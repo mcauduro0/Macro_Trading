@@ -12,9 +12,9 @@ This roadmap delivers the complete data infrastructure for an agentic macro trad
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Docker stack, ORM models, hypertables, migrations, config, and database engines
-- [ ] **Phase 2: Core Connectors** - Base connector pattern, 4 core data sources (BCB SGS, FRED, Yahoo, PTAX), data integrity utilities, and test infrastructure
-- [ ] **Phase 3: Extended Connectors** - Remaining 7 data sources (Focus, B3/Tesouro, IBGE, STN, CFTC, US Treasury, FX Flow)
+- [x] **Phase 1: Foundation** - Docker stack, ORM models, hypertables, migrations, config, and database engines
+- [x] **Phase 2: Core Connectors** - Base connector pattern, 4 core data sources (BCB SGS, FRED, Yahoo, PTAX), data integrity utilities, and test infrastructure
+- [x] **Phase 3: Extended Connectors** - Remaining 7 data sources (Focus, B3/Tesouro, IBGE, STN, CFTC, US Treasury, FX Flow)
 - [ ] **Phase 4: Seed and Backfill** - Instrument/series metadata seeding, backfill orchestrator, and historical data population (2010-present)
 - [ ] **Phase 5: Transforms** - Curve construction, returns/vol/z-scores, macro calculations, and advanced indicators (silver layer)
 - [ ] **Phase 6: API and Quality** - FastAPI serving layer, all endpoints, data quality framework, verification, and CI pipeline (gold layer)
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffolding, Docker Compose stack, and pydantic-settings configuration
-- [ ] 01-02-PLAN.md — SQLAlchemy 2.0 ORM models and Alembic migration with hypertables and compression
-- [ ] 01-03-PLAN.md — Database engines (async/sync), Redis client singleton, and connectivity verification
+- [x] 01-01-PLAN.md — Project scaffolding, Docker Compose stack, and pydantic-settings configuration
+- [x] 01-02-PLAN.md — SQLAlchemy 2.0 ORM models and Alembic migration with hypertables and compression
+- [x] 01-03-PLAN.md — Database engines (async/sync), Redis client singleton, and connectivity verification
 
 ### Phase 2: Core Connectors
 **Goal**: A proven ingestion pattern with 4 working connectors that validate the BaseConnector abstraction, Brazilian format handling, point-in-time tracking, and idempotent writes
@@ -50,9 +50,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — BaseConnector ABC, data utilities (parsing, calendars, tenors), test infrastructure, and dependency installation
-- [ ] 02-02-PLAN.md — BCB SGS connector (~50 BR macro series) and FRED connector (~50 US macro series) with tests
-- [ ] 02-03-PLAN.md — Yahoo Finance connector (25+ tickers) and BCB PTAX connector (FX fixing rates) with tests
+- [x] 02-01-PLAN.md — BaseConnector ABC, data utilities (parsing, calendars, tenors), test infrastructure, and dependency installation
+- [x] 02-02-PLAN.md — BCB SGS connector (~50 BR macro series) and FRED connector (~50 US macro series) with tests
+- [x] 02-03-PLAN.md — Yahoo Finance connector (25+ tickers) and BCB PTAX connector (FX fixing rates) with tests
 
 ### Phase 3: Extended Connectors
 **Goal**: Complete ingestion coverage across all 11 data sources, enabling the full 200+ series universe
@@ -67,10 +67,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — BCB FX Flow connector (4 SGS series to flow_data) and STN Fiscal connector (4+ SGS series to fiscal_data)
-- [ ] 03-02-PLAN.md — IBGE SIDRA connector (IPCA 9 components with weights) and BCB Focus connector (market expectations with OData pagination)
-- [ ] 03-03-PLAN.md — B3/Tesouro Direto connector (DI swap curve + NTN-B real rates to curves) and US Treasury connector (nominal + real + breakeven yield curves)
-- [ ] 03-04-PLAN.md — CFTC COT connector (disaggregated positioning, 12 contracts x 4 categories from bulk CSV) and __init__.py exports update
+- [x] 03-01-PLAN.md — BCB FX Flow connector (4 SGS series to flow_data) and STN Fiscal connector (4+ SGS series to fiscal_data)
+- [x] 03-02-PLAN.md — IBGE SIDRA connector (IPCA 9 components with weights) and BCB Focus connector (market expectations with OData pagination)
+- [x] 03-03-PLAN.md — B3/Tesouro Direto connector (DI swap curve + NTN-B real rates to curves) and US Treasury connector (nominal + real + breakeven yield curves)
+- [x] 03-04-PLAN.md — CFTC COT connector (disaggregated positioning, 12 contracts x 4 categories from bulk CSV) and __init__.py exports update
 
 ### Phase 4: Seed and Backfill
 **Goal**: Database populated with all instrument definitions, series metadata, and historical data from 2010 to present across all 11 sources
