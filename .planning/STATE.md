@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Core Connectors
 
 ## Current Position
 
-Phase: 1 of 6 (Foundation)
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 1 Complete
-Last activity: 2026-02-19 -- Completed 01-02 Database Schema (2 tasks, 6 min)
+Phase: 2 of 6 (Core Connectors)
+Plan: 0 of 3 in current phase (planned, ready to execute)
+Status: Phase 2 Planned
+Last activity: 2026-02-19 -- Phase 2 plans created and verified (3 plans, 2 waves)
 
 Progress: [██░░░░░░░░] 19%
 
@@ -69,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 01-02-PLAN.md (Database Schema) -- Phase 1 fully complete
+Stopped at: Phase 2 planned and verified -- ready for execution
 Resume file: .planning/phases/02-connectors/ (Phase 2)
