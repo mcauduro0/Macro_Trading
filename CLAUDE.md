@@ -36,6 +36,32 @@ Curated resources: CLAUDE.md templates, workflow guides, and 23 additional slash
 ### Additional Slash Commands
 Beyond GSD, the following commands are available: `/commit`, `/create-pr`, `/pr-review`, `/release`, `/optimize`, `/todo`, `/fix-github-issue`, `/create-prd`, `/testing_plan_integration`, and more.
 
+## Development Phase Rules & Guides
+
+This project follows a structured 3-phase development plan. Each phase has a comprehensive guide located in `.claude/rules/` that serves as the **authoritative reference** for what to build, how to build it, and how to validate each step.
+
+**IMPORTANT: Before starting work on any phase, you MUST read the corresponding guide file in full. These guides contain the exact specifications, code structures, database schemas, API endpoints, and validation criteria for each development step.**
+
+| Phase | Guide File | Description | Estimated Time |
+|---|---|---|---|
+| **Phase 1** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase1.md` | Quantitative Models, Agents & Backtesting (20 steps) — Agent Framework, 5 Analytical Agents, Backtesting Engine, 8 Trading Strategies, Signal Aggregation, Risk Management | 10-16 hours |
+| **Phase 2** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` | Strategy Engine, Risk & Portfolio Management (18 steps) — 17 additional strategies, NLP Pipeline, Risk Engine (VaR, CVaR, stress testing), Portfolio Construction & Optimization, Production Orchestration (Dagster) | 12-18 hours |
+| **Phase 3** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase3.md` | Production Infrastructure, Live Trading & Go-Live — Execution Management System, FIX connectivity, Emergency Stop, Auth/Security, Go-Live Checklist | 8-12 hours |
+
+### How to Use the Guides
+
+1. Each guide contains numbered **ETAPAS** (steps) that are independent prompts
+2. Each step is delimited by `═══ INÍCIO DO PROMPT N ═══` and `═══ FIM DO PROMPT N ═══`
+3. Execute steps in order — each builds on the previous
+4. Each step includes verification criteria (tests, migrations, health checks)
+5. **Never skip verification** before moving to the next step
+
+### Phase Dependencies
+
+- **Phase 1** requires: Phase 0 complete (data infrastructure with TimescaleDB, 11 connectors, 200+ macro series, FastAPI)
+- **Phase 2** requires: Phase 1 complete (5 agents, backtesting engine, 8 strategies, React dashboard)
+- **Phase 3** requires: Phase 2 complete (25 strategies, risk engine, portfolio optimization, Dagster orchestration)
+
 ## Key Constraints
 
 - **Language**: English (default working language)
