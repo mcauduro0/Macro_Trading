@@ -20,22 +20,22 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Connectors
 
 - [x] **CONN-01**: Base connector abstract class with async HTTP (httpx), retry with backoff, rate limiting, structured logging
-- [ ] **CONN-02**: BCB SGS connector fetches ~50 Brazilian macro series (inflation, activity, monetary, external, fiscal) with comma-decimal parsing
-- [ ] **CONN-03**: FRED connector fetches ~50 US macro series (CPI, PCE, NFP, rates, credit, fiscal) with missing-value handling
+- [x] **CONN-02**: BCB SGS connector fetches ~50 Brazilian macro series (inflation, activity, monetary, external, fiscal) with comma-decimal parsing
+- [x] **CONN-03**: FRED connector fetches ~50 US macro series (CPI, PCE, NFP, rates, credit, fiscal) with missing-value handling
 - [x] **CONN-04**: BCB Focus connector fetches market expectations (IPCA, Selic, GDP, FX) by horizon with OData pagination
 - [x] **CONN-05**: B3/Tesouro Direto connector fetches DI swap curve (BCB SGS #7805-7816) and NTN-B real rates from Tesouro Direto JSON API
 - [x] **CONN-06**: IBGE SIDRA connector fetches IPCA disaggregated by 9 components with weights
 - [x] **CONN-07**: STN Fiscal connector fetches primary balance, debt composition, revenue/expenditure from BCB SGS + Tesouro Transparente
 - [ ] **CONN-08**: CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
 - [x] **CONN-09**: US Treasury connector fetches daily nominal, real (TIPS), and breakeven yield curves from Treasury.gov CSV
-- [ ] **CONN-10**: Yahoo Finance connector fetches daily OHLCV for 25+ tickers (FX, indices, commodities, ETFs) via yfinance
-- [ ] **CONN-11**: BCB PTAX connector fetches official FX fixing rate (buy/sell) from OData API with MM-DD-YYYY date handling
+- [x] **CONN-10**: Yahoo Finance connector fetches daily OHLCV for 25+ tickers (FX, indices, commodities, ETFs) via yfinance
+- [x] **CONN-11**: BCB PTAX connector fetches official FX fixing rate (buy/sell) from OData API with MM-DD-YYYY date handling
 - [x] **CONN-12**: BCB FX Flow connector fetches commercial/financial flows and BCB swap stock from SGS series
 
 ### Data Integrity
 
-- [ ] **DATA-01**: All macro_series records store release_time (when data was published) for point-in-time correctness
-- [ ] **DATA-02**: Revision tracking via revision_number field — revised series store each vintage as separate row
+- [x] **DATA-01**: All macro_series records store release_time (when data was published) for point-in-time correctness
+- [x] **DATA-02**: Revision tracking via revision_number field — revised series store each vintage as separate row
 - [x] **DATA-03**: All database inserts use ON CONFLICT DO NOTHING for idempotent re-runs
 - [x] **DATA-04**: Business day calendar utilities for ANBIMA (BR) and NYSE (US) holidays (2015-2030)
 - [x] **DATA-05**: Tenor-to-days and tenor-to-date conversion with business day conventions
@@ -92,7 +92,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Testing & CI
 
 - [ ] **TEST-01**: Pytest test suite for transforms (curves, returns) with known-answer tests
-- [ ] **TEST-02**: Pytest test suite for connectors with respx HTTP mocking
+- [x] **TEST-02**: Pytest test suite for connectors with respx HTTP mocking
 - [x] **TEST-03**: Pytest conftest with database session fixture and sample date fixtures
 - [ ] **TEST-04**: GitHub Actions CI workflow runs ruff lint + pytest (excluding integration tests)
 
@@ -140,19 +140,19 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFRA-06 | Phase 1 | Complete |
 | INFRA-07 | Phase 1 | Complete |
 | CONN-01 | Phase 2 | Complete |
-| CONN-02 | Phase 2 | Pending |
-| CONN-03 | Phase 2 | Pending |
+| CONN-02 | Phase 2 | Complete |
+| CONN-03 | Phase 2 | Complete |
 | CONN-04 | Phase 3 | Complete |
 | CONN-05 | Phase 3 | Complete |
 | CONN-06 | Phase 3 | Complete |
 | CONN-07 | Phase 3 | Complete |
 | CONN-08 | Phase 3 | Pending |
 | CONN-09 | Phase 3 | Complete |
-| CONN-10 | Phase 2 | Pending |
-| CONN-11 | Phase 2 | Pending |
+| CONN-10 | Phase 2 | Complete |
+| CONN-11 | Phase 2 | Complete |
 | CONN-12 | Phase 3 | Complete |
-| DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 2 | Pending |
+| DATA-01 | Phase 2 | Complete |
+| DATA-02 | Phase 2 | Complete |
 | DATA-03 | Phase 2 | Complete |
 | DATA-04 | Phase 2 | Complete |
 | DATA-05 | Phase 2 | Complete |
@@ -194,7 +194,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | QUAL-05 | Phase 6 | Pending |
 | QUAL-06 | Phase 6 | Pending |
 | TEST-01 | Phase 5 | Pending |
-| TEST-02 | Phase 2 | Pending |
+| TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 2 | Complete |
 | TEST-04 | Phase 6 | Pending |
 
@@ -205,4 +205,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after roadmap creation*
+*Last updated: 2026-02-19 after Phase 3 plans 01-03 completion*
