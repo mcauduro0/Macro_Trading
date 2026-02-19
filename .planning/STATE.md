@@ -10,28 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 2 of 6 (Core Connectors)
-Plan: 0 of 3 in current phase (planned, ready to execute)
-Status: Phase 2 Planned
-Last activity: 2026-02-19 -- Phase 2 plans created and verified (3 plans, 2 waves)
+Plan: 1 of 3 in current phase (executing)
+Status: Phase 2 Executing
+Last activity: 2026-02-19 -- Completed 02-01-PLAN.md (Base Connector + Utilities)
 
-Progress: [██░░░░░░░░] 19%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 5 min
-- Total execution time: 0.27 hours
+- Total plans completed: 4
+- Average duration: 7 min
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 16 min | 5 min |
+| 02-connectors | 1 | 11 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6 min), 01-03 (4 min), 01-02 (6 min)
-- Trend: Consistent
+- Last 5 plans: 01-01 (6 min), 01-03 (4 min), 01-02 (6 min), 02-01 (11 min)
+- Trend: Slightly longer (more complex tasks)
 
 *Updated after each plan completion*
 
@@ -56,6 +57,9 @@ Recent decisions affecting current work:
 - [01-03]: Redis ConnectionPool passed via connection_pool= param (not from_pool()) to avoid premature closure
 - [01-03]: Sync engine pool_size=5 (smaller than async 20) since only used for Alembic/scripts
 - [01-03]: Verification script uses WARN for missing hypertables in basic mode to tolerate parallel plan execution
+- [02-01]: AsyncRetrying pattern (not decorator) for tenacity retry so MAX_RETRIES is instance-accessible
+- [02-01]: Lazy singleton pattern for ANBIMA and NYSE calendars to avoid load-time overhead
+- [02-01]: ON CONFLICT DO NOTHING via pg_insert for idempotent bulk inserts across all connectors
 
 ### Pending Todos
 
@@ -69,5 +73,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 2 planned and verified -- ready for execution
-Resume file: .planning/phases/02-connectors/ (Phase 2)
+Stopped at: Completed 02-01-PLAN.md (Base Connector + Utilities)
+Resume file: .planning/phases/02-connectors/ (Phase 2, Plan 2 next)

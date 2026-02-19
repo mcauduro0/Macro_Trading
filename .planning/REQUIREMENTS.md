@@ -19,7 +19,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Connectors
 
-- [ ] **CONN-01**: Base connector abstract class with async HTTP (httpx), retry with backoff, rate limiting, structured logging
+- [x] **CONN-01**: Base connector abstract class with async HTTP (httpx), retry with backoff, rate limiting, structured logging
 - [ ] **CONN-02**: BCB SGS connector fetches ~50 Brazilian macro series (inflation, activity, monetary, external, fiscal) with comma-decimal parsing
 - [ ] **CONN-03**: FRED connector fetches ~50 US macro series (CPI, PCE, NFP, rates, credit, fiscal) with missing-value handling
 - [ ] **CONN-04**: BCB Focus connector fetches market expectations (IPCA, Selic, GDP, FX) by horizon with OData pagination
@@ -36,9 +36,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **DATA-01**: All macro_series records store release_time (when data was published) for point-in-time correctness
 - [ ] **DATA-02**: Revision tracking via revision_number field — revised series store each vintage as separate row
-- [ ] **DATA-03**: All database inserts use ON CONFLICT DO NOTHING for idempotent re-runs
-- [ ] **DATA-04**: Business day calendar utilities for ANBIMA (BR) and NYSE (US) holidays (2015-2030)
-- [ ] **DATA-05**: Tenor-to-days and tenor-to-date conversion with business day conventions
+- [x] **DATA-03**: All database inserts use ON CONFLICT DO NOTHING for idempotent re-runs
+- [x] **DATA-04**: Business day calendar utilities for ANBIMA (BR) and NYSE (US) holidays (2015-2030)
+- [x] **DATA-05**: Tenor-to-days and tenor-to-date conversion with business day conventions
 
 ### Seed & Backfill
 
@@ -93,7 +93,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **TEST-01**: Pytest test suite for transforms (curves, returns) with known-answer tests
 - [ ] **TEST-02**: Pytest test suite for connectors with respx HTTP mocking
-- [ ] **TEST-03**: Pytest conftest with database session fixture and sample date fixtures
+- [x] **TEST-03**: Pytest conftest with database session fixture and sample date fixtures
 - [ ] **TEST-04**: GitHub Actions CI workflow runs ruff lint + pytest (excluding integration tests)
 
 ## v2 Requirements
@@ -139,7 +139,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFRA-05 | Phase 1 | Complete |
 | INFRA-06 | Phase 1 | Complete |
 | INFRA-07 | Phase 1 | Complete |
-| CONN-01 | Phase 2 | Pending |
+| CONN-01 | Phase 2 | Complete |
 | CONN-02 | Phase 2 | Pending |
 | CONN-03 | Phase 2 | Pending |
 | CONN-04 | Phase 3 | Pending |
@@ -153,9 +153,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | CONN-12 | Phase 3 | Pending |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
-| DATA-03 | Phase 2 | Pending |
-| DATA-04 | Phase 2 | Pending |
-| DATA-05 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Complete |
+| DATA-04 | Phase 2 | Complete |
+| DATA-05 | Phase 2 | Complete |
 | SEED-01 | Phase 4 | Pending |
 | SEED-02 | Phase 4 | Pending |
 | SEED-03 | Phase 4 | Pending |
@@ -195,7 +195,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | QUAL-06 | Phase 6 | Pending |
 | TEST-01 | Phase 5 | Pending |
 | TEST-02 | Phase 2 | Pending |
-| TEST-03 | Phase 2 | Pending |
+| TEST-03 | Phase 2 | Complete |
 | TEST-04 | Phase 6 | Pending |
 
 **Coverage:**
