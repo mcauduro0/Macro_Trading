@@ -16,6 +16,7 @@ Exception hierarchy:
 
 import abc
 import asyncio
+import inspect
 from datetime import date
 from typing import Any
 
@@ -168,7 +169,7 @@ class BaseConnector(abc.ABC):
                     attempt=attempt.retry_state.attempt_number,
                 )
                 response = self.client.request(method, url, **kwargs)
-                if hasattr(response, "__aenter__"):
+                if inspect.isawaitable(response):
                     response = await response
                 if response.status_code == 429:
                     raise RateLimitError(
