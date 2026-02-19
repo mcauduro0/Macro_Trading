@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 2 of 6 (Core Connectors)
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 2 Complete
-Last activity: 2026-02-19 -- Phase 2 verified (5/5 criteria, 12/12 requirements, 111 tests)
+Phase: 3 of 6 (Extended Connectors)
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-19 -- Completed 03-01 (BCB FX Flow + STN Fiscal connectors)
 
-Progress: [████░░░░░░] 35%
+Progress: [████░░░░░░] 41%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 10 min
-- Total execution time: 0.83 hours
+- Total execution time: 0.98 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [████░░░░░░] 35%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 16 min | 5 min |
 | 02-connectors | 3 | 34 min | 11 min |
+| 03-extended-connectors | 1 | 9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (6 min), 02-01 (11 min), 02-02 (15 min), 02-03 (11 min)
-- Trend: Connector plans larger than foundation (expected)
+- Last 5 plans: 02-01 (11 min), 02-02 (15 min), 02-03 (11 min), 03-01 (9 min)
+- Trend: Extended connectors faster than core (reusing proven BCB SGS pattern)
 
 *Updated after each plan completion*
 
@@ -60,6 +61,10 @@ Recent decisions affecting current work:
 - [02-01]: AsyncRetrying pattern (not decorator) for tenacity retry so MAX_RETRIES is instance-accessible
 - [02-01]: Lazy singleton pattern for ANBIMA and NYSE calendars to avoid load-time overhead
 - [02-01]: ON CONFLICT DO NOTHING via pg_insert for idempotent bulk inserts across all connectors
+- [03-01]: BcbFxFlowConnector uses flat SERIES_REGISTRY + separate FLOW_TYPE_MAP for flow_type lookup
+- [03-01]: StnFiscalConnector uses tuple-valued SERIES_REGISTRY dict[str, tuple[int, str, str]] for per-series fiscal_metric and unit
+- [03-01]: Expanded STN Fiscal to 6 series (added BR_TOTAL_EXPENDITURE and BR_SOCIAL_SEC_DEFICIT for completeness)
+- [03-01]: Tesouro Transparente API skipped per research -- BCB SGS is sole source for fiscal data
 
 ### Pending Todos
 
@@ -73,5 +78,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 2 complete -- ready for Phase 3 (Extended Connectors)
-Resume file: .planning/phases/03-extended-connectors/ (Phase 3)
+Stopped at: Completed 03-01-PLAN.md (BCB FX Flow + STN Fiscal connectors)
+Resume file: .planning/phases/03-extended-connectors/ (Phase 3, Plan 2 next)

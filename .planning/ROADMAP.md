@@ -131,7 +131,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-02-19 |
 | 2. Core Connectors | 3/3 | Complete | 2026-02-19 |
-| 3. Extended Connectors | 0/4 | Planned | - |
+| 3. Extended Connectors | 1/4 | In Progress | - |
 | 4. Seed and Backfill | 0/3 | Not started | - |
 | 5. Transforms | 0/3 | Not started | - |
 | 6. API and Quality | 0/4 | Not started | - |
