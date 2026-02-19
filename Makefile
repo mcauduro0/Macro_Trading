@@ -1,4 +1,4 @@
-.PHONY: up up-full down down-clean ps logs migrate migration install lint test
+.PHONY: up up-full down down-clean ps logs migrate migration install lint test verify
 
 # Start core services (TimescaleDB, Redis, MongoDB, MinIO)
 up:
@@ -43,3 +43,7 @@ lint:
 # Run tests
 test:
 	pytest tests/ -v
+
+# Verify infrastructure connectivity (use after 'make up' and 'make migrate')
+verify:
+	python scripts/verify_connectivity.py --strict
