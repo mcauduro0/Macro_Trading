@@ -12,6 +12,8 @@ from .base import (
     RateLimitError,
 )
 from .bcb_ptax import BcbPtaxConnector
+from .bcb_sgs import BcbSgsConnector
+from .fred import FredConnector
 from .yahoo_finance import YahooFinanceConnector
 
 __all__ = [
@@ -21,5 +23,7 @@ __all__ = [
     "FetchError",
     "RateLimitError",
     "BcbPtaxConnector",
+    "BcbSgsConnector",
+    "FredConnector",
     "YahooFinanceConnector",
 ]
