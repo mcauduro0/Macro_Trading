@@ -47,12 +47,12 @@ Plans:
   3. Yahoo Finance connector fetches daily OHLCV for FX, indices, and commodities with retry logic handling rate limits
   4. BCB PTAX connector fetches official FX fixing rates with correct MM-DD-YYYY date handling
   5. All connectors use ON CONFLICT DO NOTHING and can be re-run without creating duplicates
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — BaseConnector ABC, data utilities (parsing, calendars, tenors), test infrastructure, and dependency installation
+- [ ] 02-02-PLAN.md — BCB SGS connector (~50 BR macro series) and FRED connector (~50 US macro series) with tests
+- [ ] 02-03-PLAN.md — Yahoo Finance connector (25+ tickers) and BCB PTAX connector (FX fixing rates) with tests
 
 ### Phase 3: Extended Connectors
 **Goal**: Complete ingestion coverage across all 11 data sources, enabling the full 200+ series universe
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 0/3 | Planning complete | - |
-| 2. Core Connectors | 0/3 | Not started | - |
+| 2. Core Connectors | 0/3 | Planning complete | - |
 | 3. Extended Connectors | 0/3 | Not started | - |
 | 4. Seed and Backfill | 0/3 | Not started | - |
 | 5. Transforms | 0/3 | Not started | - |
