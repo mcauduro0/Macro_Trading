@@ -64,12 +64,13 @@ Plans:
   3. IBGE SIDRA connector fetches IPCA disaggregated by 9 components with correct weights
   4. CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
   5. US Treasury, STN Fiscal, and BCB FX Flow connectors each fetch and store their respective data series correctly
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md — BCB FX Flow connector (4 SGS series to flow_data) and STN Fiscal connector (4+ SGS series to fiscal_data)
+- [ ] 03-02-PLAN.md — IBGE SIDRA connector (IPCA 9 components with weights) and BCB Focus connector (market expectations with OData pagination)
+- [ ] 03-03-PLAN.md — B3/Tesouro Direto connector (DI swap curve + NTN-B real rates to curves) and US Treasury connector (nominal + real + breakeven yield curves)
+- [ ] 03-04-PLAN.md — CFTC COT connector (disaggregated positioning, 12 contracts x 4 categories from bulk CSV) and __init__.py exports update
 
 ### Phase 4: Seed and Backfill
 **Goal**: Database populated with all instrument definitions, series metadata, and historical data from 2010 to present across all 11 sources
@@ -129,8 +130,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-02-19 |
-| 2. Core Connectors | 1/3 | In Progress | - |
-| 3. Extended Connectors | 0/3 | Not started | - |
+| 2. Core Connectors | 3/3 | Complete | 2026-02-19 |
+| 3. Extended Connectors | 0/4 | Not started | - |
 | 4. Seed and Backfill | 0/3 | Not started | - |
 | 5. Transforms | 0/3 | Not started | - |
 | 6. API and Quality | 0/4 | Not started | - |
