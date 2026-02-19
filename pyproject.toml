@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "macro-trading"
+version = "0.1.0"
+description = "Macro Trading Data Infrastructure - volatility signals and market sentiment analysis"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "sqlalchemy>=2.0.36",
+    "asyncpg>=0.30.0",
+    "psycopg2-binary>=2.9.10",
+    "alembic>=1.14.0",
+    "pydantic-settings>=2.7.0",
+    "pydantic>=2.10.0",
+    "redis[hiredis]>=5.2.0",
+    "python-dotenv>=1.0.1",
+    "structlog>=24.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
