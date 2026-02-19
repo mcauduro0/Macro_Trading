@@ -22,15 +22,15 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CONN-01**: Base connector abstract class with async HTTP (httpx), retry with backoff, rate limiting, structured logging
 - [ ] **CONN-02**: BCB SGS connector fetches ~50 Brazilian macro series (inflation, activity, monetary, external, fiscal) with comma-decimal parsing
 - [ ] **CONN-03**: FRED connector fetches ~50 US macro series (CPI, PCE, NFP, rates, credit, fiscal) with missing-value handling
-- [ ] **CONN-04**: BCB Focus connector fetches market expectations (IPCA, Selic, GDP, FX) by horizon with OData pagination
-- [ ] **CONN-05**: B3/Tesouro Direto connector fetches DI swap curve (BCB SGS #7805-7816) and NTN-B real rates from Tesouro Direto JSON API
-- [ ] **CONN-06**: IBGE SIDRA connector fetches IPCA disaggregated by 9 components with weights
-- [ ] **CONN-07**: STN Fiscal connector fetches primary balance, debt composition, revenue/expenditure from BCB SGS + Tesouro Transparente
+- [x] **CONN-04**: BCB Focus connector fetches market expectations (IPCA, Selic, GDP, FX) by horizon with OData pagination
+- [x] **CONN-05**: B3/Tesouro Direto connector fetches DI swap curve (BCB SGS #7805-7816) and NTN-B real rates from Tesouro Direto JSON API
+- [x] **CONN-06**: IBGE SIDRA connector fetches IPCA disaggregated by 9 components with weights
+- [x] **CONN-07**: STN Fiscal connector fetches primary balance, debt composition, revenue/expenditure from BCB SGS + Tesouro Transparente
 - [ ] **CONN-08**: CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
-- [ ] **CONN-09**: US Treasury connector fetches daily nominal, real (TIPS), and breakeven yield curves from Treasury.gov CSV
+- [x] **CONN-09**: US Treasury connector fetches daily nominal, real (TIPS), and breakeven yield curves from Treasury.gov CSV
 - [ ] **CONN-10**: Yahoo Finance connector fetches daily OHLCV for 25+ tickers (FX, indices, commodities, ETFs) via yfinance
 - [ ] **CONN-11**: BCB PTAX connector fetches official FX fixing rate (buy/sell) from OData API with MM-DD-YYYY date handling
-- [ ] **CONN-12**: BCB FX Flow connector fetches commercial/financial flows and BCB swap stock from SGS series
+- [x] **CONN-12**: BCB FX Flow connector fetches commercial/financial flows and BCB swap stock from SGS series
 
 ### Data Integrity
 
@@ -142,15 +142,15 @@ Deferred to future release. Tracked but not in current roadmap.
 | CONN-01 | Phase 2 | Complete |
 | CONN-02 | Phase 2 | Pending |
 | CONN-03 | Phase 2 | Pending |
-| CONN-04 | Phase 3 | Pending |
-| CONN-05 | Phase 3 | Pending |
-| CONN-06 | Phase 3 | Pending |
-| CONN-07 | Phase 3 | Pending |
+| CONN-04 | Phase 3 | Complete |
+| CONN-05 | Phase 3 | Complete |
+| CONN-06 | Phase 3 | Complete |
+| CONN-07 | Phase 3 | Complete |
 | CONN-08 | Phase 3 | Pending |
-| CONN-09 | Phase 3 | Pending |
+| CONN-09 | Phase 3 | Complete |
 | CONN-10 | Phase 2 | Pending |
 | CONN-11 | Phase 2 | Pending |
-| CONN-12 | Phase 3 | Pending |
+| CONN-12 | Phase 3 | Complete |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
 | DATA-03 | Phase 2 | Complete |

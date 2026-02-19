@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 3 of 6 (Extended Connectors)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-19 -- Completed 03-01 (BCB FX Flow + STN Fiscal connectors)
+Last activity: 2026-02-19 -- Completed 03-03 (B3/Tesouro Direto + US Treasury yield curve connectors)
 
-Progress: [████░░░░░░] 41%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 10 min
-- Total execution time: 0.98 hours
+- Total plans completed: 9
+- Average duration: 11 min
+- Total execution time: 1.62 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [████░░░░░░] 41%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 16 min | 5 min |
 | 02-connectors | 3 | 34 min | 11 min |
-| 03-extended-connectors | 1 | 9 min | 9 min |
+| 03-extended-connectors | 3 | 38 min | 13 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (11 min), 02-02 (15 min), 02-03 (11 min), 03-01 (9 min)
-- Trend: Extended connectors faster than core (reusing proven BCB SGS pattern)
+- Last 5 plans: 02-03 (11 min), 03-01 (9 min), 03-02 (11 min), 03-03 (18 min)
+- Trend: Curve connectors take longer (CSV/JSON parsing, breakeven computation, multiple data sources per connector)
 
 *Updated after each plan completion*
 
@@ -65,6 +65,13 @@ Recent decisions affecting current work:
 - [03-01]: StnFiscalConnector uses tuple-valued SERIES_REGISTRY dict[str, tuple[int, str, str]] for per-series fiscal_metric and unit
 - [03-01]: Expanded STN Fiscal to 6 series (added BR_TOTAL_EXPENDITURE and BR_SOCIAL_SEC_DEFICIT for completeness)
 - [03-01]: Tesouro Transparente API skipped per research -- BCB SGS is sole source for fiscal data
+- [03-02]: IBGE SIDRA table 7060 with period-range fetching (YYYYMM format) and percentage weights from variable 2265
+- [03-02]: BCB Focus OData pagination with $top=1000/$skip for large result sets, weekly Monday releases
+- [03-03]: BCB SGS as primary DI curve source (series #7805-7816) rather than B3 direct feed -- free, reliable, covers 12 tenors
+- [03-03]: Tesouro Direto JSON as best-effort NTN-B source with empty-list fallback on any error (403/404/timeout)
+- [03-03]: Treasury CSV parsed via pd.read_csv in asyncio.to_thread to avoid blocking the event loop
+- [03-03]: Unknown CSV columns (e.g., '1.5 Mo' added by Treasury in Feb 2025) silently skipped via TENOR_MAP lookup
+- [03-03]: Breakeven as static method _compute_breakeven() for easy unit testing without HTTP mocking
 
 ### Pending Todos
 
@@ -78,5 +85,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 03-01-PLAN.md (BCB FX Flow + STN Fiscal connectors)
-Resume file: .planning/phases/03-extended-connectors/ (Phase 3, Plan 2 next)
+Stopped at: Completed 03-03-PLAN.md (B3/Tesouro Direto + US Treasury yield curve connectors)
+Resume file: .planning/phases/03-extended-connectors/ (Phase 3, Plan 4 next)
