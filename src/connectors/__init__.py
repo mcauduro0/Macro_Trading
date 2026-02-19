@@ -1,6 +1,7 @@
 """Data source connectors package.
 
-Re-exports the BaseConnector ABC and exception hierarchy for convenient imports.
+Re-exports the BaseConnector ABC, exception hierarchy, and all concrete
+connector classes for convenient imports.
 """
 
 from .base import (
@@ -10,6 +11,8 @@ from .base import (
     FetchError,
     RateLimitError,
 )
+from .bcb_ptax import BcbPtaxConnector
+from .yahoo_finance import YahooFinanceConnector
 
 __all__ = [
     "BaseConnector",
@@ -17,4 +20,6 @@ __all__ = [
     "DataParsingError",
     "FetchError",
     "RateLimitError",
+    "BcbPtaxConnector",
+    "YahooFinanceConnector",
 ]
