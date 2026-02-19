@@ -38,12 +38,13 @@ Beyond GSD, the following commands are available: `/commit`, `/create-pr`, `/pr-
 
 ## Development Phase Rules & Guides
 
-This project follows a structured 3-phase development plan. Each phase has a comprehensive guide located in `.claude/rules/` that serves as the **authoritative reference** for what to build, how to build it, and how to validate each step.
+This project follows a structured 4-phase development plan (Phase 0 through Phase 3). Each phase has a comprehensive guide located in `.claude/rules/` that serves as the **authoritative reference** for what to build, how to build it, and how to validate each step.
 
 **IMPORTANT: Before starting work on any phase, you MUST read the corresponding guide file in full. These guides contain the exact specifications, code structures, database schemas, API endpoints, and validation criteria for each development step.**
 
 | Phase | Guide File | Description | Estimated Time |
 |---|---|---|---|
+| **Phase 0** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase0.md` | Data Infrastructure (15 steps) — Project scaffold, Docker Compose (TimescaleDB, Redis, MongoDB, Kafka, MinIO), 11+ data connectors (BCB, FRED, B3, ANBIMA, Yahoo, etc.), 200+ macro series, data quality checks, FastAPI endpoints | 6-10 hours |
 | **Phase 1** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase1.md` | Quantitative Models, Agents & Backtesting (20 steps) — Agent Framework, 5 Analytical Agents, Backtesting Engine, 8 Trading Strategies, Signal Aggregation, Risk Management | 10-16 hours |
 | **Phase 2** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` | Strategy Engine, Risk & Portfolio Management (18 steps) — 17 additional strategies, NLP Pipeline, Risk Engine (VaR, CVaR, stress testing), Portfolio Construction & Optimization, Production Orchestration (Dagster) | 12-18 hours |
 | **Phase 3** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase3.md` | Production Infrastructure, Live Trading & Go-Live — Execution Management System, FIX connectivity, Emergency Stop, Auth/Security, Go-Live Checklist | 8-12 hours |
@@ -58,6 +59,7 @@ This project follows a structured 3-phase development plan. Each phase has a com
 
 ### Phase Dependencies
 
+- **Phase 0** requires: Docker, Python 3.11+, Node.js 18+, Git, 16GB+ RAM, FRED API key
 - **Phase 1** requires: Phase 0 complete (data infrastructure with TimescaleDB, 11 connectors, 200+ macro series, FastAPI)
 - **Phase 2** requires: Phase 1 complete (5 agents, backtesting engine, 8 strategies, React dashboard)
 - **Phase 3** requires: Phase 2 complete (25 strategies, risk engine, portfolio optimization, Dagster orchestration)
