@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 0 of 3 in current phase
-Status: Planning complete, ready to execute
-Last activity: 2026-02-19 -- Phase 1 planned: 3 plans in 2 waves (verified)
+Plan: 1 of 3 in current phase
+Status: Executing Phase 1
+Last activity: 2026-02-19 -- Completed 01-01 Project Scaffolding (2 tasks, 6 min)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 6%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 6 min
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 01-01 (6 min)
+- Trend: Starting
 
 *Updated after each plan completion*
 
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Core connectors (BCB SGS, FRED, Yahoo, PTAX) split from extended connectors to prove BaseConnector pattern first
 - [Roadmap]: Seed/backfill as separate phase to ensure all connectors exist before historical population
 - [Roadmap]: Compression policies configured in Phase 1 but backfill runs in Phase 4 before compression activates on old chunks
+- [01-01]: Kafka behind Docker Compose 'full' profile to avoid premature complexity
+- [01-01]: Pydantic-settings singleton with computed URL fields for all service connections
+- [01-01]: str-Enum mixin pattern for all enumerations (DB + JSON serializable)
 
 ### Pending Todos
 
@@ -59,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Phase 1 planning complete, ready to execute
-Resume file: .planning/phases/01-foundation/01-01-PLAN.md
+Stopped at: Completed 01-01-PLAN.md (Project Scaffolding)
+Resume file: .planning/phases/01-foundation/01-02-PLAN.md
