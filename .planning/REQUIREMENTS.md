@@ -10,9 +10,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Infrastructure
 
 - [x] **INFRA-01**: Docker Compose stack runs with TimescaleDB, Redis, MongoDB, Kafka, MinIO — all healthy
-- [ ] **INFRA-02**: SQLAlchemy 2.0 ORM models define 10 tables with type hints and async support
-- [ ] **INFRA-03**: 7 TimescaleDB hypertables with compression policies (market_data, macro_series, curves, flow_data, fiscal_data, vol_surfaces, signals)
-- [ ] **INFRA-04**: Alembic migration creates all tables, enables TimescaleDB extension, configures hypertables and compression
+- [x] **INFRA-02**: SQLAlchemy 2.0 ORM models define 10 tables with type hints and async support
+- [x] **INFRA-03**: 7 TimescaleDB hypertables with compression policies (market_data, macro_series, curves, flow_data, fiscal_data, vol_surfaces, signals)
+- [x] **INFRA-04**: Alembic migration creates all tables, enables TimescaleDB extension, configures hypertables and compression
 - [x] **INFRA-05**: Configuration via pydantic-settings with .env file support for all service URLs and API keys
 - [x] **INFRA-06**: Async database engine (asyncpg) and sync engine (psycopg2) with session factories
 - [x] **INFRA-07**: Redis client singleton with connection pool
@@ -133,9 +133,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INFRA-01 | Phase 1 | Complete |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Complete |
+| INFRA-03 | Phase 1 | Complete |
+| INFRA-04 | Phase 1 | Complete |
 | INFRA-05 | Phase 1 | Complete |
 | INFRA-06 | Phase 1 | Complete |
 | INFRA-07 | Phase 1 | Complete |
