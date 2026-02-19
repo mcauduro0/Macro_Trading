@@ -26,7 +26,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CONN-05**: B3/Tesouro Direto connector fetches DI swap curve (BCB SGS #7805-7816) and NTN-B real rates from Tesouro Direto JSON API
 - [x] **CONN-06**: IBGE SIDRA connector fetches IPCA disaggregated by 9 components with weights
 - [x] **CONN-07**: STN Fiscal connector fetches primary balance, debt composition, revenue/expenditure from BCB SGS + Tesouro Transparente
-- [ ] **CONN-08**: CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
+- [x] **CONN-08**: CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
 - [x] **CONN-09**: US Treasury connector fetches daily nominal, real (TIPS), and breakeven yield curves from Treasury.gov CSV
 - [x] **CONN-10**: Yahoo Finance connector fetches daily OHLCV for 25+ tickers (FX, indices, commodities, ETFs) via yfinance
 - [x] **CONN-11**: BCB PTAX connector fetches official FX fixing rate (buy/sell) from OData API with MM-DD-YYYY date handling
@@ -146,7 +146,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | CONN-05 | Phase 3 | Complete |
 | CONN-06 | Phase 3 | Complete |
 | CONN-07 | Phase 3 | Complete |
-| CONN-08 | Phase 3 | Pending |
+| CONN-08 | Phase 3 | Complete |
 | CONN-09 | Phase 3 | Complete |
 | CONN-10 | Phase 2 | Complete |
 | CONN-11 | Phase 2 | Complete |
@@ -205,4 +205,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after Phase 3 plans 01-03 completion*
+*Last updated: 2026-02-19 after Phase 3 plan 04 completion (Phase 3 complete)*

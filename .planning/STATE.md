@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 3: Extended Connectors
+**Current focus:** Phase 3: Extended Connectors (COMPLETE)
 
 ## Current Position
 
 Phase: 3 of 6 (Extended Connectors)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-19 -- Completed 03-03 (B3/Tesouro Direto + US Treasury yield curve connectors)
+Plan: 4 of 4 in current phase
+Status: Phase Complete
+Last activity: 2026-02-19 -- Completed 03-04 (CFTC COT connector + connectors package exports)
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 11 min
-- Total execution time: 1.62 hours
+- Total plans completed: 10
+- Average duration: 10.8 min
+- Total execution time: 1.68 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████████░] 90%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 16 min | 5 min |
 | 02-connectors | 3 | 34 min | 11 min |
-| 03-extended-connectors | 3 | 38 min | 13 min |
+| 03-extended-connectors | 4 | 42 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (11 min), 03-01 (9 min), 03-02 (11 min), 03-03 (18 min)
-- Trend: Curve connectors take longer (CSV/JSON parsing, breakeven computation, multiple data sources per connector)
+- Last 5 plans: 03-01 (9 min), 03-02 (11 min), 03-03 (18 min), 03-04 (4 min)
+- Trend: Phase 3 plan 4 was fast (CFTC single-source connector + package exports)
 
 *Updated after each plan completion*
 
@@ -72,6 +72,10 @@ Recent decisions affecting current work:
 - [03-03]: Treasury CSV parsed via pd.read_csv in asyncio.to_thread to avoid blocking the event loop
 - [03-03]: Unknown CSV columns (e.g., '1.5 Mo' added by Treasury in Feb 2025) silently skipped via TENOR_MAP lookup
 - [03-03]: Breakeven as static method _compute_breakeven() for easy unit testing without HTTP mocking
+- [03-04]: 12 contracts selected: ES, NQ, YM, TY, US, FV, TU, ED, CL, GC, SI, DX (major equity, rates, commodity, FX futures)
+- [03-04]: 4 disaggregated categories: DEALER, ASSETMGR, LEVERAGED, OTHER (covers all speculator/hedger segments)
+- [03-04]: Socrata CSV as current-week source (free, no auth); series key format CFTC_{CONTRACT}_{CATEGORY}_NET
+- [03-04]: ZIP files downloaded with 120s timeout (large files) vs standard 30s for JSON APIs
 
 ### Pending Todos
 
@@ -85,5 +89,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 03-03-PLAN.md (B3/Tesouro Direto + US Treasury yield curve connectors)
-Resume file: .planning/phases/03-extended-connectors/ (Phase 3, Plan 4 next)
+Stopped at: Completed 03-04-PLAN.md (CFTC COT connector + connectors package exports -- Phase 3 COMPLETE)
+Resume file: .planning/phases/ (Phase 4 next -- Seed and Backfill)
