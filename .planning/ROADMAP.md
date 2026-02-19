@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Running Alembic migrations creates all 10 tables (7 hypertables + 3 metadata) with TimescaleDB extension enabled and compression policies configured
   3. Python application connects to TimescaleDB (async via asyncpg) and Redis (via connection pool) and can execute queries
   4. Configuration loads from .env file via pydantic-settings with all service URLs and API keys resolved
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Project scaffolding, Docker Compose stack, and pydantic-settings configuration
+- [ ] 01-02-PLAN.md — SQLAlchemy 2.0 ORM models and Alembic migration with hypertables and compression
+- [ ] 01-03-PLAN.md — Database engines (async/sync), Redis client singleton, and connectivity verification
 
 ### Phase 2: Core Connectors
 **Goal**: A proven ingestion pattern with 4 working connectors that validate the BaseConnector abstraction, Brazilian format handling, point-in-time tracking, and idempotent writes
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planning complete | - |
 | 2. Core Connectors | 0/3 | Not started | - |
 | 3. Extended Connectors | 0/3 | Not started | - |
 | 4. Seed and Backfill | 0/3 | Not started | - |
