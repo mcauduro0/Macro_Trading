@@ -19,9 +19,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **AGENT-02**: AgentSignal dataclass with signal_id, direction (LONG/SHORT/NEUTRAL), strength, confidence (0-1), value, horizon_days, metadata
 - [x] **AGENT-03**: AgentReport dataclass combining signals, narrative text, model diagnostics, and data quality flags
 - [x] **AGENT-04**: PointInTimeDataLoader utility querying macro_series, curves, market_data with release_time <= as_of_date constraint
-- [ ] **AGENT-05**: AgentRegistry managing execution order (inflation → monetary → fiscal → fx → cross_asset) with run_all(as_of_date)
-- [ ] **AGENT-06**: Signal persistence to signals hypertable with ON CONFLICT DO NOTHING idempotency
-- [ ] **AGENT-07**: Alembic migration adding agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON)
+- [x] **AGENT-05**: AgentRegistry managing execution order (inflation → monetary → fiscal → fx → cross_asset) with run_all(as_of_date)
+- [x] **AGENT-06**: Signal persistence to signals hypertable with ON CONFLICT DO NOTHING idempotency
+- [x] **AGENT-07**: Alembic migration adding agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON)
 
 ### Analytical Agents
 
@@ -162,9 +162,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | AGENT-02 | Phase 7 | Complete |
 | AGENT-03 | Phase 7 | Complete |
 | AGENT-04 | Phase 7 | Complete |
-| AGENT-05 | Phase 7 | Pending |
-| AGENT-06 | Phase 7 | Pending |
-| AGENT-07 | Phase 7 | Pending |
+| AGENT-05 | Phase 7 | Complete |
+| AGENT-06 | Phase 7 | Complete |
+| AGENT-07 | Phase 7 | Complete |
 | INFL-01 | Phase 8 | Pending |
 | INFL-02 | Phase 8 | Pending |
 | INFL-03 | Phase 8 | Pending |

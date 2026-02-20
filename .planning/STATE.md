@@ -9,23 +9,24 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 7 — Agent Framework & Data Loader
-Plan: 2 of 2 (07-01 complete, 07-02 pending)
-Status: Executing — plan 07-01 complete
-Last activity: 2026-02-20 — Completed 07-01-PLAN.md (BaseAgent ABC, data loader, enums, deps)
+Phase: 7 — Agent Framework & Data Loader (COMPLETE)
+Plan: 2 of 2 (all complete)
+Status: Phase complete — ready for Phase 8
+Last activity: 2026-02-20 — Completed 07-02-PLAN.md (AgentRegistry, agent_reports migration, tests)
 
-Progress: [#         ] 5%  (1/20 plans complete)
+Progress: [##        ] 10%  (2/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 11
-- Average duration: 10.5 min
-- Total execution time: 1.80 hours
+- Total plans completed: 12
+- Average duration: 10.4 min
+- Total execution time: 1.83 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 07 | 01 | 7 min | 2 | 5 |
+| 07 | 02 | 12 min | 2 | 11 |
 
 *Updated after each plan completion*
 
@@ -49,6 +50,10 @@ Recent decisions affecting current work:
 - [v2.0-07-01]: Async bridge in _persist_signals using ThreadPoolExecutor when event loop is running
 - [v2.0-07-01]: COALESCE(release_time, observation_date) for flow_data PIT filtering on nullable release_time
 - [v2.0-07-01]: Dedup macro_series by observation_date keeping highest revision_number for PIT correctness
+- [v2.0-07-02]: AgentReportRecord ORM (not AgentReport) to avoid name collision with dataclass in base.py
+- [v2.0-07-02]: agent_reports as regular table (not hypertable) — low volume audit trail
+- [v2.0-07-02]: Agents not in EXECUTION_ORDER appended alphabetically — extensible for future agents
+- [v2.0-07-02]: run_all catches per-agent exceptions and continues — one failure does not abort pipeline
 
 ### Pending Todos
 
@@ -64,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 07-01-PLAN.md
-Resume action: Continue executing phase 7 (07-02 pending)
+Stopped at: Completed 07-02-PLAN.md (Phase 7 complete)
+Resume action: Begin Phase 8 (Inflation & Monetary Policy Agents)

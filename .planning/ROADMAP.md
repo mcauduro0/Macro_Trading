@@ -27,7 +27,7 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 
 ### v2.0 Phases (Active)
 
-- [ ] **Phase 7: Agent Framework & Data Loader** - BaseAgent ABC, signal/report dataclasses, PointInTimeDataLoader, AgentRegistry, DB migration, dependency installation
+- [x] **Phase 7: Agent Framework & Data Loader** - BaseAgent ABC, signal/report dataclasses, PointInTimeDataLoader, AgentRegistry, DB migration, dependency installation
 - [ ] **Phase 8: Inflation & Monetary Policy Agents** - InflationAgent (Phillips Curve, IPCA bottom-up, surprise, persistence) and MonetaryPolicyAgent (Taylor Rule, Kalman r*, Selic path, term premium)
 - [ ] **Phase 9: Fiscal & FX Equilibrium Agents** - FiscalAgent (DSA model, fiscal impulse, dominance risk) and FxEquilibriumAgent (BEER model, carry-to-risk, flows, CIP basis)
 - [ ] **Phase 10: Cross-Asset Agent & Backtesting Engine** - CrossAssetAgent (regime detection, correlations, sentiment) and BacktestEngine (portfolio tracking, metrics, PIT enforcement)
@@ -52,7 +52,7 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 
 Plans:
 - [x] 07-01-PLAN.md — BaseAgent ABC, AgentSignal/AgentReport dataclasses, SignalDirection/SignalStrength enums, PointInTimeDataLoader with PIT queries, and dependency installation (statsmodels, scikit-learn)
-- [ ] 07-02-PLAN.md — AgentRegistry with ordered execution, signal persistence to signals hypertable, Alembic migration for agent_reports table, and agent framework tests
+- [x] 07-02-PLAN.md — AgentRegistry with ordered execution, signal persistence to signals hypertable, Alembic migration for agent_reports table, and agent framework tests
 
 ### Phase 8: Inflation & Monetary Policy Agents
 **Goal**: Two fully functional analytical agents — InflationAgent monitoring BR+US inflation dynamics and MonetaryPolicyAgent analyzing central bank policy — each producing quantitative signals from real models
@@ -184,7 +184,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 7. Agent Framework | 1/2 | In Progress|  |
+| 7. Agent Framework | 2/2 | Complete | 2026-02-20 |
 | 8. Inflation & Monetary Agents | 0/3 | Not started | - |
 | 9. Fiscal & FX Agents | 0/2 | Not started | - |
 | 10. Cross-Asset & Backtesting | 0/3 | Not started | - |
