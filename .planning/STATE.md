@@ -10,18 +10,22 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 7 — Agent Framework & Data Loader
-Plan: 2 plans in 2 waves (07-01, 07-02) — ready for execution
-Status: Planned — research + plans created and verified
-Last activity: 2026-02-20 — Phase 7 planned (2 plans, 2 waves)
+Plan: 2 of 2 (07-01 complete, 07-02 pending)
+Status: Executing — plan 07-01 complete
+Last activity: 2026-02-20 — Completed 07-01-PLAN.md (BaseAgent ABC, data loader, enums, deps)
 
-Progress: [          ] 0%  (0/20 plans complete)
+Progress: [#         ] 5%  (1/20 plans complete)
 
 ## Performance Metrics
 
-**Velocity (from v1.0):**
-- Total plans completed: 10
-- Average duration: 10.8 min
-- Total execution time: 1.68 hours
+**Velocity (from v1.0 + v2.0):**
+- Total plans completed: 11
+- Average duration: 10.5 min
+- Total execution time: 1.80 hours
+
+| Phase | Plan | Duration | Tasks | Files |
+|-------|------|----------|-------|-------|
+| 07 | 01 | 7 min | 2 | 5 |
 
 *Updated after each plan completion*
 
@@ -41,6 +45,10 @@ Recent decisions affecting current work:
 - [v1.0]: Raw SQL for migration ops — no dialect dependency
 - [v1.0]: Lazy singleton for ANBIMA/NYSE calendars — avoid load-time overhead
 - [v1.0]: Redis ConnectionPool via connection_pool= param — avoid premature closure
+- [v2.0-07-01]: Sync sessions for data loader — agents are batch processes, not concurrent web requests
+- [v2.0-07-01]: Async bridge in _persist_signals using ThreadPoolExecutor when event loop is running
+- [v2.0-07-01]: COALESCE(release_time, observation_date) for flow_data PIT filtering on nullable release_time
+- [v2.0-07-01]: Dedup macro_series by observation_date keeping highest revision_number for PIT correctness
 
 ### Pending Todos
 
@@ -56,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 7 planned — ready for execution
-Resume action: /gsd:execute-phase 7
+Stopped at: Completed 07-01-PLAN.md
+Resume action: Continue executing phase 7 (07-02 pending)

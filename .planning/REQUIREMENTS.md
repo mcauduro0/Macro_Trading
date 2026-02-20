@@ -15,10 +15,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Agent Framework
 
-- [ ] **AGENT-01**: BaseAgent abstract class with Template Method pattern: load_data → compute_features → run_models → generate_narrative → persist_signals
-- [ ] **AGENT-02**: AgentSignal dataclass with signal_id, direction (LONG/SHORT/NEUTRAL), strength, confidence (0-1), value, horizon_days, metadata
-- [ ] **AGENT-03**: AgentReport dataclass combining signals, narrative text, model diagnostics, and data quality flags
-- [ ] **AGENT-04**: PointInTimeDataLoader utility querying macro_series, curves, market_data with release_time <= as_of_date constraint
+- [x] **AGENT-01**: BaseAgent abstract class with Template Method pattern: load_data → compute_features → run_models → generate_narrative → persist_signals
+- [x] **AGENT-02**: AgentSignal dataclass with signal_id, direction (LONG/SHORT/NEUTRAL), strength, confidence (0-1), value, horizon_days, metadata
+- [x] **AGENT-03**: AgentReport dataclass combining signals, narrative text, model diagnostics, and data quality flags
+- [x] **AGENT-04**: PointInTimeDataLoader utility querying macro_series, curves, market_data with release_time <= as_of_date constraint
 - [ ] **AGENT-05**: AgentRegistry managing execution order (inflation → monetary → fiscal → fx → cross_asset) with run_all(as_of_date)
 - [ ] **AGENT-06**: Signal persistence to signals hypertable with ON CONFLICT DO NOTHING idempotency
 - [ ] **AGENT-07**: Alembic migration adding agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON)
@@ -158,10 +158,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGENT-01 | Phase 7 | Pending |
-| AGENT-02 | Phase 7 | Pending |
-| AGENT-03 | Phase 7 | Pending |
-| AGENT-04 | Phase 7 | Pending |
+| AGENT-01 | Phase 7 | Complete |
+| AGENT-02 | Phase 7 | Complete |
+| AGENT-03 | Phase 7 | Complete |
+| AGENT-04 | Phase 7 | Complete |
 | AGENT-05 | Phase 7 | Pending |
 | AGENT-06 | Phase 7 | Pending |
 | AGENT-07 | Phase 7 | Pending |

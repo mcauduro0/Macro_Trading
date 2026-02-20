@@ -51,7 +51,7 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — BaseAgent ABC, AgentSignal/AgentReport dataclasses, SignalDirection/SignalStrength enums, PointInTimeDataLoader with PIT queries, and dependency installation (statsmodels, scikit-learn)
+- [x] 07-01-PLAN.md — BaseAgent ABC, AgentSignal/AgentReport dataclasses, SignalDirection/SignalStrength enums, PointInTimeDataLoader with PIT queries, and dependency installation (statsmodels, scikit-learn)
 - [ ] 07-02-PLAN.md — AgentRegistry with ordered execution, signal persistence to signals hypertable, Alembic migration for agent_reports table, and agent framework tests
 
 ### Phase 8: Inflation & Monetary Policy Agents
@@ -184,7 +184,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 7. Agent Framework | 0/2 | Not started | - |
+| 7. Agent Framework | 1/2 | In Progress|  |
 | 8. Inflation & Monetary Agents | 0/3 | Not started | - |
 | 9. Fiscal & FX Agents | 0/2 | Not started | - |
 | 10. Cross-Asset & Backtesting | 0/3 | Not started | - |
