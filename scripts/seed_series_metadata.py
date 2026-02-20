@@ -35,6 +35,7 @@ DATA_SOURCES = [
     {"name": "BCB_FX_FLOW", "base_url": "https://api.bcb.gov.br", "auth_type": "none", "rate_limit_per_minute": 180, "default_locale": "pt-BR", "notes": "BCB FX flow data"},
     {"name": "IBGE_SIDRA", "base_url": "https://apisidra.ibge.gov.br", "auth_type": "none", "rate_limit_per_minute": 60, "default_locale": "pt-BR", "notes": "IBGE SIDRA - IPCA by component"},
     {"name": "STN_FISCAL", "base_url": "https://api.bcb.gov.br", "auth_type": "none", "rate_limit_per_minute": 180, "default_locale": "pt-BR", "notes": "STN Fiscal - government fiscal data from BCB SGS"},
+    {"name": "ANBIMA", "base_url": "https://api-sandbox.anbima.com.br", "auth_type": "bearer_token", "rate_limit_per_minute": 300, "default_locale": "pt-BR", "notes": "ANBIMA - ETTJ curves, NTN-B indicative rates, IMA indices (pending API access)"},
 ]
 
 

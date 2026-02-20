@@ -10,6 +10,9 @@ Phase 3 connectors (7):
     BcbFocusConnector, BcbFxFlowConnector, B3MarketDataConnector,
     CftcCotConnector, IbgeSidraConnector, StnFiscalConnector,
     TreasuryGovConnector
+
+Placeholder connectors (1):
+    AnbimaConnector (pending API access)
 """
 
 from .base import (
@@ -35,6 +38,9 @@ from .ibge_sidra import IbgeSidraConnector
 from .stn_fiscal import StnFiscalConnector
 from .treasury_gov import TreasuryGovConnector
 
+# Placeholder connectors (pending API access)
+from .anbima import AnbimaConnector
+
 __all__ = [
     # Base
     "BaseConnector",
@@ -55,4 +61,6 @@ __all__ = [
     "IbgeSidraConnector",
     "StnFiscalConnector",
     "TreasuryGovConnector",
+    # Placeholder connectors
+    "AnbimaConnector",
 ]
