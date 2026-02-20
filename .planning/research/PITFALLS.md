@@ -1,349 +1,356 @@
-# Pitfalls Research
+# Domain Pitfalls: v2.0 Quantitative Models & Agents
 
-**Domain:** Macro Trading Data Infrastructure
-**Researched:** 2026-02-19
-**Confidence:** HIGH (domain-specific pitfalls well-documented across multiple authoritative sources)
+**Domain:** Global macro fund -- analytical agents, backtesting, strategies, risk management
+**Researched:** 2026-02-20
+**Confidence:** HIGH (pitfalls verified across academic literature, practitioner post-mortems, official documentation, and codebase inspection)
 
 ## Critical Pitfalls
 
-These are mistakes that cause data corruption, silent signal degradation, or full rewrites.
+Mistakes that cause rewrites, invalid backtests, or dangerous production behavior.
 
-### Pitfall 1: Look-Ahead Bias from Missing Point-in-Time Discipline
+### Pitfall 1: Look-Ahead Bias in Agent Computations
 
-**What goes wrong:**
-The pipeline stores only the latest revised value for macroeconomic series (GDP, NFP, CPI). When signals or backtests consume this data, they use information that was not available at the time of the trading decision. GDP Q1 2014 was first released at 17,149.6, revised to 17,101.3 a month later, then revised again to 17,016.0. A naive `get_series()` call returns only the final revision. Any signal built on this data is cheating -- it "knew" the revised number before the market did.
-
-**Why it happens:**
-Most free APIs (FRED `get_series`, BCB SGS) return only the current value by default. Developers fetch and store data without realizing they are overwriting the original release with a revision. The pipeline "works" but the data is silently wrong for any temporal analysis.
-
-**How to avoid:**
-- Use ALFRED vintage dates via `fredapi.get_series_all_releases()` or `get_series_first_release()` for every revisable series.
-- Design the schema with three date columns per observation: `observation_date`, `release_date` (when this value was first published), and `vintage_date` (which snapshot of reality this belongs to).
-- Store every revision as a separate row, not an UPDATE to the existing row.
-- For BCB SGS series that lack vintage tracking, record `ingestion_timestamp` as a proxy for "known-since" and never overwrite.
-- Build a `get_as_of(series, as_of_date)` query function that returns only data known at a given point in time. This is the only function signal generation code should call.
-
-**Warning signs:**
-- Backtest results that are "too good" -- especially on macro signals using GDP, employment, or inflation data.
-- No `release_date` or `vintage_date` column in the schema.
-- UPDATE statements in the ingestion pipeline for revisable series.
-- Downstream code calling `SELECT * WHERE observation_date <= X` without filtering on `release_date <= X`.
-
-**Phase to address:**
-Phase 1 (Schema Design). This must be in the foundational schema. Retrofitting point-in-time correctness requires reingesting all data with vintage information, which is effectively a rewrite.
-
-**Confidence:** HIGH -- This is the most documented pitfall in quantitative macro research. CEIC, Macrosynergy/JPMaQS, and the Philadelphia Fed Real-Time Data Set all exist specifically because this problem destroyed research results at scale.
-
----
-
-### Pitfall 2: Free API Fragility Causing Silent Data Gaps
-
-**What goes wrong:**
-The pipeline depends on 200+ series from free APIs (Yahoo Finance/yfinance, BCB SGS, FRED, CFTC, IBGE). These APIs break without warning. Yahoo Finance has no official API -- yfinance is a web scraper that fails with 429 errors when Yahoo changes rate limits (documented crackdown in late 2024, ongoing in 2025). BCB SGS can be slow or unresponsive under load. CFTC changes CSV formats without notice (documented format break in June 2015 that broke automated parsers). The pipeline runs, returns partial data, and nobody notices the gap until a signal produces garbage weeks later.
+**What goes wrong:** Agent models accidentally use data that was not available at the as_of_date. This is the single most destructive error in quantitative trading systems.
 
 **Why it happens:**
-Free APIs have no SLA, no deprecation notice, and no obligation to maintain backward compatibility. Developers build pipelines that assume APIs always return data, and treat HTTP 200 with partial/empty results as success.
+- Developer queries `macro_series` by `observation_date` column instead of filtering on `release_time`
+- Feature computation uses pandas operations that look forward (e.g., `shift(-1)`, future-dated rolling windows)
+- Agent loads "latest" data without checking publication lag
+- Brazilian macro data has variable release lags: IPCA ~15 days, GDP ~90 days, Focus survey is weekly but published Monday for the prior week
+- The v1.0 `_bulk_insert` in `src/connectors/base.py` (line 277) uses `ON CONFLICT DO NOTHING`, which silently drops revised data points. If a series is revised (GDP, employment), only the first-seen revision persists. The agent then uses a stale value without knowing a revision exists.
 
-**How to avoid:**
-- Implement per-source health checks that verify: (a) expected number of observations returned, (b) latest observation is within expected staleness window, (c) values are within reasonable bounds (not all zeros, not all NaN).
-- Build a `data_quality_log` table that records every ingestion run: source, series_id, rows_fetched, rows_expected, latency_ms, http_status, error_message.
-- Set up alerting when any series goes stale beyond its expected publication frequency (e.g., FRED monthly series not updated in 35 days).
-- For Yahoo Finance specifically: cache aggressively, implement exponential backoff, and have a fallback source (EODHD, Finnhub) for critical price series.
-- For CFTC: use the official Public Reporting Environment API (launched Oct 2022) or historical compressed files rather than scraping HTML pages. Use community libraries (`cot_reports`, `pycot-reports`) that handle format changes.
-- For BCB SGS: use `python-bcb` which handles caching and date format conversion, rather than raw HTTP calls.
+**Codebase-specific risk:** The `MacroSeries` model (`src/core/models/macro_series.py`) correctly has `release_time` (TIMESTAMPTZ) and `revision_number` columns. However, no v1.0 code enforces PIT queries -- there is no `PointInTimeDataLoader` class yet. Every v2.0 agent MUST use a centralized data loader that enforces `WHERE release_time <= :as_of_date AND revision_number = (SELECT MAX(revision_number) ... WHERE release_time <= :as_of_date)`.
 
-**Warning signs:**
-- No monitoring dashboard showing per-source ingestion success rates.
-- Series with unexplained gaps in the time dimension (missing weeks/months).
-- Ingestion logs that only record success/failure, not row counts.
-- Pipeline returns empty DataFrame without raising an error.
+**Consequences:** Backtests show fantasy returns. Strategies appear profitable because they "knew" inflation/GDP numbers before publication. Real trading produces opposite results.
 
-**Phase to address:**
-Phase 2 (Ingestion Layer). Build the monitoring and health-check infrastructure alongside the first collectors, not after.
+**Prevention:**
+1. ALL data access goes through `PointInTimeDataLoader` -- the single enforcement point
+2. Every query includes `WHERE release_time <= :as_of_date`
+3. Integration test: run agent for date X, then verify no data with `release_time > X` was loaded
+4. For revised series, use `MAX(revision_number) WHERE release_time <= :as_of_date` (the latest revision known at that time)
+5. Change `_bulk_insert` to use `ON CONFLICT DO UPDATE` for macro_series so revised data replaces stale data when `revision_number` is higher
 
-**Confidence:** HIGH -- yfinance rate-limiting issues are extensively documented on GitHub (issues #2125, #2128, #2422). CFTC format changes are documented in their Historical Special Announcements. BCB SGS fragility confirmed by multiple community library authors.
+**Detection:** Backtest Sharpe ratio > 2.0 for a macro strategy is a red flag. Real macro strategies rarely exceed Sharpe 1.0-1.5 out-of-sample.
 
----
+### Pitfall 2: Kalman Filter Convergence Failures
 
-### Pitfall 3: Brazilian Data Format Misinterpretation
-
-**What goes wrong:**
-Brazilian financial data uses comma as decimal separator (`1.234,56` means one thousand two hundred thirty-four point five six), DD/MM/YYYY date format, and PTAX exchange rates with MM-DD-YYYY in some BCB endpoints. A parser that treats `01/02/2024` as January 2nd (US format) when it actually means February 1st (Brazilian format) produces silently wrong data. A parser that treats `1.234` as 1.234 (US) when it actually means 1234 (Brazilian thousands separator) produces values off by ~1000x.
+**What goes wrong:** The Laubach-Williams r-star Kalman Filter fails to converge, produces exploding parameter estimates, or generates nonsensical neutral rate values.
 
 **Why it happens:**
-Python's `pandas.read_csv()` defaults to US locale conventions. When ingesting from BCB, IBGE, ANBIMA, or B3 sources, the data arrives in Brazilian format but gets parsed with default settings. The error is silent because `1.234` is a valid float in both conventions -- just with different meanings.
+- **No official Python implementation.** The NY Fed provides R code only. Python translation introduces bugs in matrix operations.
+- **Matrix positive-definiteness errors.** The covariance matrix P can lose positive-definiteness during the update step due to floating point arithmetic, causing `np.linalg.cholesky` to fail.
+- **Exploding parameters.** If the process noise Q is too large relative to observation noise R, the filter "trusts" noisy observations too much and r-star oscillates wildly.
+- **COVID shock sensitivity.** The 2020 GDP collapse produces extreme output gap values that dominate the MUE (Median Unbiased Estimator) three-stage procedure, distorting r-star for years.
+- **End-point instability.** Kalman filter estimates are most uncertain at the end of the sample -- exactly where you need them for trading decisions. The NY Fed itself notes a +/-2.5pp confidence interval on r-star.
+- **MUE three-stage misspecification.** The Laubach-Williams model uses a three-stage estimation procedure where errors compound: stage 1 estimates feed stage 2, which feeds stage 3.
 
-**How to avoid:**
-- Create a `BrazilianDataParser` utility that enforces `decimal=','` and `thousands='.'` for all BR sources.
-- For date parsing, use explicit format strings (`%d/%m/%Y` for BCB SGS, `%d-%m-%Y` for some ANBIMA files) -- never rely on `pd.to_datetime()` with `infer_datetime_format=True`.
-- Use the PYield library's approach: the first non-null string determines the format for the entire collection, with explicit DD-MM-YYYY vs YYYY-MM-DD disambiguation.
-- Tag every data source in a registry with its locale (`pt_BR` vs `en_US`) and date format, so parsers automatically select the correct convention.
-- Write explicit round-trip tests: ingest a known Brazilian-format file, parse it, and assert that `1.234,56` becomes `1234.56` and `01/02/2024` becomes `2024-02-01`.
+**Consequences:** Taylor Rule produces wrong implied rate. Monetary agent gives confident but incorrect signals. Strategies based on "policy gap" trade in the wrong direction.
 
-**Warning signs:**
-- Yield values that are exactly 1000x too large or too small.
-- Date series that have suspicious gaps on the 13th-31st of every month (dates that cannot be valid in MM/DD format get silently dropped or error).
-- PTAX exchange rates that look like BRL is worth 5000x USD instead of ~5x.
-- Tests that pass when run with US locale but fail with Brazilian locale.
+**Prevention:**
+1. **Start with fixed r-star.** Use r* = 4.5% for Brazil (BCB consensus) and r* = 0.5% for US (pre-COVID median estimate). Only upgrade to Kalman Filter if fixed r* signals are validated out-of-sample.
+2. **Joseph stabilized Kalman Filter.** Force P matrix symmetry after each update: `P = (P + P.T) / 2`. Add small epsilon to diagonal: `P += 1e-8 * np.eye(n)`.
+3. **Bound r-star output.** Clamp to [1%, 8%] for Brazil, [-1%, 4%] for US. Values outside these ranges are almost certainly estimation artifacts.
+4. **Exclude COVID period.** Either dummy-variable the 2020 Q2-Q4 observations or exclude them from the estimation window entirely.
+5. **Use `statsmodels.tsa.statespace.UnobservedComponents`** rather than manual Kalman Filter implementation. It handles numerical stability internally.
 
-**Phase to address:**
-Phase 1 (Schema Design) and Phase 2 (Ingestion Layer). The locale registry belongs in the source metadata schema. The parsers must be correct from the first ingestion.
+**Detection:** r-star estimate jumping by >100bps between adjacent quarters, or values outside economically plausible ranges.
 
-**Confidence:** HIGH -- PYield, python-bcb, and brasa libraries all explicitly address this. Brazilian date/number format confusion is a well-known localization trap.
+### Pitfall 3: HMM Regime Detection Instability
 
----
-
-### Pitfall 4: TimescaleDB Compression Destroying Backfill Capability
-
-**What goes wrong:**
-The team enables aggressive compression policies (e.g., compress after 7 days) on hypertables. Later, when a backfill from 2010 is needed -- or when a data revision arrives for a month-old GDP number -- the pipeline needs to UPDATE or INSERT into compressed chunks. In TimescaleDB versions before 2.11, this was impossible without manual decompression. Even in 2.16+, bulk modifications on compressed chunks require decompression, which can temporarily bloat disk usage by 10-14x and cause compression policy conflicts.
+**What goes wrong:** The Hidden Markov Model produces unstable regime classifications that flip frequently, overfit to in-sample data, or produce meaningless labels.
 
 **Why it happens:**
-Compression is presented as a "set and forget" optimization. Developers enable it for storage savings (up to 90%) without realizing it creates a tension with the revision-tracking and backfill requirements that are core to macro data infrastructure.
+- **Label switching problem.** HMM states are arbitrary (State 0, State 1, ...). After each re-estimation, "State 0" may correspond to a different regime than before. hmmlearn does NOT solve this automatically.
+- **Overfitting with too many states.** Using 4 states (Goldilocks, Reflation, Stagflation, Deflation) when the data only supports 2-3 regimes. BIC/AIC model selection often favors fewer states for macro time series.
+- **No ground truth.** Unlike supervised learning, there is no "correct" regime label. The HMM finds statistical patterns that may not correspond to economically meaningful regimes.
+- **Sensitive to initialization.** Different random seeds produce different regime assignments.
+- **Filtered vs Viterbi probabilities.** `predict()` returns Viterbi (globally optimal) labels, but for real-time use you need forward-filtered probabilities. The Viterbi path can change retroactively when new data arrives -- this is a form of look-ahead bias in backtests.
+- **Short training window.** Macro data at monthly frequency gives ~120-180 observations for 10-15 years. This is barely sufficient for estimating 4-state HMM parameters (4 means + 4 variances + 12 transition probabilities = 20 parameters from 180 observations).
 
-**How to avoid:**
-- Use TimescaleDB 2.16+ which has 1000x faster DML on compressed data when filtering by `segmentby` columns.
-- Set `segmentby` to the column used in WHERE clauses during backfill (e.g., `series_id`) and `orderby` to `time ASC` (not the default `DESC`).
-- Set `compress_after` to a generous delay for revisable series: at least 90 days for monthly macro data (GDP revisions can come 3 months later), 30 days for weekly data.
-- For the 2010 backfill specifically: run it BEFORE enabling compression policies. Ingest historical data first, verify it, then turn on compression.
-- Leave 20-30% extra disk headroom to accommodate temporary decompression during bulk operations.
-- Always disable compression policy before bulk decompression; re-enable after the operation completes.
+**Consequences:** Position sizing based on unstable regime labels whipsaws between max risk and zero risk. Backtest looks smooth because Viterbi retroactively picks the "right" regimes.
 
-**Warning signs:**
-- Disk space alarms during backfill operations.
-- Compression policies running concurrently with bulk INSERT/UPDATE jobs.
-- `compress_after` set to less than the maximum revision delay for the series in that hypertable.
-- Backfill jobs failing with "cannot modify compressed chunk" errors.
+**Prevention:**
+1. **Start with rule-based regime detection.** Use z-scores of VIX, credit spreads, DXY, and yield curve slope. Score each -1 to +1, weighted average. Thresholds: >0.3 = risk-on, <-0.3 = risk-off, else transition. This is transparent, stable, and debuggable.
+2. **If using HMM, use 2 states first** (risk-on / risk-off). Only add states if 2-state model clearly misses important dynamics.
+3. **Fix label switching.** After fitting, sort states by mean return (State 0 = lowest mean = risk-off). Re-sort every time you re-estimate.
+4. **Use filtered probabilities, not Viterbi.** `model.predict_proba(X)` gives forward-filtered state probabilities. Use these as continuous regime weights, not hard labels.
+5. **Re-estimate infrequently.** Re-fit HMM quarterly, not daily. Use fixed parameters for daily regime scoring.
+6. **Parallel fallback.** Always compute the rule-based z-score regime alongside HMM. If they disagree strongly, flag it as low confidence.
 
-**Phase to address:**
-Phase 1 (Schema Design) for `segmentby`/`orderby` configuration. Phase 3 (Backfill) for compression timing. The 2010 backfill must complete before compression policies are activated.
+**Detection:** Regime flipping more than once per month. Backtest Sharpe of regime-overlay strategy drops >50% when switching from Viterbi to filtered probabilities.
 
-**Confidence:** HIGH -- TimescaleDB documentation explicitly warns about this. Bug reports (#6255, #7502) document real-world compression policy failures.
+### Pitfall 4: Overfitting Agent Models to In-Sample Data
 
----
-
-### Pitfall 5: Curve Construction from Proxy Data Without Acknowledging the Approximation
-
-**What goes wrong:**
-The project plans to construct a BRL interest rate curve (DI curve) from BCB swap rate series because Bloomberg DI futures data is not available for free. The developer treats the BCB swap series as a direct substitute for DI futures, applies naive linear interpolation between available tenors, and produces a "yield curve" that looks reasonable but has material pricing errors at interpolated maturities. Worse, the interpolation is decoupled from the bootstrap -- rates are interpolated first, then bootstrapped, producing inconsistent forward rates with discontinuities.
+**What goes wrong:** Agent models (Phillips Curve, BEER, DSA) are calibrated on the same data used for backtesting, producing inflated performance metrics.
 
 **Why it happens:**
-BCB publishes Pre x DI swap rates at standard tenors (30, 60, 90, 180, 360 days, etc.) which look like they should map directly to a curve. But these are swap rates, not zero rates or forward rates. The mapping requires careful bootstrapping. The Hagan & West (2006) paper demonstrates that decoupling interpolation from bootstrapping is a fundamental error that produces arbitrage-free-violating curves.
+- **Parsimony principle violation.** Using 8+ regressors in a Phillips Curve when 3-4 suffice. The OLS R-squared looks great in-sample but the model has no predictive power out-of-sample.
+- **Rolling window too short.** A 2-year rolling window for OLS regression gives only 24 monthly observations for 4+ parameters. The estimates are highly unstable.
+- **No out-of-sample validation.** Running backtest on 2015-2025 with models trained on 2015-2025 is not a real test.
+- **Data snooping across 25 strategies.** Testing 25 strategy variants and selecting those with best Sharpe. Harvey, Liu & Zhu (2016) show that with 300+ tested factors in academic finance, the probability of finding a spurious Sharpe > 1.0 by chance approaches 100%. With 25 strategies, the false discovery rate is still significant.
+- **BEER model structural breaks.** The BRL-to-fundamentals relationship broke down in 2024 when BRL depreciated 27% despite record terms of trade -- a fiscal regime shift invalidated the equilibrium. Rolling OLS cannot capture this.
 
-**How to avoid:**
-- Document explicitly that the curve is an approximation built from proxy data, not from exchange-traded DI futures. Store a `curve_source_type` metadata field (`proxy_bcb_swap` vs `exchange_di_futures`).
-- Use monotone convex interpolation (following Hagan & West), which produces continuous forward rates and does not require routine manual adjustment of inputs. This is the method the US Treasury adopted in 2020 specifically to avoid proxy-data distortions.
-- Integrate the interpolation into the bootstrap loop iteratively: guess initial zero rates, interpolate, bootstrap, repeat until convergence.
-- Validate the constructed curve against ANBIMA's published indicative rates (available for the last 5 business days) as a sanity check.
-- Use the PYield library or QuantLib's Brazilian conventions for business day counting (BUS/252) and ANBIMA holiday calendar.
+**Consequences:** Strategies based on overfit agent signals generate strong backtest returns but fail in production. Worse, overfit models can give confidently wrong signals.
 
-**Warning signs:**
-- Forward rates that are negative or have large discontinuities between tenors.
-- Curve values that diverge materially from ANBIMA's published indicative rates.
-- No documentation in the codebase about the proxy nature of the data source.
-- Using `np.interp()` (linear interpolation) for yield curve construction.
+**Prevention:**
+1. **Parsimony first.** Start with the simplest model specification (2-3 features). Add complexity only if it improves out-of-sample performance.
+2. **10-year rolling windows for OLS.** This gives 120+ monthly observations, which is adequate for 3-4 parameter models. For Brazil-specific models with data from 2006+, use maximum available history.
+3. **Walk-forward validation.** Train on 2010-2018, test on 2019. Then train on 2010-2019, test on 2020. Compare in-sample and out-of-sample Sharpe.
+4. **Deflated Sharpe Ratio.** Apply Bailey & Lopez de Prado (2014) haircut based on number of strategy variants tested. A backtest Sharpe of 0.8 after deflation is more valuable than 1.5 before deflation.
+5. **Sanity-check model coefficients.** Phillips Curve: inflation should be positively correlated with output gap. BEER: BRL should appreciate when terms of trade improve. If signs are wrong, the model is overfit.
 
-**Phase to address:**
-Phase 4 (Derived Data / Curve Construction). This is a later phase because it depends on the raw data pipeline being correct first, but it requires dedicated research and careful implementation.
+**Detection:** In-sample Sharpe > 2x out-of-sample Sharpe. Model coefficients changing sign between rolling windows. R-squared > 0.6 for a macro model (suspiciously high).
 
-**Confidence:** MEDIUM -- The general curve construction pitfalls are well-documented (Hagan & West, Quantifi). The specific BCB swap-to-DI-curve mapping is less documented in English-language sources and needs validation against ANBIMA indicative rates.
+### Pitfall 5: DI Curve Day Count Convention Errors (BUS/252 vs ACT/365)
 
----
+**What goes wrong:** Brazilian fixed income uses business-day/252 convention for rate annualization and discounting, but the codebase uses calendar-day/365 convention throughout, producing incorrect curve interpolation, carry calculations, forward rates, and DV01 values.
 
-### Pitfall 6: Timezone and Business Calendar Misalignment Across Data Sources
+**Codebase evidence:**
+- `src/transforms/curves.py` line 45: `obs_years = np.array(observed_tenors_days) / 365.0` -- should be BUS/252 for DI curves
+- `src/transforms/curves.py` line 75: `y1 = t1_days / 365.0` in forward rate calculation -- wrong for DI
+- `src/transforms/curves.py` line 98: `carry_bps = ... * (horizon_days / 365.0)` -- wrong for DI carry
+- `src/transforms/returns.py` line 18: `returns.rolling(w).std() * np.sqrt(252)` -- uses 252 for annualization but this is hardcoded and may be wrong for instruments that trade fewer days (ANBIMA calendar has ~249 business days per year)
+- `src/transforms/returns.py` line 52: Rolling Sharpe also hardcodes `* 252` and `* np.sqrt(252)`
 
-**What goes wrong:**
-The pipeline ingests data from US sources (FRED, CFTC -- Eastern Time), Brazilian sources (BCB, IBGE, ANBIMA -- Brasilia Time, UTC-3), and global market data (Yahoo Finance -- exchange-local times). Without rigorous timezone handling, a US NFP release at 8:30 AM ET on a Friday and a Brazilian IPCA release at 9:00 AM BRT on the same Friday end up with the same naive timestamp, but they are actually 2 hours apart. Worse, when the US observes DST (March-November) but Brazil does not (since 2019), the offset between the two shifts from 2 hours to 1 hour. Joining these series on date alone produces incorrect temporal alignment.
+**Why it matters:** A 1-year DI future at 13.50% annual rate:
+- With BUS/252: price = 100,000 / (1.1350)^(252/252) = 88,106
+- With ACT/365: price = 100,000 / (1.1350)^(365/365) = 88,106 (same at 1Y by coincidence)
+- But at 6 months: BUS/252 with 126 bus days vs ACT/365 with 182 calendar days produces different prices, DV01s, and carry calculations.
 
-**Why it happens:**
-Developers use `timestamp` (without timezone) in the database, or store dates without times. When both NFP and IPCA have `observation_date = 2024-03-08`, they appear simultaneous, but NFP was released at 13:30 UTC and IPCA at 12:00 UTC. For daily-frequency macro data this seems harmless, but for intraday signals or event studies, it breaks causality.
+**Additionally:** The `compute_forward_rate` function uses simple compounding (line 77: `(r2*y2 - r1*y1) / (y2-y1)`) instead of the Brazilian convention of exponential compounding: `f = [(1+r2)^y2 / (1+r1)^y1]^(1/(y2-y1)) - 1`.
 
-**How to avoid:**
-- Use `TIMESTAMPTZ` (timestamp with timezone) exclusively in TimescaleDB. Never use naive `TIMESTAMP` or `DATE` for release times.
-- Store all timestamps in UTC internally. Convert to local time only at the display layer.
-- Maintain an explicit `release_timezone` column in the source metadata table (e.g., `America/New_York` for FRED, `America/Sao_Paulo` for BCB).
-- Use IANA timezone identifiers, never hardcoded UTC offsets (Brazil abandoned DST in 2019, but historical data from before 2019 needs DST-aware conversion).
-- Build a unified holiday calendar combining ANBIMA holidays (Brazilian financial calendar), NYSE holidays (US market calendar), and a union calendar for cross-market analysis. Use `anbima_calendar` for Brazil and `exchange_calendars` for US/global.
-- For daily data, distinguish between `observation_date` (what period the data covers), `release_date` (when it became available), and `release_time` (exact UTC moment of availability, if known).
+**Prevention:**
+1. Create separate curve functions for Brazilian instruments (`compute_di_forward_rate_bus252`) and US instruments (`compute_ust_forward_rate_act365`)
+2. The `interpolate_curve` function should accept a `day_count` parameter: `"BUS252"` or `"ACT365"`
+3. Tenor-to-year conversion should use a business day calendar for Brazilian instruments, not a fixed divisor
+4. Store the day count convention in `series_metadata` or `instruments` table and look it up at computation time
 
-**Warning signs:**
-- Using `TIMESTAMP` without `TZ` in the schema.
-- Hardcoded UTC offsets like `- timedelta(hours=3)` instead of IANA timezone conversion.
-- Cross-market joins that produce incorrect matches during DST transition weeks (mid-March, early November).
-- Holiday mismatches: pipeline expects data on a day when the Brazilian market is closed (e.g., Carnival, Tiradentes) but the US market is open.
+**Detection:** Carry/rolldown calculations for DI futures are off by 5-15% compared to Bloomberg or B3 official values.
 
-**Phase to address:**
-Phase 1 (Schema Design) for column types and timezone metadata. Phase 2 (Ingestion Layer) for timezone conversion logic. Phase 3 (Backfill) for historical DST-aware conversion of pre-2019 Brazilian data.
+### Pitfall 6: LLM Hallucination in Narrative Generation
 
-**Confidence:** HIGH -- Multiple authoritative sources confirm UTC storage as non-negotiable for multi-market systems. Brazil's DST abolition in 2019 is a documented gotcha.
-
----
-
-### Pitfall 7: Non-Idempotent Backfill Creating Duplicates or Data Loss
-
-**What goes wrong:**
-The backfill pipeline is designed to load data from 2010 to present. It runs, partially fails at 2015 due to an API timeout, and is restarted. Without idempotent design, the rerun either (a) creates duplicate rows for 2010-2015 data (INSERT without dedup), or (b) fails because of unique constraint violations, or (c) overwrites 2010-2015 data with potentially different values (if using DELETE-then-INSERT and the API returned different data on the second call due to a revision).
+**What goes wrong:** Claude API generates plausible-sounding but factually incorrect macro analysis. The narrative contradicts the actual signals, invents data points, or provides analysis that doesn't follow from the inputs.
 
 **Why it happens:**
-Developers build the "happy path" first -- a loop that fetches date ranges and INSERTs them. Error handling and restart logic are added later (or never). The pipeline works on the first run but fails catastrophically on any subsequent run.
+- LLMs are trained to produce fluent text, not to accurately represent structured data. Research (2024-2025) shows financial LLM hallucination rates of 17-41% without grounding.
+- The prompt may not include sufficient context for the model to generate accurate analysis
+- The model may "fill in" details that seem reasonable but are not in the data
+- Temperature > 0 introduces randomness that can flip conclusions
+- LLMs have a known tendency to generate plausible numbers that are not sourced from input data
 
-**How to avoid:**
-- Use UPSERT (`INSERT ... ON CONFLICT DO UPDATE`) with a composite natural key: `(series_id, observation_date, vintage_date)`. This is idempotent by definition -- rerunning produces the same result.
-- Make the pipeline accept explicit `--start-date` and `--end-date` parameters. Never use `datetime.now()` or hardcoded dates.
-- Generate deterministic record IDs from content (hash of series_id + observation_date + vintage_date), not from auto-increment or random UUIDs.
-- Log every backfill run in a `backfill_runs` audit table: `run_id`, `series_id`, `date_range`, `rows_upserted`, `rows_unchanged`, `started_at`, `completed_at`, `status`.
-- Chunk the backfill by year or month, so a failure in 2018 data does not require re-ingesting 2010-2017.
-- Run backfill against staging tables first, validate, then swap into production (or UPSERT into production from staging).
+**Consequences:** Misleading daily brief that contradicts the quantitative signals. If a human reads the narrative and overrides the model, the LLM became a negative-value component.
 
-**Warning signs:**
-- Row counts that change when the same backfill is run twice.
-- Auto-incrementing primary keys in the time series tables (suggests INSERT-only, not UPSERT).
-- No `backfill_runs` audit table.
-- Pipeline that uses `datetime.now()` anywhere in the data path.
-- No `--start-date`/`--end-date` parameters on the backfill CLI.
+**Prevention:**
+1. **Template-based fallback is the primary output.** Build a complete rule-based narrative generator that fills in blanks from signal values. This is the default.
+2. **LLM is enhancement, not replacement.** If Claude API is available, use it to improve prose quality on top of the template output. Never let LLM generate numbers or signal directions.
+3. **Verify LLM output against signals.** Post-process: check that the narrative's directional language matches the actual signal directions. Reject if contradictory.
+4. **Low temperature (0.2-0.3).** Reduce randomness in factual generation.
+5. **Structured prompt with explicit data.** Pass exact signal values, directions, and confidence scores in the prompt. Instruct: "Base your analysis ONLY on the provided data. Do not invent numbers."
+6. **Never call LLM during backtesting.** LLM calls are non-deterministic, slow, and expensive. The backtest loop must use only deterministic signal generation.
 
-**Phase to address:**
-Phase 2 (Ingestion Layer) for the UPSERT pattern. Phase 3 (Backfill) for the chunked execution and audit logging.
+**Detection:** Narrative says "inflation is falling" when INFLATION_BR_COMPOSITE direction is SHORT (meaning inflation is rising/hawkish). Any number in the narrative that doesn't match the input data.
 
-**Confidence:** HIGH -- Idempotent pipeline design is one of the most discussed topics in data engineering. Multiple authoritative guides (StartDataEngineering, ml4devs, KDnuggets) converge on the same UPSERT + audit + chunking pattern.
+**Cost management:** Claude Haiku is $0.80/MTok input for daily narrative generation. Use prompt caching (90% cost reduction for repeated system prompts). Budget ~$15-30/month for daily narratives. Sonnet ($3/MTok) only for weekly deep-dive reports.
 
----
+## Moderate Pitfalls
 
-## Technical Debt Patterns
+### Pitfall 7: Backtest Transaction Cost Underestimation
 
-Shortcuts that seem reasonable but create long-term problems.
+**What goes wrong:** Backtests assume negligible or uniform transaction costs for macro instruments that actually have heterogeneous and time-varying bid-ask spreads, particularly in Brazil.
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Store only latest value (no revisions) | Simpler schema, less storage | All backtests have look-ahead bias; cannot answer "what was known when" | Never for revisable macro series (GDP, NFP, CPI). Acceptable for non-revisable series (market prices). |
-| Use yfinance without fallback source | Fast to implement, zero cost | Pipeline breaks when Yahoo rate-limits; multi-day data gaps | Only during prototyping. Must have fallback before production. |
-| Single `observation_date` column (no release_time) | Simpler schema | Cannot determine data availability timing; event studies impossible | Never for a system that will support AI agents or intraday signal generation. |
-| Hardcoded series IDs throughout codebase | Quick iteration | Adding/renaming a series requires code changes in multiple files; no source-of-truth | Only in throwaway scripts. Production must use a series registry table. |
-| Skip ANBIMA holiday calendar | Avoid a dependency | Business day calculations wrong for Brazilian instruments; curve construction off by 1-2 days regularly | Never for Brazilian fixed income. Acceptable if only trading US instruments. |
-| Parse all dates with `pd.to_datetime(infer=True)` | Fewer lines of code | Silently misparses Brazilian DD/MM dates as MM/DD when day <= 12; produces wrong data that passes all sanity checks except on the 13th+ of the month | Never. Always use explicit format strings. |
-| Linear interpolation for yield curves | Easy to implement | Discontinuous forward rates; arbitrage-violating curves; hedging strategies that are not intuitively reasonable | Acceptable for rough approximations in research notebooks. Never for production curves. |
+**Why it matters:** Brazilian OTC instruments (NTN-B, NTN-F) have 3-5x wider spreads than exchange-traded DI futures. A strategy that looks profitable at 2bps round-trip may be unprofitable at the real 10-15bps for NTN-B OTC trades.
 
-## Integration Gotchas
+**Instrument-specific costs (approximate):**
 
-Common mistakes when connecting to external data sources.
+| Instrument | Spread (bps) | Commission | Total One-Way | Notes |
+|-----------|-------------|-----------|--------------|-------|
+| DI1 futures (B3) | 0.5-1.0 | 0.3 | 1.0-1.5 | Liquid front months |
+| DDI futures (B3) | 1.0-2.0 | 0.3 | 1.5-2.5 | Less liquid |
+| USDBRL NDF (OTC) | 2.0-3.0 | 0.0 | 2.0-3.0 | Dealer spread |
+| NTN-B (OTC) | 3.0-5.0 | 0.0 | 3.0-5.0 | Illiquid long-end |
+| DOL futures (B3) | 0.3-0.5 | 0.3 | 0.8-1.0 | Very liquid |
+| CDS Brazil (OTC) | 5.0-10.0 | 0.0 | 5.0-10.0 | Illiquid |
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| FRED API | Using `get_series()` which returns only latest revisions | Use `fredapi` with `get_series_all_releases()` or `get_series_first_release()` for revisable series; use ALFRED vintage dates |
-| BCB SGS | Sending DD/MM/YYYY dates to `dataInicial`/`dataFinal` as MM/DD/YYYY | Use `python-bcb` which handles date format conversion; explicitly use `%d/%m/%Y` format |
-| BCB PTAX | Treating buying rate and selling rate as interchangeable | PTAX has distinct bid/ask rates; use the correct one for your convention (selling rate is standard for most financial contracts) |
-| Yahoo Finance (yfinance) | No rate limit handling; no fallback | Implement exponential backoff; cache responses locally; have EODHD or Finnhub as fallback; limit to ~300 requests/hour |
-| CFTC COT | Scraping HTML pages instead of using the API | Use CFTC Public Reporting Environment API (since Oct 2022) or historical compressed CSV files; use `cot_reports` library |
-| CFTC COT | Assuming contract names are stable | Contract names change over time; use `cftc_contract_market_code` as the stable identifier, not the text name |
-| IBGE | Assuming data is available in English or ISO format | IBGE data uses Portuguese labels and Brazilian number/date formats; build explicit translation and parsing layers |
-| ANBIMA | Trying to download historical indicative rates | ANBIMA only publishes the last 5 business days online; historical data requires subscription or reconstruction from BCB series |
-| TimescaleDB | Enabling compression before backfill completes | Backfill all historical data first, verify integrity, then enable compression policies with appropriate delays |
+**Prevention:**
+- Use instrument-specific cost models, not a single flat rate
+- Default to 5 bps round-trip for exchange-traded, 10 bps for OTC
+- Add 2 bps market impact/slippage on top of spread
+- Strategies with monthly rebalancing are less sensitive to cost assumptions than daily/weekly strategies
+- Validate cost assumptions against real execution data when available
 
-## Performance Traps
+### Pitfall 8: Feature Engineering Data Leakage
 
-Patterns that work at small scale but fail as the dataset grows.
+**What goes wrong:** Feature computation inadvertently uses future data through pandas operations, separate from the PIT data loading issue (Pitfall 1). Even with correct PIT data loading, the feature engineering step itself can introduce look-ahead.
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| No `segmentby` on compressed hypertables | Full-chunk decompression on every DML targeting a single series | Set `segmentby='series_id'` so operations on one series only touch that segment | When you have 200+ series and do targeted updates/inserts |
-| Default chunk interval (7 days) for daily macro data | Thousands of nearly-empty chunks (1 row per day per series); slow query planning | Set `chunk_interval` to 1 year for daily macro data (200 series x 365 days = 73K rows/chunk, well within memory) | When chunk count exceeds ~1000 and query planning slows |
-| No continuous aggregates for common queries | Repeated full-table scans for rolling averages, z-scores, percentile ranks | Define continuous aggregates for standard transforms (e.g., 20-day rolling mean, YoY change) | When signal generation queries take >1s and are called per-series |
-| Fetching all 200+ series sequentially | Backfill takes days; daily ingestion takes hours | Use async I/O (`asyncio` + `aiohttp`) with per-source rate limiting; parallelize across sources, serialize within each source | When total series count exceeds ~50 and daily ingestion window is tight |
-| Storing every API response as raw JSON blobs | "We'll parse it later" -- but querying JSON is slow and schema is implicit | Parse and validate at ingestion time; store structured data in typed columns; archive raw responses separately for debugging | When analytical queries must scan JSON instead of typed columns |
-| No retention policy on raw/staging data | Staging tables grow unbounded; backup sizes balloon | Set retention policies on staging tables (30-90 days); archive to compressed cold storage | When staging data exceeds 100GB and backup windows stretch |
+**Common leakage patterns:**
+- `df.fillna(method='bfill')` -- fills missing values with FUTURE values
+- `df.interpolate()` -- default linear interpolation uses both past and future
+- `rolling().mean()` is safe (backward-looking), but `shift(-N)` is NOT safe
+- `z_score = (x - rolling_mean) / rolling_std` is safe only if the rolling window is fully backward-looking and the window parameter does not use `center=True`
+- Normalizing features by full-sample mean/std (should be expanding-window or rolling-window only)
+- Using `df.pct_change()` followed by `dropna()` shifts the index, causing alignment errors with other features
 
-## Security Mistakes
+**Prevention:**
+- Never use `bfill`, `shift(-N)`, or `center=True` in any feature computation
+- Test: compute features for date X, then verify that no input data has date > X
+- Use `expanding()` instead of full-sample statistics for normalization
+- Every feature function should take an explicit `as_of_date` parameter
 
-Domain-specific security issues for a macro trading data platform.
+### Pitfall 9: Agent Signal Correlation Causing Portfolio Concentration
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| API keys stored in source code or environment variables without encryption | Keys for FRED, Yahoo, EODHD leaked in git history; unauthorized data access; API key revoked by provider | Use a secrets manager (e.g., `python-dotenv` + `.env` in `.gitignore` minimum; Vault or cloud KMS for production). Never commit `.env` files. |
-| No authentication on the data API consumed by AI agents | Any process on the network can query the data platform; data exfiltration or injection possible | Require API key or JWT for all data access, even internal. AI agents get scoped read-only tokens. |
-| Signal/strategy logic stored alongside data pipeline code | Data breach exposes proprietary trading signals, not just infrastructure | Separate data infrastructure repo from signal/strategy repo. Different access controls, different deployment pipelines. |
-| CFTC/FRED data cached without access controls | Cached files on shared filesystem accessible to unauthorized users | Store cached data in a controlled location with appropriate file permissions; log access to audit table. |
-| No audit trail on data modifications | Cannot prove data integrity for compliance; cannot detect if data was tampered with | Log every INSERT/UPDATE/DELETE with user/process identity, timestamp, and before/after values for critical series. |
+**What goes wrong:** All 5 agents produce correlated signals because they share underlying macro data (e.g., IPCA feeds both InflationAgent and MonetaryPolicyAgent; USDBRL feeds both FxAgent and CrossAssetAgent). The portfolio concentrates in one direction without diversification.
 
-## "Looks Done But Isn't" Checklist
+**Why it is worse than it appears:** In normal markets, signal correlation is moderate (0.3-0.5). During crises, correlations spike toward 1.0 -- exactly when diversification is needed most. The portfolio goes from "diversified 5 signals" to "one bet, 5x leveraged."
 
-Things that appear complete but are missing critical pieces.
+**Codebase-specific risk:** The v1.0 `Signal` model (`src/core/models/signals.py` line 44) has `confidence: Mapped[Optional[float]]` -- confidence is nullable. If an agent fails to compute confidence and stores NULL, the signal aggregation layer cannot properly weight it. NULL confidence should never be allowed for v2.0 signals; it must default to 0.0 (no signal) or the agent must not emit the signal.
 
-- [ ] **Data ingestion "works":** Often missing -- validation that the correct number of rows was ingested; bounds checking on values; staleness alerting. Verify: run ingestion for a date with known data and assert exact row count and values.
-- [ ] **Backfill "completed":** Often missing -- verification that no date gaps exist in the loaded range; cross-reference with source's known publication dates. Verify: query `SELECT COUNT(DISTINCT observation_date)` and compare against expected business day count for the date range.
-- [ ] **Point-in-time queries "work":** Often missing -- test with a known revision (e.g., NFP for a month that was revised 3 times) and assert that `get_as_of()` returns different values for different as-of dates. Verify: `get_as_of('NFP', '2024-02-02')` returns the first release, `get_as_of('NFP', '2024-03-30')` returns the revision.
-- [ ] **Yield curve "constructed":** Often missing -- validation against independent source (ANBIMA indicative rates); forward rate continuity check; no negative forwards for normal market conditions. Verify: plot forward rates and visually inspect for discontinuities; compare 1Y, 5Y, 10Y points against ANBIMA.
-- [ ] **Compression "enabled":** Often missing -- verification that `segmentby` and `orderby` are set correctly; that the compression delay exceeds the maximum revision lag; that disk headroom is sufficient for temporary decompression. Verify: `SELECT * FROM timescaledb_information.compression_settings`.
-- [ ] **Holiday calendar "integrated":** Often missing -- edge case testing for Carnival (date changes every year), Corpus Christi, and city-level holidays (Sao Paulo has extra holidays not observed by Rio). Verify: generate business days for 2024 and diff against ANBIMA's published calendar.
-- [ ] **Timezone handling "correct":** Often missing -- test with a date during DST transition (e.g., March 2018 when Brazil still observed DST); verify pre-2019 historical data converts correctly. Verify: assert that a BCB release on the day clocks change has the correct UTC timestamp.
-- [ ] **CFTC data "complete":** Often missing -- handling of weeks where a contract drops below 20 reportable traders and disappears from the report; handling of trader reclassifications that create discontinuities. Verify: check for gaps in weekly series and document expected vs actual observation counts.
+**Prevention:**
+- Signal aggregation applies crowding penalty when >80% of strategies agree (reduce position sizes 30-50%)
+- CrossAssetAgent explicitly monitors agent agreement and flags when all signals point the same way
+- Portfolio construction enforces max position weights (25% single instrument, 50% single asset class)
+- Schema migration: make `confidence` NOT NULL with DEFAULT 0.0 for v2.0 signals table
+- Add `agent_id` and `horizon_days` columns to signals table for v2.0 agent framework
+
+### Pitfall 10: Confusion Between Nominal and Real Rates
+
+**What goes wrong:** Mixing nominal DI rates with real NTN-B rates in calculations. Computing breakeven inflation incorrectly. Comparing Brazilian % rates (annualized, BUS/252 convention) with US % rates (annualized, ACT/360 or ACT/365 convention).
+
+**Specific errors:**
+- Breakeven inflation = DI_PRE - NTN_B_REAL is only valid at MATCHING tenors. If tenors do not align, rates must be interpolated first. The `compute_breakeven_inflation` function in `src/transforms/curves.py` (line 63-66) correctly handles matching tenors, but does not interpolate when tenors mismatch.
+- Brazilian rate convention: `(1 + annual_rate) = (1 + daily_rate)^252`. This is exponential compounding. US Treasury uses semi-annual compounding for bond yields and continuous compounding for some derivatives.
+- Comparing "13.50% Selic" with "5.25% Fed Funds" is misleading without adjusting for inflation differential. The real rate comparison is what matters.
+
+**Prevention:**
+- All rates stored in database as decimal (0.1350 = 13.50%)
+- Day count conventions documented per instrument in code comments
+- Breakeven = nominal - real at MATCHING tenors (interpolate if needed)
+- Add a `compounding_convention` field to instruments table: `"BUS252_EXPONENTIAL"`, `"ACT365_SIMPLE"`, `"SEMI_ANNUAL"`
+- Brazilian rate convention: `(1 + annual_rate) = (1 + daily_rate)^252`
+
+### Pitfall 11: COPOM Meeting Calendar Hardcoding
+
+**What goes wrong:** COPOM meets 8 times per year on non-fixed dates (unlike the FOMC which has a more predictable schedule). Hardcoding meeting dates that change year-to-year causes the Selic Path Model and event strategies to trigger on wrong dates.
+
+**Why it matters for v2.0:** The MonetaryPolicyAgent Selic Path Model extracts meeting-by-meeting implied Selic from the DI curve. If the meeting dates are wrong, the extraction assigns rates to wrong dates, and the "policy surprise" signal fires when there is no meeting.
+
+**Prevention:**
+- BCB publishes the annual COPOM calendar in December for the following year
+- Store meeting dates in a config file or database table, updated annually
+- The MonetaryPolicyAgent should load meeting dates dynamically, not hardcode them
+- For FOMC: similarly use the published Fed calendar, not hardcoded dates
+- Validate: if today is in the COPOM window [-5, +2] days, verify by checking the calendar table
+
+### Pitfall 12: VaR Underestimation During Regime Changes
+
+**What goes wrong:** Historical VaR computed during calm periods dramatically underestimates tail risk. The 504-day (2-year) lookback window may not contain a crisis period, producing falsely low VaR that encourages overleveraging.
+
+**Why it matters:** Brazilian assets exhibit fat tails and volatility clustering. USDBRL realized vol ranges from 8% (calm) to 35% (crisis). A VaR model calibrated during calm period will be 3-4x too optimistic.
+
+**Prevention:**
+- Use 504-day window (2 years) as minimum to capture at least one stress episode
+- Supplement with stress VaR: always compute VaR under historical stress scenarios (2015 BR crisis, 2020 COVID, 2022 rate shock) even when recent history is calm
+- Use GARCH(1,1) or EWMA for volatility to give more weight to recent observations
+- Consider DCC (Dynamic Conditional Correlation) instead of static correlation for multi-asset VaR
+- Set VaR limits conservatively: if VaR(95%, 1d) limit is 2% of NAV, the actual tail loss in a crisis will be 3-5x that
+
+## Minor Pitfalls
+
+### Pitfall 13: Matplotlib Thread Safety in FastAPI
+
+**What goes wrong:** BacktestReport generates matplotlib charts. If multiple API requests trigger chart generation simultaneously, matplotlib's global state causes crashes or corrupted images.
+
+**Prevention:** Use `matplotlib.use('Agg')` (non-interactive backend) at import time. Generate charts in a thread-safe manner: create new figure per request, close immediately after saving to bytes. Consider switching to Plotly for API-served charts (JSON serializable, no global state).
+
+### Pitfall 14: Agent Report Narrative Encoding
+
+**What goes wrong:** Portuguese characters in BCB Focus series names or IPCA component names (e.g., "Alimentacao e bebidas", "Habitacao") cause encoding errors when persisting to database or generating JSON responses.
+
+**Prevention:** All strings UTF-8. Database columns use `Text` type (no length limit). FastAPI default JSON serialization handles Unicode correctly. Test with actual Portuguese-character series names.
+
+### Pitfall 15: Backtest Date Range Off-by-One
+
+**What goes wrong:** Backtest starts on 2015-01-01 (a holiday -- Confraternizacao Universal). First rebalance date is wrong, or the engine skips January entirely.
+
+**Prevention:** Use `next_business_day()` from the existing `date_utils.py` to snap start/end dates to valid business days. The BR+US combined holiday calendar from v1.0 already handles this. The backtest engine must also handle the case where a rebalance date falls on a BR holiday but not a US holiday (or vice versa) -- use the union of both calendars.
+
+## Codebase-Specific Issues for v2.0
+
+Issues found in v1.0 code that will cause problems when building v2.0 agents, backtesting, and strategies.
+
+| File | Line(s) | Issue | Impact | Fix |
+|------|---------|-------|--------|-----|
+| `src/transforms/curves.py` | 45, 47, 75, 98 | Uses `/ 365.0` for year fractions | Wrong DI curve math, carry, forwards | Add `day_count` parameter; use BUS/252 for Brazilian instruments |
+| `src/transforms/curves.py` | 77 | Simple compounding for forward rates | Wrong for DI (exponential compounding) | Implement `(1+r2)^y2 / (1+r1)^y1` formula |
+| `src/transforms/returns.py` | 18, 52, 67 | Hardcoded `np.sqrt(252)` annualization | ~1% error for ANBIMA calendar (249 biz days) | Parameterize annualization factor; use calendar-aware count |
+| `src/core/models/signals.py` | 44 | `confidence` is `Optional[float]` (nullable) | Signal aggregation breaks on NULL confidence | Make NOT NULL, DEFAULT 0.0; add `agent_id`, `horizon_days` columns |
+| `src/connectors/base.py` | 277 | `ON CONFLICT DO NOTHING` for all inserts | Silently drops data revisions (GDP, employment) | Use `ON CONFLICT DO UPDATE` for macro_series when revision_number is higher |
+| `src/core/models/signals.py` | 47-51 | Natural key is `(signal_type, signal_date, instrument_id)` | v2.0 needs `agent_id` in the key (same signal_type from different agents) | Add `agent_id` to unique constraint |
+| `src/transforms/curves.py` | 63-66 | Breakeven only at matching tenors | Mismatched NTN-B / DI tenors produce no BEI | Interpolate both curves to common tenor grid before computing BEI |
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Severity | Mitigation |
+|-------------|---------------|----------|------------|
+| Agent Framework (Phase 7) | PIT enforcement gaps in DataLoader | CRITICAL | Integration test: verify no future data leaks for every agent |
+| Agent Framework (Phase 7) | Signal schema missing `agent_id`, `horizon_days` | MODERATE | Schema migration before building agents |
+| Inflation Agent (Phase 7) | Phillips Curve overfitting with 8+ regressors | CRITICAL | Start with 3 features, 10-year window, validate coefficient signs |
+| Inflation Agent (Phase 7) | IPCA component weights from IBGE change yearly | MODERATE | Load weights from database, not hardcoded |
+| Monetary Agent (Phase 8) | Kalman Filter divergence for r-star | CRITICAL | Start with fixed r*=4.5% (BR), add KF only if validated OOS |
+| Monetary Agent (Phase 8) | COPOM calendar hardcoding | MODERATE | Store in config/database, load dynamically |
+| FX Agent (Phase 8) | BEER model coefficient instability / regime breaks | CRITICAL | Rolling OLS with 10-year window, check sign stability; add fiscal dummy |
+| Cross-Asset Agent (Phase 8) | HMM label switching / overfitting | CRITICAL | Start rule-based, add HMM as parallel check only |
+| Backtesting (Phase 9) | Look-ahead bias in backtest loop | CRITICAL | Verify: strategy never sees data after as_of_date |
+| Backtesting (Phase 9) | DI curve BUS/252 vs ACT/365 in carry calculation | MODERATE | Fix curves.py before backtesting DI strategies |
+| Strategies (Phase 10) | Signal correlation / portfolio concentration | MODERATE | Crowding penalty + position limits in aggregation |
+| Strategies (Phase 10) | 25 strategies data-snooped, inflated Sharpe | CRITICAL | Deflated Sharpe Ratio for all reported metrics |
+| Risk Management (Phase 11) | VaR underestimation in calm periods | MODERATE | Use 504-day window + stress VaR + GARCH vol |
+| Daily Pipeline (Phase 12) | Pipeline failure cascading to stale signals | MODERATE | Each step independent; partial failures logged but don't block |
+| Dashboard (Phase 12) | LLM narrative hallucination in daily brief | MODERATE | Template fallback primary; LLM enhancement only; verify against signals |
 
 ## Recovery Strategies
 
-When pitfalls occur despite prevention, how to recover.
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Look-ahead bias in stored data | HIGH | Must reingest all affected series with full vintage history from ALFRED/BCB; rebuild all derived data; re-validate all signals built on the contaminated data. Budget 2-4 weeks. |
-| Silent data gaps from API failures | MEDIUM | Identify gap boundaries from `data_quality_log`; targeted backfill for missing date ranges; verify with source publication calendar. Budget 1-3 days per source. |
-| Brazilian date/number format misparse | HIGH | Identify all affected rows (hard: correctly-parsed and incorrectly-parsed values look plausible); reingest from source with correct parser; cascade corrections through derived data. Budget 1-2 weeks. |
-| Compression policy blocking backfill | LOW | Disable compression policy; decompress affected chunks; run backfill; re-enable compression. Budget hours, not days, if you have disk headroom. |
-| Curve construction errors | MEDIUM | Rewrite bootstrap/interpolation logic; regenerate all historical curve data; re-validate signals. Budget 1-2 weeks. |
-| Timezone misalignment | HIGH | Audit all stored timestamps to determine which are correct and which are offset; reingest with correct timezone handling; rebuild all cross-market joins. Budget 2-3 weeks. |
-| Duplicate rows from non-idempotent backfill | MEDIUM | Identify duplicates by natural key; DELETE duplicates keeping the most recent ingestion; add unique constraint; rewrite pipeline to use UPSERT. Budget 2-5 days. |
-
-## Pitfall-to-Phase Mapping
-
-How roadmap phases should address these pitfalls.
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Look-ahead bias (no PIT) | Phase 1: Schema Design | Query `get_as_of()` with known revision dates; assert different values returned |
-| Free API fragility | Phase 2: Ingestion Layer | Monitor dashboard shows per-source success rates; no series stale beyond threshold |
-| Brazilian format misparse | Phase 2: Ingestion Layer | Round-trip test: ingest known BR-format file, assert correct float and date values |
-| Compression destroying backfill | Phase 1 (config) + Phase 3 (ordering) | Backfill completes before compression enabled; UPSERT on compressed chunk succeeds |
-| Curve construction from proxy | Phase 4: Derived Data | Compare constructed curve against ANBIMA indicative rates; forward rate continuity |
-| Timezone misalignment | Phase 1 (schema) + Phase 2 (ingestion) | Cross-market join produces correct alignment during DST transition week |
-| Non-idempotent backfill | Phase 2 (UPSERT pattern) + Phase 3 (execution) | Run same backfill twice; assert identical row counts and values |
-| Contract name instability (CFTC) | Phase 2: Ingestion Layer | Use `cftc_contract_market_code`, not text name; verify historical continuity |
-| ANBIMA holiday edge cases | Phase 1: Calendar setup | Diff generated calendar against ANBIMA published calendar for 3 years |
-| Schema evolution breaking consumers | Phase 5: API Layer | Add column to staging; verify downstream queries and AI agent still work |
-| Survivorship bias in equity data | Phase 2: Ingestion Layer | Include delisted stocks in universe; verify backtest uses point-in-time constituents |
+| Failure | Severity | Recovery | Estimated Fix Time |
+|---------|----------|----------|-------------------|
+| Kalman Filter diverges | HIGH | Fall back to fixed r*; log warning; do not emit signal | Immediate (fallback) |
+| HMM fit fails | HIGH | Fall back to rule-based z-score regime; log warning | Immediate (fallback) |
+| Agent produces NaN signal | MEDIUM | Skip signal; log error; other agents continue | Immediate (skip) |
+| BEER model coefficients wrong sign | HIGH | Reject model; use prior window coefficients; flag for review | 1-2 hours (manual) |
+| Backtest produces negative Sharpe | LOW | Not an error -- some strategies lose money in some periods | N/A |
+| LLM API timeout | LOW | Fall back to template narrative; log warning | Immediate (fallback) |
+| LLM narrative contradicts signals | MEDIUM | Reject LLM output; use template; log for review | Immediate (fallback) |
+| All agents agree (crowding) | MEDIUM | Reduce position sizes 30-50%; flag in risk report | Immediate (auto) |
+| Circuit breaker Level 2+ | HIGH | Halt strategy execution; require manual review to resume | 2-4 hours (manual) |
+| Data revision missed (ON CONFLICT DO NOTHING) | HIGH | Re-ingest with ON CONFLICT DO UPDATE; re-run affected agents | 30-60 minutes |
 
 ## Sources
 
-### Authoritative / Official
-- [FRED API Documentation](https://fred.stlouisfed.org/docs/api/fred/) -- Vintage dates, real-time periods
-- [Philadelphia Fed Real-Time Data Set](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/real-time-data-set-for-macroeconomists) -- Macro data vintages
-- [CFTC Historical Compressed Data](https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalCompressed/index.htm) -- COT data formats
-- [CFTC Historical Special Announcements](https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalSpecialAnnouncements/index.htm) -- Format changes, reclassifications
-- [TimescaleDB Compression Documentation](https://docs.timescale.com/use-timescale/latest/compression/) -- Compression policies, DML on compressed data
-- [TimescaleDB Hypertable Troubleshooting](https://docs.tigerdata.com/use-timescale/latest/hypertables/troubleshooting/) -- Chunk sizing, index strategies
-- [US Treasury Yield Curve Methodology Change](https://home.treasury.gov/policy-issues/financing-the-government/yield-curve-methodology-change-information-sheet) -- Monotone convex adoption
-- [ANBIMA Calendar Documentation](https://anbima-calendar.readthedocs.io/en/latest/introduction.html) -- Brazilian business days
+**Academic:**
+- Bailey, D.H. & Lopez de Prado, M. (2014) "The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality"
+- Harvey, C.R., Liu, Y. & Zhu, H. (2016) "...and the Cross-Section of Expected Returns" -- multiple testing / data snooping
+- Laubach, T. & Williams, J. (2003) "Measuring the Natural Rate of Interest" -- Kalman filter r-star
+- Hamilton, J.D. (1989) "A New Approach to the Economic Analysis of Nonstationary Time Series" -- HMM regime switching
+- Clark, P.B. & MacDonald, R. (1998) "Exchange Rates and Economic Fundamentals: A Methodological Comparison of BEERs and FEERs" -- BEER model
+- Almgren, R. & Chriss, N. (2000) "Optimal Execution of Portfolio Transactions" -- market impact / slippage
+- Burnside, C. et al. (2011) "Carry Trades and Currency Crashes" -- FX carry risks
 
-### Community / Library Documentation
-- [fredapi (GitHub)](https://github.com/mortada/fredapi) -- Python FRED/ALFRED interface; vintage date handling
-- [python-bcb (GitHub)](https://github.com/wilsonfreitas/python-bcb) -- BCB SGS/PTAX/OData wrapper
-- [pySGS Documentation](https://pysgs.readthedocs.io/) -- BCB SGS API interface
-- [PYield (PyPI)](https://pypi.org/project/PYield/) -- Brazilian fixed income; date format handling
-- [cot_reports (GitHub)](https://github.com/NDelventhal/cot_reports) -- CFTC COT data parsing
-- [yfinance Issues #2125, #2128, #2422](https://github.com/ranaroussi/yfinance/issues/2422) -- Rate limiting documentation
+**Official Documentation:**
+- statsmodels -- `UnobservedComponents`, state-space numerical stability
+- hmmlearn -- `GaussianHMM`, `predict_proba` vs `predict` (Viterbi)
+- NY Fed -- Holston-Laubach-Williams r-star methodology and R code
+- BCB -- Inflation targeting framework, COPOM calendar, Focus survey methodology
+- ANBIMA -- Business day calendar, DI futures day count convention (BUS/252)
 
-### Research / Academic
-- [Hagan & West (2006) "Interpolation Methods for Curve Construction"](https://www.deriscope.com/docs/Hagan_West_curves_AMF.pdf) -- Bootstrap/interpolation coupling
-- [Macrosynergy: Quantitative Methods for Macro Information Efficiency](https://macrosynergy.com/research/quantitative-methods/) -- PIT data, revision bias, model parsimony
-- [CEIC Point-in-Time Data Launch](https://info.ceicdata.com/ceic-launches-point-in-time-data) -- NFP PIT case study
-- [Refinitiv: Using Point-in-Time Data to Avoid Bias](https://www.refinitiv.com/perspectives/future-of-investing-trading/how-to-use-point-in-time-data-to-avoid-bias-in-backtesting/) -- PIT methodology
-- [Portfolio Optimization Book: Seven Sins of Quantitative Investing](https://bookdown.org/palomar/portfoliooptimizationbook/8.2-seven-sins.html) -- Survivorship bias, data snooping
+**Web Research (2026):**
+- "Kalman Filter r-star Python implementation pitfalls 2026" -- matrix stability, COVID sensitivity, MUE misspecification
+- "HMM regime detection overfitting label switching macro 2026" -- label switching, filtered vs Viterbi, state count selection
+- "point-in-time backtesting macro strategies common mistakes 2026" -- look-ahead bias, survivorship, transaction costs, data snooping
+- "Python macro trading agent framework design patterns 2026" -- parsimony principle, simple OLS outperforms complex models
+- "LLM hallucination financial analysis grounding 2025" -- 17-41% error rate without grounding, HybridRAG mitigation
+- "Brazilian DI futures day count convention BUS 252 2026" -- ANBIMA convention, B3 settlement rules
 
-### Data Engineering Best Practices
-- [Building Idempotent Data Pipelines (ml4devs)](https://www.ml4devs.com/what-is/backfilling-data/) -- Backfill patterns
-- [Idempotent Data Pipelines at Scale (Towards Data Engineering)](https://medium.com/towards-data-engineering/building-idempotent-data-pipelines-a-practical-guide-to-reliability-at-scale-2afc1dcb7251) -- UPSERT, dedup, audit
-- [Database Backfill: Methods, Best Practices & Pitfalls (Galaxy)](https://www.getgalaxy.io/learn/glossary/database-backfill) -- Chunking, staging
-- [Timezone Consistency in Data Pipelines (DZone)](https://dzone.com/articles/cross-time-zone-integrity-pipelines) -- UTC storage, DST handling
-- [UTC for Trading Infrastructure (TimeStored)](https://www.timestored.com/data/utc-finance-infra) -- Financial timezone best practices
-- [Lessons from Building AI Agents for Financial Services](https://www.nicolasbustamante.com/p/lessons-from-building-ai-agents-for) -- AI agent data consumption patterns
-
----
-*Pitfalls research for: Macro Trading Data Infrastructure*
-*Researched: 2026-02-19*
+**Codebase Inspection:**
+- `src/transforms/curves.py` -- day count convention errors (lines 45, 75, 98), simple vs exponential compounding
+- `src/transforms/returns.py` -- hardcoded annualization factor (lines 18, 52, 67)
+- `src/core/models/signals.py` -- nullable confidence, missing agent_id column
+- `src/core/models/macro_series.py` -- PIT schema correct but no enforcement layer
+- `src/connectors/base.py` -- ON CONFLICT DO NOTHING drops revisions (line 277)
