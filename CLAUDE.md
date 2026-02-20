@@ -49,6 +49,12 @@ This project follows a structured 4-phase development plan (Phase 0 through Phas
 | **Phase 2** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` | Strategy Engine, Risk & Portfolio Management (18 steps) — 17 additional strategies, NLP Pipeline, Risk Engine (VaR, CVaR, stress testing), Portfolio Construction & Optimization, Production Orchestration (Dagster) | 12-18 hours |
 | **Phase 3** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase3.md` | Production Infrastructure, Live Trading & Go-Live — Execution Management System, FIX connectivity, Emergency Stop, Auth/Security, Go-Live Checklist | 8-12 hours |
 
+### Architecture Reference Document
+
+| Document | File | Description |
+|---|---|---|
+| **Data Architecture Blueprint** | `.claude/rules/Data_Architecture_Blueprint_MacroHedgeFund.md` | Complete catalog of all data providers, 200+ variables, collection frequencies, database schemas (TimescaleDB, MongoDB, Redis, Kafka), pipeline design (Bronze/Silver/Gold layers), data quality governance, and storage sizing. This is the **master reference** for all data-related decisions across all phases. |
+
 ### How to Use the Guides
 
 1. Each guide contains numbered **ETAPAS** (steps) that are independent prompts
