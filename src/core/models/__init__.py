@@ -17,6 +17,7 @@ from .flow_data import FlowData
 from .fiscal_data import FiscalData
 from .vol_surfaces import VolSurface
 from .signals import Signal
+from .agent_reports import AgentReportRecord
 
 __all__ = [
     "Base",
@@ -30,4 +31,5 @@ __all__ = [
     "FiscalData",
     "VolSurface",
     "Signal",
+    "AgentReportRecord",
 ]

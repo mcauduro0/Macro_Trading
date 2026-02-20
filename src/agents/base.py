@@ -19,7 +19,7 @@ from typing import Any
 import structlog
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.core.database import async_session_factory
+from src.core.database import async_session_factory, sync_session_factory
 from src.core.enums import SignalDirection, SignalStrength
 from src.core.models.signals import Signal
 
@@ -204,7 +204,7 @@ class BaseAgent(abc.ABC):
             signals=len(signals),
             elapsed=round(elapsed, 2),
         )
-        return AgentReport(
+        report = AgentReport(
             agent_id=self.agent_id,
             as_of_date=as_of_date,
             generated_at=datetime.utcnow(),
@@ -213,6 +213,8 @@ class BaseAgent(abc.ABC):
             model_diagnostics={},
             data_quality_flags=data_flags,
         )
+        self._persist_report(report)
+        return report
 
     def backtest_run(self, as_of_date: date) -> AgentReport:
         """Execute the pipeline without persisting signals.
@@ -278,6 +280,37 @@ class BaseAgent(abc.ABC):
                                 f"{key}.{sub_key}: contains {na_sub} missing values"
                             )
         return flags
+
+    def _persist_report(self, report: AgentReport) -> None:
+        """Persist agent report to the ``agent_reports`` table for audit trail.
+
+        Args:
+            report: The AgentReport to persist.
+        """
+        from src.core.models.agent_reports import AgentReportRecord
+
+        session = sync_session_factory()
+        try:
+            record = AgentReportRecord(
+                agent_id=report.agent_id,
+                as_of_date=report.as_of_date,
+                signals_count=len(report.signals),
+                narrative=report.narrative,
+                model_diagnostics=report.model_diagnostics or None,
+                data_quality_flags=report.data_quality_flags or None,
+            )
+            session.add(record)
+            session.commit()
+            self.log.info(
+                "report_persisted",
+                agent_id=report.agent_id,
+                as_of_date=str(report.as_of_date),
+            )
+        except Exception as exc:
+            session.rollback()
+            self.log.error("report_persist_failed", error=str(exc))
+        finally:
+            session.close()
 
     def _persist_signals(self, signals: list[AgentSignal]) -> int:
         """Persist signals to the signals hypertable.

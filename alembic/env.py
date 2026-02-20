@@ -11,21 +11,21 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-from src.core.models.base import Base
-
 # Import all model modules so they register with Base.metadata
 from src.core.models import (  # noqa: F401
-    instruments,
-    series_metadata,
-    data_sources,
-    market_data,
-    macro_series,
+    agent_reports,
     curves,
-    flow_data,
+    data_sources,
     fiscal_data,
-    vol_surfaces,
+    flow_data,
+    instruments,
+    macro_series,
+    market_data,
+    series_metadata,
     signals,
+    vol_surfaces,
 )
+from src.core.models.base import Base
 
 # Alembic Config object -- provides access to .ini values
 config = context.config
