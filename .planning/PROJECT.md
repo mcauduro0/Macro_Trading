@@ -1,104 +1,115 @@
-# Macro Fund System — Data Infrastructure
+# Macro Fund System — Quantitative Models & Agents
 
 ## What This Is
 
-A comprehensive data infrastructure for an agentic macro trading system serving a global macro hedge fund focused on Brazil and the US. The system ingests, stores, transforms, and serves 200+ macroeconomic and market data series from 11+ data sources, providing the foundation for AI-driven trading agents and ~25 quantitative strategies operating across FX, interest rates, inflation, cupom cambial, and sovereign risk.
+A comprehensive macro trading system for a global macro hedge fund focused on Brazil and the US. Building on a complete data infrastructure (11 connectors, 250+ series, TimescaleDB), this milestone adds AI-driven analytical agents, quantitative models, a backtesting engine, initial trading strategies, signal aggregation, risk management, and a monitoring dashboard.
 
 ## Core Value
 
 Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation everything else (agents, strategies, risk) depends on. If the data layer doesn't work, nothing works.
 
+## Current Milestone: v2.0 Quantitative Models & Agents
+
+**Goal:** Build 5 analytical agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset), a point-in-time backtesting engine, 8 initial trading strategies, signal aggregation, risk management, and a daily pipeline — all powered by the data infrastructure from v1.0.
+
+**Target features:**
+- Agent Framework (BaseAgent ABC, signals, reports, point-in-time data loader)
+- 5 Analytical Agents with quantitative models
+- Event-driven Backtesting Engine with point-in-time correctness
+- 8 Trading Strategies (rates, inflation, FX, cupom cambial, sovereign)
+- Signal Aggregation & Portfolio Construction
+- Risk Management (VaR, limits, circuit breakers)
+- Daily Orchestration Pipeline
+- LLM Narrative Generation (Claude API)
+- Monitoring Dashboard (HTML/React)
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Docker Compose stack with TimescaleDB, Redis, MongoDB, Kafka, MinIO
+- [x] SQLAlchemy 2.0 ORM models with 10 tables including 7 TimescaleDB hypertables with compression
+- [x] 11 data connectors covering Brazil + US macro data (250+ series)
+- [x] Instrument seeding (~25) and series metadata (150-200+ entries)
+- [x] Historical backfill orchestrator with idempotent inserts
+- [x] Transforms: curves, returns, macro calculations, vol surface
+- [x] FastAPI REST API with 12 endpoints and point-in-time support
+- [x] Data quality framework and infrastructure verification
+- [x] 319 tests with CI pipeline
 
 ### Active
 
-- [ ] Docker Compose stack with TimescaleDB, Redis, MongoDB, Kafka, MinIO
-- [ ] SQLAlchemy 2.0 ORM models with 10 tables including 7 TimescaleDB hypertables with compression
-- [ ] BCB SGS connector (~50 Brazilian macro series: inflation, activity, monetary, external, fiscal)
-- [ ] FRED connector (~50 US macro series: CPI, PCE, NFP, rates, credit, fiscal)
-- [ ] BCB Focus connector (market expectations: IPCA, Selic, GDP, FX by horizon)
-- [ ] B3/Tesouro Direto connector (DI curve from swap series, NTN-B real rates, breakeven)
-- [ ] ANBIMA connector placeholder (future: ETTJ curve, indicative rates)
-- [ ] IBGE SIDRA connector (IPCA disaggregated by 9 components with weights)
-- [ ] STN Fiscal connector (primary balance, debt composition by indexer)
-- [ ] CFTC COT connector (positioning for 12 contracts × 4 categories = 48 series)
-- [ ] US Treasury connector (nominal + real + breakeven yield curves)
-- [ ] Yahoo Finance connector (25+ tickers: FX, indices, commodities, ETFs)
-- [ ] BCB PTAX connector (official FX fixing rate)
-- [ ] BCB FX Flow connector (commercial/financial flows, swap stock)
-- [ ] Seed scripts for instruments (~25) and series metadata (150-200+)
-- [ ] Historical backfill orchestrator with idempotent inserts (2010-present)
-- [ ] Transforms: Nelson-Siegel curve fitting, forward rates, carry/rolldown, DV01
-- [ ] Transforms: returns, rolling vol, z-scores, percentile ranks, correlations, drawdowns
-- [ ] Transforms: macro (YoY from MoM, diffusion index, trimmed mean, surprise index)
-- [ ] Transforms: vol surface reconstruction from delta-space quotes
-- [ ] FastAPI REST API with endpoints for macro, curves, market data, flows
-- [ ] Point-in-time query support (release_time filtering for macro series)
-- [ ] Macro dashboard endpoint (latest values for key indicators: BR + US + market)
-- [ ] Data quality framework (completeness, accuracy, curve integrity, PIT validation)
-- [ ] Infrastructure verification script (end-to-end health check)
+*See REQUIREMENTS.md for full REQ-ID list*
 
 ### Out of Scope
 
-- AI agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset) — Phase 1+
-- Trading strategies (~25 strategies) — Phase 1+
-- Risk management system — Phase 1+
 - Live order execution — research/backtesting focus first
-- Frontend dashboard (React) — Phase 1+
 - Multi-user access / authentication — solo user for now
 - Bloomberg terminal integration — using free data sources only
 - ETFs, mutual funds as investment instruments — stocks only per project constraints
+- Production deployment (Kubernetes, Helm) — Phase 2+
+- Real-time streaming execution — Phase 2+
+- NLP pipeline for central bank communications — Phase 2+
+- Additional 17 strategies (total 25) — Phase 2+
 
 ## Context
 
-**Domain**: Global macro trading, focused on Brazil-US axis. The system needs to capture the full picture of both economies — inflation dynamics, monetary policy, fiscal health, external accounts, positioning, and cross-asset flows.
+**Domain**: Global macro trading, focused on Brazil-US axis. The system needs 5 specialized analytical agents that understand inflation dynamics, monetary policy, fiscal sustainability, FX equilibrium, and cross-asset regime detection.
 
-**Data Architecture**: Bronze/Silver/Gold layer pattern:
-- Bronze: Raw data from connectors → TimescaleDB hypertables (market_data, macro_series, curves, flow_data, fiscal_data, vol_surfaces, signals)
-- Silver: Transforms layer (curve interpolation, returns, z-scores, macro calculations)
-- Gold: API endpoints serving processed data to agents and strategies
+**Data Architecture**: Bronze/Silver/Gold layer pattern (v1.0 delivered Bronze+Silver+Gold for data). This milestone adds:
+- Agent Layer: 5 analytical agents consuming Silver/Gold data
+- Strategy Layer: 8 trading strategies consuming agent signals
+- Risk Layer: Portfolio construction, VaR, limits, circuit breakers
+- Pipeline: Daily orchestration from data ingestion to risk report
 
-**Key Design Decisions from Spec**:
-- TimescaleDB for time-series (hypertables with compression policies)
-- Point-in-time correctness via release_time tracking on macro_series (critical for backtesting)
-- Revision tracking for revised data series (NFP, GDP)
-- BCB swap DI x Pré series (SGS #7805-7816) as proxy for DI curve in absence of Bloomberg
-- Tesouro Direto JSON API for NTN-B real rates
-- CFTC disaggregated report for positioning (Dealer, Asset Manager, Leveraged Funds)
-- Idempotent inserts everywhere (ON CONFLICT DO NOTHING) for safe re-runs
+**Existing Infrastructure** (from v1.0):
+- TimescaleDB with 10 tables, 7 hypertables, compression policies
+- 11 connectors: BCB SGS, FRED, Yahoo Finance, BCB PTAX, BCB Focus, B3/Tesouro Direto, IBGE SIDRA, STN Fiscal, CFTC COT, US Treasury, BCB FX Flow
+- 250+ macro series with point-in-time release_time tracking
+- Transforms: Nelson-Siegel, returns, z-scores, macro calculations
+- FastAPI with 12 endpoints, data quality checks, verification script
+
+**Key Academic References for Agents**:
+- Phillips Curve (Friedman 1968, Lucas 1972) — inflation dynamics
+- Taylor Rule (Taylor 1993) — monetary policy
+- Laubach-Williams (2003) — natural rate estimation via Kalman Filter
+- Clark-MacDonald (1998) BEER model — FX fair value
+- IMF DSA framework (2013) — debt sustainability
+- Hamilton (1989) — regime switching models
 
 **Brazilian Specifics**:
-- BCB SGS values use comma as decimal separator ("1.234,56")
-- PTAX uses MM-DD-YYYY date format (different from DD/MM/YYYY for SGS)
-- Business day calendar: ANBIMA holidays differ from NYSE
-- Focus survey published weekly (Mondays)
-- IPCA released ~15 days after reference month
+- BCB SGS values use comma as decimal separator
+- COPOM meets 8x/year; Focus survey weekly (Mondays)
+- IPCA released ~15 days after reference month; IPCA-15 as preview
+- DI curve from BCB swap series (proxy for B3 DI futures)
+- Inflation target: 3.0% center (CMN)
 
 ## Constraints
 
-- **Tech Stack**: Python 3.11+, SQLAlchemy 2.0 async, FastAPI, Docker Compose — per project spec
-- **Data Sources**: Free APIs only (BCB, FRED, IBGE, Tesouro Direto, Yahoo Finance, CFTC) — no Bloomberg
-- **FRED API Key**: Required — free registration at fred.stlouisfed.org
-- **Infrastructure**: Docker (TimescaleDB, Redis, MongoDB, Kafka, MinIO) — 16GB+ RAM, 50GB+ disk
-- **Investment Focus**: Stocks only, no ETFs or mutual funds as trading instruments
-- **LLM Preference**: Claude Opus 4.5, GPT-5.2 Pro, Gemini 3 Pro for agent phases
-- **Real Data Only**: No mock data in production — all connectors must hit real APIs
+- **Tech Stack**: Python 3.11+, SQLAlchemy 2.0 async, FastAPI, Docker Compose
+- **Data Sources**: Free APIs only — no Bloomberg
+- **FRED API Key**: Required — free registration
+- **Infrastructure**: Docker (TimescaleDB, Redis, MongoDB, Kafka, MinIO) — 16GB+ RAM
+- **Investment Focus**: Stocks only, no ETFs or mutual funds
+- **LLM Preference**: Claude Opus 4.5/4.6 for narrative generation
+- **Real Data Only**: No mock data in production
+- **Point-in-Time**: All agent/strategy computations must respect release_time constraints
+- **Backtesting Integrity**: No look-ahead bias — strictly point-in-time data access
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| TimescaleDB over InfluxDB | SQLAlchemy compatibility, SQL interface, compression, hypertables | — Pending |
-| BCB swap series for DI curve | Free alternative to Bloomberg DI futures; 12 standard tenors daily | — Pending |
-| Tesouro Direto for NTN-B rates | Free JSON API with current prices; historical CSVs available | — Pending |
-| MongoDB for unstructured data | Agent outputs, LLM responses, document storage | — Pending |
-| Kafka for event streaming | Future: real-time signal propagation between agents | — Pending |
-| Point-in-time via release_time | Prevents look-ahead bias in backtesting — critical for macro data | — Pending |
-| Monorepo structure | All components in one repo for now; split later if needed | — Pending |
+| TimescaleDB over InfluxDB | SQLAlchemy compatibility, SQL interface, compression | Good |
+| BCB swap series for DI curve | Free alternative to Bloomberg DI futures; 12 tenors daily | Good |
+| Tesouro Direto for NTN-B rates | Free JSON API with current prices; historical CSVs | Good |
+| MongoDB for unstructured data | Agent outputs, LLM responses, document storage | Pending |
+| Kafka for event streaming | Future: real-time signal propagation between agents | Pending |
+| Point-in-time via release_time | Prevents look-ahead bias in backtesting | Good |
+| Monorepo structure | All components in one repo for now | Good |
+| ON CONFLICT DO NOTHING | Idempotent inserts enable safe re-runs | Good |
+| BaseConnector ABC pattern | Consistent interface across all 11 connectors | Good |
+| Template Method for agents | BaseAgent.run() orchestrates load→features→models→narrative | Pending |
 
 ---
-*Last updated: 2026-02-19 after initialization*
+*Last updated: 2026-02-20 after milestone v2.0 started*
