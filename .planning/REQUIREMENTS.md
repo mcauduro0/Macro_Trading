@@ -1,208 +1,258 @@
-# Requirements: Macro Fund Data Infrastructure
+# Requirements: Macro Fund System
 
-**Defined:** 2026-02-19
-**Core Value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
+**Defined:** 2026-02-19 (v1) | 2026-02-20 (v2)
+**Core Value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation for analytical agents, quantitative strategies, and risk management
 
-## v1 Requirements
+## v1 Requirements (Complete)
 
-Requirements for initial release. Each maps to roadmap phases.
+All 65 v1 requirements delivered in milestone v1.0 Data Infrastructure. See `.planning/MILESTONES.md` for archive.
 
-### Infrastructure
-
-- [x] **INFRA-01**: Docker Compose stack runs with TimescaleDB, Redis, MongoDB, Kafka, MinIO — all healthy
-- [x] **INFRA-02**: SQLAlchemy 2.0 ORM models define 10 tables with type hints and async support
-- [x] **INFRA-03**: 7 TimescaleDB hypertables with compression policies (market_data, macro_series, curves, flow_data, fiscal_data, vol_surfaces, signals)
-- [x] **INFRA-04**: Alembic migration creates all tables, enables TimescaleDB extension, configures hypertables and compression
-- [x] **INFRA-05**: Configuration via pydantic-settings with .env file support for all service URLs and API keys
-- [x] **INFRA-06**: Async database engine (asyncpg) and sync engine (psycopg2) with session factories
-- [x] **INFRA-07**: Redis client singleton with connection pool
-
-### Connectors
-
-- [x] **CONN-01**: Base connector abstract class with async HTTP (httpx), retry with backoff, rate limiting, structured logging
-- [x] **CONN-02**: BCB SGS connector fetches ~50 Brazilian macro series (inflation, activity, monetary, external, fiscal) with comma-decimal parsing
-- [x] **CONN-03**: FRED connector fetches ~50 US macro series (CPI, PCE, NFP, rates, credit, fiscal) with missing-value handling
-- [x] **CONN-04**: BCB Focus connector fetches market expectations (IPCA, Selic, GDP, FX) by horizon with OData pagination
-- [x] **CONN-05**: B3/Tesouro Direto connector fetches DI swap curve (BCB SGS #7805-7816) and NTN-B real rates from Tesouro Direto JSON API
-- [x] **CONN-06**: IBGE SIDRA connector fetches IPCA disaggregated by 9 components with weights
-- [x] **CONN-07**: STN Fiscal connector fetches primary balance, debt composition, revenue/expenditure from BCB SGS + Tesouro Transparente
-- [x] **CONN-08**: CFTC COT connector fetches disaggregated positioning for 12 contracts x 4 categories (48 series) from bulk CSV files
-- [x] **CONN-09**: US Treasury connector fetches daily nominal, real (TIPS), and breakeven yield curves from Treasury.gov CSV
-- [x] **CONN-10**: Yahoo Finance connector fetches daily OHLCV for 25+ tickers (FX, indices, commodities, ETFs) via yfinance
-- [x] **CONN-11**: BCB PTAX connector fetches official FX fixing rate (buy/sell) from OData API with MM-DD-YYYY date handling
-- [x] **CONN-12**: BCB FX Flow connector fetches commercial/financial flows and BCB swap stock from SGS series
-
-### Data Integrity
-
-- [x] **DATA-01**: All macro_series records store release_time (when data was published) for point-in-time correctness
-- [x] **DATA-02**: Revision tracking via revision_number field — revised series store each vintage as separate row
-- [x] **DATA-03**: All database inserts use ON CONFLICT DO NOTHING for idempotent re-runs
-- [x] **DATA-04**: Business day calendar utilities for ANBIMA (BR) and NYSE (US) holidays (2015-2030)
-- [x] **DATA-05**: Tenor-to-days and tenor-to-date conversion with business day conventions
-
-### Seed & Backfill
-
-- [ ] **SEED-01**: Seed script populates instruments table with ~25 instruments (FX, indices, commodities, ETFs)
-- [ ] **SEED-02**: Seed script populates series_metadata table with 150-200+ series definitions from all connectors
-- [ ] **SEED-03**: Backfill orchestrator accepts CLI args (--source, --start-date, --end-date, --dry-run)
-- [ ] **SEED-04**: Backfill executes all 11 connectors in dependency order with progress logging and error resilience
-- [ ] **SEED-05**: Backfill produces summary report with record counts per source, timing, and status
-
-### Transforms
-
-- [ ] **XFORM-01**: Nelson-Siegel curve fitting (fit and interpolate to standard tenors)
-- [ ] **XFORM-02**: Forward rate calculation from spot curves
-- [ ] **XFORM-03**: DV01/duration calculation per curve point
-- [ ] **XFORM-04**: Breakeven inflation curve (nominal DI - NTN-B real at matched tenors)
-- [ ] **XFORM-05**: Carry and rolldown analytics (carry_bps, rolldown_bps, total_bps per tenor)
-- [ ] **XFORM-06**: Returns calculation (log and arithmetic) from price series
-- [ ] **XFORM-07**: Rolling volatility at multiple windows (5d, 21d, 63d, 252d), annualized
-- [ ] **XFORM-08**: Z-score and percentile rank with configurable lookback window
-- [ ] **XFORM-09**: Rolling correlation between any two series
-- [ ] **XFORM-10**: YoY from MoM conversion for inflation series
-- [ ] **XFORM-11**: IPCA diffusion index (% of components with positive variation, weighted)
-- [ ] **XFORM-12**: Trimmed mean IPCA (trim extremes, re-weight remainder)
-- [ ] **XFORM-13**: Macro surprise index (actual vs Focus median expectation, standardized)
-- [ ] **XFORM-14**: Drawdown calculation (cumulative max, drawdown, drawdown %)
-
-### API
-
-- [ ] **API-01**: FastAPI app with CORS, lifespan handler, auto-generated Swagger docs at /docs
-- [ ] **API-02**: GET /health returns database connectivity status and timestamp
-- [ ] **API-03**: GET /health/data-status returns record counts per table, total instruments, total series
-- [ ] **API-04**: GET /api/v1/macro/{series_id} returns time series with optional point-in-time filtering (pit=true)
-- [ ] **API-05**: GET /api/v1/macro/dashboard returns latest values for key BR + US + market indicators
-- [ ] **API-06**: GET /api/v1/macro/search returns series matching keyword and optional country filter
-- [ ] **API-07**: GET /api/v1/curves/{curve_id} returns curve for a given date with all tenors
-- [ ] **API-08**: GET /api/v1/curves/{curve_id}/history returns single-tenor history over date range
-- [ ] **API-09**: GET /api/v1/market-data/{ticker} returns OHLCV history for instrument
-- [ ] **API-10**: GET /api/v1/market-data/latest returns latest prices for multiple tickers
-- [ ] **API-11**: GET /api/v1/flows/{series_id} returns flow/positioning data
-- [ ] **API-12**: GET /api/v1/flows/positioning-summary returns CFTC positioning with z-scores
-
-### Quality & Verification
-
-- [ ] **QUAL-01**: Completeness check detects missing observations based on expected frequency (daily >3 BD stale, weekly >10d, monthly >45d)
-- [ ] **QUAL-02**: Accuracy check validates ranges for key series and flags z-score outliers (|z|>5)
-- [ ] **QUAL-03**: Curve integrity check validates minimum tenors, rate bounds, and reasonable monotonicity
-- [ ] **QUAL-04**: Point-in-time integrity check validates release_time >= observation time for all macro_series
-- [ ] **QUAL-05**: Run-all-checks produces summary with quality score 0-100 and PASS/WARN/FAIL status
-- [ ] **QUAL-06**: Infrastructure verification script checks all services, tables, hypertables, compression, data freshness, API health
-
-### Testing & CI
-
-- [ ] **TEST-01**: Pytest test suite for transforms (curves, returns) with known-answer tests
-- [x] **TEST-02**: Pytest test suite for connectors with respx HTTP mocking
-- [x] **TEST-03**: Pytest conftest with database session fixture and sample date fixtures
-- [ ] **TEST-04**: GitHub Actions CI workflow runs ruff lint + pytest (excluding integration tests)
+Summary: INFRA (7/7), CONN (12/12), DATA (5/5), SEED (5/5), XFORM (14/14), API (12/12), QUAL (6/6), TEST (4/4)
 
 ## v2 Requirements
 
-Deferred to future release. Tracked but not in current roadmap.
+Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadmap phases.
 
-### Advanced Data
+### Agent Framework
 
-- **ADVD-01**: Vol surface reconstruction from delta-space quotes (requires FX option data)
-- **ADVD-02**: ANBIMA ETTJ curve integration (requires ANBIMA API registration)
-- **ADVD-03**: Snapshot-based BCB revision capture ("ALFRED for Brazil")
-- **ADVD-04**: Data lineage and series catalog (provenance tracking)
+- [ ] **AGENT-01**: BaseAgent abstract class with Template Method pattern: load_data → compute_features → run_models → generate_narrative → persist_signals
+- [ ] **AGENT-02**: AgentSignal dataclass with signal_id, direction (LONG/SHORT/NEUTRAL), strength, confidence (0-1), value, horizon_days, metadata
+- [ ] **AGENT-03**: AgentReport dataclass combining signals, narrative text, model diagnostics, and data quality flags
+- [ ] **AGENT-04**: PointInTimeDataLoader utility querying macro_series, curves, market_data with release_time <= as_of_date constraint
+- [ ] **AGENT-05**: AgentRegistry managing execution order (inflation → monetary → fiscal → fx → cross_asset) with run_all(as_of_date)
+- [ ] **AGENT-06**: Signal persistence to signals hypertable with ON CONFLICT DO NOTHING idempotency
+- [ ] **AGENT-07**: Alembic migration adding agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON)
 
-### Infrastructure
+### Analytical Agents
 
-- **ADVF-01**: Kafka streaming pipelines for real-time data ingestion
-- **ADVF-02**: Multi-user authentication / API key middleware
-- **ADVF-03**: Frontend React dashboard for data visualization
-- **ADVF-04**: Airflow/Dagster orchestration for complex DAG scheduling
-- **ADVF-05**: Tick-level / intraday data storage
+- [ ] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
+- [ ] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
+- [ ] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
+- [ ] **INFL-04**: InflationSurpriseModel — z-score of rolling 3-month actual-vs-Focus surprise average as regime indicator
+- [ ] **INFL-05**: InflationPersistenceModel — composite score (0-100) from diffusion level, core acceleration, services momentum, expectations anchoring
+- [ ] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
+- [ ] **INFL-07**: Composite INFLATION_BR_COMPOSITE signal aggregating sub-model outputs
 
-## Out of Scope
+- [ ] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
+- [ ] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
+- [ ] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
+- [ ] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
+- [ ] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
+- [ ] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
+
+- [ ] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
+- [ ] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
+- [ ] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
+- [ ] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
+
+- [ ] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
+- [ ] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
+- [ ] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
+- [ ] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
+- [ ] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
+
+- [ ] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
+- [ ] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
+- [ ] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
+
+### Backtesting Engine
+
+- [ ] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
+- [ ] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
+- [ ] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
+- [ ] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
+- [ ] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
+- [ ] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
+- [ ] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
+- [ ] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
+
+### Trading Strategies
+
+- [ ] **STRAT-01**: BaseStrategy abstract class with StrategyConfig (id, asset class, instruments, rebalance freq, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
+- [ ] **STRAT-02**: RATES_BR_01 Carry & Roll-Down — capture carry-to-risk at optimal DI curve tenor, sized by carry/risk ratio vs threshold
+- [ ] **STRAT-03**: RATES_BR_02 Taylor Rule Misalignment — trade DI direction based on gap between current Selic and Taylor-implied fair rate
+- [ ] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
+- [ ] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
+- [ ] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
+- [ ] **STRAT-07**: FX_BR_01 Carry & Fundamental — composite of FX carry-to-risk (40%), BEER misalignment (35%), flow score (25%) with regime adjustment
+- [ ] **STRAT-08**: CUPOM_01 CIP Basis Mean Reversion — fade extreme z-scores in cupom cambial minus SOFR basis
+- [ ] **STRAT-09**: SOV_BR_01 Fiscal Risk Premium — trade long-end DI and USDBRL based on fiscal dominance risk vs sovereign spread level
+
+### Signal Aggregation & Portfolio
+
+- [ ] **PORT-01**: SignalAggregator combining agent signals into directional consensus per asset class with conflict detection
+- [ ] **PORT-02**: PortfolioConstructor converting strategy positions to net portfolio weights with risk-budget scaling and regime adjustment (RISK_OFF → -50%)
+- [ ] **PORT-03**: CapitalAllocator enforcing portfolio constraints (max leverage, max single position, max asset class concentration)
+- [ ] **PORT-04**: Rebalance threshold check (drift > 5% triggers rebalance) and trade computation
+
+### Risk Management
+
+- [ ] **RISK-01**: VaR calculator with historical VaR (95% and 99%, 1-day horizon) from portfolio returns
+- [ ] **RISK-02**: Parametric VaR using Gaussian assumption with portfolio covariance
+- [ ] **RISK-03**: Expected Shortfall (CVaR) as conditional expectation beyond VaR threshold
+- [ ] **RISK-04**: Stress testing against 4+ historical scenarios (2013 Taper Tantrum, 2015 BR Crisis, 2020 COVID, 2022 Rate Shock)
+- [ ] **RISK-05**: Risk limits configuration (max VaR, max drawdown, max leverage, max position, max asset class concentration)
+- [ ] **RISK-06**: Pre-trade limit checking — verify proposed trades don't breach limits before execution
+- [ ] **RISK-07**: DrawdownManager with 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
+- [ ] **RISK-08**: RiskMonitor generating aggregate risk report (portfolio VaR, stress tests, limit utilization, circuit breaker status)
+
+### Daily Pipeline
+
+- [ ] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
+- [ ] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
+- [ ] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
+
+### LLM Narrative
+
+- [ ] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
+- [ ] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
+- [ ] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
+- [ ] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
+
+### Dashboard
+
+- [ ] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
+- [ ] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
+- [ ] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
+- [ ] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
+- [ ] **DASH-05**: Backtests tab with strategy results table and equity curve chart
+
+### API Extensions
+
+- [ ] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
+- [ ] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
+- [ ] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
+- [ ] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
+- [ ] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
+- [ ] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
+- [ ] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
+- [ ] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
+- [ ] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
+
+### Testing
+
+- [ ] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
+- [ ] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
+- [ ] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
+- [ ] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
+- [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
+- [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
+- [ ] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
+
+## Out of Scope (v2.0)
 
 | Feature | Reason |
 |---------|--------|
-| Bloomberg/Refinitiv integration | $24k+/year cost; free sources cover 90%+ of needs |
-| Live order execution | Research/backtesting focus; execution is Phase 1+ |
-| AI agents (Inflation, Monetary, Fiscal, FX) | Phase 1+ after data layer is proven |
-| Trading strategies (~25) | Phase 1+ after agents produce signals |
-| Risk management system | Phase 1+ after strategies exist |
-| ETF/mutual fund trading | Investment focus is stocks only |
-| G5 extension (EUR, GBP, JPY, CHF) | Phase 1+ after BR+US is complete |
-| NLP corpus (central bank communications) | Phase 1+ when agents need text analysis |
+| Live order execution | Research/backtesting focus first |
+| Multi-user authentication | Solo user for now |
+| Bloomberg/Refinitiv integration | Free data sources only |
+| ETFs/mutual funds as instruments | Stocks only per constraints |
+| Production deployment (Kubernetes) | Phase 2+ |
+| Real-time streaming execution | Phase 2+ |
+| NLP pipeline for central bank comms | Phase 2+ |
+| Additional 17 strategies (total 25) | Phase 2+ |
+| Dagster/Airflow orchestration | Phase 2+ |
+| Full React frontend app | Single HTML sufficient for v2.0 |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Complete |
-| INFRA-02 | Phase 1 | Complete |
-| INFRA-03 | Phase 1 | Complete |
-| INFRA-04 | Phase 1 | Complete |
-| INFRA-05 | Phase 1 | Complete |
-| INFRA-06 | Phase 1 | Complete |
-| INFRA-07 | Phase 1 | Complete |
-| CONN-01 | Phase 2 | Complete |
-| CONN-02 | Phase 2 | Complete |
-| CONN-03 | Phase 2 | Complete |
-| CONN-04 | Phase 3 | Complete |
-| CONN-05 | Phase 3 | Complete |
-| CONN-06 | Phase 3 | Complete |
-| CONN-07 | Phase 3 | Complete |
-| CONN-08 | Phase 3 | Complete |
-| CONN-09 | Phase 3 | Complete |
-| CONN-10 | Phase 2 | Complete |
-| CONN-11 | Phase 2 | Complete |
-| CONN-12 | Phase 3 | Complete |
-| DATA-01 | Phase 2 | Complete |
-| DATA-02 | Phase 2 | Complete |
-| DATA-03 | Phase 2 | Complete |
-| DATA-04 | Phase 2 | Complete |
-| DATA-05 | Phase 2 | Complete |
-| SEED-01 | Phase 4 | Pending |
-| SEED-02 | Phase 4 | Pending |
-| SEED-03 | Phase 4 | Pending |
-| SEED-04 | Phase 4 | Pending |
-| SEED-05 | Phase 4 | Pending |
-| XFORM-01 | Phase 5 | Pending |
-| XFORM-02 | Phase 5 | Pending |
-| XFORM-03 | Phase 5 | Pending |
-| XFORM-04 | Phase 5 | Pending |
-| XFORM-05 | Phase 5 | Pending |
-| XFORM-06 | Phase 5 | Pending |
-| XFORM-07 | Phase 5 | Pending |
-| XFORM-08 | Phase 5 | Pending |
-| XFORM-09 | Phase 5 | Pending |
-| XFORM-10 | Phase 5 | Pending |
-| XFORM-11 | Phase 5 | Pending |
-| XFORM-12 | Phase 5 | Pending |
-| XFORM-13 | Phase 5 | Pending |
-| XFORM-14 | Phase 5 | Pending |
-| API-01 | Phase 6 | Pending |
-| API-02 | Phase 6 | Pending |
-| API-03 | Phase 6 | Pending |
-| API-04 | Phase 6 | Pending |
-| API-05 | Phase 6 | Pending |
-| API-06 | Phase 6 | Pending |
-| API-07 | Phase 6 | Pending |
-| API-08 | Phase 6 | Pending |
-| API-09 | Phase 6 | Pending |
-| API-10 | Phase 6 | Pending |
-| API-11 | Phase 6 | Pending |
-| API-12 | Phase 6 | Pending |
-| QUAL-01 | Phase 6 | Pending |
-| QUAL-02 | Phase 6 | Pending |
-| QUAL-03 | Phase 6 | Pending |
-| QUAL-04 | Phase 6 | Pending |
-| QUAL-05 | Phase 6 | Pending |
-| QUAL-06 | Phase 6 | Pending |
-| TEST-01 | Phase 5 | Pending |
-| TEST-02 | Phase 2 | Complete |
-| TEST-03 | Phase 2 | Complete |
-| TEST-04 | Phase 6 | Pending |
+| AGENT-01 | Phase 7 | Pending |
+| AGENT-02 | Phase 7 | Pending |
+| AGENT-03 | Phase 7 | Pending |
+| AGENT-04 | Phase 7 | Pending |
+| AGENT-05 | Phase 7 | Pending |
+| AGENT-06 | Phase 7 | Pending |
+| AGENT-07 | Phase 7 | Pending |
+| INFL-01 | Phase 8 | Pending |
+| INFL-02 | Phase 8 | Pending |
+| INFL-03 | Phase 8 | Pending |
+| INFL-04 | Phase 8 | Pending |
+| INFL-05 | Phase 8 | Pending |
+| INFL-06 | Phase 8 | Pending |
+| INFL-07 | Phase 8 | Pending |
+| MONP-01 | Phase 8 | Pending |
+| MONP-02 | Phase 8 | Pending |
+| MONP-03 | Phase 8 | Pending |
+| MONP-04 | Phase 8 | Pending |
+| MONP-05 | Phase 8 | Pending |
+| MONP-06 | Phase 8 | Pending |
+| FISC-01 | Phase 9 | Pending |
+| FISC-02 | Phase 9 | Pending |
+| FISC-03 | Phase 9 | Pending |
+| FISC-04 | Phase 9 | Pending |
+| FXEQ-01 | Phase 9 | Pending |
+| FXEQ-02 | Phase 9 | Pending |
+| FXEQ-03 | Phase 9 | Pending |
+| FXEQ-04 | Phase 9 | Pending |
+| FXEQ-05 | Phase 9 | Pending |
+| CRSA-01 | Phase 10 | Pending |
+| CRSA-02 | Phase 10 | Pending |
+| CRSA-03 | Phase 10 | Pending |
+| BACK-01 | Phase 10 | Pending |
+| BACK-02 | Phase 10 | Pending |
+| BACK-03 | Phase 10 | Pending |
+| BACK-04 | Phase 10 | Pending |
+| BACK-05 | Phase 10 | Pending |
+| BACK-06 | Phase 10 | Pending |
+| BACK-07 | Phase 10 | Pending |
+| BACK-08 | Phase 10 | Pending |
+| STRAT-01 | Phase 11 | Pending |
+| STRAT-02 | Phase 11 | Pending |
+| STRAT-03 | Phase 11 | Pending |
+| STRAT-04 | Phase 11 | Pending |
+| STRAT-05 | Phase 11 | Pending |
+| STRAT-06 | Phase 11 | Pending |
+| STRAT-07 | Phase 11 | Pending |
+| STRAT-08 | Phase 11 | Pending |
+| STRAT-09 | Phase 11 | Pending |
+| PORT-01 | Phase 12 | Pending |
+| PORT-02 | Phase 12 | Pending |
+| PORT-03 | Phase 12 | Pending |
+| PORT-04 | Phase 12 | Pending |
+| RISK-01 | Phase 12 | Pending |
+| RISK-02 | Phase 12 | Pending |
+| RISK-03 | Phase 12 | Pending |
+| RISK-04 | Phase 12 | Pending |
+| RISK-05 | Phase 12 | Pending |
+| RISK-06 | Phase 12 | Pending |
+| RISK-07 | Phase 12 | Pending |
+| RISK-08 | Phase 12 | Pending |
+| PIPE-01 | Phase 13 | Pending |
+| PIPE-02 | Phase 13 | Pending |
+| PIPE-03 | Phase 13 | Pending |
+| LLM-01 | Phase 13 | Pending |
+| LLM-02 | Phase 13 | Pending |
+| LLM-03 | Phase 13 | Pending |
+| LLM-04 | Phase 13 | Pending |
+| DASH-01 | Phase 13 | Pending |
+| DASH-02 | Phase 13 | Pending |
+| DASH-03 | Phase 13 | Pending |
+| DASH-04 | Phase 13 | Pending |
+| DASH-05 | Phase 13 | Pending |
+| APIV2-01 | Phase 13 | Pending |
+| APIV2-02 | Phase 13 | Pending |
+| APIV2-03 | Phase 13 | Pending |
+| APIV2-04 | Phase 13 | Pending |
+| APIV2-05 | Phase 13 | Pending |
+| APIV2-06 | Phase 13 | Pending |
+| APIV2-07 | Phase 13 | Pending |
+| APIV2-08 | Phase 13 | Pending |
+| APIV2-09 | Phase 13 | Pending |
+| TESTV2-01 | Phase 8-13 | Pending |
+| TESTV2-02 | Phase 8-13 | Pending |
+| TESTV2-03 | Phase 10 | Pending |
+| TESTV2-04 | Phase 12 | Pending |
+| TESTV2-05 | Phase 13 | Pending |
+| TESTV2-06 | Phase 13 | Pending |
+| TESTV2-07 | Phase 13 | Pending |
 
 **Coverage:**
-- v1 requirements: 65 total
-- Mapped to phases: 65
+- v2 requirements: 88 total
+- Mapped to phases: 88
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after Phase 3 plan 04 completion (Phase 3 complete)*
+*Requirements defined: 2026-02-20*
+*Milestone: v2.0 Quantitative Models & Agents*
