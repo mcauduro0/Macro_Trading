@@ -61,3 +61,27 @@ class FiscalMetric(str, Enum):
     NET_DEBT = "NET_DEBT"
     REVENUE = "REVENUE"
     EXPENDITURE = "EXPENDITURE"
+
+
+class SignalDirection(str, Enum):
+    """Direction of an agent's trading signal."""
+
+    LONG = "LONG"
+    SHORT = "SHORT"
+    NEUTRAL = "NEUTRAL"
+
+
+class SignalStrength(str, Enum):
+    """Confidence-bucketed signal strength.
+
+    Thresholds:
+    - STRONG: confidence >= 0.75
+    - MODERATE: 0.50 <= confidence < 0.75
+    - WEAK: 0.25 <= confidence < 0.50
+    - NO_SIGNAL: confidence < 0.25
+    """
+
+    STRONG = "STRONG"
+    MODERATE = "MODERATE"
+    WEAK = "WEAK"
+    NO_SIGNAL = "NO_SIGNAL"
