@@ -1,0 +1,68 @@
+{
+  "responseStatus": 200,
+  "responseStatusText": "OK",
+  "response": {
+    "TrsrBdTradgList": [
+      {
+        "TrsrBd": {
+          "nm": "Tesouro IPCA+ 2029",
+          "mtrtyDt": "2029-05-15T00:00:00",
+          "anulInvstmtRate": 6.85,
+          "minInvstmtAmt": 31.56,
+          "untrInvstmtVal": 3156.23,
+          "isSugstdTrsrBd": false
+        }
+      },
+      {
+        "TrsrBd": {
+          "nm": "Tesouro IPCA+ 2035",
+          "mtrtyDt": "2035-05-15T00:00:00",
+          "anulInvstmtRate": 7.12,
+          "minInvstmtAmt": 28.91,
+          "untrInvstmtVal": 2891.45,
+          "isSugstdTrsrBd": false
+        }
+      },
+      {
+        "TrsrBd": {
+          "nm": "Tesouro IPCA+ 2045",
+          "mtrtyDt": "2045-05-15T00:00:00",
+          "anulInvstmtRate": 7.25,
+          "minInvstmtAmt": 22.10,
+          "untrInvstmtVal": 2210.78,
+          "isSugstdTrsrBd": false
+        }
+      },
+      {
+        "TrsrBd": {
+          "nm": "Tesouro Prefixado 2027",
+          "mtrtyDt": "2027-01-01T00:00:00",
+          "anulInvstmtRate": 14.52,
+          "minInvstmtAmt": 30.10,
+          "untrInvstmtVal": 753.22,
+          "isSugstdTrsrBd": false
+        }
+      },
+      {
+        "TrsrBd": {
+          "nm": "Tesouro Selic 2029",
+          "mtrtyDt": "2029-03-01T00:00:00",
+          "anulInvstmtRate": 0.0551,
+          "minInvstmtAmt": 156.78,
+          "untrInvstmtVal": 15678.90,
+          "isSugstdTrsrBd": false
+        }
+      },
+      {
+        "TrsrBd": {
+          "nm": "Tesouro IPCA+ com Juros Semestrais 2032",
+          "mtrtyDt": "2032-08-15T00:00:00",
+          "anulInvstmtRate": 7.05,
+          "minInvstmtAmt": 42.33,
+          "untrInvstmtVal": 4233.12,
+          "isSugstdTrsrBd": false
+        }
+      }
+    ]
+  }
+}

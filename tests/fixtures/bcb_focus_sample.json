@@ -1,0 +1,43 @@
+{
+  "value": [
+    {
+      "Indicador": "IPCA",
+      "Data": "2025-02-14",
+      "DataReferencia": "2025",
+      "Media": 5.58,
+      "Mediana": 5.60,
+      "DesvioPadrao": 0.35,
+      "Minimo": 4.80,
+      "Maximo": 6.50,
+      "CoeficienteVariacao": 6.25,
+      "baseCalculo": 0,
+      "numeroRespondentes": 120
+    },
+    {
+      "Indicador": "IPCA",
+      "Data": "2025-02-14",
+      "DataReferencia": "2026",
+      "Media": 4.30,
+      "Mediana": 4.20,
+      "DesvioPadrao": 0.50,
+      "Minimo": 3.50,
+      "Maximo": 5.50,
+      "CoeficienteVariacao": 11.63,
+      "baseCalculo": 0,
+      "numeroRespondentes": 118
+    },
+    {
+      "Indicador": "IPCA",
+      "Data": "2025-02-07",
+      "DataReferencia": "2025",
+      "Media": 5.55,
+      "Mediana": 5.57,
+      "DesvioPadrao": 0.34,
+      "Minimo": 4.75,
+      "Maximo": 6.48,
+      "CoeficienteVariacao": 6.13,
+      "baseCalculo": 0,
+      "numeroRespondentes": 119
+    }
+  ]
+}
