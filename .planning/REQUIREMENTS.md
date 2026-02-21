@@ -45,11 +45,11 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
 - [x] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
 
-- [ ] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
-- [ ] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
-- [ ] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
-- [ ] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
-- [ ] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
+- [x] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
+- [x] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
+- [x] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
+- [x] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
+- [x] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
 
 - [ ] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
 - [ ] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
@@ -182,11 +182,11 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | FISC-02 | Phase 9 | Complete |
 | FISC-03 | Phase 9 | Complete |
 | FISC-04 | Phase 9 | Complete |
-| FXEQ-01 | Phase 9 | Pending |
-| FXEQ-02 | Phase 9 | Pending |
-| FXEQ-03 | Phase 9 | Pending |
-| FXEQ-04 | Phase 9 | Pending |
-| FXEQ-05 | Phase 9 | Pending |
+| FXEQ-01 | Phase 9 | Complete |
+| FXEQ-02 | Phase 9 | Complete |
+| FXEQ-03 | Phase 9 | Complete |
+| FXEQ-04 | Phase 9 | Complete |
+| FXEQ-05 | Phase 9 | Complete |
 | CRSA-01 | Phase 10 | Pending |
 | CRSA-02 | Phase 10 | Pending |
 | CRSA-03 | Phase 10 | Pending |

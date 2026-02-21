@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 9 — Fiscal & FX Equilibrium Agents (IN PROGRESS)
-Plan: 1 of 2 complete (09-01 done, 09-02 remaining)
-Status: Plan 09-01 complete — FiscalAgent built and tested
-Last activity: 2026-02-21 — Completed 09-01-PLAN.md (FiscalAgent, FiscalFeatureEngine, 3 fiscal models, 14 unit tests)
+Phase: 9 — Fiscal & FX Equilibrium Agents (COMPLETE)
+Plan: 2 of 2 complete (09-01 done, 09-02 done)
+Status: Phase 9 complete — FiscalAgent and FxEquilibriumAgent both built and tested
+Last activity: 2026-02-21 — Completed 09-02-PLAN.md (FxEquilibriumAgent, FxFeatureEngine, 4 FX models, 20 unit tests)
 
-Progress: [######    ] 30%  (6/20 plans complete)
+Progress: [#######   ] 35%  (7/20 plans complete)
 
 ## Performance Metrics
 
@@ -31,6 +31,7 @@ Progress: [######    ] 30%  (6/20 plans complete)
 | 08 | 02 | 14 min | 2 | 2 |
 | 08 | 03 | 13 min | 2 | 4 |
 | 09 | 01 | 11 min | 2 | 4 |
+| 09 | 02 | 12 min | 2 | 4 |
 
 *Updated after each plan completion*
 
@@ -78,6 +79,11 @@ Recent decisions affecting current work:
 - [v2.0-09-01]: DSA confidence from scenario consensus: 4/4 stabilizing→1.0, 3/4→0.70, 2/4→0.40, 1/4→0.20, 0/4→0.05
 - [v2.0-09-01]: FiscalImpulseModel: positive z (pb improving) = SHORT (fiscal contraction = BRL positive)
 - [v2.0-09-01]: FISCAL_BR_COMPOSITE: equal 1/3 weights, 0.70 conflict dampening when any active signal disagrees
+- [v2.0-09-02]: BeerModel uses same sm.add_constant() for prediction as training (avoids shape mismatch from statsmodels constant-dropping behavior)
+- [v2.0-09-02]: FX_BR_COMPOSITE: locked weights BEER 40% + Carry 30% + Flow 20% + CIP 10%; 0.70 dampening when any active signal disagrees
+- [v2.0-09-02]: CipBasisModel direction locked: positive basis = LONG USDBRL (capital flow friction, BRL less attractive)
+- [v2.0-09-02]: FlowModel: NaN for one flow component falls back to single-source composite (not NO_SIGNAL)
+- [v2.0-09-02]: FxFeatureEngine._build_beer_ols_data filters to 2010-present; only drops rows where log_usdbrl is NaN (other predictors with NaN kept for per-predictor availability check)
 
 ### Pending Todos
 
@@ -93,5 +99,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 09-01-PLAN.md (FiscalAgent, FiscalFeatureEngine, 3 fiscal models, 14 unit tests)
-Resume action: Continue Phase 9 — execute 09-02-PLAN.md (FxEquilibriumAgent)
+Stopped at: Completed 09-02-PLAN.md (FxEquilibriumAgent, FxFeatureEngine, 4 FX models, 20 unit tests)
+Resume action: Continue to Phase 10 — cross-asset agent
