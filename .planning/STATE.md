@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 10 — Cross-Asset Agent & Backtesting Engine (COMPLETE)
-Plan: 3 of 3 complete (10-01 done, 10-02 done, 10-03 done)
-Status: Phase 10 complete — all 3 plans delivered (CrossAssetAgent, BacktestEngine, Metrics/Reports)
-Last activity: 2026-02-21 — Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 tests)
+Phase: 11 — Trading Strategies
+Plan: 1 of 3 complete (11-01 done)
+Status: Executing Phase 11 — BaseStrategy framework + first 2 rate strategies delivered
+Last activity: 2026-02-21 — Completed 11-01-PLAN.md (BaseStrategy ABC, RATES_BR_01, RATES_BR_02, 51 tests)
 
-Progress: [########  ] 45%  (9/20 plans complete)
+Progress: [########  ] 50%  (10/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 10.0 min
-- Total execution time: 2.45 hours
+- Total execution time: 2.62 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -35,6 +35,7 @@ Progress: [########  ] 45%  (9/20 plans complete)
 | 10 | 01 | 9 min | 2 | 4 |
 | 10 | 02 | 5 min | 2 | 6 |
 | 10 | 03 | 6 min | 2 | 6 |
+| 11 | 01 | 10 min | 2 | 7 |
 
 *Updated after each plan completion*
 
@@ -99,6 +100,11 @@ Recent decisions affecting current work:
 - [v2.0-10-03]: Zero-vol positive returns produce capped Sharpe of 99.99 (not 0.0) — monotonically increasing equity must show positive Sharpe
 - [v2.0-10-03]: matplotlib Agg backend called before pyplot import — ensures headless PNG generation in CI/server
 - [v2.0-10-03]: BacktestEngine.run() returns BacktestResult (replaces BacktestRawResult namedtuple from 10-02)
+- [v2.0-11-01]: STRENGTH_MAP locked: STRONG=1.0, MODERATE=0.6, WEAK=0.3, NO_SIGNAL=0.0
+- [v2.0-11-01]: Weight formula: strength_base * confidence * max_position_size with leverage proportional scaling
+- [v2.0-11-01]: NEUTRAL signals produce 50% scale-down of existing position weight
+- [v2.0-11-01]: RATES_BR_01 carry_threshold=1.5 default; confidence scales linearly to 2x threshold
+- [v2.0-11-01]: RATES_BR_02 gap_threshold=100bps; Taylor r_star=4.5%, alpha=1.5, beta=0.5; 1Y tenor 50-day tolerance
 
 ### Pending Todos
 
@@ -114,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 TESTV2-03 tests)
-Resume action: Phase 10 complete. Proceed to Phase 11 planning/execution.
+Stopped at: Completed 11-01-PLAN.md (BaseStrategy ABC, RATES_BR_01 Carry, RATES_BR_02 Taylor, 51 tests)
+Resume action: Continue Phase 11 with 11-02-PLAN.md (next wave of strategies).

@@ -188,6 +188,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Inflation & Monetary Agents | 3/3 | Complete    | 2026-02-21 |
 | 9. Fiscal & FX Agents | 2/2 | Complete    | 2026-02-21 |
 | 10. Cross-Asset & Backtesting | 3/3 | Complete    | 2026-02-21 |
-| 11. Trading Strategies | 0/3 | Not started | - |
+| 11. Trading Strategies | 1/3 | In Progress|  |
 | 12. Portfolio & Risk | 0/3 | Not started | - |
 | 13. Pipeline, LLM, Dashboard, API & Tests | 0/4 | Not started | - |

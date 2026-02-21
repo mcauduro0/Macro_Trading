@@ -68,9 +68,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Trading Strategies
 
-- [ ] **STRAT-01**: BaseStrategy abstract class with StrategyConfig (id, asset class, instruments, rebalance freq, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
-- [ ] **STRAT-02**: RATES_BR_01 Carry & Roll-Down — capture carry-to-risk at optimal DI curve tenor, sized by carry/risk ratio vs threshold
-- [ ] **STRAT-03**: RATES_BR_02 Taylor Rule Misalignment — trade DI direction based on gap between current Selic and Taylor-implied fair rate
+- [x] **STRAT-01**: BaseStrategy abstract class with StrategyConfig (id, asset class, instruments, rebalance freq, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
+- [x] **STRAT-02**: RATES_BR_01 Carry & Roll-Down — capture carry-to-risk at optimal DI curve tenor, sized by carry/risk ratio vs threshold
+- [x] **STRAT-03**: RATES_BR_02 Taylor Rule Misalignment — trade DI direction based on gap between current Selic and Taylor-implied fair rate
 - [ ] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
 - [ ] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
 - [ ] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
@@ -198,9 +198,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | BACK-06 | Phase 10 | Complete |
 | BACK-07 | Phase 10 | Complete |
 | BACK-08 | Phase 10 | Complete |
-| STRAT-01 | Phase 11 | Pending |
-| STRAT-02 | Phase 11 | Pending |
-| STRAT-03 | Phase 11 | Pending |
+| STRAT-01 | Phase 11 | Complete |
+| STRAT-02 | Phase 11 | Complete |
+| STRAT-03 | Phase 11 | Complete |
 | STRAT-04 | Phase 11 | Pending |
 | STRAT-05 | Phase 11 | Pending |
 | STRAT-06 | Phase 11 | Pending |
