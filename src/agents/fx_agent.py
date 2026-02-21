@@ -111,9 +111,10 @@ class BeerModel:
             X = sm.add_constant(df_fit[available_preds])
             model = sm.OLS(df_fit["log_usdbrl"], X).fit()
 
-            latest_X = sm.add_constant(
-                df_fit[available_preds].iloc[[-1]], has_const=True
-            )
+            # Reconstruct latest_X using the same add_constant as training
+            # so column count always matches model.params (handles edge case
+            # where sm.add_constant skips constant when predictors are constant)
+            latest_X = sm.add_constant(df_fit[available_preds].iloc[[-1]])
             predicted_log = model.predict(latest_X).iloc[0]
             fair_value = float(np.exp(predicted_log))
             actual_usdbrl = float(np.exp(df_fit["log_usdbrl"].iloc[-1]))
