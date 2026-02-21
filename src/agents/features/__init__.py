@@ -1,11 +1,13 @@
 """Feature engines for analytical agents.
 
 Re-exports the feature engine classes used by inflation, monetary
-policy, and fiscal agents.
+policy, fiscal, FX, and cross-asset agents.
 
 InflationFeatureEngine is exported when available (built in plan 08-01).
 MonetaryFeatureEngine is always available (built in plan 08-03, wave 1).
 FiscalFeatureEngine is exported when available (built in plan 09-01).
+FxFeatureEngine is exported when available (built in plan 09-02).
+CrossAssetFeatureEngine is exported when available (built in plan 10-01).
 """
 
 from src.agents.features.monetary_features import MonetaryFeatureEngine
@@ -36,5 +38,13 @@ try:
     from src.agents.features.fx_features import FxFeatureEngine  # type: ignore[import]
 
     __all__ = [*__all__, "FxFeatureEngine"]
+except ImportError:
+    pass
+
+# CrossAssetFeatureEngine is added in plan 10-01; import conditionally
+try:
+    from src.agents.features.cross_asset_features import CrossAssetFeatureEngine  # type: ignore[import]
+
+    __all__ = [*__all__, "CrossAssetFeatureEngine"]
 except ImportError:
     pass
