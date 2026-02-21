@@ -6,7 +6,7 @@ This is a **Macro Trading System** project focused on identifying and executing 
 
 ## Skills & Capabilities
 
-This project is equipped with **145 Agent Skills** from 6 curated sources, plus the **GSD (Get Stuff Done) framework** for structured project management.
+This project is equipped with **Agent Skills** from 6 curated sources, plus the **GSD (Get Stuff Done) framework** for structured project management.
 
 ### Installed Frameworks & Skills
 
@@ -18,8 +18,8 @@ This project is equipped with **145 Agent Skills** from 6 curated sources, plus 
 #### obra/superpowers (14 skills)
 Battle-tested development skills: TDD, systematic debugging, code review, parallel agents, git worktrees, plan writing/execution, subagent-driven development, verification.
 
-#### anthropics/skills (16 skills)
-Official Anthropic skills: PDF/DOCX/XLSX/PPTX processing, MCP builder, frontend design, webapp testing, canvas design, doc co-authoring, brand guidelines.
+#### anthropics/skills (selected skills)
+Official Anthropic skills: PDF processing, MCP builder, frontend design, webapp testing, doc co-authoring, skill creator.
 
 #### alirezarezvani/claude-skills (53 skills)
 Enterprise-grade skills organized by team: financial analyst, senior architect/backend/frontend/devops/ML/data-scientist, CEO/CTO advisor, product management, Jira/Confluence integration, code review, database design, RAG architect, security.
@@ -27,41 +27,39 @@ Enterprise-grade skills organized by team: financial analyst, senior architect/b
 #### levnikolaevich/claude-code-skills (40 skills)
 Full SDLC pipeline: scope decomposition, epic/story/task management, code execution, quality gates, auditors (security, code quality, dependencies, dead code, performance), DevOps setup (Docker, CI/CD), project bootstrap.
 
-#### ComposioHQ/awesome-claude-skills (19 skills)
-Third-party integrations and utilities: artifacts builder, changelog generator, content research, file organizer, lead research, MCP builder, meeting insights, webapp testing, Polygon/OpenAI/Snowflake automations.
-
-#### hesreallyhim/awesome-claude-code (3 resource packs)
-Curated resources: CLAUDE.md templates, workflow guides, and 23 additional slash commands (commit, PR review, release, optimize, etc.).
+#### ComposioHQ/awesome-claude-skills (selected skills)
+Third-party integrations and utilities: artifacts builder, changelog generator, content research, file organizer, MCP builder, meeting insights, webapp testing, Polygon/OpenAI automations.
 
 ### Additional Slash Commands
 Beyond GSD, the following commands are available: `/commit`, `/create-pr`, `/pr-review`, `/release`, `/optimize`, `/todo`, `/fix-github-issue`, `/create-prd`, `/testing_plan_integration`, and more.
 
-## Development Phase Rules & Guides
+## Development Phase Guides
 
-This project follows a structured 4-phase development plan (Phase 0 through Phase 3). Each phase has a comprehensive guide located in `.claude/rules/` that serves as the **authoritative reference** for what to build, how to build it, and how to validate each step.
+This project follows a structured 4-phase development plan (Phase 0 through Phase 3). Each phase has a comprehensive guide located in the `docs/` folder. **These guides are NOT loaded automatically** — you must read them on demand when starting a phase.
 
-**IMPORTANT: Before starting work on any phase, you MUST read the corresponding guide file in full. These guides contain the exact specifications, code structures, database schemas, API endpoints, and validation criteria for each development step.**
+**IMPORTANT: Before starting work on any phase, read the corresponding guide file. These guides contain the exact specifications, code structures, database schemas, API endpoints, and validation criteria for each development step.**
 
 | Phase | Guide File | Description | Estimated Time |
 |---|---|---|---|
-| **Phase 0** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase0.md` | Data Infrastructure (15 steps) — Project scaffold, Docker Compose (TimescaleDB, Redis, MongoDB, Kafka, MinIO), 11+ data connectors (BCB, FRED, B3, ANBIMA, Yahoo, etc.), 200+ macro series, data quality checks, FastAPI endpoints | 6-10 hours |
-| **Phase 1** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase1.md` | Quantitative Models, Agents & Backtesting (20 steps) — Agent Framework, 5 Analytical Agents, Backtesting Engine, 8 Trading Strategies, Signal Aggregation, Risk Management | 10-16 hours |
-| **Phase 2** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` | Strategy Engine, Risk & Portfolio Management (18 steps) — 17 additional strategies, NLP Pipeline, Risk Engine (VaR, CVaR, stress testing), Portfolio Construction & Optimization, Production Orchestration (Dagster) | 12-18 hours |
-| **Phase 3** | `.claude/rules/GUIA_COMPLETO_CLAUDE_CODE_Fase3.md` | Production Infrastructure, Live Trading & Go-Live — Execution Management System, FIX connectivity, Emergency Stop, Auth/Security, Go-Live Checklist | 8-12 hours |
+| **Phase 0** | `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase0.md` | Data Infrastructure (15 steps) — Project scaffold, Docker Compose (TimescaleDB, Redis, MongoDB, Kafka, MinIO), 11+ data connectors (BCB, FRED, B3, ANBIMA, Yahoo, etc.), 200+ macro series, data quality checks, FastAPI endpoints | 6-10 hours |
+| **Phase 1** | `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase1.md` | Quantitative Models, Agents & Backtesting (20 steps) — Agent Framework, 5 Analytical Agents, Backtesting Engine, 8 Trading Strategies, Signal Aggregation, Risk Management | 10-16 hours |
+| **Phase 2** | `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` | Strategy Engine, Risk & Portfolio Management (18 steps) — 17 additional strategies, NLP Pipeline, Risk Engine (VaR, CVaR, stress testing), Portfolio Construction & Optimization, Production Orchestration (Dagster) | 12-18 hours |
+| **Phase 3** | `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase3.md` | Production Infrastructure, Live Trading & Go-Live — Execution Management System, FIX connectivity, Emergency Stop, Auth/Security, Go-Live Checklist | 8-12 hours |
 
 ### Architecture Reference Document
 
 | Document | File | Description |
 |---|---|---|
-| **Data Architecture Blueprint** | `.claude/rules/Data_Architecture_Blueprint_MacroHedgeFund.md` | Complete catalog of all data providers, 200+ variables, collection frequencies, database schemas (TimescaleDB, MongoDB, Redis, Kafka), pipeline design (Bronze/Silver/Gold layers), data quality governance, and storage sizing. This is the **master reference** for all data-related decisions across all phases. |
+| **Data Architecture Blueprint** | `docs/Data_Architecture_Blueprint_MacroHedgeFund.md` | Complete catalog of all data providers, 200+ variables, collection frequencies, database schemas (TimescaleDB, MongoDB, Redis, Kafka), pipeline design (Bronze/Silver/Gold layers), data quality governance, and storage sizing. This is the **master reference** for all data-related decisions across all phases. |
 
 ### How to Use the Guides
 
-1. Each guide contains numbered **ETAPAS** (steps) that are independent prompts
-2. Each step is delimited by `═══ INÍCIO DO PROMPT N ═══` and `═══ FIM DO PROMPT N ═══`
-3. Execute steps in order — each builds on the previous
-4. Each step includes verification criteria (tests, migrations, health checks)
-5. **Never skip verification** before moving to the next step
+1. To start a phase, tell Claude Code: `"Read docs/GUIA_COMPLETO_CLAUDE_CODE_Fase0.md and execute Etapa 1."`
+2. Each guide contains numbered **ETAPAS** (steps) that are independent prompts
+3. Each step is delimited by `═══ INÍCIO DO PROMPT N ═══` and `═══ FIM DO PROMPT N ═══`
+4. Execute steps in order — each builds on the previous
+5. Each step includes verification criteria (tests, migrations, health checks)
+6. **Never skip verification** before moving to the next step
 
 ### Phase Dependencies
 

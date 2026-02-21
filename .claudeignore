@@ -1,0 +1,36 @@
+# =============================================================================
+# .claudeignore — Macro Trading Project
+# Instructs Claude Code to ignore files that are not useful for LLM processing
+# =============================================================================
+
+# --- Binary files inside skills (fonts, schemas, images) ---
+.claude/skills/**/*.ttf
+.claude/skills/**/*.woff
+.claude/skills/**/*.woff2
+.claude/skills/**/*.xsd
+.claude/skills/**/*.xml
+.claude/skills/**/*.png
+.claude/skills/**/*.jpg
+.claude/skills/**/*.jpeg
+.claude/skills/**/*.svg
+.claude/skills/**/*.ico
+.claude/skills/**/*.gif
+.claude/skills/**/*.pdf
+.claude/skills/**/*.gz
+
+# --- License and metadata files inside skills ---
+.claude/skills/**/LICENSE.txt
+.claude/skills/**/LICENSE
+.claude/skills/**/*-OFL.txt
+.claude/skills/**/*.gitkeep
+
+# --- GSD internal files ---
+.claude/gsd-file-manifest.json
+.claude/package.json
+
+# --- Git ---
+.git/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
