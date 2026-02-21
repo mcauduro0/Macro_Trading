@@ -8,9 +8,11 @@ Re-exports the core strategy infrastructure and concrete strategies:
 - RatesBR02TaylorStrategy: BR Taylor Rule Misalignment strategy
 - RatesBR03SlopeStrategy: BR DI Curve Slope (Flattener/Steepener) strategy
 - RatesBR04SpilloverStrategy: US Rates Spillover to BR DI strategy
+- InfBR01BreakevenStrategy: BR Breakeven Inflation Trade strategy
 """
 
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategyPosition
+from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
 from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
 from src.strategies.rates_br_02_taylor import RatesBR02TaylorStrategy
 from src.strategies.rates_br_03_slope import RatesBR03SlopeStrategy
@@ -18,6 +20,7 @@ from src.strategies.rates_br_04_spillover import RatesBR04SpilloverStrategy
 
 __all__ = [
     "BaseStrategy",
+    "InfBR01BreakevenStrategy",
     "RatesBR01CarryStrategy",
     "RatesBR02TaylorStrategy",
     "RatesBR03SlopeStrategy",
