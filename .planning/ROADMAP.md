@@ -28,7 +28,7 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 ### v2.0 Phases (Active)
 
 - [x] **Phase 7: Agent Framework & Data Loader** - BaseAgent ABC, signal/report dataclasses, PointInTimeDataLoader, AgentRegistry, DB migration, dependency installation
-- [ ] **Phase 8: Inflation & Monetary Policy Agents** - InflationAgent (Phillips Curve, IPCA bottom-up, surprise, persistence) and MonetaryPolicyAgent (Taylor Rule, Kalman r*, Selic path, term premium)
+- [x] **Phase 8: Inflation & Monetary Policy Agents** - InflationAgent (Phillips Curve, IPCA bottom-up, surprise, persistence) and MonetaryPolicyAgent (Taylor Rule, Kalman r*, Selic path, term premium) (completed 2026-02-21)
 - [ ] **Phase 9: Fiscal & FX Equilibrium Agents** - FiscalAgent (DSA model, fiscal impulse, dominance risk) and FxEquilibriumAgent (BEER model, carry-to-risk, flows, CIP basis)
 - [ ] **Phase 10: Cross-Asset Agent & Backtesting Engine** - CrossAssetAgent (regime detection, correlations, sentiment) and BacktestEngine (portfolio tracking, metrics, PIT enforcement)
 - [ ] **Phase 11: Trading Strategies** - BaseStrategy ABC, 8 initial strategies (4 rates, 1 inflation, 1 FX, 1 cupom cambial, 1 sovereign)
@@ -185,7 +185,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 7. Agent Framework | 2/2 | Complete | 2026-02-20 |
-| 8. Inflation & Monetary Agents | 2/3 | In Progress|  |
+| 8. Inflation & Monetary Agents | 3/3 | Complete   | 2026-02-21 |
 | 9. Fiscal & FX Agents | 0/2 | Not started | - |
 | 10. Cross-Asset & Backtesting | 0/3 | Not started | - |
 | 11. Trading Strategies | 0/3 | Not started | - |

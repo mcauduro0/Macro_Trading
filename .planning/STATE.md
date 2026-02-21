@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 8 — Inflation & Monetary Policy Agents (IN PROGRESS)
-Plan: 2 of 3 complete (08-01 + 08-03 complete; 08-02 remaining)
-Status: Plans 08-01 and 08-03 complete — ready for Plan 08-02
-Last activity: 2026-02-21 — Completed 08-03-PLAN.md (MonetaryPolicyAgent, 5 models, 28 tests)
+Phase: 8 — Inflation & Monetary Policy Agents (COMPLETE)
+Plan: 3 of 3 complete (08-01 + 08-02 + 08-03 all complete)
+Status: All 3 plans complete — Phase 8 done
+Last activity: 2026-02-21 — Completed 08-02-PLAN.md (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, 21 unit tests)
 
-Progress: [####      ] 20%  (4/20 plans complete)
+Progress: [#####     ] 25%  (5/20 plans complete)
 
 ## Performance Metrics
 
@@ -28,6 +28,7 @@ Progress: [####      ] 20%  (4/20 plans complete)
 | 07 | 01 | 7 min | 2 | 5 |
 | 07 | 02 | 12 min | 2 | 11 |
 | 08 | 01 | 11 min | 2 | 4 |
+| 08 | 02 | 14 min | 2 | 2 |
 | 08 | 03 | 13 min | 2 | 4 |
 
 *Updated after each plan completion*
@@ -67,6 +68,10 @@ Recent decisions affecting current work:
 - [v2.0-08-03]: Conflict dampening 0.70 when any active BR sub-signal disagrees with plurality direction
 - [v2.0-08-03]: KalmanFilterRStar MIN_OBS=24, DEFAULT_R_STAR=3.0 — graceful degradation for historical backtesting
 - [v2.0-08-03]: features/__init__.py uses conditional import for InflationFeatureEngine for wave-1 independence
+- [v2.0-08-02]: InflationSurpriseModel direction: upside surprise (z>0) = LONG (hawkish); downside = SHORT — per CONTEXT.md
+- [v2.0-08-02]: InflationSurpriseModel fires only when |z| >= Z_FIRE=1.0; flat/constant data returns NO_SIGNAL via zero-std guard
+- [v2.0-08-02]: InflationPersistenceModel expectations anchoring: max(0, 100 - |focus-3.0|*20) — inverted, closer to 3% = higher
+- [v2.0-08-02]: INFLATION_BR_COMPOSITE dampening at >=2 disagreements (not >=1); US trend excluded from BR composite
 
 ### Pending Todos
 
@@ -82,5 +87,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 08-03-PLAN.md (MonetaryPolicyAgent, 5 models, 28 unit tests)
-Resume action: Begin Plan 08-02 (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, InflationAgent orchestration)
+Stopped at: Completed 08-02-PLAN.md (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, 21 unit tests)
+Resume action: Phase 8 complete — proceed to Phase 9 or next milestone
