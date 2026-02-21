@@ -185,7 +185,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 7. Agent Framework | 2/2 | Complete | 2026-02-20 |
-| 8. Inflation & Monetary Agents | 3/3 | Complete   | 2026-02-21 |
+| 8. Inflation & Monetary Agents | 3/3 | Complete    | 2026-02-21 |
 | 9. Fiscal & FX Agents | 0/2 | Not started | - |
 | 10. Cross-Asset & Backtesting | 0/3 | Not started | - |
 | 11. Trading Strategies | 0/3 | Not started | - |
