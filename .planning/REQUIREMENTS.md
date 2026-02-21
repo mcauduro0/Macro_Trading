@@ -25,9 +25,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Analytical Agents
 
-- [ ] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
-- [ ] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
-- [ ] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
+- [x] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
+- [x] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
+- [x] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
 - [ ] **INFL-04**: InflationSurpriseModel — z-score of rolling 3-month actual-vs-Focus surprise average as regime indicator
 - [ ] **INFL-05**: InflationPersistenceModel — composite score (0-100) from diffusion level, core acceleration, services momentum, expectations anchoring
 - [ ] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
@@ -165,9 +165,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | AGENT-05 | Phase 7 | Complete |
 | AGENT-06 | Phase 7 | Complete |
 | AGENT-07 | Phase 7 | Complete |
-| INFL-01 | Phase 8 | Pending |
-| INFL-02 | Phase 8 | Pending |
-| INFL-03 | Phase 8 | Pending |
+| INFL-01 | Phase 8 | Complete |
+| INFL-02 | Phase 8 | Complete |
+| INFL-03 | Phase 8 | Complete |
 | INFL-04 | Phase 8 | Pending |
 | INFL-05 | Phase 8 | Pending |
 | INFL-06 | Phase 8 | Pending |

@@ -9,24 +9,25 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 7 — Agent Framework & Data Loader (COMPLETE)
-Plan: 2 of 2 (all complete)
-Status: Phase complete — ready for Phase 8
-Last activity: 2026-02-20 — Completed 07-02-PLAN.md (AgentRegistry, agent_reports migration, tests)
+Phase: 8 — Inflation & Monetary Policy Agents (IN PROGRESS)
+Plan: 1 of 3 complete
+Status: Plan 08-01 complete — ready for Plan 08-02
+Last activity: 2026-02-21 — Completed 08-01-PLAN.md (InflationFeatureEngine, PhillipsCurveModel, IpcaBottomUpModel)
 
-Progress: [##        ] 10%  (2/20 plans complete)
+Progress: [###       ] 15%  (3/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 12
-- Average duration: 10.4 min
-- Total execution time: 1.83 hours
+- Total plans completed: 13
+- Average duration: 10.3 min
+- Total execution time: 1.99 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 07 | 01 | 7 min | 2 | 5 |
 | 07 | 02 | 12 min | 2 | 11 |
+| 08 | 01 | 11 min | 2 | 4 |
 
 *Updated after each plan completion*
 
@@ -54,6 +55,11 @@ Recent decisions affecting current work:
 - [v2.0-07-02]: agent_reports as regular table (not hypertable) — low volume audit trail
 - [v2.0-07-02]: Agents not in EXECUTION_ORDER appended alphabetically — extensible for future agents
 - [v2.0-07-02]: run_all catches per-agent exceptions and continues — one failure does not abort pipeline
+- [v2.0-08-01]: Compounded YoY via prod(1+mom/100)-1 — matches IBGE methodology vs simple sum
+- [v2.0-08-01]: Private _raw_ols_data and _raw_components keys in features dict — model classes receive pre-assembled data
+- [v2.0-08-01]: IBC-Br uses 10Y lookback (3650 days) — HP filter and 120M OLS window both need full history
+- [v2.0-08-01]: USDBRL/CRB via get_market_data(), not get_macro_series() — FX/commodities are intraday not macro releases
+- [v2.0-08-01]: IpcaBottomUpModel renormalizes IBGE weights to available components — partial coverage produces valid signal
 
 ### Pending Todos
 
@@ -64,10 +70,10 @@ None yet.
 - FRED API key required for backfill (free registration at fred.stlouisfed.org)
 - Yahoo Finance (yfinance) is a scraper with known fragility — fallback considered
 - Anthropic API key needed for LLM narrative generation (can use fallback templates without it)
-- statsmodels / sklearn needed for quantitative models (Phillips Curve OLS, Kalman Filter)
+- statsmodels confirmed installed and working (Phillips Curve OLS, HP filter)
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Completed 07-02-PLAN.md (Phase 7 complete)
-Resume action: Begin Phase 8 (Inflation & Monetary Policy Agents)
+Last session: 2026-02-21
+Stopped at: Completed 08-01-PLAN.md (InflationFeatureEngine, PhillipsCurveModel, IpcaBottomUpModel)
+Resume action: Begin Plan 08-02 (orchestrate InflationAgent, add remaining sub-models)
