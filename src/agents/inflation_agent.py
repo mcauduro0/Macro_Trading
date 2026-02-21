@@ -2,12 +2,14 @@
 
 Implements:
 - InflationAgent: Template Method agent orchestrating feature computation
-  and model execution.  load_data() and compute_features() are fully
-  implemented here; run_models() will be expanded in Plan 08-02.
+  and model execution.  load_data(), compute_features(), run_models(), and
+  generate_narrative() are all fully implemented here.
 - PhillipsCurveModel: Expectations-augmented OLS Phillips Curve on a
   rolling 120-month (10-year) window.
-- IpcaBottomUpModel: 9-component seasonal forecast aggregated with
-  official IBGE weights.
+- IpcaBottomUpModel: 9-component seasonal IBGE-weighted 12M IPCA forecast.
+- InflationSurpriseModel: IPCA actual vs Focus MoM consensus z-score signal.
+- InflationPersistenceModel: Composite 0-100 inflation persistence score.
+- UsInflationTrendModel: US PCE core trend analysis vs Fed 2% target.
 """
 
 from __future__ import annotations
@@ -35,9 +37,10 @@ log = logging.getLogger(__name__)
 class InflationAgent(BaseAgent):
     """Analytical agent for Brazilian and US inflation signals.
 
-    Implements the BaseAgent Template Method pattern.  Data loading and
-    feature computation are fully implemented; model execution is stubbed
-    for Plan 08-02 completion.
+    Implements the BaseAgent Template Method pattern.  All pipeline steps are
+    fully implemented: load_data(), compute_features(), run_models(), and
+    generate_narrative().  The agent produces exactly 6 AgentSignal objects:
+    5 sub-model signals + 1 INFLATION_BR_COMPOSITE.
     """
 
     AGENT_ID = "inflation_agent"
@@ -85,6 +88,11 @@ class InflationAgent(BaseAgent):
         super().__init__(self.AGENT_ID, self.AGENT_NAME)
         self.loader = loader
         self.feature_engine = InflationFeatureEngine()
+        self.phillips = PhillipsCurveModel()
+        self.bottom_up = IpcaBottomUpModel()
+        self.surprise = InflationSurpriseModel()
+        self.persistence = InflationPersistenceModel()
+        self.us_trend = UsInflationTrendModel()
 
     # ------------------------------------------------------------------
     # load_data — fully implemented
@@ -211,36 +219,260 @@ class InflationAgent(BaseAgent):
     # compute_features — fully implemented
     # ------------------------------------------------------------------
     def compute_features(self, data: dict) -> dict[str, Any]:
-        """Delegate to InflationFeatureEngine.compute().
+        """Delegate to InflationFeatureEngine.compute() and add private keys.
+
+        Stores ``features["_as_of_date"]`` (required by run_models),
+        ``features["_surprise_series"]`` (DataFrame for InflationSurpriseModel),
+        and ``features["_services_3m_saar"]`` (float for InflationPersistenceModel).
 
         Args:
             data: Output of load_data().
 
         Returns:
-            Flat feature dict including private _raw_ols_data and
-            _raw_components keys for downstream models.
+            Flat feature dict including private _raw_ols_data,
+            _raw_components, _surprise_series, and _services_3m_saar keys.
         """
-        # as_of_date is not stored on data; pass today as placeholder.
-        # PhillipsCurveModel and IpcaBottomUpModel receive as_of_date
-        # explicitly via run().
-        return self.feature_engine.compute(data, date.today())
+        # as_of_date stored in data by load_data caller (run/backtest_run)
+        as_of_date = data.get("_as_of_date", date.today())
+        features = self.feature_engine.compute(data, as_of_date)
+        features["_as_of_date"] = as_of_date
+
+        # Build _surprise_series for InflationSurpriseModel
+        features["_surprise_series"] = self._build_surprise_series(data)
+
+        # Build _services_3m_saar for InflationPersistenceModel
+        features["_services_3m_saar"] = self._compute_services_3m_saar(data)
+
+        return features
 
     # ------------------------------------------------------------------
-    # run_models — stub (completed in Plan 08-02)
+    # run_models — fully implemented
     # ------------------------------------------------------------------
     def run_models(self, features: dict) -> list[AgentSignal]:
-        """Execute quantitative models (stub — completed in Plan 08-02).
+        """Execute all 5 inflation models and build composite.
 
-        Returns empty list until Plan 08-02 wires in all models.
+        Runs: PhillipsCurve, BottomUp, Surprise, Persistence, UsTrend.
+        Then builds INFLATION_BR_COMPOSITE from the 4 BR signals.
+
+        Args:
+            features: Output of compute_features(), must include _as_of_date.
+
+        Returns:
+            List of exactly 6 AgentSignal objects.
         """
-        return []
+        as_of_date = features["_as_of_date"]
+        signals = []
+
+        for model in [self.phillips, self.bottom_up, self.surprise, self.persistence, self.us_trend]:
+            try:
+                sig = model.run(features, as_of_date)
+                signals.append(sig)
+            except Exception as exc:
+                self.log.warning("model_failed", model=model.SIGNAL_ID, error=str(exc))
+
+        composite = self._build_composite(signals, as_of_date)
+        signals.append(composite)
+        return signals
 
     # ------------------------------------------------------------------
-    # generate_narrative — stub (completed in Plan 08-02)
+    # generate_narrative — fully implemented
     # ------------------------------------------------------------------
     def generate_narrative(self, signals: list[AgentSignal], features: dict) -> str:
-        """Generate analysis narrative (stub — completed in Plan 08-02)."""
-        return ""
+        """Generate a human-readable inflation analysis summary.
+
+        Args:
+            signals: List of AgentSignal objects from run_models().
+            features: Feature dict from compute_features().
+
+        Returns:
+            Multi-line analysis text summarizing all signals.
+        """
+        as_of_date = features.get("_as_of_date", "unknown")
+        composite_direction = "NEUTRAL"
+        for sig in signals:
+            if sig.signal_id == "INFLATION_BR_COMPOSITE":
+                composite_direction = sig.direction.value
+                break
+
+        lines = ["# Inflation Agent Analysis", ""]
+        for sig in signals:
+            lines.append(
+                f"- {sig.signal_id}: {sig.direction.value} ({sig.strength.value}, conf={sig.confidence:.2f})"
+            )
+        lines.append(f"\nComposite inflation view: {composite_direction} as of {as_of_date}")
+        return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Composite signal builder
+    # ------------------------------------------------------------------
+    def _build_composite(self, signals: list[AgentSignal], as_of_date: date) -> AgentSignal:
+        """Weighted composite of BR inflation sub-signals.
+
+        Weights: Phillips 35%, BottomUp 30%, Surprise 20%, Persistence 15%.
+        US trend (INFLATION_US_TREND) is excluded from the BR composite.
+        Conflict dampening: if >= 2 signals disagree with plurality, reduce
+        confidence by 30% (multiply by 0.70).
+
+        Args:
+            signals: List of sub-model signals (5 total, US excluded from BR).
+            as_of_date: Point-in-time reference date.
+
+        Returns:
+            AgentSignal with signal_id="INFLATION_BR_COMPOSITE".
+        """
+        no_signal_composite = AgentSignal(
+            signal_id="INFLATION_BR_COMPOSITE",
+            agent_id=self.AGENT_ID,
+            timestamp=datetime.utcnow(),
+            as_of_date=as_of_date,
+            direction=SignalDirection.NEUTRAL,
+            strength=SignalStrength.NO_SIGNAL,
+            confidence=0.0,
+            value=0.0,
+            horizon_days=252,
+            metadata={"reason": "no_active_br_sub_signals"},
+        )
+
+        # Weights only for BR sub-signals (US trend excluded)
+        base_weights = {
+            "INFLATION_BR_PHILLIPS": 0.35,
+            "INFLATION_BR_BOTTOMUP": 0.30,
+            "INFLATION_BR_SURPRISE": 0.20,
+            "INFLATION_BR_PERSISTENCE": 0.15,
+        }
+
+        # Filter to non-NO_SIGNAL BR signals
+        active_signals = [
+            sig
+            for sig in signals
+            if sig.signal_id in base_weights and sig.strength != SignalStrength.NO_SIGNAL
+        ]
+
+        if not active_signals:
+            return no_signal_composite
+
+        # Renormalize weights for available signals
+        available_weight = sum(base_weights[sig.signal_id] for sig in active_signals)
+        norm_weights = {
+            sig.signal_id: base_weights[sig.signal_id] / available_weight
+            for sig in active_signals
+        }
+
+        # Majority vote for direction (count votes by weight)
+        long_w = sum(
+            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.LONG
+        )
+        short_w = sum(
+            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.SHORT
+        )
+        neutral_w = sum(
+            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.NEUTRAL
+        )
+
+        if long_w >= short_w and long_w >= neutral_w:
+            plurality_direction = SignalDirection.LONG
+        elif short_w >= long_w and short_w >= neutral_w:
+            plurality_direction = SignalDirection.SHORT
+        else:
+            plurality_direction = SignalDirection.NEUTRAL
+
+        # Conflict detection: >= 2 signals disagree with plurality
+        disagreements = sum(1 for sig in active_signals if sig.direction != plurality_direction)
+        dampening = 0.70 if disagreements >= 2 else 1.0
+
+        # Weighted confidence with dampening
+        composite_confidence = sum(
+            norm_weights[sig.signal_id] * sig.confidence for sig in active_signals
+        ) * dampening
+        composite_confidence = round(min(1.0, composite_confidence), 4)
+        strength = classify_strength(composite_confidence)
+
+        effective_weights = {sig.signal_id: round(norm_weights[sig.signal_id], 4) for sig in active_signals}
+        sub_directions = {sig.signal_id: sig.direction.value for sig in active_signals}
+
+        return AgentSignal(
+            signal_id="INFLATION_BR_COMPOSITE",
+            agent_id=self.AGENT_ID,
+            timestamp=datetime.utcnow(),
+            as_of_date=as_of_date,
+            direction=plurality_direction,
+            strength=strength,
+            confidence=composite_confidence,
+            value=composite_confidence,
+            horizon_days=252,
+            metadata={
+                "weights": effective_weights,
+                "dampening": dampening,
+                "sub_directions": sub_directions,
+            },
+        )
+
+    # ------------------------------------------------------------------
+    # Private helpers for compute_features
+    # ------------------------------------------------------------------
+    def _build_surprise_series(self, data: dict) -> pd.DataFrame:
+        """Build the surprise_series DataFrame for InflationSurpriseModel.
+
+        Returns a DataFrame with columns: actual_mom, focus_mom_median,
+        indexed monthly.  Returns empty DataFrame if data unavailable.
+        """
+        try:
+            ipca_df = data.get("ipca")
+            focus_df = data.get("focus")
+
+            if ipca_df is None or not isinstance(ipca_df, pd.DataFrame) or ipca_df.empty:
+                return pd.DataFrame(columns=["actual_mom", "focus_mom_median"])
+
+            # Get IPCA MoM (actual)
+            val_col = "value" if "value" in ipca_df.columns else ipca_df.columns[0]
+            actual = ipca_df[[val_col]].rename(columns={val_col: "actual_mom"}).copy()
+            actual.index = pd.to_datetime(actual.index)
+            actual = actual.resample("ME").last()
+
+            # Get Focus 12M median (used as MoM consensus proxy)
+            if focus_df is None or not isinstance(focus_df, pd.DataFrame) or focus_df.empty:
+                return pd.DataFrame(columns=["actual_mom", "focus_mom_median"])
+
+            # Focus 12M expectations as MoM proxy (divide YoY by 12)
+            focus_val_col = "ipca_12m" if "ipca_12m" in focus_df.columns else focus_df.columns[0]
+            focus_series = focus_df[[focus_val_col]].copy()
+            focus_series.index = pd.to_datetime(focus_series.index)
+            focus_monthly = focus_series.resample("ME").last()
+            # Convert 12M YoY expectation to approximate MoM
+            focus_monthly["focus_mom_median"] = focus_monthly[focus_val_col] / 12.0
+            focus_monthly = focus_monthly[["focus_mom_median"]]
+
+            # Align and join
+            surprise = actual.join(focus_monthly, how="inner")
+            return surprise.dropna()
+
+        except Exception as exc:
+            self.log.warning("surprise_series_build_failed", error=str(exc))
+            return pd.DataFrame(columns=["actual_mom", "focus_mom_median"])
+
+    def _compute_services_3m_saar(self, data: dict) -> float:
+        """Compute services MoM 3-month SAAR for InflationPersistenceModel.
+
+        Returns:
+            SAAR value in %, or np.nan if insufficient data.
+        """
+        try:
+            df = data.get("ipca_services")
+            if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+                return float(np.nan)
+
+            val_col = "value" if "value" in df.columns else df.columns[0]
+            series = df[val_col].dropna()
+            if len(series) < 4:
+                return float(np.nan)
+
+            # Last 3 MoM values, annualized (SAAR)
+            last3 = series.iloc[-3:]
+            compounded_3m = np.prod(1.0 + last3.values / 100.0)
+            saar = (compounded_3m**4 - 1.0) * 100.0
+            return float(saar)
+        except Exception:
+            return float(np.nan)
 
 
 # ---------------------------------------------------------------------------
@@ -523,6 +755,391 @@ class IpcaBottomUpModel:
 
         except Exception as exc:
             log.warning("ipca_bottomup_failed", error=str(exc))
+            return self._no_signal(as_of_date, f"exception: {exc}")
+
+    def _no_signal(self, as_of_date: date, reason: str) -> AgentSignal:
+        return AgentSignal(
+            signal_id=self.SIGNAL_ID,
+            agent_id=self.AGENT_ID,
+            timestamp=datetime.utcnow(),
+            as_of_date=as_of_date,
+            direction=SignalDirection.NEUTRAL,
+            strength=SignalStrength.NO_SIGNAL,
+            confidence=0.0,
+            value=0.0,
+            horizon_days=252,
+            metadata={"reason": reason},
+        )
+
+
+# ---------------------------------------------------------------------------
+# InflationSurpriseModel
+# ---------------------------------------------------------------------------
+class InflationSurpriseModel:
+    """IPCA actual vs Focus MoM consensus z-score signal.
+
+    Computes the rolling 3-month average surprise (actual - consensus MoM),
+    normalizes it against trailing 12-month history, and fires a signal when
+    the absolute z-score exceeds Z_FIRE.
+
+    Direction conventions (locked per CONTEXT.md):
+    - Upside surprise (actual > consensus, z > 0) → LONG (hawkish signal)
+    - Downside surprise (z < 0) → SHORT
+    """
+
+    SIGNAL_ID = "INFLATION_BR_SURPRISE"
+    AGENT_ID = "inflation_agent"
+    Z_FIRE = 1.0    # |z| > 1.0 → signal fires
+    Z_STRONG = 2.0  # |z| > 2.0 → STRONG
+
+    def run(self, features: dict, as_of_date: date) -> AgentSignal:
+        """Compute surprise z-score and return directional signal.
+
+        Args:
+            features: Must contain ``_surprise_series`` — a DataFrame with
+                columns ``actual_mom`` and ``focus_mom_median``, monthly
+                DatetimeIndex, at least 12 rows.
+            as_of_date: PIT reference date.
+
+        Returns:
+            AgentSignal with direction LONG (upside) or SHORT (downside),
+            or NO_SIGNAL if insufficient data or |z| < Z_FIRE.
+        """
+        try:
+            surprise_df: pd.DataFrame = features.get("_surprise_series", pd.DataFrame())
+
+            if surprise_df is None or not isinstance(surprise_df, pd.DataFrame) or surprise_df.empty:
+                return self._no_signal(as_of_date, "no_surprise_series")
+
+            if len(surprise_df) < 12:
+                return self._no_signal(as_of_date, "insufficient_data_lt_12m")
+
+            # Ensure required columns exist
+            if "actual_mom" not in surprise_df.columns or "focus_mom_median" not in surprise_df.columns:
+                return self._no_signal(as_of_date, "missing_columns")
+
+            # Monthly surprise = actual - consensus (in pp)
+            monthly_surprise = surprise_df["actual_mom"] - surprise_df["focus_mom_median"]
+
+            # Rolling 3M average
+            rolling_3m = monthly_surprise.rolling(3).mean()
+            if rolling_3m.empty or pd.isna(rolling_3m.iloc[-1]):
+                return self._no_signal(as_of_date, "rolling_3m_nan")
+            rolling_3m_avg = float(rolling_3m.iloc[-1])
+
+            # Trailing 12M statistics for normalization
+            trailing_12m = monthly_surprise.tail(12)
+            mean_12m = float(trailing_12m.mean())
+            std_12m = float(trailing_12m.std())
+
+            # Handle zero std (no variation)
+            if std_12m == 0.0 or pd.isna(std_12m):
+                return self._no_signal(as_of_date, "zero_std_no_variation")
+
+            z_score = (rolling_3m_avg - mean_12m) / std_12m
+
+            # Signal fires only when |z| >= Z_FIRE
+            if abs(z_score) < self.Z_FIRE:
+                return AgentSignal(
+                    signal_id=self.SIGNAL_ID,
+                    agent_id=self.AGENT_ID,
+                    timestamp=datetime.utcnow(),
+                    as_of_date=as_of_date,
+                    direction=SignalDirection.NEUTRAL,
+                    strength=SignalStrength.NO_SIGNAL,
+                    confidence=0.0,
+                    value=round(z_score, 4),
+                    horizon_days=63,
+                    metadata={
+                        "z_score": z_score,
+                        "rolling_3m_avg_pp": rolling_3m_avg,
+                        "trailing_12m_std": std_12m,
+                        "reason": "z_below_fire_threshold",
+                    },
+                )
+
+            # Direction: upside surprise → LONG (hawkish), downside → SHORT
+            direction = SignalDirection.LONG if z_score > 0 else SignalDirection.SHORT
+
+            # Strength and confidence
+            if abs(z_score) >= self.Z_STRONG:
+                confidence = max(0.85, min(1.0, 0.85 + (abs(z_score) - self.Z_STRONG) * 0.05))
+                strength = SignalStrength.STRONG
+            else:
+                confidence = min(abs(z_score) / 2.0, 1.0)
+                strength = classify_strength(confidence)
+
+            return AgentSignal(
+                signal_id=self.SIGNAL_ID,
+                agent_id=self.AGENT_ID,
+                timestamp=datetime.utcnow(),
+                as_of_date=as_of_date,
+                direction=direction,
+                strength=strength,
+                confidence=round(confidence, 4),
+                value=round(z_score, 4),
+                horizon_days=63,
+                metadata={
+                    "z_score": z_score,
+                    "rolling_3m_avg_pp": rolling_3m_avg,
+                    "trailing_12m_std": std_12m,
+                },
+            )
+
+        except Exception as exc:
+            log.warning("inflation_surprise_failed", error=str(exc))
+            return self._no_signal(as_of_date, f"exception: {exc}")
+
+    def _no_signal(self, as_of_date: date, reason: str) -> AgentSignal:
+        return AgentSignal(
+            signal_id=self.SIGNAL_ID,
+            agent_id=self.AGENT_ID,
+            timestamp=datetime.utcnow(),
+            as_of_date=as_of_date,
+            direction=SignalDirection.NEUTRAL,
+            strength=SignalStrength.NO_SIGNAL,
+            confidence=0.0,
+            value=0.0,
+            horizon_days=63,
+            metadata={"reason": reason},
+        )
+
+
+# ---------------------------------------------------------------------------
+# InflationPersistenceModel
+# ---------------------------------------------------------------------------
+class InflationPersistenceModel:
+    """Composite 0-100 inflation persistence score from 4 components.
+
+    Components (equal weight 25% each):
+    1. Diffusion index (already 0-100)
+    2. Core acceleration (3M vs 6M momentum)
+    3. Services momentum (3M SAAR)
+    4. Expectations anchoring (inverted distance from BCB target)
+
+    Missing components are skipped and weights are renormalized.
+    """
+
+    SIGNAL_ID = "INFLATION_BR_PERSISTENCE"
+    AGENT_ID = "inflation_agent"
+    WEIGHTS = {"diffusion": 0.25, "core_accel": 0.25, "services_mom": 0.25, "expectations": 0.25}
+    HIGH_THRESHOLD = 60.0  # score > 60 → LONG (sticky inflation)
+    LOW_THRESHOLD = 40.0   # score < 40 → SHORT (falling)
+
+    def run(self, features: dict, as_of_date: date) -> AgentSignal:
+        """Compute persistence composite score and return directional signal.
+
+        Args:
+            features: Must contain ``ipca_diffusion``, ``ipca_core_smoothed``
+                (or a DataFrame), ``_services_3m_saar``, and ``focus_ipca_12m``.
+            as_of_date: PIT reference date.
+
+        Returns:
+            AgentSignal with direction based on composite 0-100 score.
+        """
+        try:
+            sub_scores: dict[str, float] = {}
+
+            # 1. Diffusion sub-score (0-100 normalized, already in that range)
+            ipca_diffusion = features.get("ipca_diffusion", np.nan)
+            if not pd.isna(ipca_diffusion):
+                sub_scores["diffusion"] = float(min(100.0, max(0.0, ipca_diffusion)))
+
+            # 2. Core acceleration (3M vs 6M momentum of core YoY)
+            ipca_core_raw = features.get("ipca_core_smoothed", np.nan)
+            # Try to get DataFrame-based core series for momentum computation
+            raw_ols = features.get("_raw_ols_data")
+            if raw_ols is not None and isinstance(raw_ols, pd.DataFrame) and not raw_ols.empty:
+                core_series = raw_ols["core_yoy"].dropna()
+                if len(core_series) >= 6:
+                    avg_3m = float(core_series.iloc[-3:].mean())
+                    avg_6m = float(core_series.iloc[-6:].mean())
+                    diff = avg_3m - avg_6m
+                    # Normalize: 50 + (diff * 10) clamped to [0, 100]
+                    core_accel_sub = float(min(100.0, max(0.0, 50.0 + diff * 10.0)))
+                    sub_scores["core_accel"] = core_accel_sub
+            elif not pd.isna(ipca_core_raw):
+                # Fallback: use scalar — treat as neutral (50)
+                sub_scores["core_accel"] = 50.0
+
+            # 3. Services momentum (3M SAAR)
+            services_saar = features.get("_services_3m_saar", np.nan)
+            if not pd.isna(services_saar):
+                # SAAR in [0, 15] range → normalize to [0, 100]
+                services_sub = float(min(100.0, max(0.0, services_saar / 15.0 * 100.0)))
+                sub_scores["services_mom"] = services_sub
+
+            # 4. Expectations anchoring (inverted: closer to target = higher score)
+            focus_12m = features.get("focus_ipca_12m", np.nan)
+            if not pd.isna(focus_12m):
+                bcb_target = 3.0
+                # anchoring_sub = max(0, 100 - |focus - target| * 20)
+                anchoring_sub = float(max(0.0, 100.0 - abs(focus_12m - bcb_target) * 20.0))
+                sub_scores["expectations"] = anchoring_sub
+
+            # If all 4 components are NaN → NO_SIGNAL
+            if not sub_scores:
+                return self._no_signal(as_of_date, "all_sub_scores_nan")
+
+            # Renormalize weights among available components
+            available_weight = sum(self.WEIGHTS[k] for k in sub_scores)
+            norm_weights = {k: self.WEIGHTS[k] / available_weight for k in sub_scores}
+
+            # Composite score
+            score = sum(sub_scores[k] * norm_weights[k] for k in sub_scores)
+            score = round(score, 2)
+
+            # Direction
+            if score > self.HIGH_THRESHOLD:
+                direction = SignalDirection.LONG
+            elif score < self.LOW_THRESHOLD:
+                direction = SignalDirection.SHORT
+            else:
+                direction = SignalDirection.NEUTRAL
+
+            # Confidence: distance from neutral midpoint (50)
+            confidence = round(abs(score - 50.0) / 50.0, 4)
+            strength = classify_strength(confidence)
+
+            return AgentSignal(
+                signal_id=self.SIGNAL_ID,
+                agent_id=self.AGENT_ID,
+                timestamp=datetime.utcnow(),
+                as_of_date=as_of_date,
+                direction=direction,
+                strength=strength,
+                confidence=confidence,
+                value=score,
+                horizon_days=63,
+                metadata={
+                    "score": score,
+                    "diffusion_sub": sub_scores.get("diffusion", float("nan")),
+                    "core_accel_sub": sub_scores.get("core_accel", float("nan")),
+                    "services_sub": sub_scores.get("services_mom", float("nan")),
+                    "expectations_sub": sub_scores.get("expectations", float("nan")),
+                },
+            )
+
+        except Exception as exc:
+            log.warning("inflation_persistence_failed", error=str(exc))
+            return self._no_signal(as_of_date, f"exception: {exc}")
+
+    def _no_signal(self, as_of_date: date, reason: str) -> AgentSignal:
+        return AgentSignal(
+            signal_id=self.SIGNAL_ID,
+            agent_id=self.AGENT_ID,
+            timestamp=datetime.utcnow(),
+            as_of_date=as_of_date,
+            direction=SignalDirection.NEUTRAL,
+            strength=SignalStrength.NO_SIGNAL,
+            confidence=0.0,
+            value=0.0,
+            horizon_days=63,
+            metadata={"reason": reason},
+        )
+
+
+# ---------------------------------------------------------------------------
+# UsInflationTrendModel
+# ---------------------------------------------------------------------------
+class UsInflationTrendModel:
+    """US PCE core trend analysis vs Fed 2% target.
+
+    Compares PCE core 3M SAAR and YoY against the Fed's 2% target.
+    Secondary confirmation via PCE supercore momentum.
+    """
+
+    SIGNAL_ID = "INFLATION_US_TREND"
+    AGENT_ID = "inflation_agent"
+    FED_TARGET = 2.0
+
+    def run(self, features: dict, as_of_date: date) -> AgentSignal:
+        """Analyze US PCE trend relative to Fed target.
+
+        Args:
+            features: Must contain ``us_pce_core_3m_saar``, ``us_pce_core_yoy``,
+                and ``us_pce_supercore_mom_3m``.
+            as_of_date: PIT reference date.
+
+        Returns:
+            AgentSignal with direction and confidence based on PCE gap.
+        """
+        try:
+            pce_3m_saar = features.get("us_pce_core_3m_saar", np.nan)
+            pce_yoy = features.get("us_pce_core_yoy", np.nan)
+            supercore_mom = features.get("us_pce_supercore_mom_3m", np.nan)
+
+            # If all inputs are NaN → NO_SIGNAL
+            pce_3m_valid = not pd.isna(pce_3m_saar)
+            pce_yoy_valid = not pd.isna(pce_yoy)
+            supercore_valid = not pd.isna(supercore_mom)
+
+            if not pce_3m_valid and not pce_yoy_valid:
+                return self._no_signal(as_of_date, "all_inputs_nan")
+
+            # Target gap using YoY (most reliable)
+            if pce_yoy_valid:
+                target_gap = float(pce_yoy) - self.FED_TARGET
+            else:
+                target_gap = float(pce_3m_saar) - self.FED_TARGET  # type: ignore[arg-type]
+
+            # Primary direction signal
+            if pce_3m_valid and pce_yoy_valid:
+                if float(pce_3m_saar) > self.FED_TARGET and target_gap > 0:  # type: ignore[arg-type]
+                    direction = SignalDirection.LONG
+                elif float(pce_3m_saar) < self.FED_TARGET and target_gap < 0:  # type: ignore[arg-type]
+                    direction = SignalDirection.SHORT
+                else:
+                    direction = SignalDirection.NEUTRAL
+            elif pce_yoy_valid:
+                direction = SignalDirection.LONG if target_gap > 0 else (
+                    SignalDirection.SHORT if target_gap < 0 else SignalDirection.NEUTRAL
+                )
+            else:
+                gap_3m = float(pce_3m_saar) - self.FED_TARGET  # type: ignore[arg-type]
+                direction = SignalDirection.LONG if gap_3m > 0 else (
+                    SignalDirection.SHORT if gap_3m < 0 else SignalDirection.NEUTRAL
+                )
+
+            # Base confidence: 2pp above target = full confidence
+            confidence = min(1.0, abs(target_gap) / 2.0)
+
+            # Secondary confirmation: supercore momentum
+            if supercore_valid:
+                supercore_val = float(supercore_mom)  # type: ignore[arg-type]
+                if direction == SignalDirection.LONG and supercore_val > 0:
+                    confidence = min(1.0, confidence + 0.10)
+                elif direction == SignalDirection.SHORT and supercore_val < 0:
+                    confidence = min(1.0, confidence + 0.10)
+                elif direction != SignalDirection.NEUTRAL:
+                    # Opposing supercore → dampen
+                    confidence = max(0.0, confidence - 0.10)
+
+            confidence = round(confidence, 4)
+            strength = classify_strength(confidence)
+
+            # Primary value: 3M SAAR if available, else YoY
+            value = round(float(pce_3m_saar), 4) if pce_3m_valid else round(float(pce_yoy), 4)  # type: ignore[arg-type]
+
+            return AgentSignal(
+                signal_id=self.SIGNAL_ID,
+                agent_id=self.AGENT_ID,
+                timestamp=datetime.utcnow(),
+                as_of_date=as_of_date,
+                direction=direction,
+                strength=strength,
+                confidence=confidence,
+                value=value,
+                horizon_days=252,
+                metadata={
+                    "pce_3m_saar": float(pce_3m_saar) if pce_3m_valid else None,
+                    "target_gap_pp": target_gap,
+                    "supercore_momentum": float(supercore_mom) if supercore_valid else None,
+                },
+            )
+
+        except Exception as exc:
+            log.warning("us_inflation_trend_failed", error=str(exc))
             return self._no_signal(as_of_date, f"exception: {exc}")
 
     def _no_signal(self, as_of_date: date, reason: str) -> AgentSignal:
