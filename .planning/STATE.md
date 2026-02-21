@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 10 — Cross-Asset Agent & Backtesting Engine
-Plan: 2 of 3 complete (10-01 done, 10-02 done)
-Status: Plan 10-02 complete — BacktestEngine, Portfolio, BacktestResultRecord ORM, migration 004
-Last activity: 2026-02-21 — Completed 10-02-PLAN.md (BacktestEngine, Portfolio, BacktestResultRecord, Alembic 004)
+Phase: 10 — Cross-Asset Agent & Backtesting Engine (COMPLETE)
+Plan: 3 of 3 complete (10-01 done, 10-02 done, 10-03 done)
+Status: Phase 10 complete — all 3 plans delivered (CrossAssetAgent, BacktestEngine, Metrics/Reports)
+Last activity: 2026-02-21 — Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 tests)
 
-Progress: [########  ] 40%  (8/20 plans complete)
+Progress: [########  ] 45%  (9/20 plans complete)
 
 ## Performance Metrics
 
@@ -34,6 +34,7 @@ Progress: [########  ] 40%  (8/20 plans complete)
 | 09 | 02 | 12 min | 2 | 4 |
 | 10 | 01 | 9 min | 2 | 4 |
 | 10 | 02 | 5 min | 2 | 6 |
+| 10 | 03 | 6 min | 2 | 6 |
 
 *Updated after each plan completion*
 
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 - [v2.0-10-02]: Cash-position transfer on rebalance — cash decreases by trade_notional + cost to preserve total_equity invariant
 - [v2.0-10-02]: BacktestRawResult namedtuple as interim return type until Plan 10-03 adds full BacktestResult dataclass
 - [v2.0-10-02]: BacktestResultRecord ORM (not BacktestResult) to avoid collision with dataclass in metrics module
+- [v2.0-10-03]: Zero-vol positive returns produce capped Sharpe of 99.99 (not 0.0) — monotonically increasing equity must show positive Sharpe
+- [v2.0-10-03]: matplotlib Agg backend called before pyplot import — ensures headless PNG generation in CI/server
+- [v2.0-10-03]: BacktestEngine.run() returns BacktestResult (replaces BacktestRawResult namedtuple from 10-02)
 
 ### Pending Todos
 
@@ -110,5 +114,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 10-01-PLAN.md (CrossAssetAgent, RegimeDetectionModel, CorrelationAnalysis, RiskSentimentIndex, 20 tests)
-Resume action: Continue to Phase 10 Plan 03 — metrics computation, reporting, and persistence
+Stopped at: Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 TESTV2-03 tests)
+Resume action: Phase 10 complete. Proceed to Phase 11 planning/execution.

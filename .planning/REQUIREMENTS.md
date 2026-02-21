@@ -60,10 +60,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
 - [x] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
 - [x] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
-- [ ] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
+- [x] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
 - [x] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
-- [ ] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
-- [ ] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
+- [x] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
+- [x] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
 - [x] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
 
 ### Trading Strategies
@@ -133,7 +133,7 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 - [x] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
 - [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
-- [ ] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
+- [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
 - [ ] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
 - [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
 - [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
@@ -193,10 +193,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | BACK-01 | Phase 10 | Complete |
 | BACK-02 | Phase 10 | Complete |
 | BACK-03 | Phase 10 | Complete |
-| BACK-04 | Phase 10 | Pending |
+| BACK-04 | Phase 10 | Complete |
 | BACK-05 | Phase 10 | Complete |
-| BACK-06 | Phase 10 | Pending |
-| BACK-07 | Phase 10 | Pending |
+| BACK-06 | Phase 10 | Complete |
+| BACK-07 | Phase 10 | Complete |
 | BACK-08 | Phase 10 | Complete |
 | STRAT-01 | Phase 11 | Pending |
 | STRAT-02 | Phase 11 | Pending |
@@ -242,7 +242,7 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | APIV2-09 | Phase 13 | Pending |
 | TESTV2-01 | Phase 8-13 | Complete |
 | TESTV2-02 | Phase 8-13 | Complete |
-| TESTV2-03 | Phase 10 | Pending |
+| TESTV2-03 | Phase 10 | Complete |
 | TESTV2-04 | Phase 12 | Pending |
 | TESTV2-05 | Phase 13 | Pending |
 | TESTV2-06 | Phase 13 | Pending |
