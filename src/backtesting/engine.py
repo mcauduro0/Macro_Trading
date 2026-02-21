@@ -14,6 +14,7 @@ from typing import Any, Protocol
 import pandas as pd
 
 from src.backtesting.portfolio import Portfolio
+from src.backtesting.metrics import compute_metrics
 from src.agents.data_loader import PointInTimeDataLoader
 
 logger = logging.getLogger(__name__)
@@ -65,24 +66,13 @@ class BacktestEngine:
     def run(self, strategy: StrategyProtocol) -> Any:
         """Execute the full backtest for a strategy.
 
-        Returns BacktestRawResult with equity curve. Metrics are computed
-        by calling compute_metrics() from src.backtesting.metrics -- but
-        BacktestEngine.run() returns a BacktestRawResult with equity_curve and
-        trade_log populated; metrics are computed in Plan 10-03.
+        Iterates rebalance dates, calling strategy.generate_signals() at each
+        step. After the loop, computes all financial metrics via compute_metrics()
+        and returns a BacktestResult dataclass with 10 metrics populated.
 
-        For Plan 10-02, return a namedtuple containing portfolio and config so
-        Plan 10-03 can add compute_metrics(). Defines a simple BacktestRawResult
-        namedtuple here:
-
-        BacktestRawResult(strategy_id, config, portfolio, rebalance_dates)
-
-        Plan 10-03 replaces this with the full BacktestResult dataclass.
+        Returns:
+            BacktestResult with equity curve, trade statistics, and risk metrics.
         """
-        from collections import namedtuple
-        BacktestRawResult = namedtuple(
-            "BacktestRawResult", ["strategy_id", "config", "portfolio", "rebalance_dates"]
-        )
-
         portfolio = Portfolio(initial_capital=self.config.initial_capital)
         rebalance_dates = self._get_rebalance_dates()
 
@@ -128,12 +118,7 @@ class BacktestEngine:
             portfolio.equity_curve[-1][1] if portfolio.equity_curve else 0.0,
         )
 
-        return BacktestRawResult(
-            strategy_id=strategy.strategy_id,
-            config=self.config,
-            portfolio=portfolio,
-            rebalance_dates=rebalance_dates,
-        )
+        return compute_metrics(portfolio, self.config, strategy.strategy_id)
 
     def _get_rebalance_dates(self) -> list[date]:
         """Generate rebalance dates based on config.rebalance_frequency."""
