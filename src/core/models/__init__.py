@@ -18,6 +18,7 @@ from .fiscal_data import FiscalData
 from .vol_surfaces import VolSurface
 from .signals import Signal
 from .agent_reports import AgentReportRecord
+from .backtest_results import BacktestResultRecord
 
 __all__ = [
     "Base",
@@ -32,4 +33,5 @@ __all__ = [
     "VolSurface",
     "Signal",
     "AgentReportRecord",
+    "BacktestResultRecord",
 ]
