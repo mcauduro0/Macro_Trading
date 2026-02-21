@@ -40,10 +40,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
 - [x] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
 
-- [ ] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
-- [ ] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
-- [ ] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
-- [ ] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
+- [x] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
+- [x] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
+- [x] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
+- [x] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
 
 - [ ] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
 - [ ] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
@@ -178,10 +178,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | MONP-04 | Phase 8 | Complete |
 | MONP-05 | Phase 8 | Complete |
 | MONP-06 | Phase 8 | Complete |
-| FISC-01 | Phase 9 | Pending |
-| FISC-02 | Phase 9 | Pending |
-| FISC-03 | Phase 9 | Pending |
-| FISC-04 | Phase 9 | Pending |
+| FISC-01 | Phase 9 | Complete |
+| FISC-02 | Phase 9 | Complete |
+| FISC-03 | Phase 9 | Complete |
+| FISC-04 | Phase 9 | Complete |
 | FXEQ-01 | Phase 9 | Pending |
 | FXEQ-02 | Phase 9 | Pending |
 | FXEQ-03 | Phase 9 | Pending |

@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 8 — Inflation & Monetary Policy Agents (COMPLETE)
-Plan: 3 of 3 complete (08-01 + 08-02 + 08-03 all complete)
-Status: All 3 plans complete — Phase 8 done
-Last activity: 2026-02-21 — Completed 08-02-PLAN.md (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, 21 unit tests)
+Phase: 9 — Fiscal & FX Equilibrium Agents (IN PROGRESS)
+Plan: 1 of 2 complete (09-01 done, 09-02 remaining)
+Status: Plan 09-01 complete — FiscalAgent built and tested
+Last activity: 2026-02-21 — Completed 09-01-PLAN.md (FiscalAgent, FiscalFeatureEngine, 3 fiscal models, 14 unit tests)
 
-Progress: [#####     ] 25%  (5/20 plans complete)
+Progress: [######    ] 30%  (6/20 plans complete)
 
 ## Performance Metrics
 
@@ -30,6 +30,7 @@ Progress: [#####     ] 25%  (5/20 plans complete)
 | 08 | 01 | 11 min | 2 | 4 |
 | 08 | 02 | 14 min | 2 | 2 |
 | 08 | 03 | 13 min | 2 | 4 |
+| 09 | 01 | 11 min | 2 | 4 |
 
 *Updated after each plan completion*
 
@@ -72,6 +73,11 @@ Recent decisions affecting current work:
 - [v2.0-08-02]: InflationSurpriseModel fires only when |z| >= Z_FIRE=1.0; flat/constant data returns NO_SIGNAL via zero-std guard
 - [v2.0-08-02]: InflationPersistenceModel expectations anchoring: max(0, 100 - |focus-3.0|*20) — inverted, closer to 3% = higher
 - [v2.0-08-02]: INFLATION_BR_COMPOSITE dampening at >=2 disagreements (not >=1); US trend excluded from BR composite
+- [v2.0-09-01]: FiscalDominanceRisk substitutes 50 (neutral) for NaN subscores — partial signal still valuable
+- [v2.0-09-01]: DSA uses baseline-as-primary approach for direction; scenarios provide confidence calibration
+- [v2.0-09-01]: DSA confidence from scenario consensus: 4/4 stabilizing→1.0, 3/4→0.70, 2/4→0.40, 1/4→0.20, 0/4→0.05
+- [v2.0-09-01]: FiscalImpulseModel: positive z (pb improving) = SHORT (fiscal contraction = BRL positive)
+- [v2.0-09-01]: FISCAL_BR_COMPOSITE: equal 1/3 weights, 0.70 conflict dampening when any active signal disagrees
 
 ### Pending Todos
 
@@ -87,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 08-02-PLAN.md (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, 21 unit tests)
-Resume action: Phase 8 complete — proceed to Phase 9 or next milestone
+Stopped at: Completed 09-01-PLAN.md (FiscalAgent, FiscalFeatureEngine, 3 fiscal models, 14 unit tests)
+Resume action: Continue Phase 9 — execute 09-02-PLAN.md (FxEquilibriumAgent)
