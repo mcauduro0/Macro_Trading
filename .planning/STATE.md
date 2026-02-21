@@ -9,24 +9,32 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 7 — Agent Framework & Data Loader (COMPLETE)
-Plan: 2 of 2 (all complete)
-Status: Phase complete — ready for Phase 8
-Last activity: 2026-02-20 — Completed 07-02-PLAN.md (AgentRegistry, agent_reports migration, tests)
+Phase: 10 — Cross-Asset Agent & Backtesting Engine (COMPLETE)
+Plan: 3 of 3 complete (10-01 done, 10-02 done, 10-03 done)
+Status: Phase 10 complete — all 3 plans delivered (CrossAssetAgent, BacktestEngine, Metrics/Reports)
+Last activity: 2026-02-21 — Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 tests)
 
-Progress: [##        ] 10%  (2/20 plans complete)
+Progress: [########  ] 45%  (9/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 12
-- Average duration: 10.4 min
-- Total execution time: 1.83 hours
+- Total plans completed: 16
+- Average duration: 10.0 min
+- Total execution time: 2.45 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 07 | 01 | 7 min | 2 | 5 |
 | 07 | 02 | 12 min | 2 | 11 |
+| 08 | 01 | 11 min | 2 | 4 |
+| 08 | 02 | 14 min | 2 | 2 |
+| 08 | 03 | 13 min | 2 | 4 |
+| 09 | 01 | 11 min | 2 | 4 |
+| 09 | 02 | 12 min | 2 | 4 |
+| 10 | 01 | 9 min | 2 | 4 |
+| 10 | 02 | 5 min | 2 | 6 |
+| 10 | 03 | 6 min | 2 | 6 |
 
 *Updated after each plan completion*
 
@@ -54,6 +62,43 @@ Recent decisions affecting current work:
 - [v2.0-07-02]: agent_reports as regular table (not hypertable) — low volume audit trail
 - [v2.0-07-02]: Agents not in EXECUTION_ORDER appended alphabetically — extensible for future agents
 - [v2.0-07-02]: run_all catches per-agent exceptions and continues — one failure does not abort pipeline
+- [v2.0-08-01]: Compounded YoY via prod(1+mom/100)-1 — matches IBGE methodology vs simple sum
+- [v2.0-08-01]: Private _raw_ols_data and _raw_components keys in features dict — model classes receive pre-assembled data
+- [v2.0-08-01]: IBC-Br uses 10Y lookback (3650 days) — HP filter and 120M OLS window both need full history
+- [v2.0-08-01]: USDBRL/CRB via get_market_data(), not get_macro_series() — FX/commodities are intraday not macro releases
+- [v2.0-08-01]: IpcaBottomUpModel renormalizes IBGE weights to available components — partial coverage produces valid signal
+- [v2.0-08-03]: TaylorRuleModel GAP_FLOOR=1.0 (100bps locked per CONTEXT.md); MODERATE for [1.0,1.5), STRONG for >=1.5
+- [v2.0-08-03]: SelicPathModel direction: market > model -> SHORT (fade hike pricing); market < model -> LONG (hike risk)
+- [v2.0-08-03]: MONETARY_BR_COMPOSITE weights: Taylor 50%, SelicPath 30%, TermPremium 20%; US Fed excluded from BR composite
+- [v2.0-08-03]: Conflict dampening 0.70 when any active BR sub-signal disagrees with plurality direction
+- [v2.0-08-03]: KalmanFilterRStar MIN_OBS=24, DEFAULT_R_STAR=3.0 — graceful degradation for historical backtesting
+- [v2.0-08-03]: features/__init__.py uses conditional import for InflationFeatureEngine for wave-1 independence
+- [v2.0-08-02]: InflationSurpriseModel direction: upside surprise (z>0) = LONG (hawkish); downside = SHORT — per CONTEXT.md
+- [v2.0-08-02]: InflationSurpriseModel fires only when |z| >= Z_FIRE=1.0; flat/constant data returns NO_SIGNAL via zero-std guard
+- [v2.0-08-02]: InflationPersistenceModel expectations anchoring: max(0, 100 - |focus-3.0|*20) — inverted, closer to 3% = higher
+- [v2.0-08-02]: INFLATION_BR_COMPOSITE dampening at >=2 disagreements (not >=1); US trend excluded from BR composite
+- [v2.0-09-01]: FiscalDominanceRisk substitutes 50 (neutral) for NaN subscores — partial signal still valuable
+- [v2.0-09-01]: DSA uses baseline-as-primary approach for direction; scenarios provide confidence calibration
+- [v2.0-09-01]: DSA confidence from scenario consensus: 4/4 stabilizing→1.0, 3/4→0.70, 2/4→0.40, 1/4→0.20, 0/4→0.05
+- [v2.0-09-01]: FiscalImpulseModel: positive z (pb improving) = SHORT (fiscal contraction = BRL positive)
+- [v2.0-09-01]: FISCAL_BR_COMPOSITE: equal 1/3 weights, 0.70 conflict dampening when any active signal disagrees
+- [v2.0-09-02]: BeerModel uses same sm.add_constant() for prediction as training (avoids shape mismatch from statsmodels constant-dropping behavior)
+- [v2.0-09-02]: FX_BR_COMPOSITE: locked weights BEER 40% + Carry 30% + Flow 20% + CIP 10%; 0.70 dampening when any active signal disagrees
+- [v2.0-09-02]: CipBasisModel direction locked: positive basis = LONG USDBRL (capital flow friction, BRL less attractive)
+- [v2.0-09-02]: FlowModel: NaN for one flow component falls back to single-source composite (not NO_SIGNAL)
+- [v2.0-09-02]: FxFeatureEngine._build_beer_ols_data filters to 2010-present; only drops rows where log_usdbrl is NaN (other predictors with NaN kept for per-predictor availability check)
+- [v2.0-10-01]: RegimeDetectionModel: composite = nanmean of 6 direction-corrected z-scores / 2.0, clipped to [-1,+1]; SHORT > +0.2, LONG < -0.2
+- [v2.0-10-01]: CorrelationAnalysis: always NEUTRAL direction (regime-neutral alert); strength from max |z| across 5 pairs
+- [v2.0-10-01]: RiskSentimentIndex: 6-component weighted index renormalized over available (non-NaN) components; WEIGHTS sum to 1.0
+- [v2.0-10-01]: DI_UST correlation pair uses IBOV as proxy for DI daily history when unavailable
+- [v2.0-10-01]: br_fiscal regime component = hy_oas_zscore * 0.3 as placeholder fiscal dominance proxy
+- [v2.0-10-02]: Notional-based positions (not shares) — simplifies rebalancing, no price lookup for position access
+- [v2.0-10-02]: Cash-position transfer on rebalance — cash decreases by trade_notional + cost to preserve total_equity invariant
+- [v2.0-10-02]: BacktestRawResult namedtuple as interim return type until Plan 10-03 adds full BacktestResult dataclass
+- [v2.0-10-02]: BacktestResultRecord ORM (not BacktestResult) to avoid collision with dataclass in metrics module
+- [v2.0-10-03]: Zero-vol positive returns produce capped Sharpe of 99.99 (not 0.0) — monotonically increasing equity must show positive Sharpe
+- [v2.0-10-03]: matplotlib Agg backend called before pyplot import — ensures headless PNG generation in CI/server
+- [v2.0-10-03]: BacktestEngine.run() returns BacktestResult (replaces BacktestRawResult namedtuple from 10-02)
 
 ### Pending Todos
 
@@ -64,10 +109,10 @@ None yet.
 - FRED API key required for backfill (free registration at fred.stlouisfed.org)
 - Yahoo Finance (yfinance) is a scraper with known fragility — fallback considered
 - Anthropic API key needed for LLM narrative generation (can use fallback templates without it)
-- statsmodels / sklearn needed for quantitative models (Phillips Curve OLS, Kalman Filter)
+- statsmodels confirmed installed and working (Phillips Curve OLS, HP filter)
 
 ## Session Continuity
 
-Last session: 2026-02-20
-Stopped at: Completed 07-02-PLAN.md (Phase 7 complete)
-Resume action: Begin Phase 8 (Inflation & Monetary Policy Agents)
+Last session: 2026-02-21
+Stopped at: Completed 10-03-PLAN.md (BacktestResult, compute_metrics, report, chart, 22 TESTV2-03 tests)
+Resume action: Phase 10 complete. Proceed to Phase 11 planning/execution.

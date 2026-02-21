@@ -25,46 +25,46 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Analytical Agents
 
-- [ ] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
-- [ ] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
-- [ ] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
-- [ ] **INFL-04**: InflationSurpriseModel — z-score of rolling 3-month actual-vs-Focus surprise average as regime indicator
-- [ ] **INFL-05**: InflationPersistenceModel — composite score (0-100) from diffusion level, core acceleration, services momentum, expectations anchoring
-- [ ] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
-- [ ] **INFL-07**: Composite INFLATION_BR_COMPOSITE signal aggregating sub-model outputs
+- [x] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
+- [x] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
+- [x] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
+- [x] **INFL-04**: InflationSurpriseModel — z-score of rolling 3-month actual-vs-Focus surprise average as regime indicator
+- [x] **INFL-05**: InflationPersistenceModel — composite score (0-100) from diffusion level, core acceleration, services momentum, expectations anchoring
+- [x] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
+- [x] **INFL-07**: Composite INFLATION_BR_COMPOSITE signal aggregating sub-model outputs
 
-- [ ] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
-- [ ] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
-- [ ] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
-- [ ] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
-- [ ] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
-- [ ] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
+- [x] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
+- [x] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
+- [x] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
+- [x] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
+- [x] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
+- [x] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
 
-- [ ] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
-- [ ] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
-- [ ] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
-- [ ] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
+- [x] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
+- [x] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
+- [x] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
+- [x] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
 
-- [ ] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
-- [ ] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
-- [ ] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
-- [ ] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
-- [ ] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
+- [x] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
+- [x] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
+- [x] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
+- [x] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
+- [x] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
 
-- [ ] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
-- [ ] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
-- [ ] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
+- [x] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
+- [x] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
+- [x] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
 
 ### Backtesting Engine
 
-- [ ] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
-- [ ] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
-- [ ] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
-- [ ] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
-- [ ] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
-- [ ] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
-- [ ] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
-- [ ] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
+- [x] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
+- [x] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
+- [x] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
+- [x] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
+- [x] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
+- [x] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
+- [x] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
+- [x] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
 
 ### Trading Strategies
 
@@ -131,9 +131,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Testing
 
-- [ ] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
-- [ ] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
-- [ ] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
+- [x] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
+- [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
+- [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
 - [ ] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
 - [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
 - [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
@@ -165,39 +165,39 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | AGENT-05 | Phase 7 | Complete |
 | AGENT-06 | Phase 7 | Complete |
 | AGENT-07 | Phase 7 | Complete |
-| INFL-01 | Phase 8 | Pending |
-| INFL-02 | Phase 8 | Pending |
-| INFL-03 | Phase 8 | Pending |
-| INFL-04 | Phase 8 | Pending |
-| INFL-05 | Phase 8 | Pending |
-| INFL-06 | Phase 8 | Pending |
-| INFL-07 | Phase 8 | Pending |
-| MONP-01 | Phase 8 | Pending |
-| MONP-02 | Phase 8 | Pending |
-| MONP-03 | Phase 8 | Pending |
-| MONP-04 | Phase 8 | Pending |
-| MONP-05 | Phase 8 | Pending |
-| MONP-06 | Phase 8 | Pending |
-| FISC-01 | Phase 9 | Pending |
-| FISC-02 | Phase 9 | Pending |
-| FISC-03 | Phase 9 | Pending |
-| FISC-04 | Phase 9 | Pending |
-| FXEQ-01 | Phase 9 | Pending |
-| FXEQ-02 | Phase 9 | Pending |
-| FXEQ-03 | Phase 9 | Pending |
-| FXEQ-04 | Phase 9 | Pending |
-| FXEQ-05 | Phase 9 | Pending |
-| CRSA-01 | Phase 10 | Pending |
-| CRSA-02 | Phase 10 | Pending |
-| CRSA-03 | Phase 10 | Pending |
-| BACK-01 | Phase 10 | Pending |
-| BACK-02 | Phase 10 | Pending |
-| BACK-03 | Phase 10 | Pending |
-| BACK-04 | Phase 10 | Pending |
-| BACK-05 | Phase 10 | Pending |
-| BACK-06 | Phase 10 | Pending |
-| BACK-07 | Phase 10 | Pending |
-| BACK-08 | Phase 10 | Pending |
+| INFL-01 | Phase 8 | Complete |
+| INFL-02 | Phase 8 | Complete |
+| INFL-03 | Phase 8 | Complete |
+| INFL-04 | Phase 8 | Complete |
+| INFL-05 | Phase 8 | Complete |
+| INFL-06 | Phase 8 | Complete |
+| INFL-07 | Phase 8 | Complete |
+| MONP-01 | Phase 8 | Complete |
+| MONP-02 | Phase 8 | Complete |
+| MONP-03 | Phase 8 | Complete |
+| MONP-04 | Phase 8 | Complete |
+| MONP-05 | Phase 8 | Complete |
+| MONP-06 | Phase 8 | Complete |
+| FISC-01 | Phase 9 | Complete |
+| FISC-02 | Phase 9 | Complete |
+| FISC-03 | Phase 9 | Complete |
+| FISC-04 | Phase 9 | Complete |
+| FXEQ-01 | Phase 9 | Complete |
+| FXEQ-02 | Phase 9 | Complete |
+| FXEQ-03 | Phase 9 | Complete |
+| FXEQ-04 | Phase 9 | Complete |
+| FXEQ-05 | Phase 9 | Complete |
+| CRSA-01 | Phase 10 | Complete |
+| CRSA-02 | Phase 10 | Complete |
+| CRSA-03 | Phase 10 | Complete |
+| BACK-01 | Phase 10 | Complete |
+| BACK-02 | Phase 10 | Complete |
+| BACK-03 | Phase 10 | Complete |
+| BACK-04 | Phase 10 | Complete |
+| BACK-05 | Phase 10 | Complete |
+| BACK-06 | Phase 10 | Complete |
+| BACK-07 | Phase 10 | Complete |
+| BACK-08 | Phase 10 | Complete |
 | STRAT-01 | Phase 11 | Pending |
 | STRAT-02 | Phase 11 | Pending |
 | STRAT-03 | Phase 11 | Pending |
@@ -240,9 +240,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | APIV2-07 | Phase 13 | Pending |
 | APIV2-08 | Phase 13 | Pending |
 | APIV2-09 | Phase 13 | Pending |
-| TESTV2-01 | Phase 8-13 | Pending |
-| TESTV2-02 | Phase 8-13 | Pending |
-| TESTV2-03 | Phase 10 | Pending |
+| TESTV2-01 | Phase 8-13 | Complete |
+| TESTV2-02 | Phase 8-13 | Complete |
+| TESTV2-03 | Phase 10 | Complete |
 | TESTV2-04 | Phase 12 | Pending |
 | TESTV2-05 | Phase 13 | Pending |
 | TESTV2-06 | Phase 13 | Pending |

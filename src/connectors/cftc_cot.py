@@ -67,6 +67,7 @@ class CftcCotConnector(BaseConnector):
         "GC": "088691",   # Gold
         "SI": "084691",   # Silver
         "DX": "098662",   # US Dollar Index
+        "6L": "102741",   # Brazilian Real (BRL/USD)
     }
 
     # Reverse lookup: code -> short name
