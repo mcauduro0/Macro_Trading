@@ -29,3 +29,12 @@ try:
     __all__ = [*__all__, "FiscalFeatureEngine"]
 except ImportError:
     pass
+
+# FxFeatureEngine is added in plan 09-02; import conditionally
+# so other plans can run independently.
+try:
+    from src.agents.features.fx_features import FxFeatureEngine  # type: ignore[import]
+
+    __all__ = [*__all__, "FxFeatureEngine"]
+except ImportError:
+    pass
