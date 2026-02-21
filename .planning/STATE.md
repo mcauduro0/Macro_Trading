@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 11 — Trading Strategies
-Plan: 1 of 3 complete (11-01 done)
-Status: Executing Phase 11 — BaseStrategy framework + first 2 rate strategies delivered
-Last activity: 2026-02-21 — Completed 11-01-PLAN.md (BaseStrategy ABC, RATES_BR_01, RATES_BR_02, 51 tests)
+Plan: 2 of 3 complete (11-01, 11-02 done)
+Status: Executing Phase 11 — 5 strategies delivered (BR01-BR04 rates + INF01 breakeven)
+Last activity: 2026-02-21 — Completed 11-02-PLAN.md (RATES_BR_03, RATES_BR_04, INF_BR_01, 85 tests total)
 
-Progress: [########  ] 50%  (10/20 plans complete)
+Progress: [#########-] 55%  (11/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: 10.0 min
-- Total execution time: 2.62 hours
+- Total execution time: 2.78 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -36,6 +36,7 @@ Progress: [########  ] 50%  (10/20 plans complete)
 | 10 | 02 | 5 min | 2 | 6 |
 | 10 | 03 | 6 min | 2 | 6 |
 | 11 | 01 | 10 min | 2 | 7 |
+| 11 | 02 | 10 min | 2 | 7 |
 
 *Updated after each plan completion*
 
@@ -105,6 +106,10 @@ Recent decisions affecting current work:
 - [v2.0-11-01]: NEUTRAL signals produce 50% scale-down of existing position weight
 - [v2.0-11-01]: RATES_BR_01 carry_threshold=1.5 default; confidence scales linearly to 2x threshold
 - [v2.0-11-01]: RATES_BR_02 gap_threshold=100bps; Taylor r_star=4.5%, alpha=1.5, beta=0.5; 1Y tenor 50-day tolerance
+- [v2.0-11-02]: RATES_BR_03 slope z-score uses rolling 252-day window; flattener for z > threshold regardless of easing/tightening cycle
+- [v2.0-11-02]: RATES_BR_04 outer join with ffill for DI-UST holiday alignment; weekly UST change = ust[-1] - ust[-5] (5 biz days)
+- [v2.0-11-02]: INF_BR_01 focuses on 2Y tenor as primary breakeven signal; divergence_threshold_bps=50 default
+- [v2.0-11-02]: Confidence formulas vary by strategy: slope /(threshold*2.5), spillover /(threshold*2), breakeven /(threshold*3)
 
 ### Pending Todos
 
@@ -120,5 +125,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 11-01-PLAN.md (BaseStrategy ABC, RATES_BR_01 Carry, RATES_BR_02 Taylor, 51 tests)
-Resume action: Continue Phase 11 with 11-02-PLAN.md (next wave of strategies).
+Stopped at: Completed 11-02-PLAN.md (RATES_BR_03 Slope, RATES_BR_04 Spillover, INF_BR_01 Breakeven, 85 total tests)
+Resume action: Continue Phase 11 with 11-03-PLAN.md (final wave of strategies).

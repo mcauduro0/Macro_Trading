@@ -71,9 +71,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **STRAT-01**: BaseStrategy abstract class with StrategyConfig (id, asset class, instruments, rebalance freq, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
 - [x] **STRAT-02**: RATES_BR_01 Carry & Roll-Down — capture carry-to-risk at optimal DI curve tenor, sized by carry/risk ratio vs threshold
 - [x] **STRAT-03**: RATES_BR_02 Taylor Rule Misalignment — trade DI direction based on gap between current Selic and Taylor-implied fair rate
-- [ ] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
-- [ ] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
-- [ ] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
+- [x] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
+- [x] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
+- [x] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
 - [ ] **STRAT-07**: FX_BR_01 Carry & Fundamental — composite of FX carry-to-risk (40%), BEER misalignment (35%), flow score (25%) with regime adjustment
 - [ ] **STRAT-08**: CUPOM_01 CIP Basis Mean Reversion — fade extreme z-scores in cupom cambial minus SOFR basis
 - [ ] **STRAT-09**: SOV_BR_01 Fiscal Risk Premium — trade long-end DI and USDBRL based on fiscal dominance risk vs sovereign spread level
@@ -201,9 +201,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | STRAT-01 | Phase 11 | Complete |
 | STRAT-02 | Phase 11 | Complete |
 | STRAT-03 | Phase 11 | Complete |
-| STRAT-04 | Phase 11 | Pending |
-| STRAT-05 | Phase 11 | Pending |
-| STRAT-06 | Phase 11 | Pending |
+| STRAT-04 | Phase 11 | Complete |
+| STRAT-05 | Phase 11 | Complete |
+| STRAT-06 | Phase 11 | Complete |
 | STRAT-07 | Phase 11 | Pending |
 | STRAT-08 | Phase 11 | Pending |
 | STRAT-09 | Phase 11 | Pending |
