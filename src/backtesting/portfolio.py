@@ -110,7 +110,8 @@ class Portfolio:
             cost = abs(trade_notional) * (
                 config.transaction_cost_bps + config.slippage_bps
             ) / 10_000
-            self.cash -= cost
+            # Move capital from cash to position (or vice versa) + deduct cost
+            self.cash -= trade_notional + cost
 
             # PnL for reduced/closed positions (round-trip tracking)
             pnl = 0.0
@@ -149,7 +150,8 @@ class Portfolio:
                     cost = abs(current_notional) * (
                         config.transaction_cost_bps + config.slippage_bps
                     ) / 10_000
-                    self.cash -= cost
+                    # Return position notional to cash, deduct exit cost
+                    self.cash += current_notional - cost
                     entry_price = self._entry_prices.get(ticker, prices.get(ticker, 1.0))
                     current_price = prices.get(ticker, entry_price)
                     pnl = (current_price / entry_price - 1) * abs(current_notional) if entry_price > 0 else 0.0
