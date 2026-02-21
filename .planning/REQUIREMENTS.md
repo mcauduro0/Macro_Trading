@@ -74,9 +74,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
 - [x] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
 - [x] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
-- [ ] **STRAT-07**: FX_BR_01 Carry & Fundamental — composite of FX carry-to-risk (40%), BEER misalignment (35%), flow score (25%) with regime adjustment
-- [ ] **STRAT-08**: CUPOM_01 CIP Basis Mean Reversion — fade extreme z-scores in cupom cambial minus SOFR basis
-- [ ] **STRAT-09**: SOV_BR_01 Fiscal Risk Premium — trade long-end DI and USDBRL based on fiscal dominance risk vs sovereign spread level
+- [x] **STRAT-07**: FX_BR_01 Carry & Fundamental — composite of FX carry-to-risk (40%), BEER misalignment (35%), flow score (25%) with regime adjustment
+- [x] **STRAT-08**: CUPOM_01 CIP Basis Mean Reversion — fade extreme z-scores in cupom cambial minus SOFR basis
+- [x] **STRAT-09**: SOV_BR_01 Fiscal Risk Premium — trade long-end DI and USDBRL based on fiscal dominance risk vs sovereign spread level
 
 ### Signal Aggregation & Portfolio
 
@@ -204,9 +204,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | STRAT-04 | Phase 11 | Complete |
 | STRAT-05 | Phase 11 | Complete |
 | STRAT-06 | Phase 11 | Complete |
-| STRAT-07 | Phase 11 | Pending |
-| STRAT-08 | Phase 11 | Pending |
-| STRAT-09 | Phase 11 | Pending |
+| STRAT-07 | Phase 11 | Complete |
+| STRAT-08 | Phase 11 | Complete |
+| STRAT-09 | Phase 11 | Complete |
 | PORT-01 | Phase 12 | Pending |
 | PORT-02 | Phase 12 | Pending |
 | PORT-03 | Phase 12 | Pending |

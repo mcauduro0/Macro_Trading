@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 11 — Trading Strategies
-Plan: 2 of 3 complete (11-01, 11-02 done)
-Status: Executing Phase 11 — 5 strategies delivered (BR01-BR04 rates + INF01 breakeven)
-Last activity: 2026-02-21 — Completed 11-02-PLAN.md (RATES_BR_03, RATES_BR_04, INF_BR_01, 85 tests total)
+Phase: 11 — Trading Strategies (COMPLETE)
+Plan: 3 of 3 complete (11-01, 11-02, 11-03 done)
+Status: Phase 11 complete — all 8 strategies delivered + ALL_STRATEGIES registry
+Last activity: 2026-02-21 — Completed 11-03-PLAN.md (FX_BR_01, CUPOM_01, SOV_BR_01, ALL_STRATEGIES, 136 tests total)
 
-Progress: [#########-] 55%  (11/20 plans complete)
+Progress: [##########] 60%  (12/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: 10.0 min
-- Total execution time: 2.78 hours
+- Total execution time: 2.95 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -37,6 +37,7 @@ Progress: [#########-] 55%  (11/20 plans complete)
 | 10 | 03 | 6 min | 2 | 6 |
 | 11 | 01 | 10 min | 2 | 7 |
 | 11 | 02 | 10 min | 2 | 7 |
+| 11 | 03 | 10 min | 2 | 7 |
 
 *Updated after each plan completion*
 
@@ -110,6 +111,13 @@ Recent decisions affecting current work:
 - [v2.0-11-02]: RATES_BR_04 outer join with ffill for DI-UST holiday alignment; weekly UST change = ust[-1] - ust[-5] (5 biz days)
 - [v2.0-11-02]: INF_BR_01 focuses on 2Y tenor as primary breakeven signal; divergence_threshold_bps=50 default
 - [v2.0-11-02]: Confidence formulas vary by strategy: slope /(threshold*2.5), spillover /(threshold*2), breakeven /(threshold*3)
+- [v2.0-11-03]: FX_BR_01 carry-to-risk uses tanh(carry_to_risk/2) normalization; 21-day annualized realized vol from USDBRL close returns
+- [v2.0-11-03]: FX_BR_01 BEER uses 252-day rolling mean as simplified fair value; full BEER from FxEquilibriumAgent in Phase 9
+- [v2.0-11-03]: FX_BR_01 regime adjustment: optional regime_score param scales position by 0.50 when < -0.3 (risk-off)
+- [v2.0-11-03]: CUPOM_01 inner join for DI-UST history alignment; basis z-threshold=2.0 default (conservative mean reversion)
+- [v2.0-11-03]: SOV_BR_01 fiscal risk = linear 60-100% GDP debt mapping + primary balance (deficit +20x, surplus -10x)
+- [v2.0-11-03]: SOV_BR_01 produces 2 correlated positions (DI + USDBRL) for fiscal dominance risk trade
+- [v2.0-11-03]: ALL_STRATEGIES uses type[BaseStrategy] values (not instances) for lazy instantiation by caller
 
 ### Pending Todos
 
@@ -125,5 +133,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 11-02-PLAN.md (RATES_BR_03 Slope, RATES_BR_04 Spillover, INF_BR_01 Breakeven, 85 total tests)
-Resume action: Continue Phase 11 with 11-03-PLAN.md (final wave of strategies).
+Stopped at: Completed 11-03-PLAN.md (FX_BR_01, CUPOM_01, SOV_BR_01, ALL_STRATEGIES registry, 136 total tests)
+Resume action: Phase 11 complete. Proceed to next phase.
