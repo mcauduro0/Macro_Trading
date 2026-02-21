@@ -19,9 +19,9 @@ Progress: [########  ] 40%  (8/20 plans complete)
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 15
-- Average duration: 10.1 min
-- Total execution time: 2.30 hours
+- Total plans completed: 16
+- Average duration: 10.0 min
+- Total execution time: 2.45 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -32,6 +32,7 @@ Progress: [########  ] 40%  (8/20 plans complete)
 | 08 | 03 | 13 min | 2 | 4 |
 | 09 | 01 | 11 min | 2 | 4 |
 | 09 | 02 | 12 min | 2 | 4 |
+| 10 | 01 | 9 min | 2 | 4 |
 | 10 | 02 | 5 min | 2 | 6 |
 
 *Updated after each plan completion*
@@ -85,6 +86,11 @@ Recent decisions affecting current work:
 - [v2.0-09-02]: CipBasisModel direction locked: positive basis = LONG USDBRL (capital flow friction, BRL less attractive)
 - [v2.0-09-02]: FlowModel: NaN for one flow component falls back to single-source composite (not NO_SIGNAL)
 - [v2.0-09-02]: FxFeatureEngine._build_beer_ols_data filters to 2010-present; only drops rows where log_usdbrl is NaN (other predictors with NaN kept for per-predictor availability check)
+- [v2.0-10-01]: RegimeDetectionModel: composite = nanmean of 6 direction-corrected z-scores / 2.0, clipped to [-1,+1]; SHORT > +0.2, LONG < -0.2
+- [v2.0-10-01]: CorrelationAnalysis: always NEUTRAL direction (regime-neutral alert); strength from max |z| across 5 pairs
+- [v2.0-10-01]: RiskSentimentIndex: 6-component weighted index renormalized over available (non-NaN) components; WEIGHTS sum to 1.0
+- [v2.0-10-01]: DI_UST correlation pair uses IBOV as proxy for DI daily history when unavailable
+- [v2.0-10-01]: br_fiscal regime component = hy_oas_zscore * 0.3 as placeholder fiscal dominance proxy
 - [v2.0-10-02]: Notional-based positions (not shares) — simplifies rebalancing, no price lookup for position access
 - [v2.0-10-02]: Cash-position transfer on rebalance — cash decreases by trade_notional + cost to preserve total_equity invariant
 - [v2.0-10-02]: BacktestRawResult namedtuple as interim return type until Plan 10-03 adds full BacktestResult dataclass
@@ -104,5 +110,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 10-02-PLAN.md (BacktestEngine, Portfolio, BacktestResultRecord, Alembic migration 004)
+Stopped at: Completed 10-01-PLAN.md (CrossAssetAgent, RegimeDetectionModel, CorrelationAnalysis, RiskSentimentIndex, 20 tests)
 Resume action: Continue to Phase 10 Plan 03 — metrics computation, reporting, and persistence

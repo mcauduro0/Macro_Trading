@@ -51,9 +51,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
 - [x] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
 
-- [ ] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
-- [ ] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
-- [ ] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
+- [x] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
+- [x] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
+- [x] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
 
 ### Backtesting Engine
 
@@ -187,9 +187,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | FXEQ-03 | Phase 9 | Complete |
 | FXEQ-04 | Phase 9 | Complete |
 | FXEQ-05 | Phase 9 | Complete |
-| CRSA-01 | Phase 10 | Pending |
-| CRSA-02 | Phase 10 | Pending |
-| CRSA-03 | Phase 10 | Pending |
+| CRSA-01 | Phase 10 | Complete |
+| CRSA-02 | Phase 10 | Complete |
+| CRSA-03 | Phase 10 | Complete |
 | BACK-01 | Phase 10 | Complete |
 | BACK-02 | Phase 10 | Complete |
 | BACK-03 | Phase 10 | Complete |
