@@ -57,14 +57,14 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Backtesting Engine
 
-- [ ] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
-- [ ] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
-- [ ] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
+- [x] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
+- [x] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
+- [x] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
 - [ ] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
-- [ ] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
+- [x] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
 - [ ] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
 - [ ] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
-- [ ] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
+- [x] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
 
 ### Trading Strategies
 
@@ -190,14 +190,14 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | CRSA-01 | Phase 10 | Pending |
 | CRSA-02 | Phase 10 | Pending |
 | CRSA-03 | Phase 10 | Pending |
-| BACK-01 | Phase 10 | Pending |
-| BACK-02 | Phase 10 | Pending |
-| BACK-03 | Phase 10 | Pending |
+| BACK-01 | Phase 10 | Complete |
+| BACK-02 | Phase 10 | Complete |
+| BACK-03 | Phase 10 | Complete |
 | BACK-04 | Phase 10 | Pending |
-| BACK-05 | Phase 10 | Pending |
+| BACK-05 | Phase 10 | Complete |
 | BACK-06 | Phase 10 | Pending |
 | BACK-07 | Phase 10 | Pending |
-| BACK-08 | Phase 10 | Pending |
+| BACK-08 | Phase 10 | Complete |
 | STRAT-01 | Phase 11 | Pending |
 | STRAT-02 | Phase 11 | Pending |
 | STRAT-03 | Phase 11 | Pending |

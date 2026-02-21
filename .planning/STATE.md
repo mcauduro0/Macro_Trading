@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 9 — Fiscal & FX Equilibrium Agents (COMPLETE)
-Plan: 2 of 2 complete (09-01 done, 09-02 done)
-Status: Phase 9 complete — FiscalAgent and FxEquilibriumAgent both built and tested
-Last activity: 2026-02-21 — Completed 09-02-PLAN.md (FxEquilibriumAgent, FxFeatureEngine, 4 FX models, 20 unit tests)
+Phase: 10 — Cross-Asset Agent & Backtesting Engine
+Plan: 2 of 3 complete (10-01 done, 10-02 done)
+Status: Plan 10-02 complete — BacktestEngine, Portfolio, BacktestResultRecord ORM, migration 004
+Last activity: 2026-02-21 — Completed 10-02-PLAN.md (BacktestEngine, Portfolio, BacktestResultRecord, Alembic 004)
 
-Progress: [#######   ] 35%  (7/20 plans complete)
+Progress: [########  ] 40%  (8/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 14
-- Average duration: 10.5 min
-- Total execution time: 2.21 hours
+- Total plans completed: 15
+- Average duration: 10.1 min
+- Total execution time: 2.30 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -32,6 +32,7 @@ Progress: [#######   ] 35%  (7/20 plans complete)
 | 08 | 03 | 13 min | 2 | 4 |
 | 09 | 01 | 11 min | 2 | 4 |
 | 09 | 02 | 12 min | 2 | 4 |
+| 10 | 02 | 5 min | 2 | 6 |
 
 *Updated after each plan completion*
 
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [v2.0-09-02]: CipBasisModel direction locked: positive basis = LONG USDBRL (capital flow friction, BRL less attractive)
 - [v2.0-09-02]: FlowModel: NaN for one flow component falls back to single-source composite (not NO_SIGNAL)
 - [v2.0-09-02]: FxFeatureEngine._build_beer_ols_data filters to 2010-present; only drops rows where log_usdbrl is NaN (other predictors with NaN kept for per-predictor availability check)
+- [v2.0-10-02]: Notional-based positions (not shares) — simplifies rebalancing, no price lookup for position access
+- [v2.0-10-02]: Cash-position transfer on rebalance — cash decreases by trade_notional + cost to preserve total_equity invariant
+- [v2.0-10-02]: BacktestRawResult namedtuple as interim return type until Plan 10-03 adds full BacktestResult dataclass
+- [v2.0-10-02]: BacktestResultRecord ORM (not BacktestResult) to avoid collision with dataclass in metrics module
 
 ### Pending Todos
 
@@ -99,5 +104,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 09-02-PLAN.md (FxEquilibriumAgent, FxFeatureEngine, 4 FX models, 20 unit tests)
-Resume action: Continue to Phase 10 — cross-asset agent
+Stopped at: Completed 10-02-PLAN.md (BacktestEngine, Portfolio, BacktestResultRecord, Alembic migration 004)
+Resume action: Continue to Phase 10 Plan 03 — metrics computation, reporting, and persistence
