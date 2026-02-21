@@ -33,12 +33,12 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [ ] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
 - [ ] **INFL-07**: Composite INFLATION_BR_COMPOSITE signal aggregating sub-model outputs
 
-- [ ] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
-- [ ] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
-- [ ] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
-- [ ] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
-- [ ] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
-- [ ] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
+- [x] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
+- [x] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
+- [x] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
+- [x] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
+- [x] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
+- [x] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
 
 - [ ] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
 - [ ] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
@@ -131,8 +131,8 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Testing
 
-- [ ] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
-- [ ] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
+- [x] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
+- [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
 - [ ] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
 - [ ] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
 - [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
@@ -172,12 +172,12 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | INFL-05 | Phase 8 | Pending |
 | INFL-06 | Phase 8 | Pending |
 | INFL-07 | Phase 8 | Pending |
-| MONP-01 | Phase 8 | Pending |
-| MONP-02 | Phase 8 | Pending |
-| MONP-03 | Phase 8 | Pending |
-| MONP-04 | Phase 8 | Pending |
-| MONP-05 | Phase 8 | Pending |
-| MONP-06 | Phase 8 | Pending |
+| MONP-01 | Phase 8 | Complete |
+| MONP-02 | Phase 8 | Complete |
+| MONP-03 | Phase 8 | Complete |
+| MONP-04 | Phase 8 | Complete |
+| MONP-05 | Phase 8 | Complete |
+| MONP-06 | Phase 8 | Complete |
 | FISC-01 | Phase 9 | Pending |
 | FISC-02 | Phase 9 | Pending |
 | FISC-03 | Phase 9 | Pending |
@@ -240,8 +240,8 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | APIV2-07 | Phase 13 | Pending |
 | APIV2-08 | Phase 13 | Pending |
 | APIV2-09 | Phase 13 | Pending |
-| TESTV2-01 | Phase 8-13 | Pending |
-| TESTV2-02 | Phase 8-13 | Pending |
+| TESTV2-01 | Phase 8-13 | Complete |
+| TESTV2-02 | Phase 8-13 | Complete |
 | TESTV2-03 | Phase 10 | Pending |
 | TESTV2-04 | Phase 12 | Pending |
 | TESTV2-05 | Phase 13 | Pending |

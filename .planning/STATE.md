@@ -10,24 +10,25 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 8 — Inflation & Monetary Policy Agents (IN PROGRESS)
-Plan: 1 of 3 complete
-Status: Plan 08-01 complete — ready for Plan 08-02
-Last activity: 2026-02-21 — Completed 08-01-PLAN.md (InflationFeatureEngine, PhillipsCurveModel, IpcaBottomUpModel)
+Plan: 2 of 3 complete (08-01 + 08-03 complete; 08-02 remaining)
+Status: Plans 08-01 and 08-03 complete — ready for Plan 08-02
+Last activity: 2026-02-21 — Completed 08-03-PLAN.md (MonetaryPolicyAgent, 5 models, 28 tests)
 
-Progress: [###       ] 15%  (3/20 plans complete)
+Progress: [####      ] 20%  (4/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 13
-- Average duration: 10.3 min
-- Total execution time: 1.99 hours
+- Total plans completed: 14
+- Average duration: 10.5 min
+- Total execution time: 2.21 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 07 | 01 | 7 min | 2 | 5 |
 | 07 | 02 | 12 min | 2 | 11 |
 | 08 | 01 | 11 min | 2 | 4 |
+| 08 | 03 | 13 min | 2 | 4 |
 
 *Updated after each plan completion*
 
@@ -60,6 +61,12 @@ Recent decisions affecting current work:
 - [v2.0-08-01]: IBC-Br uses 10Y lookback (3650 days) — HP filter and 120M OLS window both need full history
 - [v2.0-08-01]: USDBRL/CRB via get_market_data(), not get_macro_series() — FX/commodities are intraday not macro releases
 - [v2.0-08-01]: IpcaBottomUpModel renormalizes IBGE weights to available components — partial coverage produces valid signal
+- [v2.0-08-03]: TaylorRuleModel GAP_FLOOR=1.0 (100bps locked per CONTEXT.md); MODERATE for [1.0,1.5), STRONG for >=1.5
+- [v2.0-08-03]: SelicPathModel direction: market > model -> SHORT (fade hike pricing); market < model -> LONG (hike risk)
+- [v2.0-08-03]: MONETARY_BR_COMPOSITE weights: Taylor 50%, SelicPath 30%, TermPremium 20%; US Fed excluded from BR composite
+- [v2.0-08-03]: Conflict dampening 0.70 when any active BR sub-signal disagrees with plurality direction
+- [v2.0-08-03]: KalmanFilterRStar MIN_OBS=24, DEFAULT_R_STAR=3.0 — graceful degradation for historical backtesting
+- [v2.0-08-03]: features/__init__.py uses conditional import for InflationFeatureEngine for wave-1 independence
 
 ### Pending Todos
 
@@ -75,5 +82,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 08-01-PLAN.md (InflationFeatureEngine, PhillipsCurveModel, IpcaBottomUpModel)
-Resume action: Begin Plan 08-02 (orchestrate InflationAgent, add remaining sub-models)
+Stopped at: Completed 08-03-PLAN.md (MonetaryPolicyAgent, 5 models, 28 unit tests)
+Resume action: Begin Plan 08-02 (InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, InflationAgent orchestration)
