@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 15: New Trading Strategies (v3.0)
+**Current focus:** Phase 16: Cross-Asset Agent v2 & NLP Pipeline (v3.0)
 
 ## Current Position
 
-Phase: 15 of 19 (New Trading Strategies)
-Plan: 5 of 5 complete in current phase (15-01, 15-02, 15-03, 15-04, 15-05 done)
-Status: Phase 15 complete (including gap closure)
-Last activity: 2026-02-22 — Completed 15-05-PLAN.md (BacktestEngine signal adapter + 13 integration tests)
+Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
+Plan: 0 of 3 complete in current phase
+Status: Ready for Phase 16 planning
+Last activity: 2026-02-22 — Phase 15 verified and approved (5/5 criteria, 16/16 requirements, 371 tests passing)
 
 Progress: [########################......] 79% (15/19 phases complete)
 
@@ -99,6 +99,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 15-05-PLAN.md (BacktestEngine signal adapter gap closure -- Phase 15 fully complete)
-Resume file: .planning/phases/
-Resume action: Begin Phase 16 planning
+Stopped at: Phase 15 approved — all 5 success criteria verified, 371 tests passing, 16/16 requirements satisfied
+Resume file: .planning/phases/16-crossasset-nlp/
+Resume action: Begin Phase 16 planning (/gsd:plan-phase or /gsd:discuss-phase)
