@@ -1,7 +1,9 @@
-"""Tests for BaseStrategy ABC, StrategyConfig, StrategyPosition, and signals_to_positions.
+"""Tests for BaseStrategy ABC, StrategyConfig, StrategyPosition, StrategySignal,
+signals_to_positions, and v3.0 utility methods.
 
-Validates the strategy framework's constraint engine, weight formula, and
-position limit enforcement.
+Validates the strategy framework's constraint engine, weight formula,
+position limit enforcement, z-score computation, conviction sizing, and
+strength classification.
 """
 
 from datetime import date, datetime
@@ -15,6 +17,7 @@ from src.strategies.base import (
     BaseStrategy,
     StrategyConfig,
     StrategyPosition,
+    StrategySignal,
 )
 
 
@@ -402,3 +405,150 @@ class TestValidatePosition:
         validated = strat.validate_position(pos)
         assert pos.weight == 2.0  # original unchanged
         assert validated.weight == 1.0  # new object clamped
+
+
+# ---------------------------------------------------------------------------
+# StrategySignal tests (v3.0 SFWK-01)
+# ---------------------------------------------------------------------------
+class TestStrategySignal:
+    def test_strategy_signal_creation(self) -> None:
+        """StrategySignal should accept all required fields with optional defaults."""
+        sig = StrategySignal(
+            strategy_id="TEST_01",
+            timestamp=datetime(2026, 1, 15, 12, 0, 0),
+            direction=SignalDirection.LONG,
+            strength=SignalStrength.STRONG,
+            confidence=0.9,
+            z_score=2.5,
+            raw_value=100.0,
+            suggested_size=0.8,
+            asset_class=AssetClass.FX,
+            instruments=["USDBRL"],
+        )
+        assert sig.strategy_id == "TEST_01"
+        assert sig.z_score == 2.5
+        assert sig.raw_value == 100.0
+        assert sig.suggested_size == 0.8
+        assert sig.confidence == 0.9
+        assert sig.asset_class == AssetClass.FX
+        assert sig.instruments == ["USDBRL"]
+        # Optional fields default to None
+        assert sig.entry_level is None
+        assert sig.stop_loss is None
+        assert sig.take_profit is None
+        assert sig.holding_period_days is None
+        assert sig.metadata == {}
+
+    def test_strategy_signal_with_optional_fields(self) -> None:
+        """StrategySignal should accept all optional fields."""
+        sig = StrategySignal(
+            strategy_id="TEST_02",
+            timestamp=datetime(2026, 1, 15, 12, 0, 0),
+            direction=SignalDirection.SHORT,
+            strength=SignalStrength.MODERATE,
+            confidence=0.7,
+            z_score=-1.5,
+            raw_value=50.0,
+            suggested_size=0.4,
+            asset_class=AssetClass.FIXED_INCOME,
+            instruments=["DI_PRE"],
+            entry_level=100.5,
+            stop_loss=98.0,
+            take_profit=105.0,
+            holding_period_days=10,
+            metadata={"model": "v2"},
+        )
+        assert sig.entry_level == 100.5
+        assert sig.stop_loss == 98.0
+        assert sig.take_profit == 105.0
+        assert sig.holding_period_days == 10
+        assert sig.metadata == {"model": "v2"}
+
+
+# ---------------------------------------------------------------------------
+# BaseStrategy v3.0 utility method tests
+# ---------------------------------------------------------------------------
+class TestComputeZScore:
+    """Tests for BaseStrategy.compute_z_score()."""
+
+    def _make_strat(self) -> DummyStrategy:
+        return DummyStrategy(config=_make_config())
+
+    def test_compute_z_score_normal(self) -> None:
+        """z-score with varying history should return correct value."""
+        strat = self._make_strat()
+        history = [100, 102, 98, 101, 99]
+        z = strat.compute_z_score(110, history, window=5)
+        assert z > 0, f"Expected positive z-score, got {z}"
+
+    def test_compute_z_score_zero_std(self) -> None:
+        """Constant history (zero std) should return 0.0."""
+        strat = self._make_strat()
+        z = strat.compute_z_score(105, [100, 100, 100, 100, 100], window=5)
+        assert z == 0.0
+
+    def test_compute_z_score_empty_history(self) -> None:
+        """Empty history should return 0.0."""
+        strat = self._make_strat()
+        assert strat.compute_z_score(100, []) == 0.0
+
+    def test_compute_z_score_single_value(self) -> None:
+        """Single-element history should return 0.0."""
+        strat = self._make_strat()
+        assert strat.compute_z_score(100, [100]) == 0.0
+
+
+class TestSizeFromConviction:
+    """Tests for BaseStrategy.size_from_conviction()."""
+
+    def _make_strat(self) -> DummyStrategy:
+        return DummyStrategy(config=_make_config())
+
+    def test_size_from_conviction_zero(self) -> None:
+        """z=0 should return 0.0."""
+        strat = self._make_strat()
+        assert strat.size_from_conviction(0.0) == 0.0
+
+    def test_size_from_conviction_large(self) -> None:
+        """Large z should approach max_size."""
+        strat = self._make_strat()
+        size = strat.size_from_conviction(5.0, max_size=1.0)
+        assert size > 0.9, f"Expected > 0.9, got {size}"
+
+    def test_size_from_conviction_moderate(self) -> None:
+        """z=1.0 should be between 0.3 and 0.8."""
+        strat = self._make_strat()
+        size = strat.size_from_conviction(1.0, max_size=1.0)
+        assert 0.3 < size < 0.8, f"Expected between 0.3 and 0.8, got {size}"
+
+
+class TestClassifyStrength:
+    """Tests for BaseStrategy.classify_strength()."""
+
+    def _make_strat(self) -> DummyStrategy:
+        return DummyStrategy(config=_make_config())
+
+    def test_classify_strength_strong(self) -> None:
+        """z=2.5 should classify as STRONG."""
+        strat = self._make_strat()
+        assert strat.classify_strength(2.5) == SignalStrength.STRONG
+
+    def test_classify_strength_moderate(self) -> None:
+        """z=1.5 should classify as MODERATE."""
+        strat = self._make_strat()
+        assert strat.classify_strength(1.5) == SignalStrength.MODERATE
+
+    def test_classify_strength_weak(self) -> None:
+        """z=0.7 should classify as WEAK."""
+        strat = self._make_strat()
+        assert strat.classify_strength(0.7) == SignalStrength.WEAK
+
+    def test_classify_strength_no_signal(self) -> None:
+        """z=0.3 should classify as NO_SIGNAL."""
+        strat = self._make_strat()
+        assert strat.classify_strength(0.3) == SignalStrength.NO_SIGNAL
+
+    def test_classify_strength_negative(self) -> None:
+        """z=-2.5 should classify as STRONG (uses abs)."""
+        strat = self._make_strat()
+        assert strat.classify_strength(-2.5) == SignalStrength.STRONG
