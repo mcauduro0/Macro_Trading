@@ -1,4 +1,4 @@
-"""Strategy framework core -- BaseStrategy ABC, StrategyConfig, and StrategyPosition.
+"""Strategy framework core -- BaseStrategy ABC, StrategyConfig, StrategyPosition, StrategySignal.
 
 BaseStrategy mirrors the BaseAgent ABC pattern: subclasses implement
 ``generate_signals(as_of_date)`` to produce a list of target positions.
@@ -10,12 +10,18 @@ The ``signals_to_positions`` method converts agent-level signals
 
 Direction and NEUTRAL scale-down rules are applied, followed by clamping
 and leverage enforcement.
+
+v3.0 additions:
+- StrategySignal: Rich signal dataclass with z_score, entry/stop/take-profit levels
+- BaseStrategy utility methods: compute_z_score, size_from_conviction, classify_strength
 """
 
 import abc
 import copy
+import math
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
+from typing import Optional
 
 import structlog
 
@@ -83,6 +89,48 @@ class StrategyPosition:
     confidence: float
     direction: SignalDirection
     entry_signal: str
+    metadata: dict = field(default_factory=dict)
+
+
+@dataclass
+class StrategySignal:
+    """Rich signal dataclass for v3.0 strategy framework (SFWK-01).
+
+    Contains quantitative fields needed for rigorous backtesting:
+    z_score, entry/stop/take-profit levels, and suggested position sizing.
+
+    Attributes:
+        strategy_id: Source strategy identifier.
+        timestamp: Signal generation time.
+        direction: LONG, SHORT, or NEUTRAL.
+        strength: Signal strength bucket.
+        confidence: Signal confidence in [0, 1].
+        z_score: Z-score of the signal vs history.
+        raw_value: Raw model output before transformation.
+        suggested_size: Suggested position size in [0, 1] risk units.
+        asset_class: Target asset class.
+        instruments: List of tradeable instrument tickers.
+        entry_level: Optional entry price level.
+        stop_loss: Optional stop loss price level.
+        take_profit: Optional take profit price level.
+        holding_period_days: Optional expected holding period in days.
+        metadata: Strategy-specific additional data.
+    """
+
+    strategy_id: str
+    timestamp: datetime
+    direction: SignalDirection
+    strength: SignalStrength
+    confidence: float
+    z_score: float
+    raw_value: float
+    suggested_size: float
+    asset_class: AssetClass
+    instruments: list[str]
+    entry_level: Optional[float] = None
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
+    holding_period_days: Optional[int] = None
     metadata: dict = field(default_factory=dict)
 
 
@@ -223,3 +271,76 @@ class BaseStrategy(abc.ABC):
         validated.weight = max(-1.0, min(1.0, position.weight))
         validated.confidence = max(0.0, min(1.0, position.confidence))
         return validated
+
+    # ------------------------------------------------------------------
+    # v3.0 utility methods (concrete -- not abstract)
+    # ------------------------------------------------------------------
+    def compute_z_score(
+        self, value: float, history: list[float], window: int = 252
+    ) -> float:
+        """Compute rolling z-score of *value* against *history*.
+
+        Uses the last *window* values of history.  Returns 0.0 if history
+        has fewer than 2 elements or if standard deviation is zero.
+
+        Args:
+            value: Current observation.
+            history: Historical observations (most recent last).
+            window: Lookback window size.
+
+        Returns:
+            Z-score as float, or 0.0 for degenerate cases.
+        """
+        if len(history) < 2:
+            return 0.0
+        window_data = history[-window:]
+        mean = sum(window_data) / len(window_data)
+        variance = sum((x - mean) ** 2 for x in window_data) / len(window_data)
+        std = math.sqrt(variance)
+        if std == 0.0:
+            return 0.0
+        return (value - mean) / std
+
+    def size_from_conviction(
+        self, z_score: float, max_size: float = 1.0
+    ) -> float:
+        """Map z-score to position size using sigmoid truncation.
+
+        Uses ``min(max_size, max_size * (2 / (1 + exp(-|z|)) - 1))``.
+        Returns 0 for z=0, approaches *max_size* for large |z|.
+
+        Args:
+            z_score: Signal z-score (sign is ignored).
+            max_size: Maximum position size.
+
+        Returns:
+            Position size in [0, max_size].
+        """
+        return min(
+            max_size,
+            max_size * (2.0 / (1.0 + math.exp(-abs(z_score))) - 1.0),
+        )
+
+    def classify_strength(self, z_score: float) -> SignalStrength:
+        """Classify signal strength from z-score magnitude.
+
+        Thresholds:
+        - |z| >= 2.0 -> STRONG
+        - |z| >= 1.0 -> MODERATE
+        - |z| >= 0.5 -> WEAK
+        - |z| < 0.5  -> NO_SIGNAL
+
+        Args:
+            z_score: Signal z-score.
+
+        Returns:
+            SignalStrength enum value.
+        """
+        az = abs(z_score)
+        if az >= 2.0:
+            return SignalStrength.STRONG
+        if az >= 1.0:
+            return SignalStrength.MODERATE
+        if az >= 0.5:
+            return SignalStrength.WEAK
+        return SignalStrength.NO_SIGNAL

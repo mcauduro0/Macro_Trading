@@ -15,6 +15,14 @@ class AssetClass(str, Enum):
     COMMODITY = "COMMODITY"
     FIXED_INCOME = "FIXED_INCOME"
     CRYPTO = "CRYPTO"
+    # v3.0 additions for Phase 15 strategy specialization
+    RATES_BR = "RATES_BR"
+    RATES_US = "RATES_US"
+    INFLATION_BR = "INFLATION_BR"
+    INFLATION_US = "INFLATION_US"
+    CUPOM_CAMBIAL = "CUPOM_CAMBIAL"
+    SOVEREIGN_CREDIT = "SOVEREIGN_CREDIT"
+    CROSS_ASSET = "CROSS_ASSET"
 
 
 class Frequency(str, Enum):
