@@ -87,10 +87,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Risk Management
 
-- [ ] **RISK-01**: VaR calculator with historical VaR (95% and 99%, 1-day horizon) from portfolio returns
-- [ ] **RISK-02**: Parametric VaR using Gaussian assumption with portfolio covariance
-- [ ] **RISK-03**: Expected Shortfall (CVaR) as conditional expectation beyond VaR threshold
-- [ ] **RISK-04**: Stress testing against 4+ historical scenarios (2013 Taper Tantrum, 2015 BR Crisis, 2020 COVID, 2022 Rate Shock)
+- [x] **RISK-01**: VaR calculator with historical VaR (95% and 99%, 1-day horizon) from portfolio returns
+- [x] **RISK-02**: Parametric VaR using Gaussian assumption with portfolio covariance
+- [x] **RISK-03**: Expected Shortfall (CVaR) as conditional expectation beyond VaR threshold
+- [x] **RISK-04**: Stress testing against 4+ historical scenarios (2013 Taper Tantrum, 2015 BR Crisis, 2020 COVID, 2022 Rate Shock)
 - [ ] **RISK-05**: Risk limits configuration (max VaR, max drawdown, max leverage, max position, max asset class concentration)
 - [ ] **RISK-06**: Pre-trade limit checking — verify proposed trades don't breach limits before execution
 - [ ] **RISK-07**: DrawdownManager with 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
@@ -211,10 +211,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | PORT-02 | Phase 12 | Pending |
 | PORT-03 | Phase 12 | Pending |
 | PORT-04 | Phase 12 | Pending |
-| RISK-01 | Phase 12 | Pending |
-| RISK-02 | Phase 12 | Pending |
-| RISK-03 | Phase 12 | Pending |
-| RISK-04 | Phase 12 | Pending |
+| RISK-01 | Phase 12 | Complete |
+| RISK-02 | Phase 12 | Complete |
+| RISK-03 | Phase 12 | Complete |
+| RISK-04 | Phase 12 | Complete |
 | RISK-05 | Phase 12 | Pending |
 | RISK-06 | Phase 12 | Pending |
 | RISK-07 | Phase 12 | Pending |

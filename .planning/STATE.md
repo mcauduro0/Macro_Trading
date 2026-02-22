@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 11 — Trading Strategies (COMPLETE)
-Plan: 3 of 3 complete (11-01, 11-02, 11-03 done)
-Status: Phase 11 complete — all 8 strategies delivered + ALL_STRATEGIES registry
-Last activity: 2026-02-21 — Completed 11-03-PLAN.md (FX_BR_01, CUPOM_01, SOV_BR_01, ALL_STRATEGIES, 136 tests total)
+Phase: 12 — Portfolio Construction & Risk Management (IN PROGRESS)
+Plan: 2 of 3 complete (12-01, 12-02 done)
+Status: VaR/CVaR engine + stress testing delivered; RiskMonitor (12-03) remaining
+Last activity: 2026-02-22 — Completed 12-02-PLAN.md (VaRCalculator, StressTester, 36 tests)
 
-Progress: [##########] 60%  (12/20 plans complete)
+Progress: [###########] 70%  (14/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 19
-- Average duration: 10.0 min
-- Total execution time: 2.95 hours
+- Total plans completed: 21
+- Average duration: 9.8 min
+- Total execution time: 3.07 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -38,6 +38,7 @@ Progress: [##########] 60%  (12/20 plans complete)
 | 11 | 01 | 10 min | 2 | 7 |
 | 11 | 02 | 10 min | 2 | 7 |
 | 11 | 03 | 10 min | 2 | 7 |
+| 12 | 02 | 7 min | 2 | 6 |
 
 *Updated after each plan completion*
 
@@ -118,6 +119,11 @@ Recent decisions affecting current work:
 - [v2.0-11-03]: SOV_BR_01 fiscal risk = linear 60-100% GDP debt mapping + primary balance (deficit +20x, surplus -10x)
 - [v2.0-11-03]: SOV_BR_01 produces 2 correlated positions (DI + USDBRL) for fiscal dominance risk trade
 - [v2.0-11-03]: ALL_STRATEGIES uses type[BaseStrategy] values (not instances) for lazy instantiation by caller
+- [v2.0-12-02]: Eigenvalue floor at 1e-8 for near-singular covariance matrices during Cholesky decomposition
+- [v2.0-12-02]: Student-t fit fallback to normal (df=1e6) when asset has < 30 observations for MC VaR
+- [v2.0-12-02]: Uniform clipping to [1e-6, 1-1e-6] before ppf to avoid infinities in Monte Carlo draws
+- [v2.0-12-02]: Stress scenario prefix matching: startswith() for DI_PRE instrument family (DI_PRE_365 -> DI_PRE)
+- [v2.0-12-02]: Stress tests are advisory only — no position modifications (locked CONTEXT.md decision)
 
 ### Pending Todos
 
@@ -132,6 +138,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Completed 11-03-PLAN.md (FX_BR_01, CUPOM_01, SOV_BR_01, ALL_STRATEGIES registry, 136 total tests)
-Resume action: Phase 11 complete. Proceed to next phase.
+Last session: 2026-02-22
+Stopped at: Completed 12-02-PLAN.md (VaRCalculator with 3 methods, StressTester with 4 scenarios, 36 tests)
+Resume action: Continue to 12-03-PLAN.md (RiskMonitor).
