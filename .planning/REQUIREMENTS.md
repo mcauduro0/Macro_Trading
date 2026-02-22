@@ -167,17 +167,92 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ## Traceability
 
-(To be populated by roadmap creation)
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| SFWK-01 | Phase 14 | Pending |
+| SFWK-02 | Phase 14 | Pending |
+| SFWK-03 | Phase 14 | Pending |
+| SFWK-04 | Phase 14 | Pending |
+| BTST-01 | Phase 14 | Pending |
+| BTST-02 | Phase 14 | Pending |
+| BTST-03 | Phase 14 | Pending |
+| BTST-04 | Phase 14 | Pending |
+| BTST-05 | Phase 14 | Pending |
+| BTST-06 | Phase 14 | Pending |
+| FXST-01 | Phase 15 | Pending |
+| FXST-02 | Phase 15 | Pending |
+| FXST-03 | Phase 15 | Pending |
+| FXST-04 | Phase 15 | Pending |
+| RTST-01 | Phase 15 | Pending |
+| RTST-02 | Phase 15 | Pending |
+| RTST-03 | Phase 15 | Pending |
+| RTST-04 | Phase 15 | Pending |
+| INST-01 | Phase 15 | Pending |
+| INST-02 | Phase 15 | Pending |
+| CPST-01 | Phase 15 | Pending |
+| SVST-01 | Phase 15 | Pending |
+| SVST-02 | Phase 15 | Pending |
+| SVST-03 | Phase 15 | Pending |
+| CAST-01 | Phase 15 | Pending |
+| CAST-02 | Phase 15 | Pending |
+| CRSV-01 | Phase 16 | Pending |
+| CRSV-02 | Phase 16 | Pending |
+| CRSV-03 | Phase 16 | Pending |
+| CRSV-04 | Phase 16 | Pending |
+| NLP-01 | Phase 16 | Pending |
+| NLP-02 | Phase 16 | Pending |
+| NLP-03 | Phase 16 | Pending |
+| NLP-04 | Phase 16 | Pending |
+| NLP-05 | Phase 16 | Pending |
+| SAGG-01 | Phase 17 | Pending |
+| SAGG-02 | Phase 17 | Pending |
+| SAGG-03 | Phase 17 | Pending |
+| SAGG-04 | Phase 17 | Pending |
+| RSKV-01 | Phase 17 | Pending |
+| RSKV-02 | Phase 17 | Pending |
+| RSKV-03 | Phase 17 | Pending |
+| RSKV-04 | Phase 17 | Pending |
+| RSKV-05 | Phase 17 | Pending |
+| RSKV-06 | Phase 17 | Pending |
+| RSKV-07 | Phase 17 | Pending |
+| RSKV-08 | Phase 17 | Pending |
+| POPT-01 | Phase 17 | Pending |
+| POPT-02 | Phase 17 | Pending |
+| POPT-03 | Phase 17 | Pending |
+| POPT-04 | Phase 17 | Pending |
+| POPT-05 | Phase 17 | Pending |
+| ORCH-01 | Phase 18 | Pending |
+| ORCH-02 | Phase 18 | Pending |
+| ORCH-03 | Phase 18 | Pending |
+| ORCH-04 | Phase 18 | Pending |
+| MNTR-01 | Phase 18 | Pending |
+| MNTR-02 | Phase 18 | Pending |
+| MNTR-03 | Phase 18 | Pending |
+| MNTR-04 | Phase 18 | Pending |
+| REPT-01 | Phase 18 | Pending |
+| REPT-02 | Phase 18 | Pending |
+| REPT-03 | Phase 18 | Pending |
+| DSHV-01 | Phase 19 | Pending |
+| DSHV-02 | Phase 19 | Pending |
+| DSHV-03 | Phase 19 | Pending |
+| DSHV-04 | Phase 19 | Pending |
+| DSHV-05 | Phase 19 | Pending |
+| DSHV-06 | Phase 19 | Pending |
+| APIV-01 | Phase 19 | Pending |
+| APIV-02 | Phase 19 | Pending |
+| APIV-03 | Phase 19 | Pending |
+| APIV-04 | Phase 19 | Pending |
+| TSTV-01 | Phase 19 | Pending |
+| TSTV-02 | Phase 19 | Pending |
+| TSTV-03 | Phase 19 | Pending |
+| TSTV-04 | Phase 19 | Pending |
 
 **Coverage:**
 - v3 requirements: 62 total
-- Mapped to phases: 0
-- Unmapped: 62
+- Mapped to phases: 62
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-22*
+*Last updated: 2026-02-22 after roadmap creation*
 *Milestone: v3.0 Strategy Engine, Risk & Portfolio Management*
