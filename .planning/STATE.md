@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 14: Backtesting Engine v2 & Strategy Framework (v3.0)
+**Current focus:** Phase 15: New Trading Strategies (v3.0)
 
 ## Current Position
 
