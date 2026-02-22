@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 14 of 19 (Backtesting Engine v2 & Strategy Framework)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-22 — Completed 14-01-PLAN.md (Strategy Framework Foundation)
+Last activity: 2026-02-22 — Completed 14-02-PLAN.md (BacktestEngine v2)
 
 Progress: [####################..........] 68% (13/19 phases complete)
 
@@ -35,6 +35,7 @@ Progress: [####################..........] 68% (13/19 phases complete)
 
 *Updated after each plan completion*
 | Phase 14 P01 | 7min | 3 tasks | 11 files |
+| Phase 14 P02 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -51,6 +52,9 @@ Recent decisions affecting current work:
 - [14-01]: Auto-register existing 8 strategies in StrategyRegistry via __init__.py for backward compat
 - [14-01]: Extract asset_class metadata from module-level StrategyConfig constants for registry filtering
 - [14-01]: Add backtest_results v2 columns as nullable to preserve existing data
+- [14-02]: Portfolio equity = weighted sum of individual strategy equity curves, aligned to common DatetimeIndex
+- [14-02]: Walk-forward overfit ratio = mean OOS Sharpe / mean IS Sharpe, < 0.5 warns
+- [14-02]: TransactionCostModel uses instance-level default_bps for customizable fallback cost
 
 ### Pending Todos
 
@@ -66,6 +70,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 14-01-PLAN.md
+Stopped at: Completed 14-02-PLAN.md
 Resume file: .planning/phases/14-backtesting-engine-v2-strategy-framework/
-Resume action: Execute 14-02-PLAN.md (next plan in phase 14)
+Resume action: Execute 14-03-PLAN.md (next plan in phase 14)

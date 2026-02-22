@@ -28,10 +28,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Backtesting Engine v2
 
-- [ ] **BTST-01**: BacktestEngine v2 with portfolio-level backtesting — run_portfolio(strategies, weights) aggregating multiple strategies with risk allocation
-- [ ] **BTST-02**: Walk-forward validation — split period into train/test windows, optimize params in-sample, evaluate out-of-sample
+- [x] **BTST-01**: BacktestEngine v2 with portfolio-level backtesting — run_portfolio(strategies, weights) aggregating multiple strategies with risk allocation
+- [x] **BTST-02**: Walk-forward validation — split period into train/test windows, optimize params in-sample, evaluate out-of-sample
 - [ ] **BTST-03**: Deflated Sharpe Ratio (Bailey & Lopez de Prado, 2014) adjusting for multiple testing
-- [ ] **BTST-04**: TransactionCostModel with per-instrument cost table (12 instruments: DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT)
+- [x] **BTST-04**: TransactionCostModel with per-instrument cost table (12 instruments: DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT)
 - [ ] **BTST-05**: Analytics functions: compute_sortino, compute_information_ratio, compute_tail_ratio, compute_turnover, compute_rolling_sharpe
 - [ ] **BTST-06**: generate_tearsheet producing complete dict for dashboard rendering (equity curve, drawdown chart, monthly heatmap, rolling sharpe, trade analysis)
 
@@ -173,10 +173,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | SFWK-02 | Phase 14 | Complete |
 | SFWK-03 | Phase 14 | Complete |
 | SFWK-04 | Phase 14 | Complete |
-| BTST-01 | Phase 14 | Pending |
-| BTST-02 | Phase 14 | Pending |
+| BTST-01 | Phase 14 | Complete |
+| BTST-02 | Phase 14 | Complete |
 | BTST-03 | Phase 14 | Pending |
-| BTST-04 | Phase 14 | Pending |
+| BTST-04 | Phase 14 | Complete |
 | BTST-05 | Phase 14 | Pending |
 | BTST-06 | Phase 14 | Pending |
 | FXST-01 | Phase 15 | Pending |
