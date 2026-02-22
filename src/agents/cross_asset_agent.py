@@ -1,6 +1,7 @@
-"""Cross-Asset Agent -- regime detection, correlation breaks, risk sentiment.
+"""Cross-Asset Agent v2 -- regime detection, correlation breaks, risk sentiment,
+HMM regime classification, consistency checking, and structured CrossAssetView.
 
-Implements CrossAssetAgent with three quantitative models:
+Implements CrossAssetAgent with three quantitative models plus v2 enhancements:
 
 1. **RegimeDetectionModel** -- Composite risk-on/risk-off regime score from
    6 macro z-scores. Positive composite = risk-off factors elevated.
@@ -12,6 +13,14 @@ Implements CrossAssetAgent with three quantitative models:
 
 3. **RiskSentimentIndex** -- Weighted 0-100 fear/greed composite from 6
    subscores. Below 30 = fear (SHORT risk assets); above 70 = greed (LONG).
+
+v2 Enhancements:
+- **HMMRegimeClassifier** -- 4-state HMM with rule-based fallback producing
+  full probability vector.
+- **CrossAssetConsistencyChecker** -- 7 rules detecting signal contradictions
+  with 0.5x sizing penalty on affected instruments.
+- **CrossAssetView** -- Frozen dataclass output with regime, probabilities,
+  asset class views, risk metrics, key trades, narrative, and consistency issues.
 
 CrossAssetAgent is the 5th and final agent in the pipeline, registered last
 in AgentRegistry.EXECUTION_ORDER. It provides the global risk regime context
@@ -28,8 +37,17 @@ import numpy as np
 import pandas as pd
 
 from src.agents.base import AgentSignal, BaseAgent, classify_strength
+from src.agents.consistency_checker import CrossAssetConsistencyChecker
+from src.agents.cross_asset_view import (
+    AssetClassView,
+    CrossAssetView,
+    CrossAssetViewBuilder,
+    KeyTrade,
+    TailRiskAssessment,
+)
 from src.agents.data_loader import PointInTimeDataLoader
 from src.agents.features.cross_asset_features import CrossAssetFeatureEngine
+from src.agents.hmm_regime import HMMRegimeClassifier
 from src.core.enums import SignalDirection, SignalStrength
 
 logger = logging.getLogger(__name__)
@@ -396,6 +414,10 @@ class CrossAssetAgent(BaseAgent):
         self.regime_model = RegimeDetectionModel()
         self.correlation_model = CorrelationAnalysis()
         self.sentiment_model = RiskSentimentIndex()
+        # v2 enhancements
+        self.hmm_classifier = HMMRegimeClassifier()
+        self.consistency_checker = CrossAssetConsistencyChecker()
+        self._last_view: CrossAssetView | None = None
 
     # ------------------------------------------------------------------
     # BaseAgent abstract method implementations
@@ -434,6 +456,10 @@ class CrossAssetAgent(BaseAgent):
         _safe_load("cftc_brl", self.loader.get_flow_data, "CFTC_6L_LEVERAGED_NET", as_of_date, lookback_days=756)
         _safe_load("bcb_flow", self.loader.get_flow_data, "BR_FX_FLOW_COMMERCIAL", as_of_date, lookback_days=365)
 
+        # v2: Growth and inflation z-score series for HMM features
+        _safe_load("growth_proxy", self.loader.get_macro_series, "BR_IBC_BR_YOY", as_of_date, lookback_days=756)
+        _safe_load("ipca_12m", self.loader.get_macro_series, "BR_IPCA_12M", as_of_date, lookback_days=756)
+
         # DI curve for credit proxy
         try:
             data["di_curve"] = self.loader.get_curve("DI", as_of_date)
@@ -459,9 +485,9 @@ class CrossAssetAgent(BaseAgent):
         return self.feature_engine.compute(data, as_of_date)
 
     def run_models(self, features: dict) -> list[AgentSignal]:
-        """Execute all 3 cross-asset models.
+        """Execute all 3 cross-asset models and build CrossAssetView.
 
-        Order: Regime -> Correlation -> Sentiment.
+        Order: Regime -> Correlation -> Sentiment -> build CrossAssetView.
 
         Args:
             features: Output of ``compute_features()``.
@@ -474,10 +500,260 @@ class CrossAssetAgent(BaseAgent):
         signals.append(self.regime_model.run(features, as_of_date))
         signals.append(self.correlation_model.run(features, as_of_date))
         signals.append(self.sentiment_model.run(features, as_of_date))
+
+        # v2: Build CrossAssetView from signals and features
+        try:
+            self._last_view = self.build_cross_asset_view(signals, features)
+        except Exception as exc:
+            logger.warning("CrossAssetView build failed: %s", exc)
+            self._last_view = None
+
         return signals
+
+    # ------------------------------------------------------------------
+    # v2: CrossAssetView builder
+    # ------------------------------------------------------------------
+    def build_cross_asset_view(
+        self, signals: list[AgentSignal], features: dict
+    ) -> CrossAssetView:
+        """Build a CrossAssetView from agent signals and features.
+
+        Uses HMMRegimeClassifier for regime probabilities and
+        CrossAssetConsistencyChecker for contradiction detection.
+
+        Args:
+            signals: List of 3 AgentSignal objects from run_models().
+            features: Feature dict from compute_features().
+
+        Returns:
+            Frozen CrossAssetView dataclass.
+        """
+        as_of_date = features.get("_as_of_date", date.today())
+        builder = CrossAssetViewBuilder()
+
+        # --- HMM regime classification ---
+        feature_df = self._build_hmm_features(features)
+        hmm_result = self.hmm_classifier.classify(feature_df, as_of_date)
+
+        builder.set_regime(hmm_result.regime)
+        builder.set_regime_probabilities(hmm_result.regime_probabilities)
+
+        if hmm_result.warning:
+            builder.add_risk_warning(hmm_result.warning)
+
+        # --- Per-asset-class views from signals ---
+        regime_sig = signals[0] if len(signals) > 0 else None
+        sentiment_sig = signals[2] if len(signals) > 2 else None
+
+        # FX view
+        builder.add_asset_class_view(AssetClassView(
+            asset_class="FX",
+            direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
+            conviction=regime_sig.confidence if regime_sig else 0.0,
+            key_driver="regime_risk_off_on",
+            instruments=("USDBRL",),
+        ))
+
+        # Rates view
+        builder.add_asset_class_view(AssetClassView(
+            asset_class="rates",
+            direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
+            conviction=regime_sig.confidence if regime_sig else 0.0,
+            key_driver="regime_composite",
+            instruments=("DI_PRE", "NTN_B_REAL"),
+        ))
+
+        # Equities view
+        builder.add_asset_class_view(AssetClassView(
+            asset_class="equities",
+            direction=sentiment_sig.direction.value if sentiment_sig else "NEUTRAL",
+            conviction=sentiment_sig.confidence if sentiment_sig else 0.0,
+            key_driver="risk_sentiment_index",
+            instruments=("IBOV_FUT",),
+        ))
+
+        # --- Risk appetite ---
+        if sentiment_sig:
+            builder.set_risk_appetite(sentiment_sig.value)
+
+        # --- Tail risk ---
+        regime_probs = hmm_result.regime_probabilities
+        regime_transition_prob = regime_probs.get("Stagflation", 0.0) + regime_probs.get("Deflation", 0.0)
+
+        vix_z = features.get("vix_zscore_252d", 0.0)
+        if isinstance(vix_z, float) and np.isnan(vix_z):
+            vix_z = 0.0
+        credit_z = features.get("hy_oas_zscore_252d", 0.0)
+        if isinstance(credit_z, float) and np.isnan(credit_z):
+            credit_z = 0.0
+
+        tail_composite = min(100.0, max(0.0,
+            30.0 * abs(vix_z) + 30.0 * abs(credit_z) + 40.0 * regime_transition_prob
+        ))
+
+        if tail_composite >= 70:
+            assessment = "critical"
+        elif tail_composite >= 50:
+            assessment = "elevated"
+        elif tail_composite >= 30:
+            assessment = "moderate"
+        else:
+            assessment = "low"
+
+        builder.set_tail_risk(TailRiskAssessment(
+            composite_score=round(tail_composite, 2),
+            regime_transition_prob=round(regime_transition_prob, 4),
+            market_indicators=(
+                ("VIX_z", round(vix_z, 4)),
+                ("credit_spread_z", round(credit_z, 4)),
+            ),
+            assessment=assessment,
+        ))
+
+        # --- Key trades: top-3 by confidence ---
+        trade_candidates = []
+        for sig in signals:
+            if sig.direction != SignalDirection.NEUTRAL and sig.confidence > 0:
+                instrument = sig.signal_id.replace("CROSSASSET_", "")
+                trade_candidates.append(KeyTrade(
+                    instrument=instrument,
+                    direction=sig.direction.value,
+                    conviction=sig.confidence,
+                    rationale=f"{sig.signal_id} signal ({sig.strength.value})",
+                    strategy_id="cross_asset_agent",
+                ))
+
+        trade_candidates.sort(key=lambda t: t.conviction, reverse=True)
+        for trade in trade_candidates[:3]:
+            builder.add_key_trade(trade)
+
+        # --- Narrative ---
+        narrative = self._build_view_narrative(
+            hmm_result, sentiment_sig, regime_transition_prob, trade_candidates[:3]
+        )
+        builder.set_narrative(narrative)
+
+        # --- Consistency checking ---
+        agent_sigs_dict: dict[str, Any] = {}
+        for sig in signals:
+            agent_sigs_dict[sig.signal_id] = sig
+
+        strategy_sigs_dict: dict[str, Any] = {}  # populated externally if available
+
+        issues = self.consistency_checker.check(
+            agent_sigs_dict, strategy_sigs_dict, hmm_result.regime
+        )
+        for issue in issues:
+            builder.add_consistency_issue(issue)
+
+        builder.set_as_of_date(as_of_date)
+        return builder.build()
+
+    def _build_hmm_features(self, features: dict) -> pd.DataFrame:
+        """Build 6-column HMM feature DataFrame from feature dict.
+
+        Columns: growth_z, inflation_z, VIX_z, credit_spread_z, FX_vol_z,
+                 equity_momentum_z.
+
+        Uses available z-scores from the feature engine, mapping them to
+        HMM-expected column names. Returns a single-row DataFrame suitable
+        for rule-based fallback (HMM needs >= 60 rows for full path).
+
+        Args:
+            features: Feature dict from compute_features().
+
+        Returns:
+            DataFrame with HMM feature columns.
+        """
+        # Map feature engine keys to HMM columns
+        vix_z = features.get("vix_zscore_252d", 0.0)
+        credit_z = features.get("hy_oas_zscore_252d", 0.0)
+        dxy_z = features.get("dxy_zscore_252d", 0.0)
+        bcb_z = features.get("bcb_flow_zscore", 0.0)
+
+        # Use regime components for growth proxy
+        regime_comps = features.get("_regime_components", {})
+        # Growth: negative of ust_slope (inverted curve = low growth)
+        growth_z = -regime_comps.get("ust_slope", 0.0) if regime_comps else 0.0
+
+        # Inflation: use credit proxy or dxy as inflation proxy
+        inflation_z = credit_z * 0.5  # credit spread partially reflects inflation expectations
+
+        # Replace NaN with 0
+        def _safe(v: float) -> float:
+            if isinstance(v, float) and np.isnan(v):
+                return 0.0
+            return float(v)
+
+        row = {
+            "growth_z": _safe(growth_z),
+            "inflation_z": _safe(inflation_z),
+            "VIX_z": _safe(vix_z),
+            "credit_spread_z": _safe(credit_z),
+            "FX_vol_z": _safe(dxy_z),
+            "equity_momentum_z": _safe(bcb_z),
+        }
+
+        return pd.DataFrame([row])
+
+    @staticmethod
+    def _build_view_narrative(
+        hmm_result: Any,
+        sentiment_sig: AgentSignal | None,
+        regime_transition_prob: float,
+        key_trades: list,
+    ) -> str:
+        """Build a 3-5 sentence regime narrative for CrossAssetView.
+
+        Uses template-based generation (LLM narrative is in NarrativeGenerator).
+
+        Args:
+            hmm_result: HMMResult from classifier.
+            sentiment_sig: Sentiment signal (or None).
+            regime_transition_prob: Probability of adverse regime.
+            key_trades: Top key trades.
+
+        Returns:
+            Narrative text string.
+        """
+        regime = hmm_result.regime
+        prob = hmm_result.regime_probabilities.get(regime, 0.0)
+        method = hmm_result.method
+
+        sentences = []
+        sentences.append(
+            f"Current regime is {regime} ({prob:.0%} confidence via {method})."
+        )
+
+        if sentiment_sig:
+            sent_val = sentiment_sig.value
+            sent_dir = sentiment_sig.direction.value
+            sentences.append(
+                f"Risk sentiment at {sent_val:.0f}/100 ({sent_dir})."
+            )
+
+        if regime_transition_prob > 0.3:
+            sentences.append(
+                f"Elevated regime transition risk at {regime_transition_prob:.0%} "
+                f"probability of moving to Stagflation/Deflation."
+            )
+
+        if key_trades:
+            trade_strs = [
+                f"{t.direction} {t.instrument}" for t in key_trades[:3]
+            ]
+            sentences.append(f"Key trades: {', '.join(trade_strs)}.")
+
+        if hmm_result.warning:
+            sentences.append(f"Note: {hmm_result.warning}")
+
+        return " ".join(sentences)
 
     def generate_narrative(self, signals: list[AgentSignal], features: dict) -> str:
         """Generate a human-readable cross-asset analysis summary.
+
+        Uses CrossAssetView narrative when available (v2), falling back to
+        the original format.
 
         Args:
             signals: List of 3 AgentSignal objects from run_models().
@@ -486,6 +762,11 @@ class CrossAssetAgent(BaseAgent):
         Returns:
             Formatted analysis text summarizing all signals.
         """
+        # v2: Use CrossAssetView narrative if available
+        if self._last_view and self._last_view.narrative:
+            return self._last_view.narrative
+
+        # Fallback to original format
         as_of = features.get("_as_of_date", "unknown")
 
         regime_sig = signals[0] if len(signals) > 0 else None

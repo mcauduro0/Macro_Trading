@@ -199,6 +199,131 @@ class NarrativeGenerator:
         )
 
     # ------------------------------------------------------------------
+    # v2: Cross-asset narrative from CrossAssetView
+    # ------------------------------------------------------------------
+    def generate_cross_asset_narrative(self, view: Any) -> str:
+        """Generate a cross-asset narrative section from a CrossAssetView.
+
+        If API key available, uses structured LLM prompt requesting 3-5
+        sentences explaining regime, key drivers, trade rationale, and risks.
+        Falls back to template-based ASCII summary.
+
+        Args:
+            view: CrossAssetView instance (imported lazily to avoid circular).
+
+        Returns:
+            Cross-asset narrative string.
+        """
+        if self._has_api_key:
+            try:
+                return self._generate_cross_asset_llm(view)
+            except Exception as exc:
+                logger.warning(
+                    "LLM cross-asset narrative failed, using template: %s", exc
+                )
+
+        return self._generate_cross_asset_template(view)
+
+    def _generate_cross_asset_llm(self, view: Any) -> str:
+        """Generate cross-asset narrative via LLM.
+
+        Args:
+            view: CrossAssetView instance.
+
+        Returns:
+            LLM-generated narrative string.
+        """
+        prompt = (
+            "Write a concise 3-5 sentence cross-asset regime narrative for the "
+            "trading desk based on the following data. Return ONLY the narrative text, "
+            "no JSON wrapper.\n\n"
+            f"Regime: {view.regime} (probabilities: {view.regime_probabilities})\n"
+            f"Risk Appetite: {view.risk_appetite:.0f}/100\n"
+        )
+
+        if view.tail_risk:
+            prompt += (
+                f"Tail Risk: {view.tail_risk.assessment} "
+                f"(composite={view.tail_risk.composite_score:.0f}, "
+                f"transition_prob={view.tail_risk.regime_transition_prob:.2%})\n"
+            )
+
+        if view.key_trades:
+            trades_str = ", ".join(
+                f"{t.direction} {t.instrument} ({t.conviction:.0%})"
+                for t in view.key_trades
+            )
+            prompt += f"Key Trades: {trades_str}\n"
+
+        if view.risk_warnings:
+            prompt += f"Warnings: {'; '.join(view.risk_warnings)}\n"
+
+        response = self._client.messages.create(  # type: ignore[union-attr]
+            model=_MODEL_ID,
+            max_tokens=500,
+            system=(
+                "You are a senior macro strategist. Write concise internal notes."
+            ),
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.content[0].text
+
+    @staticmethod
+    def _generate_cross_asset_template(view: Any) -> str:
+        """Generate cross-asset narrative using template (no LLM).
+
+        Args:
+            view: CrossAssetView instance.
+
+        Returns:
+            Template-based narrative string.
+        """
+        lines = []
+        lines.append(f"CROSS-ASSET VIEW ({view.as_of_date})")
+        lines.append(f"  Regime: {view.regime}")
+
+        if view.regime_probabilities:
+            probs = ", ".join(
+                f"{k}={v:.0%}" for k, v in sorted(
+                    view.regime_probabilities.items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+            )
+            lines.append(f"  Probabilities: {probs}")
+
+        lines.append(f"  Risk Appetite: {view.risk_appetite:.0f}/100")
+
+        if view.tail_risk:
+            lines.append(
+                f"  Tail Risk: {view.tail_risk.assessment} "
+                f"(score={view.tail_risk.composite_score:.0f})"
+            )
+
+        if view.key_trades:
+            lines.append("  Key Trades:")
+            for t in view.key_trades:
+                lines.append(
+                    f"    {t.direction} {t.instrument} "
+                    f"({t.conviction:.0%}) -- {t.rationale}"
+                )
+
+        if view.risk_warnings:
+            lines.append("  Warnings:")
+            for w in view.risk_warnings:
+                lines.append(f"    - {w}")
+
+        if view.consistency_issues:
+            lines.append("  Consistency Issues:")
+            for issue in view.consistency_issues:
+                lines.append(
+                    f"    [{issue.rule_id}] {issue.description} "
+                    f"(penalty={issue.sizing_penalty}x)"
+                )
+
+        return "\n".join(lines)
+
+    # ------------------------------------------------------------------
     # Prompt builder
     # ------------------------------------------------------------------
     @staticmethod
@@ -207,6 +332,8 @@ class NarrativeGenerator:
         features: dict | None,
     ) -> str:
         """Serialize agent reports into structured text for the LLM prompt.
+
+        Includes CrossAssetView data when available in features.
 
         Args:
             agent_reports: Mapping of agent_id to AgentReport.
@@ -241,7 +368,27 @@ class NarrativeGenerator:
         if features:
             parts.append("--- Additional Features ---")
             for key, val in sorted(features.items()):
+                if key.startswith("_"):
+                    continue  # skip private keys
                 parts.append(f"  {key}: {val}")
             parts.append("")
+
+            # v2: Include CrossAssetView data if available
+            cross_view = features.get("_cross_asset_view")
+            if cross_view is not None:
+                parts.append("--- Cross-Asset View ---")
+                parts.append(f"  Regime: {cross_view.regime}")
+                parts.append(f"  Risk Appetite: {cross_view.risk_appetite:.0f}")
+                if cross_view.tail_risk:
+                    parts.append(
+                        f"  Tail Risk: {cross_view.tail_risk.assessment}"
+                    )
+                if cross_view.key_trades:
+                    for t in cross_view.key_trades:
+                        parts.append(
+                            f"  Trade: {t.direction} {t.instrument} "
+                            f"({t.conviction:.2f})"
+                        )
+                parts.append("")
 
         return "\n".join(parts)
