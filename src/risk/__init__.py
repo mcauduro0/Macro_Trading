@@ -1,5 +1,20 @@
-"""Risk computation package -- VaR, CVaR, and stress testing."""
+"""Risk computation package -- VaR, CVaR, stress testing, limits, and monitoring."""
 
+from src.risk.drawdown_manager import (
+    AlertDispatcher,
+    AssetClassLossTracker,
+    CircuitBreakerConfig,
+    CircuitBreakerEvent,
+    CircuitBreakerState,
+    DrawdownManager,
+    StrategyLossTracker,
+)
+from src.risk.risk_limits import (
+    LimitCheckResult,
+    RiskLimitChecker,
+    RiskLimitsConfig,
+)
+from src.risk.risk_monitor import RiskMonitor, RiskReport
 from src.risk.stress_tester import (
     DEFAULT_SCENARIOS,
     StressResult,
@@ -9,10 +24,22 @@ from src.risk.stress_tester import (
 from src.risk.var_calculator import VaRCalculator, VaRResult
 
 __all__ = [
+    "AlertDispatcher",
+    "AssetClassLossTracker",
+    "CircuitBreakerConfig",
+    "CircuitBreakerEvent",
+    "CircuitBreakerState",
     "DEFAULT_SCENARIOS",
+    "DrawdownManager",
+    "LimitCheckResult",
+    "RiskLimitChecker",
+    "RiskLimitsConfig",
+    "RiskMonitor",
+    "RiskReport",
     "StressResult",
     "StressScenario",
     "StressTester",
+    "StrategyLossTracker",
     "VaRCalculator",
     "VaRResult",
 ]
