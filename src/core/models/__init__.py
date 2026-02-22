@@ -20,6 +20,7 @@ from .signals import Signal
 from .agent_reports import AgentReportRecord
 from .backtest_results import BacktestResultRecord
 from .strategy_state import StrategyStateRecord
+from .nlp_documents import NlpDocumentRecord
 
 __all__ = [
     "Base",
@@ -36,4 +37,5 @@ __all__ = [
     "AgentReportRecord",
     "BacktestResultRecord",
     "StrategyStateRecord",
+    "NlpDocumentRecord",
 ]
