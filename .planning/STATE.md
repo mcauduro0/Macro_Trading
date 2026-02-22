@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 12 — Portfolio Construction & Risk Management (COMPLETE)
-Plan: 3 of 3 complete (12-01, 12-02, 12-03 done)
-Status: Phase 12 complete — signal aggregation, VaR/stress, risk limits/monitoring all delivered (107 tests)
-Last activity: 2026-02-22 — Completed 12-03-PLAN.md (RiskLimitChecker, DrawdownManager, RiskMonitor, 42 tests)
+Phase: 13 — Pipeline, LLM, Dashboard, API & Tests (COMPLETE)
+Plan: 4 of 4 complete (13-01, 13-02, 13-03, 13-04 done)
+Status: Phase 13 complete — all 4 plans executed
+Last activity: 2026-02-22 — Completed 13-04-PLAN.md (9 API v2 endpoints, 27 tests, verification script)
 
-Progress: [############] 75%  (15/20 plans complete)
+Progress: [################] 100%  (20/20 plans complete)
 
 ## Performance Metrics
 
@@ -41,6 +41,10 @@ Progress: [############] 75%  (15/20 plans complete)
 | 12 | 01 | 12 min | 2 | 8 |
 | 12 | 02 | 7 min | 2 | 6 |
 | 12 | 03 | 10 min | 2 | 7 |
+| 13 | 02 | 5 min | 2 | 7 |
+| 13 | 01 | 9 min | 2 | 7 |
+| 13 | 03 | 6 min | 2 | 5 |
+| 13 | 04 | 8 min | 2 | 12 |
 
 *Updated after each plan completion*
 
@@ -139,6 +143,20 @@ Recent decisions affecting current work:
 - [v2.0-12-03]: L1 recovery requires drawdown < l1_threshold * 0.5 to prevent whipsaw at boundary
 - [v2.0-12-03]: Risk level: CRITICAL (breach) > HIGH (>80% util or >2% dd) > MODERATE (>1% dd) > LOW
 - [v2.0-12-03]: Strategy/AssetClass loss trackers fire independently from portfolio DrawdownManager
+- [v2.0-13-02]: Template fallback uses pure ASCII tables with no prose -- fast and scannable per CONTEXT.md decision
+- [v2.0-13-02]: Anthropic SDK imported conditionally (try/except ImportError) so system runs without it installed
+- [v2.0-13-02]: claude-sonnet-4-5 model for daily generation (cost-effective, fast)
+- [v2.0-13-02]: Graceful fallback on any API error with source="template_fallback" to distinguish from deliberate template use
+- [v2.0-13-03]: CDN-only dashboard (React 18 + Tailwind + Recharts + Babel) — no build step required
+- [v2.0-13-03]: FileResponse for static HTML serving — simple, no template engine needed
+- [v2.0-13-01]: Pipeline uses sync execution (batch script, not async) with sync SQLAlchemy sessions for DB persistence
+- [v2.0-13-01]: Agent/strategy/portfolio/risk steps use try/except for graceful degradation; pipeline abort only on unrecoverable errors
+- [v2.0-13-01]: Placeholder steps for ingest/quality when Docker services unavailable
+- [v2.0-13-03]: Isolated test app fixture bypasses DB lifespan for pure HTML endpoint tests
+- [v2.0-13-04]: Static AGENT_DEFINITIONS list for API stability (agents always listed even if registry empty)
+- [v2.0-13-04]: backtest_run() for GET endpoints (no DB writes), run() for POST (persists signals)
+- [v2.0-13-04]: Response envelope: {status: ok, data: ..., meta: {timestamp: ...}} for all v2 endpoints
+- [v2.0-13-04]: risk_api delegates to portfolio_api._build_risk_report to avoid code duplication
 
 ### Pending Todos
 
@@ -154,6 +172,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 13 context gathered
-Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-CONTEXT.md
-Resume action: Context captured for Phase 13. Run /gsd:plan-phase 13 to create plans.
+Stopped at: Completed 13-04-PLAN.md — Phase 13 fully complete
+Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-04-SUMMARY.md
+Resume action: Phase 13 complete. All 20/20 plans done. Project v2.0 milestone complete.

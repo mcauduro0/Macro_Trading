@@ -1,4 +1,4 @@
-.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql
+.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all
 
 # ── Setup ────────────────────────────────────────────────────────────
 # Full first-time setup
@@ -91,3 +91,25 @@ verify-quick:
 # Run data quality checks
 quality:
 	python -c "from src.quality.checks import DataQualityChecker; import json; print(json.dumps(DataQualityChecker().run_all_checks(), indent=2))"
+
+# ── Daily Pipeline ────────────────────────────────────────────────
+# Run daily pipeline for today
+daily:
+	python scripts/daily_run.py
+
+# Run daily pipeline in dry-run mode (no DB writes)
+daily-dry:
+	python scripts/daily_run.py --dry-run
+
+# Run daily pipeline for a specific date
+daily-date:
+	python scripts/daily_run.py --date $(DATE)
+
+# ── Integration Tests ────────────────────────────────────────────────
+# Run integration tests only
+test-integration:
+	pytest tests/test_integration/ -v
+
+# Run all tests (unit + integration)
+test-all:
+	pytest tests/ -v --cov=src

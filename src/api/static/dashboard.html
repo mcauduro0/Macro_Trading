@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Macro Trading System</title>
+
+  <!-- React 18 -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Recharts -->
+  <script crossorigin src="https://unpkg.com/recharts@2/umd/Recharts.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gray: {
+              950: '#0a0a0f',
+              900: '#111118',
+              800: '#1e1e2a',
+              700: '#2a2a3a',
+              600: '#3a3a4a',
+              500: '#6b7280',
+              400: '#9ca3af',
+              300: '#d1d5db',
+              200: '#e5e7eb',
+              100: '#f3f4f6',
+            },
+            green: { 500: '#22c55e' },
+            red: { 500: '#ef4444' },
+            amber: { 500: '#f59e0b' },
+            blue: { 500: '#3b82f6' },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      background: #0a0a0f;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .font-mono { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace; }
+    .small-caps { font-variant: small-caps; letter-spacing: 0.08em; }
+    .skeleton { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+    const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = Recharts;
+
+    // -----------------------------------------------------------------------
+    // Utility: fetch with graceful error handling
+    // -----------------------------------------------------------------------
+    async function safeFetch(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return { data: await res.json(), error: null };
+      } catch (err) {
+        return { data: null, error: err.message };
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Skeleton loader
+    // -----------------------------------------------------------------------
+    function SkeletonCard() {
+      return (
+        <div className="bg-gray-900 border border-gray-800 rounded p-4 skeleton">
+          <div className="h-3 bg-gray-800 rounded w-1/2 mb-3"></div>
+          <div className="h-6 bg-gray-800 rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-gray-800 rounded w-1/3"></div>
+        </div>
+      );
+    }
+
+    function SkeletonGrid({ count = 8 }) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {Array.from({ length: count }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Error state
+    // -----------------------------------------------------------------------
+    function ErrorState({ message }) {
+      return (
+        <div className="bg-gray-900 border border-gray-800 rounded p-6 text-center">
+          <div className="text-gray-500 text-sm small-caps mb-2">data unavailable</div>
+          <div className="text-gray-400 text-sm">
+            {message || 'Run daily pipeline first to populate data.'}
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Direction arrow component
+    // -----------------------------------------------------------------------
+    function DirectionArrow({ direction }) {
+      if (direction === 'LONG') {
+        return <span className="text-green-500 font-mono text-lg" title="LONG">&#9650;</span>;
+      }
+      if (direction === 'SHORT') {
+        return <span className="text-red-500 font-mono text-lg" title="SHORT">&#9660;</span>;
+      }
+      return <span className="text-gray-500 font-mono text-lg" title="NEUTRAL">&#8212;</span>;
+    }
+
+    // -----------------------------------------------------------------------
+    // Confidence bar
+    // -----------------------------------------------------------------------
+    function ConfidenceBar({ value }) {
+      const pct = Math.max(0, Math.min(100, (value || 0) * 100));
+      const color = pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-gray-500';
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-gray-800 rounded-full h-2 overflow-hidden">
+            <div className={`${color} h-full rounded-full`} style={{ width: `${pct}%` }}></div>
+          </div>
+          <span className="text-gray-400 text-xs font-mono w-10 text-right">{pct.toFixed(0)}%</span>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Tab definitions
+    // -----------------------------------------------------------------------
+    const TABS = [
+      { id: 'macro', label: 'Macro Dashboard', icon: '\u2637' },
+      { id: 'agents', label: 'Agent Signals', icon: '\u26A1' },
+      { id: 'portfolio', label: 'Portfolio', icon: '\u2696' },
+      { id: 'backtests', label: 'Backtests', icon: '\u25B6' },
+    ];
+
+    // -----------------------------------------------------------------------
+    // Header
+    // -----------------------------------------------------------------------
+    function Header({ onRefresh }) {
+      const now = new Date().toISOString().slice(0, 10);
+      return (
+        <div className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-green-500 font-mono text-xl font-bold">MT</span>
+            <h1 className="text-gray-100 text-lg font-semibold">Macro Trading System</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 font-mono text-sm">{now}</span>
+            <button
+              onClick={onRefresh}
+              className="px-3 py-1 bg-gray-800 text-gray-300 text-sm rounded border border-gray-700 hover:bg-gray-700 transition"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // TabBar
+    // -----------------------------------------------------------------------
+    function TabBar({ activeTab, onTabChange }) {
+      return (
+        <div className="bg-gray-900 border-b border-gray-800 flex">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 px-4 py-2 text-sm text-center transition ${
+                activeTab === tab.id
+                  ? 'text-green-500 border-b-2 border-green-500 bg-gray-950'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+              }`}
+            >
+              <span className="mr-1">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Macro Dashboard Tab
+    // -----------------------------------------------------------------------
+    const MACRO_INDICATORS = [
+      { key: 'selic', label: 'Selic Rate', suffix: '%' },
+      { key: 'ipca_yoy', label: 'IPCA YoY', suffix: '%' },
+      { key: 'usdbrl', label: 'USD/BRL', suffix: '' },
+      { key: 'ibov', label: 'IBOVESPA', suffix: '' },
+      { key: 'di_1y', label: 'DI 1Y', suffix: '%' },
+      { key: 'vix', label: 'VIX', suffix: '' },
+      { key: 'us_10y', label: 'US 10Y', suffix: '%' },
+      { key: 'cds_5y', label: 'CDS 5Y', suffix: 'bps' },
+    ];
+
+    function MacroDashboard({ refreshKey }) {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        const result = await safeFetch('/api/v1/macro/dashboard');
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setData(result.data);
+        }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+
+      if (loading) return <SkeletonGrid count={8} />;
+      if (error || !data) return <ErrorState message={error} />;
+
+      const indicators = data.indicators || data;
+
+      return (
+        <div>
+          <h2 className="text-gray-500 text-xs small-caps mb-3 tracking-wider">key macro indicators</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {MACRO_INDICATORS.map((ind) => {
+              const val = indicators[ind.key];
+              const change = indicators[ind.key + '_change'];
+              const updated = indicators[ind.key + '_updated'];
+              return (
+                <div key={ind.key} className="bg-gray-900 border border-gray-800 rounded p-3">
+                  <div className="text-gray-500 text-xs small-caps mb-1">{ind.label}</div>
+                  <div className="font-mono text-lg text-gray-100">
+                    {val != null ? Number(val).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '—'}
+                    {ind.suffix && <span className="text-gray-500 text-sm ml-1">{ind.suffix}</span>}
+                  </div>
+                  {change != null && (
+                    <div className={`text-xs font-mono mt-1 ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {change >= 0 ? '\u25B2' : '\u25BC'} {Math.abs(change).toFixed(2)}
+                    </div>
+                  )}
+                  {updated && (
+                    <div className="text-gray-600 text-xs mt-1">{updated}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Agent Signals Tab
+    // -----------------------------------------------------------------------
+    const AGENT_NAMES = [
+      'monetary_policy_agent',
+      'inflation_agent',
+      'fiscal_agent',
+      'fx_equilibrium_agent',
+      'cross_asset_agent',
+    ];
+
+    function AgentSignals({ refreshKey }) {
+      const [agents, setAgents] = useState(null);
+      const [signals, setSignals] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        const [agentsRes, signalsRes] = await Promise.all([
+          safeFetch('/api/v1/agents'),
+          safeFetch('/api/v1/signals/latest'),
+        ]);
+        if (agentsRes.error && signalsRes.error) {
+          setError('Agents and signals endpoints unavailable');
+        } else {
+          setAgents(agentsRes.data);
+          setSignals(signalsRes.data);
+        }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+
+      if (loading) return <SkeletonGrid count={5} />;
+      if (error) return <ErrorState message={error} />;
+
+      // Build agent-signal map
+      const signalList = Array.isArray(signals) ? signals : (signals?.signals || []);
+      const agentList = Array.isArray(agents) ? agents : (agents?.agents || AGENT_NAMES);
+      const signalsByAgent = {};
+      signalList.forEach((s) => {
+        const key = s.agent_id || s.agent_name || 'unknown';
+        if (!signalsByAgent[key]) signalsByAgent[key] = [];
+        signalsByAgent[key].push(s);
+      });
+
+      // Consensus calculation
+      const directions = signalList.map(s => s.direction).filter(Boolean);
+      const longCount = directions.filter(d => d === 'LONG').length;
+      const shortCount = directions.filter(d => d === 'SHORT').length;
+      const consensusDir = longCount > shortCount ? 'LONG' : shortCount > longCount ? 'SHORT' : 'NEUTRAL';
+      const avgConf = signalList.length > 0
+        ? signalList.reduce((sum, s) => sum + (s.confidence || 0), 0) / signalList.length
+        : 0;
+
+      return (
+        <div>
+          {/* Consensus view */}
+          <div className="bg-gray-900 border border-gray-800 rounded p-4 mb-4">
+            <h2 className="text-gray-500 text-xs small-caps mb-2 tracking-wider">consensus view</h2>
+            <div className="flex items-center gap-4">
+              <DirectionArrow direction={consensusDir} />
+              <span className="text-gray-100 font-mono text-lg">{consensusDir}</span>
+              <div className="flex-1 max-w-xs">
+                <ConfidenceBar value={avgConf} />
+              </div>
+              <span className="text-gray-500 text-xs">
+                {longCount}L / {shortCount}S / {directions.length - longCount - shortCount}N
+              </span>
+            </div>
+          </div>
+
+          {/* Agent cards */}
+          <h2 className="text-gray-500 text-xs small-caps mb-3 tracking-wider">agent signals</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {(agentList.length > 0 ? agentList : AGENT_NAMES).map((agent) => {
+              const name = typeof agent === 'string' ? agent : (agent.agent_id || agent.name);
+              const agentSignals = signalsByAgent[name] || [];
+              const lastRun = typeof agent === 'object' ? agent.last_run : null;
+              return (
+                <div key={name} className="bg-gray-900 border border-gray-800 rounded p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-gray-300 text-sm font-semibold truncate">
+                      {name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </div>
+                    <span className="bg-gray-800 text-gray-400 text-xs px-2 py-0.5 rounded-full font-mono">
+                      {agentSignals.length}
+                    </span>
+                  </div>
+                  {lastRun && (
+                    <div className="text-gray-600 text-xs mb-2">{lastRun}</div>
+                  )}
+                  {agentSignals.length === 0 ? (
+                    <div className="text-gray-600 text-xs">No signals</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {agentSignals.map((s, i) => (
+                        <div key={i} className="border-t border-gray-800 pt-1">
+                          <div className="flex items-center gap-2">
+                            <DirectionArrow direction={s.direction} />
+                            <span className="text-gray-300 text-xs truncate flex-1">
+                              {s.signal_id || s.instrument || `signal-${i + 1}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-gray-500 text-xs">
+                              {s.strength || '—'}
+                            </span>
+                            <div className="flex-1">
+                              <ConfidenceBar value={s.confidence} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Portfolio Tab
+    // -----------------------------------------------------------------------
+    function Portfolio({ refreshKey }) {
+      const [positions, setPositions] = useState(null);
+      const [risk, setRisk] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        const [posRes, riskRes] = await Promise.all([
+          safeFetch('/api/v1/portfolio/current'),
+          safeFetch('/api/v1/portfolio/risk'),
+        ]);
+        if (posRes.error && riskRes.error) {
+          setError('Portfolio endpoints unavailable');
+        } else {
+          setPositions(posRes.data);
+          setRisk(riskRes.data);
+        }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
+
+      if (loading) return <SkeletonGrid count={6} />;
+      if (error) return <ErrorState message={error} />;
+
+      const posList = positions?.positions || (Array.isArray(positions) ? positions : []);
+      const riskData = risk || {};
+
+      return (
+        <div>
+          {/* Risk metrics panel */}
+          <h2 className="text-gray-500 text-xs small-caps mb-3 tracking-wider">risk metrics</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+            {[
+              { label: 'VaR 95%', value: riskData.var_95, suffix: '%', color: 'text-amber-500' },
+              { label: 'VaR 99%', value: riskData.var_99, suffix: '%', color: 'text-red-500' },
+              { label: 'Leverage', value: riskData.leverage, suffix: 'x', color: 'text-gray-100' },
+              { label: 'Max Drawdown', value: riskData.max_drawdown, suffix: '%', color: 'text-red-500' },
+              { label: 'Circuit Breaker', value: riskData.circuit_breaker || 'INACTIVE', suffix: '', color: riskData.circuit_breaker === 'ACTIVE' ? 'text-red-500' : 'text-green-500' },
+            ].map((m) => (
+              <div key={m.label} className="bg-gray-900 border border-gray-800 rounded p-3">
+                <div className="text-gray-500 text-xs small-caps mb-1">{m.label}</div>
+                <div className={`font-mono text-lg ${m.color}`}>
+                  {m.value != null ? (typeof m.value === 'number' ? m.value.toFixed(2) : m.value) : '—'}
+                  {m.value != null && m.suffix && <span className="text-gray-500 text-sm ml-1">{m.suffix}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Positions table */}
+          <h2 className="text-gray-500 text-xs small-caps mb-3 tracking-wider">positions</h2>
+          {posList.length === 0 ? (
+            <ErrorState message="No active positions" />
+          ) : (
+            <div className="bg-gray-900 border border-gray-800 rounded overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-800">
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Instrument</th>
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Direction</th>
+                    <th className="text-right text-gray-500 text-xs small-caps px-3 py-2">Weight</th>
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Strategy</th>
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {posList.map((pos, i) => (
+                    <tr key={i} className="border-b border-gray-800 hover:bg-gray-800/50">
+                      <td className="text-gray-200 font-mono px-3 py-2">{pos.instrument}</td>
+                      <td className="px-3 py-2"><DirectionArrow direction={pos.direction} /></td>
+                      <td className={`text-right font-mono px-3 py-2 ${(pos.weight || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {pos.weight != null ? (pos.weight * 100).toFixed(1) + '%' : '—'}
+                      </td>
+                      <td className="text-gray-400 px-3 py-2">{pos.strategy || '—'}</td>
+                      <td className="text-gray-600 text-xs px-3 py-2">{pos.last_updated || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Backtests Tab
+    // -----------------------------------------------------------------------
+    function Backtests({ refreshKey }) {
+      const [strategies, setStrategies] = useState(null);
+      const [selectedId, setSelectedId] = useState(null);
+      const [equityCurve, setEquityCurve] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [curveLoading, setCurveLoading] = useState(false);
+      const [error, setError] = useState(null);
+
+      const fetchStrategies = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        const result = await safeFetch('/api/v1/strategies');
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setStrategies(result.data);
+        }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { fetchStrategies(); }, [fetchStrategies, refreshKey]);
+
+      const fetchEquityCurve = useCallback(async (strategyId) => {
+        setCurveLoading(true);
+        const result = await safeFetch(`/api/v1/strategies/${strategyId}/backtest`);
+        if (!result.error && result.data) {
+          const curve = result.data.equity_curve || result.data;
+          setEquityCurve(Array.isArray(curve) ? curve : []);
+        } else {
+          setEquityCurve([]);
+        }
+        setCurveLoading(false);
+      }, []);
+
+      useEffect(() => {
+        if (selectedId) fetchEquityCurve(selectedId);
+      }, [selectedId, fetchEquityCurve]);
+
+      if (loading) return <SkeletonGrid count={4} />;
+      if (error) return <ErrorState message={error} />;
+
+      const stratList = strategies?.strategies || (Array.isArray(strategies) ? strategies : []);
+
+      return (
+        <div>
+          {/* Strategy results table */}
+          <h2 className="text-gray-500 text-xs small-caps mb-3 tracking-wider">strategy results</h2>
+          {stratList.length === 0 ? (
+            <ErrorState message="No backtest results available. Run backtesting pipeline first." />
+          ) : (
+            <div className="bg-gray-900 border border-gray-800 rounded overflow-x-auto mb-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-800">
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Strategy</th>
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Description</th>
+                    <th className="text-right text-gray-500 text-xs small-caps px-3 py-2">Sharpe</th>
+                    <th className="text-right text-gray-500 text-xs small-caps px-3 py-2">Ann. Return</th>
+                    <th className="text-right text-gray-500 text-xs small-caps px-3 py-2">Max DD</th>
+                    <th className="text-right text-gray-500 text-xs small-caps px-3 py-2">Win Rate</th>
+                    <th className="text-left text-gray-500 text-xs small-caps px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stratList.map((s, i) => (
+                    <tr
+                      key={i}
+                      onClick={() => setSelectedId(s.strategy_id || s.id)}
+                      className={`border-b border-gray-800 cursor-pointer transition ${
+                        selectedId === (s.strategy_id || s.id) ? 'bg-gray-800' : 'hover:bg-gray-800/50'
+                      }`}
+                    >
+                      <td className="text-gray-200 font-mono px-3 py-2">{s.strategy_id || s.id}</td>
+                      <td className="text-gray-400 px-3 py-2 truncate max-w-xs">{s.description || '—'}</td>
+                      <td className={`text-right font-mono px-3 py-2 ${(s.sharpe || 0) >= 1 ? 'text-green-500' : 'text-gray-300'}`}>
+                        {s.sharpe != null ? s.sharpe.toFixed(2) : '—'}
+                      </td>
+                      <td className={`text-right font-mono px-3 py-2 ${(s.annual_return || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {s.annual_return != null ? (s.annual_return * 100).toFixed(1) + '%' : '—'}
+                      </td>
+                      <td className="text-right font-mono text-red-500 px-3 py-2">
+                        {s.max_drawdown != null ? (s.max_drawdown * 100).toFixed(1) + '%' : '—'}
+                      </td>
+                      <td className="text-right font-mono text-gray-300 px-3 py-2">
+                        {s.win_rate != null ? (s.win_rate * 100).toFixed(0) + '%' : '—'}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          s.status === 'active' ? 'bg-green-500/20 text-green-500' :
+                          s.status === 'paused' ? 'bg-amber-500/20 text-amber-500' :
+                          'bg-gray-800 text-gray-500'
+                        }`}>
+                          {s.status || 'unknown'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Equity curve chart */}
+          {selectedId && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-gray-500 text-xs small-caps tracking-wider">
+                  equity curve: <span className="text-gray-300 font-mono">{selectedId}</span>
+                </h2>
+                <select
+                  value={selectedId}
+                  onChange={(e) => setSelectedId(e.target.value)}
+                  className="bg-gray-800 text-gray-300 text-sm border border-gray-700 rounded px-2 py-1"
+                >
+                  {stratList.map((s) => (
+                    <option key={s.strategy_id || s.id} value={s.strategy_id || s.id}>
+                      {s.strategy_id || s.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded p-4">
+                {curveLoading ? (
+                  <div className="h-64 skeleton bg-gray-800 rounded"></div>
+                ) : equityCurve && equityCurve.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={equityCurve}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2a" />
+                      <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 10 }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 10 }} />
+                      <Tooltip
+                        contentStyle={{ background: '#111118', border: '1px solid #1e1e2a', borderRadius: 4 }}
+                        labelStyle={{ color: '#9ca3af' }}
+                        itemStyle={{ color: '#22c55e' }}
+                      />
+                      <Line type="monotone" dataKey="equity" stroke="#22c55e" strokeWidth={1.5} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-64 flex items-center justify-center text-gray-600 text-sm">
+                    No equity curve data available
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Main App
+    // -----------------------------------------------------------------------
+    function App() {
+      const [activeTab, setActiveTab] = useState('macro');
+      const [refreshKey, setRefreshKey] = useState(0);
+
+      const handleRefresh = () => setRefreshKey((k) => k + 1);
+
+      return (
+        <div className="min-h-screen bg-gray-950 text-gray-100">
+          <Header onRefresh={handleRefresh} />
+          <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="p-4 max-w-screen-2xl mx-auto">
+            {activeTab === 'macro' && <MacroDashboard refreshKey={refreshKey} />}
+            {activeTab === 'agents' && <AgentSignals refreshKey={refreshKey} />}
+            {activeTab === 'portfolio' && <Portfolio refreshKey={refreshKey} />}
+            {activeTab === 'backtests' && <Backtests refreshKey={refreshKey} />}
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Mount
+    // -----------------------------------------------------------------------
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>

@@ -98,36 +98,36 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Daily Pipeline
 
-- [ ] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
-- [ ] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
-- [ ] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
+- [x] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
+- [x] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
+- [x] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
 
 ### LLM Narrative
 
-- [ ] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
-- [ ] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
-- [ ] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
-- [ ] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
+- [x] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
+- [x] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
+- [x] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
+- [x] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
 
 ### Dashboard
 
-- [ ] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
-- [ ] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
-- [ ] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
-- [ ] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
-- [ ] **DASH-05**: Backtests tab with strategy results table and equity curve chart
+- [x] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
+- [x] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
+- [x] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
+- [x] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
+- [x] **DASH-05**: Backtests tab with strategy results table and equity curve chart
 
 ### API Extensions
 
-- [ ] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
-- [ ] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
-- [ ] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
-- [ ] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
-- [ ] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
-- [ ] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
-- [ ] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
-- [ ] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
-- [ ] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
+- [x] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
+- [x] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
+- [x] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
+- [x] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
+- [x] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
+- [x] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
+- [x] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
+- [x] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
+- [x] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
 
 ### Testing
 
@@ -135,9 +135,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
 - [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
 - [x] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
-- [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
-- [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
-- [ ] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
+- [x] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
+- [x] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
+- [x] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
 
 ## Out of Scope (v2.0)
 
@@ -219,34 +219,34 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | RISK-06 | Phase 12 | Complete |
 | RISK-07 | Phase 12 | Complete |
 | RISK-08 | Phase 12 | Complete |
-| PIPE-01 | Phase 13 | Pending |
-| PIPE-02 | Phase 13 | Pending |
-| PIPE-03 | Phase 13 | Pending |
-| LLM-01 | Phase 13 | Pending |
-| LLM-02 | Phase 13 | Pending |
-| LLM-03 | Phase 13 | Pending |
-| LLM-04 | Phase 13 | Pending |
-| DASH-01 | Phase 13 | Pending |
-| DASH-02 | Phase 13 | Pending |
-| DASH-03 | Phase 13 | Pending |
-| DASH-04 | Phase 13 | Pending |
-| DASH-05 | Phase 13 | Pending |
-| APIV2-01 | Phase 13 | Pending |
-| APIV2-02 | Phase 13 | Pending |
-| APIV2-03 | Phase 13 | Pending |
-| APIV2-04 | Phase 13 | Pending |
-| APIV2-05 | Phase 13 | Pending |
-| APIV2-06 | Phase 13 | Pending |
-| APIV2-07 | Phase 13 | Pending |
-| APIV2-08 | Phase 13 | Pending |
-| APIV2-09 | Phase 13 | Pending |
+| PIPE-01 | Phase 13 | Complete |
+| PIPE-02 | Phase 13 | Complete |
+| PIPE-03 | Phase 13 | Complete |
+| LLM-01 | Phase 13 | Complete |
+| LLM-02 | Phase 13 | Complete |
+| LLM-03 | Phase 13 | Complete |
+| LLM-04 | Phase 13 | Complete |
+| DASH-01 | Phase 13 | Complete |
+| DASH-02 | Phase 13 | Complete |
+| DASH-03 | Phase 13 | Complete |
+| DASH-04 | Phase 13 | Complete |
+| DASH-05 | Phase 13 | Complete |
+| APIV2-01 | Phase 13 | Complete |
+| APIV2-02 | Phase 13 | Complete |
+| APIV2-03 | Phase 13 | Complete |
+| APIV2-04 | Phase 13 | Complete |
+| APIV2-05 | Phase 13 | Complete |
+| APIV2-06 | Phase 13 | Complete |
+| APIV2-07 | Phase 13 | Complete |
+| APIV2-08 | Phase 13 | Complete |
+| APIV2-09 | Phase 13 | Complete |
 | TESTV2-01 | Phase 8-13 | Complete |
 | TESTV2-02 | Phase 8-13 | Complete |
 | TESTV2-03 | Phase 10 | Complete |
 | TESTV2-04 | Phase 12 | Complete |
-| TESTV2-05 | Phase 13 | Pending |
-| TESTV2-06 | Phase 13 | Pending |
-| TESTV2-07 | Phase 13 | Pending |
+| TESTV2-05 | Phase 13 | Complete |
+| TESTV2-06 | Phase 13 | Complete |
+| TESTV2-07 | Phase 13 | Complete |
 
 **Coverage:**
 - v2 requirements: 88 total
