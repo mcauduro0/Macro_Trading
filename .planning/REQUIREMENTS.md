@@ -119,15 +119,15 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### API Extensions
 
-- [ ] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
-- [ ] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
-- [ ] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
-- [ ] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
-- [ ] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
-- [ ] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
-- [ ] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
-- [ ] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
-- [ ] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
+- [x] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
+- [x] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
+- [x] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
+- [x] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
+- [x] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
+- [x] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
+- [x] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
+- [x] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
+- [x] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
 
 ### Testing
 
@@ -135,9 +135,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
 - [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
 - [x] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
-- [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
-- [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
-- [ ] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
+- [x] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
+- [x] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
+- [x] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
 
 ## Out of Scope (v2.0)
 
@@ -231,22 +231,22 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | DASH-03 | Phase 13 | Complete |
 | DASH-04 | Phase 13 | Complete |
 | DASH-05 | Phase 13 | Complete |
-| APIV2-01 | Phase 13 | Pending |
-| APIV2-02 | Phase 13 | Pending |
-| APIV2-03 | Phase 13 | Pending |
-| APIV2-04 | Phase 13 | Pending |
-| APIV2-05 | Phase 13 | Pending |
-| APIV2-06 | Phase 13 | Pending |
-| APIV2-07 | Phase 13 | Pending |
-| APIV2-08 | Phase 13 | Pending |
-| APIV2-09 | Phase 13 | Pending |
+| APIV2-01 | Phase 13 | Complete |
+| APIV2-02 | Phase 13 | Complete |
+| APIV2-03 | Phase 13 | Complete |
+| APIV2-04 | Phase 13 | Complete |
+| APIV2-05 | Phase 13 | Complete |
+| APIV2-06 | Phase 13 | Complete |
+| APIV2-07 | Phase 13 | Complete |
+| APIV2-08 | Phase 13 | Complete |
+| APIV2-09 | Phase 13 | Complete |
 | TESTV2-01 | Phase 8-13 | Complete |
 | TESTV2-02 | Phase 8-13 | Complete |
 | TESTV2-03 | Phase 10 | Complete |
 | TESTV2-04 | Phase 12 | Complete |
-| TESTV2-05 | Phase 13 | Pending |
-| TESTV2-06 | Phase 13 | Pending |
-| TESTV2-07 | Phase 13 | Pending |
+| TESTV2-05 | Phase 13 | Complete |
+| TESTV2-06 | Phase 13 | Complete |
+| TESTV2-07 | Phase 13 | Complete |
 
 **Coverage:**
 - v2 requirements: 88 total

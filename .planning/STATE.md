@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 13 — Pipeline, LLM, Dashboard, API & Tests
-Plan: 3 of 4 complete (13-01, 13-02, 13-03 done; next: 13-04)
-Status: Executing Phase 13 — Daily pipeline orchestration with 8-step CI-style output, CLI, 17 tests
-Last activity: 2026-02-22 — Completed 13-01-PLAN.md (DailyPipeline, CLI, pipeline_runs migration, 17 tests)
+Phase: 13 — Pipeline, LLM, Dashboard, API & Tests (COMPLETE)
+Plan: 4 of 4 complete (13-01, 13-02, 13-03, 13-04 done)
+Status: Phase 13 complete — all 4 plans executed
+Last activity: 2026-02-22 — Completed 13-04-PLAN.md (9 API v2 endpoints, 27 tests, verification script)
 
-Progress: [##############] 90%  (18/20 plans complete)
+Progress: [################] 100%  (20/20 plans complete)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [##############] 90%  (18/20 plans complete)
 | 13 | 02 | 5 min | 2 | 7 |
 | 13 | 01 | 9 min | 2 | 7 |
 | 13 | 03 | 6 min | 2 | 5 |
+| 13 | 04 | 8 min | 2 | 12 |
 
 *Updated after each plan completion*
 
@@ -152,6 +153,10 @@ Recent decisions affecting current work:
 - [v2.0-13-01]: Agent/strategy/portfolio/risk steps use try/except for graceful degradation; pipeline abort only on unrecoverable errors
 - [v2.0-13-01]: Placeholder steps for ingest/quality when Docker services unavailable
 - [v2.0-13-03]: Isolated test app fixture bypasses DB lifespan for pure HTML endpoint tests
+- [v2.0-13-04]: Static AGENT_DEFINITIONS list for API stability (agents always listed even if registry empty)
+- [v2.0-13-04]: backtest_run() for GET endpoints (no DB writes), run() for POST (persists signals)
+- [v2.0-13-04]: Response envelope: {status: ok, data: ..., meta: {timestamp: ...}} for all v2 endpoints
+- [v2.0-13-04]: risk_api delegates to portfolio_api._build_risk_report to avoid code duplication
 
 ### Pending Todos
 
@@ -167,6 +172,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 13-01-PLAN.md
-Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-01-SUMMARY.md
-Resume action: Plan 13-01 complete. Continue with 13-04.
+Stopped at: Completed 13-04-PLAN.md — Phase 13 fully complete
+Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-04-SUMMARY.md
+Resume action: Phase 13 complete. All 20/20 plans done. Project v2.0 milestone complete.
