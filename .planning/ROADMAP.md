@@ -39,7 +39,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 
 ### v3.0 Phases (Active)
 
-- [ ] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations
+- [x] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations (completed 2026-02-22)
 - [ ] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2)
 - [ ] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis
 - [ ] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing
@@ -58,7 +58,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
   3. User can run walk-forward validation that splits a backtest period into train/test windows, optimizes parameters in-sample, and reports out-of-sample performance -- detecting overfitting
   4. User can compute deflated Sharpe ratio (Bailey & Lopez de Prado) that adjusts for multiple testing bias, and generate a complete tearsheet (equity curve, drawdown chart, monthly heatmap, rolling Sharpe, trade analysis)
   5. TransactionCostModel applies per-instrument costs for 12 instruments (DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT) and Alembic migrations create strategy_state and backtest_results v2 tables
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 14-01: Enhanced StrategySignal dataclass, StrategyRegistry with decorator, strategy_state table migration, backtest_results v2 table migration
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Backtesting Engine v2 & Strategy Framework | 2/3 | In Progress|  |
+| 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete   | 2026-02-22 |
 | 15. New Trading Strategies | 0/4 | Not started | - |
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 0/3 | Not started | - |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
