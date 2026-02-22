@@ -104,18 +104,18 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### LLM Narrative
 
-- [ ] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
-- [ ] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
-- [ ] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
-- [ ] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
+- [x] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
+- [x] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
+- [x] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
+- [x] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
 
 ### Dashboard
 
-- [ ] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
-- [ ] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
-- [ ] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
-- [ ] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
-- [ ] **DASH-05**: Backtests tab with strategy results table and equity curve chart
+- [x] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
+- [x] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
+- [x] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
+- [x] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
+- [x] **DASH-05**: Backtests tab with strategy results table and equity curve chart
 
 ### API Extensions
 
@@ -222,15 +222,15 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | PIPE-01 | Phase 13 | Pending |
 | PIPE-02 | Phase 13 | Pending |
 | PIPE-03 | Phase 13 | Pending |
-| LLM-01 | Phase 13 | Pending |
-| LLM-02 | Phase 13 | Pending |
-| LLM-03 | Phase 13 | Pending |
-| LLM-04 | Phase 13 | Pending |
-| DASH-01 | Phase 13 | Pending |
-| DASH-02 | Phase 13 | Pending |
-| DASH-03 | Phase 13 | Pending |
-| DASH-04 | Phase 13 | Pending |
-| DASH-05 | Phase 13 | Pending |
+| LLM-01 | Phase 13 | Complete |
+| LLM-02 | Phase 13 | Complete |
+| LLM-03 | Phase 13 | Complete |
+| LLM-04 | Phase 13 | Complete |
+| DASH-01 | Phase 13 | Complete |
+| DASH-02 | Phase 13 | Complete |
+| DASH-03 | Phase 13 | Complete |
+| DASH-04 | Phase 13 | Complete |
+| DASH-05 | Phase 13 | Complete |
 | APIV2-01 | Phase 13 | Pending |
 | APIV2-02 | Phase 13 | Pending |
 | APIV2-03 | Phase 13 | Pending |

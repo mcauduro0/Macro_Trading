@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 12 — Portfolio Construction & Risk Management (COMPLETE)
-Plan: 3 of 3 complete (12-01, 12-02, 12-03 done)
-Status: Phase 12 complete — signal aggregation, VaR/stress, risk limits/monitoring all delivered (107 tests)
-Last activity: 2026-02-22 — Completed 12-03-PLAN.md (RiskLimitChecker, DrawdownManager, RiskMonitor, 42 tests)
+Phase: 13 — Pipeline, LLM, Dashboard, API & Tests
+Plan: 3 of 4 complete (13-02, 13-03 done; next: 13-04)
+Status: Executing Phase 13 — Bloomberg-inspired HTML dashboard at GET /dashboard with 4 tabs, 5 tests
+Last activity: 2026-02-22 — Completed 13-03-PLAN.md (dashboard HTML, FastAPI route, 5 tests)
 
-Progress: [############] 75%  (15/20 plans complete)
+Progress: [#############-] 85%  (17/20 plans complete)
 
 ## Performance Metrics
 
@@ -41,6 +41,8 @@ Progress: [############] 75%  (15/20 plans complete)
 | 12 | 01 | 12 min | 2 | 8 |
 | 12 | 02 | 7 min | 2 | 6 |
 | 12 | 03 | 10 min | 2 | 7 |
+| 13 | 02 | 5 min | 2 | 7 |
+| 13 | 03 | 6 min | 2 | 5 |
 
 *Updated after each plan completion*
 
@@ -139,6 +141,13 @@ Recent decisions affecting current work:
 - [v2.0-12-03]: L1 recovery requires drawdown < l1_threshold * 0.5 to prevent whipsaw at boundary
 - [v2.0-12-03]: Risk level: CRITICAL (breach) > HIGH (>80% util or >2% dd) > MODERATE (>1% dd) > LOW
 - [v2.0-12-03]: Strategy/AssetClass loss trackers fire independently from portfolio DrawdownManager
+- [v2.0-13-02]: Template fallback uses pure ASCII tables with no prose -- fast and scannable per CONTEXT.md decision
+- [v2.0-13-02]: Anthropic SDK imported conditionally (try/except ImportError) so system runs without it installed
+- [v2.0-13-02]: claude-sonnet-4-5 model for daily generation (cost-effective, fast)
+- [v2.0-13-02]: Graceful fallback on any API error with source="template_fallback" to distinguish from deliberate template use
+- [v2.0-13-03]: CDN-only dashboard (React 18 + Tailwind + Recharts + Babel) — no build step required
+- [v2.0-13-03]: FileResponse for static HTML serving — simple, no template engine needed
+- [v2.0-13-03]: Isolated test app fixture bypasses DB lifespan for pure HTML endpoint tests
 
 ### Pending Todos
 
@@ -154,6 +163,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 13 context gathered
-Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-CONTEXT.md
-Resume action: Context captured for Phase 13. Run /gsd:plan-phase 13 to create plans.
+Stopped at: Completed 13-03-PLAN.md
+Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-03-SUMMARY.md
+Resume action: Plan 13-03 complete. Continue with 13-01 or 13-04.

@@ -190,4 +190,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 10. Cross-Asset & Backtesting | 3/3 | Complete    | 2026-02-21 |
 | 11. Trading Strategies | 3/3 | Complete    | 2026-02-21 |
 | 12. Portfolio & Risk | 3/3 | Complete    | 2026-02-22 |
-| 13. Pipeline, LLM, Dashboard, API & Tests | 0/4 | Not started | - |
+| 13. Pipeline, LLM, Dashboard, API & Tests | 2/4 | In Progress|  |
