@@ -189,7 +189,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 |-------|----------------|--------|-----------|
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
-| 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete   | 2026-02-22 |
+| 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete    | 2026-02-22 |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |
