@@ -264,6 +264,14 @@ class DrawdownManager:
                     old_state, self.state, dd,
                     "close_all", positions, pnl, signals,
                 )
+                # L3_TRIGGERED immediately transitions to COOLDOWN
+                l3_state = self.state
+                self.cooldown_counter = cfg.cooldown_days
+                self.state = CircuitBreakerState.COOLDOWN
+                self._log_event(
+                    l3_state, self.state, dd,
+                    "cooldown_start", positions, pnl, signals,
+                )
             elif dd < cfg.l1_drawdown_pct:
                 self.state = CircuitBreakerState.L1_TRIGGERED
                 self._log_event(
@@ -272,7 +280,8 @@ class DrawdownManager:
                 )
 
         elif self.state == CircuitBreakerState.L3_TRIGGERED:
-            # Immediately transition to COOLDOWN
+            # Safety: if we somehow end up in L3 (shouldn't happen since L2
+            # immediately chains to COOLDOWN), still transition to COOLDOWN
             self.cooldown_counter = cfg.cooldown_days
             self.state = CircuitBreakerState.COOLDOWN
             self._log_event(
