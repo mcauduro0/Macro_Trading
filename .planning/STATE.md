@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 16: Cross-Asset Agent v2 & NLP Pipeline (v3.0)
+**Current focus:** Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization (v3.0)
 
 ## Current Position
 
@@ -114,6 +114,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 16-03-PLAN.md (Sentiment Scoring Pipeline) -- Phase 16 complete
-Resume file: .planning/phases/
-Resume action: Begin Phase 17 planning/execution
+Stopped at: Phase 17 context gathered
+Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-CONTEXT.md
+Resume action: Run /gsd:plan-phase 17
