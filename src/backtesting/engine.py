@@ -4,17 +4,24 @@ Point-in-time correctness is enforced by PointInTimeDataLoader:
 strategy.generate_signals(as_of_date) calls loader.get_*() methods
 which filter by release_time <= as_of_date. BacktestEngine passes
 as_of_date to strategy -- no future data can leak in.
+
+v2 additions (BTST-01, BTST-02):
+- run_portfolio: Multi-strategy portfolio backtesting with weights and attribution
+- walk_forward_validation: Train/test window splitting with overfit detection
+- BacktestConfig: New optional fields for walk-forward and cost model
 """
 from __future__ import annotations
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
+import numpy as np
 import pandas as pd
 
 from src.backtesting.portfolio import Portfolio
-from src.backtesting.metrics import compute_metrics
+from src.backtesting.metrics import BacktestResult, compute_metrics
+from src.backtesting.costs import TransactionCostModel
 from src.agents.data_loader import PointInTimeDataLoader
 
 logger = logging.getLogger(__name__)
@@ -22,7 +29,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class BacktestConfig:
-    """Immutable configuration for a backtest run."""
+    """Immutable configuration for a backtest run.
+
+    v2 additions: walk_forward, walk_forward_train_months,
+    walk_forward_test_months, funding_rate, point_in_time, cost_model.
+    All new fields have defaults that preserve backward compatibility.
+    """
     start_date: date
     end_date: date
     initial_capital: float
@@ -30,6 +42,13 @@ class BacktestConfig:
     transaction_cost_bps: float = 5.0       # bps round-trip per trade
     slippage_bps: float = 2.0               # bps per trade
     max_leverage: float = 1.0               # max sum(abs(weights))
+    # v2 additions
+    walk_forward: bool = False
+    walk_forward_train_months: int = 60
+    walk_forward_test_months: int = 12
+    funding_rate: float = 0.05
+    point_in_time: bool = True
+    cost_model: Optional[TransactionCostModel] = None
 
 
 class StrategyProtocol(Protocol):
@@ -138,6 +157,396 @@ class BacktestEngine:
                 f"Unknown rebalance_frequency: {self.config.rebalance_frequency!r}. "
                 "Use 'daily', 'weekly', or 'monthly'."
             )
+
+    # ------------------------------------------------------------------
+    # v2: Portfolio-level backtesting (BTST-01)
+    # ------------------------------------------------------------------
+    def run_portfolio(
+        self,
+        strategies: list[StrategyProtocol],
+        weights: dict[str, float] | None = None,
+    ) -> dict[str, Any]:
+        """Run multi-strategy portfolio backtest with attribution.
+
+        Executes ``self.run()`` for each strategy, combines equity curves
+        using the given weights, computes correlation and attribution.
+
+        Args:
+            strategies: List of strategy instances (must satisfy StrategyProtocol).
+            weights: Optional {strategy_id: weight} dict.  If ``None``,
+                strategies are equally weighted (1/N).
+
+        Returns:
+            Dict with keys:
+            - ``portfolio_result``: Combined BacktestResult.
+            - ``individual_results``: {strategy_id: BacktestResult}.
+            - ``weights``: The weights used.
+            - ``correlation_matrix``: {(id_a, id_b): correlation}.
+            - ``attribution``: {strategy_id: contribution_pct}.
+        """
+        if not strategies:
+            raise ValueError("strategies list must not be empty")
+
+        # Default: equal weight
+        if weights is None:
+            n = len(strategies)
+            weights = {s.strategy_id: 1.0 / n for s in strategies}
+
+        # Run individual backtests
+        individual_results: dict[str, BacktestResult] = {}
+        for strategy in strategies:
+            result = self.run(strategy)
+            individual_results[strategy.strategy_id] = result
+
+        # Build daily returns per strategy from equity curves
+        strategy_returns: dict[str, pd.Series] = {}
+        for sid, result in individual_results.items():
+            if len(result.equity_curve) < 2:
+                continue
+            dates = [pd.Timestamp(d) for d, _ in result.equity_curve]
+            equities = pd.Series(
+                [e for _, e in result.equity_curve], index=dates
+            )
+            strategy_returns[sid] = equities.pct_change().dropna()
+
+        # Combine equity curves: weighted sum of individual equity series
+        equity_series_dict: dict[str, pd.Series] = {}
+        for sid, result in individual_results.items():
+            if len(result.equity_curve) >= 2:
+                dates = [pd.Timestamp(d) for d, _ in result.equity_curve]
+                equity_series_dict[sid] = pd.Series(
+                    [e for _, e in result.equity_curve], index=dates
+                )
+
+        if equity_series_dict:
+            # Align all equity series to a common date index
+            equity_df = pd.DataFrame(equity_series_dict)
+            equity_df = equity_df.ffill().bfill()
+
+            # Portfolio equity = sum of weighted individual equities
+            portfolio_equity = pd.Series(0.0, index=equity_df.index)
+            for sid in equity_df.columns:
+                w = weights.get(sid, 0.0)
+                portfolio_equity += equity_df[sid] * w
+
+            # Combined equity curve as list of (date, equity)
+            combined_curve = [
+                (d.date(), float(e))
+                for d, e in portfolio_equity.items()
+            ]
+
+            # Compute combined metrics via Portfolio + compute_metrics
+            combined_portfolio = Portfolio(
+                initial_capital=self.config.initial_capital
+            )
+            combined_portfolio.equity_curve = combined_curve
+
+            # Aggregate trade statistics
+            total_trades = sum(
+                r.total_trades for r in individual_results.values()
+            )
+            combined_portfolio.trade_log = []
+            for r in individual_results.values():
+                # Add synthetic trade log entries for aggregate stats
+                if r.total_trades > 0 and r.win_rate > 0:
+                    wins = int(r.total_trades * r.win_rate)
+                    for _ in range(wins):
+                        combined_portfolio.trade_log.append({"pnl": 1.0})
+                    for _ in range(r.total_trades - wins):
+                        combined_portfolio.trade_log.append({"pnl": -1.0})
+
+            portfolio_result = compute_metrics(
+                combined_portfolio, self.config, "PORTFOLIO"
+            )
+        else:
+            # No valid equity curves
+            portfolio_result = BacktestResult(
+                strategy_id="PORTFOLIO",
+                start_date=self.config.start_date,
+                end_date=self.config.end_date,
+                initial_capital=self.config.initial_capital,
+                final_equity=self.config.initial_capital,
+                total_return=0.0,
+                annualized_return=0.0,
+                annualized_volatility=0.0,
+                sharpe_ratio=0.0,
+                sortino_ratio=0.0,
+                calmar_ratio=0.0,
+                max_drawdown=0.0,
+                win_rate=0.0,
+                profit_factor=0.0,
+                total_trades=0,
+                monthly_returns={},
+                equity_curve=[],
+            )
+            combined_curve = []
+
+        # Correlation matrix
+        correlation_matrix: dict[tuple[str, str], float] = {}
+        if len(strategy_returns) >= 2:
+            returns_df = pd.DataFrame(strategy_returns)
+            returns_df = returns_df.dropna()
+            if len(returns_df) > 1:
+                corr = returns_df.corr()
+                for id_a in corr.columns:
+                    for id_b in corr.columns:
+                        correlation_matrix[(id_a, id_b)] = float(
+                            corr.loc[id_a, id_b]
+                        )
+
+        # Attribution: each strategy's weighted contribution to total return
+        attribution: dict[str, float] = {}
+        total_weighted_return = sum(
+            individual_results[sid].total_return * weights.get(sid, 0.0)
+            for sid in individual_results
+        )
+        for sid, result in individual_results.items():
+            w = weights.get(sid, 0.0)
+            if abs(total_weighted_return) > 1e-8:
+                attribution[sid] = (
+                    result.total_return * w / total_weighted_return
+                )
+            else:
+                attribution[sid] = w  # fallback: just the weight
+
+        logger.info(
+            "portfolio_backtest_complete n_strategies=%d total_return=%.2f%%",
+            len(strategies),
+            portfolio_result.total_return,
+        )
+
+        return {
+            "portfolio_result": portfolio_result,
+            "individual_results": individual_results,
+            "weights": weights,
+            "correlation_matrix": correlation_matrix,
+            "attribution": attribution,
+        }
+
+    # ------------------------------------------------------------------
+    # v2: Walk-forward validation (BTST-02)
+    # ------------------------------------------------------------------
+    def walk_forward_validation(
+        self,
+        strategy: StrategyProtocol,
+        param_grid: dict[str, list] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Walk-forward validation with train/test window splitting.
+
+        Slides a rolling window across the backtest period to evaluate
+        in-sample vs out-of-sample performance.  Useful for detecting
+        overfitting (overfit ratio = mean OOS Sharpe / mean IS Sharpe;
+        ratio < 0.5 suggests overfitting).
+
+        Args:
+            strategy: Strategy instance to validate.
+            param_grid: Optional parameter grid for optimization.
+                Each key is a strategy attribute, each value a list of
+                candidates.  If provided, the best Sharpe params on the
+                training window are used for the test window.
+
+        Returns:
+            List of dicts, one per window, with keys:
+            window, train_start, train_end, test_start, test_end,
+            in_sample_sharpe, out_of_sample_sharpe, in_sample_result,
+            out_of_sample_result, params_used.
+        """
+        train_months = self.config.walk_forward_train_months
+        test_months = self.config.walk_forward_test_months
+
+        # Generate windows
+        windows = self._generate_wf_windows(
+            self.config.start_date,
+            self.config.end_date,
+            train_months,
+            test_months,
+        )
+
+        if not windows:
+            logger.warning(
+                "walk_forward_no_windows period too short for "
+                "train=%d test=%d months",
+                train_months,
+                test_months,
+            )
+            return []
+
+        results: list[dict[str, Any]] = []
+        is_sharpes: list[float] = []
+        oos_sharpes: list[float] = []
+
+        for i, (train_start, train_end, test_start, test_end) in enumerate(
+            windows
+        ):
+            params_used: dict[str, Any] = {}
+
+            if param_grid:
+                # Grid search on training window
+                best_sharpe = -float("inf")
+                best_params: dict[str, Any] = {}
+
+                import itertools
+
+                param_names = list(param_grid.keys())
+                param_values = list(param_grid.values())
+
+                for combo in itertools.product(*param_values):
+                    trial_params = dict(zip(param_names, combo))
+                    # Apply params to strategy
+                    for k, v in trial_params.items():
+                        setattr(strategy, k, v)
+
+                    train_config = BacktestConfig(
+                        start_date=train_start,
+                        end_date=train_end,
+                        initial_capital=self.config.initial_capital,
+                        rebalance_frequency=self.config.rebalance_frequency,
+                        transaction_cost_bps=self.config.transaction_cost_bps,
+                        slippage_bps=self.config.slippage_bps,
+                        max_leverage=self.config.max_leverage,
+                    )
+                    train_engine = BacktestEngine(train_config, self.loader)
+                    train_result = train_engine.run(strategy)
+
+                    if train_result.sharpe_ratio > best_sharpe:
+                        best_sharpe = train_result.sharpe_ratio
+                        best_params = trial_params.copy()
+
+                # Apply best params for test
+                for k, v in best_params.items():
+                    setattr(strategy, k, v)
+                params_used = best_params
+            else:
+                # No param grid: run with current params
+                train_config = BacktestConfig(
+                    start_date=train_start,
+                    end_date=train_end,
+                    initial_capital=self.config.initial_capital,
+                    rebalance_frequency=self.config.rebalance_frequency,
+                    transaction_cost_bps=self.config.transaction_cost_bps,
+                    slippage_bps=self.config.slippage_bps,
+                    max_leverage=self.config.max_leverage,
+                )
+                train_engine = BacktestEngine(train_config, self.loader)
+
+            # Run train (in-sample)
+            train_config = BacktestConfig(
+                start_date=train_start,
+                end_date=train_end,
+                initial_capital=self.config.initial_capital,
+                rebalance_frequency=self.config.rebalance_frequency,
+                transaction_cost_bps=self.config.transaction_cost_bps,
+                slippage_bps=self.config.slippage_bps,
+                max_leverage=self.config.max_leverage,
+            )
+            train_engine = BacktestEngine(train_config, self.loader)
+            in_sample_result = train_engine.run(strategy)
+
+            # Run test (out-of-sample)
+            test_config = BacktestConfig(
+                start_date=test_start,
+                end_date=test_end,
+                initial_capital=self.config.initial_capital,
+                rebalance_frequency=self.config.rebalance_frequency,
+                transaction_cost_bps=self.config.transaction_cost_bps,
+                slippage_bps=self.config.slippage_bps,
+                max_leverage=self.config.max_leverage,
+            )
+            test_engine = BacktestEngine(test_config, self.loader)
+            oos_result = test_engine.run(strategy)
+
+            is_sharpes.append(in_sample_result.sharpe_ratio)
+            oos_sharpes.append(oos_result.sharpe_ratio)
+
+            results.append({
+                "window": i,
+                "train_start": train_start,
+                "train_end": train_end,
+                "test_start": test_start,
+                "test_end": test_end,
+                "in_sample_sharpe": in_sample_result.sharpe_ratio,
+                "out_of_sample_sharpe": oos_result.sharpe_ratio,
+                "in_sample_result": in_sample_result,
+                "out_of_sample_result": oos_result,
+                "params_used": params_used,
+            })
+
+            logger.info(
+                "walk_forward_window window=%d is_sharpe=%.2f oos_sharpe=%.2f",
+                i,
+                in_sample_result.sharpe_ratio,
+                oos_result.sharpe_ratio,
+            )
+
+        # Log overfit ratio
+        mean_is = np.mean(is_sharpes) if is_sharpes else 0.0
+        mean_oos = np.mean(oos_sharpes) if oos_sharpes else 0.0
+        if abs(mean_is) > 1e-8:
+            overfit_ratio = mean_oos / mean_is
+        else:
+            overfit_ratio = 0.0
+
+        logger.info(
+            "walk_forward_complete n_windows=%d mean_is_sharpe=%.2f "
+            "mean_oos_sharpe=%.2f overfit_ratio=%.2f%s",
+            len(results),
+            float(mean_is),
+            float(mean_oos),
+            float(overfit_ratio),
+            " WARNING:OVERFITTING" if overfit_ratio < 0.5 else "",
+        )
+
+        return results
+
+    @staticmethod
+    def _generate_wf_windows(
+        start: date,
+        end: date,
+        train_months: int,
+        test_months: int,
+    ) -> list[tuple[date, date, date, date]]:
+        """Generate walk-forward train/test windows.
+
+        Slides by test_months each step.  Returns list of
+        (train_start, train_end, test_start, test_end) tuples.
+
+        Args:
+            start: Overall backtest start date.
+            end: Overall backtest end date.
+            train_months: Training window length in months.
+            test_months: Test window length in months.
+
+        Returns:
+            List of (train_start, train_end, test_start, test_end) tuples.
+        """
+        windows: list[tuple[date, date, date, date]] = []
+        current_train_start = start
+
+        while True:
+            # Compute window boundaries using pd.DateOffset
+            train_end_ts = pd.Timestamp(current_train_start) + pd.DateOffset(
+                months=train_months
+            )
+            test_start_ts = train_end_ts
+            test_end_ts = test_start_ts + pd.DateOffset(months=test_months)
+
+            train_end = train_end_ts.date()
+            test_start = test_start_ts.date()
+            test_end = test_end_ts.date()
+
+            # Stop if test window exceeds overall end
+            if test_end > end:
+                break
+
+            windows.append((current_train_start, train_end, test_start, test_end))
+
+            # Advance by test_months
+            next_start_ts = pd.Timestamp(current_train_start) + pd.DateOffset(
+                months=test_months
+            )
+            current_train_start = next_start_ts.date()
+
+        return windows
 
     def _get_prices(self, as_of_date: date, tickers: list[str]) -> dict[str, float]:
         """Fetch PIT prices for tickers, falling back to last known price on gaps.
