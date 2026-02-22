@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 15 of 19 (New Trading Strategies)
-Plan: 4 of 4 complete in current phase (15-01, 15-02, 15-03, 15-04 done)
-Status: Phase 15 complete
-Last activity: 2026-02-22 — Completed 15-04-PLAN.md (SOV-01/02/03, CROSS-01/02 strategies)
+Plan: 5 of 5 complete in current phase (15-01, 15-02, 15-03, 15-04, 15-05 done)
+Status: Phase 15 complete (including gap closure)
+Last activity: 2026-02-22 — Completed 15-05-PLAN.md (BacktestEngine signal adapter + 13 integration tests)
 
 Progress: [########################......] 79% (15/19 phases complete)
 
@@ -41,6 +41,7 @@ Progress: [########################......] 79% (15/19 phases complete)
 | Phase 15 P02 | 14min | 2 tasks | 6 files |
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 | Phase 15 P04 | 14min | 2 tasks | 7 files |
+| Phase 15 P05 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,9 @@ Recent decisions affecting current work:
 - [15-04]: CROSS-01 rule-based regime (Goldilocks/Reflation/Stagflation/Deflation); Phase 16 adds HMM
 - [15-04]: CROSS-02 uses only market indicators (VIX, CDS, vol, corr, funding, momentum) -- no flow/positioning
 - [15-04]: Regime modulates sizing (0.5x multiplier), never hard-suppresses (locked decision)
+- [15-05]: Duck-typing detection (hasattr) for signal adapter instead of strict isinstance
+- [15-05]: Multiple signals targeting same instrument have weights summed, not overwritten
+- [15-05]: Portfolio-level trade count uses individual strategy aggregation
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 15-04-PLAN.md (SOV-01/02/03, CROSS-01/02 -- Phase 15 complete)
+Stopped at: Completed 15-05-PLAN.md (BacktestEngine signal adapter gap closure -- Phase 15 fully complete)
 Resume file: .planning/phases/
 Resume action: Begin Phase 16 planning
