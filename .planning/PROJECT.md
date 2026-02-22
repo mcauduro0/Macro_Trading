@@ -1,27 +1,32 @@
-# Macro Fund System — Quantitative Models & Agents
+# Macro Fund System — Strategy Engine, Risk & Portfolio Management
 
 ## What This Is
 
-A comprehensive macro trading system for a global macro hedge fund focused on Brazil and the US. Building on a complete data infrastructure (11 connectors, 250+ series, TimescaleDB), this milestone adds AI-driven analytical agents, quantitative models, a backtesting engine, initial trading strategies, signal aggregation, risk management, and a monitoring dashboard.
+A comprehensive macro trading system for a global macro hedge fund focused on Brazil and the US. The system integrates real-time market data APIs (11 connectors, 250+ series), 5 AI-driven analytical agents with quantitative models, 8 trading strategies, portfolio construction, risk management, and a daily orchestration pipeline. This milestone expands to 24+ strategies, adds NLP for central bank communications, production orchestration (Dagster), monitoring (Grafana), and a React dashboard.
 
 ## Core Value
 
 Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation everything else (agents, strategies, risk) depends on. If the data layer doesn't work, nothing works.
 
-## Current Milestone: v2.0 Quantitative Models & Agents
+## Current Milestone: v3.0 Strategy Engine, Risk & Portfolio Management
 
-**Goal:** Build 5 analytical agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset), a point-in-time backtesting engine, 8 initial trading strategies, signal aggregation, risk management, and a daily pipeline — all powered by the data infrastructure from v1.0.
+**Goal:** Expand from 8 to 24+ trading strategies across all asset classes, add NLP pipeline for central bank communications (COPOM + FOMC), enhance risk engine (Monte Carlo VaR, reverse stress, Black-Litterman portfolio optimization), add Dagster production orchestration, Grafana monitoring dashboards, React multi-page dashboard, and comprehensive integration testing.
 
 **Target features:**
-- Agent Framework (BaseAgent ABC, signals, reports, point-in-time data loader)
-- 5 Analytical Agents with quantitative models
-- Event-driven Backtesting Engine with point-in-time correctness
-- 8 Trading Strategies (rates, inflation, FX, cupom cambial, sovereign)
-- Signal Aggregation & Portfolio Construction
-- Risk Management (VaR, limits, circuit breakers)
-- Daily Orchestration Pipeline
-- LLM Narrative Generation (Claude API)
-- Monitoring Dashboard (HTML/React)
+- 16 new trading strategies (FX, rates, inflation, cupom cambial, sovereign, cross-asset)
+- Enhanced backtesting engine (portfolio-level, walk-forward, deflated Sharpe, cost model)
+- NLP pipeline for COPOM/FOMC communications (scrapers, hawk/dove sentiment)
+- Enhanced Cross-Asset Agent with LLM-powered narrative and CrossAssetView
+- Signal aggregation v2 (Bayesian, crowding penalty, staleness discount)
+- Risk engine v2 (Monte Carlo VaR, reverse stress, component VaR)
+- Portfolio optimization (Black-Litterman, mean-variance, Kelly sizing)
+- Dagster production orchestration (16+ assets, dependency graph)
+- Grafana monitoring (4 provisioned dashboards)
+- Alert system (10 rules, Slack + email)
+- React multi-page dashboard (5 pages: Strategies, Signals, Risk, Portfolio, Agents)
+- API expansion (backtest routes, WebSocket channels)
+- Daily report generator (markdown, HTML, email, Slack)
+- Integration testing and CI/CD expansion
 
 ## Requirements
 
@@ -36,6 +41,17 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 - [x] FastAPI REST API with 12 endpoints and point-in-time support
 - [x] Data quality framework and infrastructure verification
 - [x] 319 tests with CI pipeline
+- [x] 5 analytical agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset)
+- [x] BacktestEngine with point-in-time correctness
+- [x] 8 trading strategies (RATES_BR_01-04, INF_BR_01, FX_BR_01, CUPOM_01, SOV_BR_01)
+- [x] Signal aggregation with directional consensus and conflict detection
+- [x] Portfolio construction (risk parity + conviction overlay + regime scaling)
+- [x] Capital allocator with constraint enforcement (leverage, concentration, drift)
+- [x] Risk engine (VaR 3 methods, stress testing 4 scenarios, 9 limits, circuit breakers)
+- [x] Daily pipeline (8-step orchestration with CLI)
+- [x] LLM narrative generation (Claude API + template fallback)
+- [x] HTML dashboard (4 tabs, CDN-only React)
+- [x] 12 API route files
 
 ### Active
 
@@ -47,42 +63,41 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 - Multi-user access / authentication — solo user for now
 - Bloomberg terminal integration — using free data sources only
 - ETFs, mutual funds as investment instruments — stocks only per project constraints
-- Production deployment (Kubernetes, Helm) — Phase 2+
-- Real-time streaming execution — Phase 2+
-- NLP pipeline for central bank communications — Phase 2+
-- Additional 17 strategies (total 25) — Phase 2+
+- Production deployment (Kubernetes, Helm) — Phase 3+
+- Real-time streaming execution — Phase 3+
+- FIX protocol connectivity — Phase 3+
 
 ## Context
 
-**Domain**: Global macro trading, focused on Brazil-US axis. The system needs 5 specialized analytical agents that understand inflation dynamics, monetary policy, fiscal sustainability, FX equilibrium, and cross-asset regime detection.
+**Domain**: Global macro trading, focused on Brazil-US axis. The system has 5 specialized analytical agents and 8 trading strategies. This milestone expands strategy coverage to 24+ strategies, adds NLP intelligence from central bank communications, and builds production-grade orchestration and monitoring.
 
-**Data Architecture**: Bronze/Silver/Gold layer pattern (v1.0 delivered Bronze+Silver+Gold for data). This milestone adds:
-- Agent Layer: 5 analytical agents consuming Silver/Gold data
-- Strategy Layer: 8 trading strategies consuming agent signals
-- Risk Layer: Portfolio construction, VaR, limits, circuit breakers
-- Pipeline: Daily orchestration from data ingestion to risk report
-
-**Existing Infrastructure** (from v1.0):
+**Existing Infrastructure** (from v1.0 + v2.0):
 - TimescaleDB with 10 tables, 7 hypertables, compression policies
 - 11 connectors: BCB SGS, FRED, Yahoo Finance, BCB PTAX, BCB Focus, B3/Tesouro Direto, IBGE SIDRA, STN Fiscal, CFTC COT, US Treasury, BCB FX Flow
 - 250+ macro series with point-in-time release_time tracking
 - Transforms: Nelson-Siegel, returns, z-scores, macro calculations
 - FastAPI with 12 endpoints, data quality checks, verification script
+- 5 agents: InflationAgent, MonetaryPolicyAgent, FiscalAgent, FxEquilibriumAgent, CrossAssetAgent
+- 8 strategies in src/strategies/ (flat files, ALL_STRATEGIES dict registry)
+- BacktestEngine in src/backtesting/ (single strategy, PIT correct)
+- Signal aggregation in src/portfolio/signal_aggregator.py
+- Portfolio construction in src/portfolio/ (risk parity + conviction + regime)
+- Risk engine in src/risk/ (VaR, stress, limits, drawdown/circuit breakers)
+- Daily pipeline in src/pipeline/daily_pipeline.py (custom Python orchestrator)
+- Narrative in src/narrative/generator.py (Claude API + ASCII template fallback)
+- HTML dashboard served via FileResponse at /dashboard
 
-**Key Academic References for Agents**:
-- Phillips Curve (Friedman 1968, Lucas 1972) — inflation dynamics
-- Taylor Rule (Taylor 1993) — monetary policy
-- Laubach-Williams (2003) — natural rate estimation via Kalman Filter
-- Clark-MacDonald (1998) BEER model — FX fair value
-- IMF DSA framework (2013) — debt sustainability
-- Hamilton (1989) — regime switching models
+**Key Academic References (new for v3.0)**:
+- Lopez de Prado (2018) "Advances in Financial Machine Learning" — backtesting, deflated Sharpe
+- Black & Litterman (1992) — portfolio optimization with views
+- Maillard, Roncalli & Teiletche (2010) — risk parity
+- Hansen & McMahon (2016) "Shocking Language" — central bank NLP
+- Burnside (2011) — carry trades
+- Du, Tepper & Verdelhan (2018) — CIP deviations
+- Hamilton (1989) — regime switching / HMM
+- Pan & Singleton (2008) — sovereign CDS term structure
 
-**Brazilian Specifics**:
-- BCB SGS values use comma as decimal separator
-- COPOM meets 8x/year; Focus survey weekly (Mondays)
-- IPCA released ~15 days after reference month; IPCA-15 as preview
-- DI curve from BCB swap series (proxy for B3 DI futures)
-- Inflation target: 3.0% center (CMN)
+**Guide Reference**: `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` — 18 etapas with detailed specifications for all v3.0 components.
 
 ## Constraints
 
@@ -95,6 +110,7 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 - **Real Data Only**: No mock data in production
 - **Point-in-Time**: All agent/strategy computations must respect release_time constraints
 - **Backtesting Integrity**: No look-ahead bias — strictly point-in-time data access
+- **New Dependencies**: Dagster 1.6+, Grafana (Docker), Node.js 18+ (React dashboard)
 
 ## Key Decisions
 
@@ -109,7 +125,10 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 | Monorepo structure | All components in one repo for now | Good |
 | ON CONFLICT DO NOTHING | Idempotent inserts enable safe re-runs | Good |
 | BaseConnector ABC pattern | Consistent interface across all 11 connectors | Good |
-| Template Method for agents | BaseAgent.run() orchestrates load→features→models→narrative | Pending |
+| Template Method for agents | BaseAgent.run() orchestrates load->features->models->narrative | Good |
+| Enhance not replace | Existing v2.0 components enhanced, not rewritten from scratch | Pending |
+| Coexisting strategies | New strategies (FX-02 etc.) live alongside existing (FX_BR_01 etc.) | Pending |
+| Dagster over custom pipeline | Scheduling, retry, monitoring UI — custom pipeline stays as fallback | Pending |
 
 ---
-*Last updated: 2026-02-20 after milestone v2.0 started*
+*Last updated: 2026-02-22 after milestone v3.0 started*
