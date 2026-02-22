@@ -6,6 +6,11 @@ Provides the signal-to-portfolio pipeline:
 - CapitalAllocator: Constraint enforcement, drift-triggered rebalancing.
 """
 
+from src.portfolio.capital_allocator import (
+    AllocationConstraints,
+    AllocationResult,
+    CapitalAllocator,
+)
 from src.portfolio.portfolio_constructor import (
     PortfolioConstructor,
     PortfolioTarget,
@@ -15,17 +20,6 @@ from src.portfolio.signal_aggregator import (
     AggregatedSignal,
     SignalAggregator,
 )
-
-# CapitalAllocator and AllocationResult will be added in Task 2
-# Deferred imports to avoid circular dependency before the file exists
-try:
-    from src.portfolio.capital_allocator import (
-        AllocationConstraints,
-        AllocationResult,
-        CapitalAllocator,
-    )
-except ImportError:
-    pass
 
 __all__ = [
     "AggregatedSignal",
