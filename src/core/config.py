@@ -59,6 +59,7 @@ class Settings(BaseSettings):
 
     # API Keys (external data sources)
     fred_api_key: str = ""
+    anthropic_api_key: str = ""
 
     @computed_field
     @property
