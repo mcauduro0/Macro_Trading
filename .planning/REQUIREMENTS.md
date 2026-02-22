@@ -44,10 +44,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Rates Strategies
 
-- [ ] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
-- [ ] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
-- [ ] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
-- [ ] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
+- [x] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
+- [x] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
+- [x] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
+- [x] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
 
 ### Inflation Strategies
 
@@ -183,10 +183,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | FXST-02 | Phase 15 | Complete |
 | FXST-03 | Phase 15 | Complete |
 | FXST-04 | Phase 15 | Complete |
-| RTST-01 | Phase 15 | Pending |
-| RTST-02 | Phase 15 | Pending |
-| RTST-03 | Phase 15 | Pending |
-| RTST-04 | Phase 15 | Pending |
+| RTST-01 | Phase 15 | Complete |
+| RTST-02 | Phase 15 | Complete |
+| RTST-03 | Phase 15 | Complete |
+| RTST-04 | Phase 15 | Complete |
 | INST-01 | Phase 15 | Complete |
 | INST-02 | Phase 15 | Complete |
 | CPST-01 | Phase 15 | Complete |

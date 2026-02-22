@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 15 of 19 (New Trading Strategies)
-Plan: 2 of 4 complete in current phase (15-01, 15-03 done; 15-02, 15-04 remaining)
+Plan: 3 of 4 complete in current phase (15-01, 15-02, 15-03 done; 15-04 remaining)
 Status: Executing Phase 15 plans
-Last activity: 2026-02-22 — Completed 15-01-PLAN.md (FX-02, FX-03, FX-04, FX-05 strategies)
+Last activity: 2026-02-22 — Completed 15-02-PLAN.md (RATES-03, RATES-04, RATES-05, RATES-06 strategies)
 
 Progress: [######################........] 74% (14/19 phases complete)
 
@@ -38,6 +38,7 @@ Progress: [######################........] 74% (14/19 phases complete)
 | Phase 14 P02 | 6min | 2 tasks | 4 files |
 | Phase 14 P03 | 7min | 2 tasks | 3 files |
 | Phase 15 P01 | 9min | 2 tasks | 6 files |
+| Phase 15 P02 | 14min | 2 tasks | 6 files |
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -69,6 +70,11 @@ Recent decisions affecting current work:
 - [15-03]: INF-02 uses IPCA-15 as primary model forecast with seasonal average fallback
 - [15-03]: INF-03 composite z-score: average of 3 z-scores vs BCB target, IPCA 12M, Focus
 - [15-03]: CUPOM-02 uses DI - UST as CIP basis proxy for onshore-offshore spread
+- [15-02]: RATES-03 uses 2Y as primary signal with 5Y confirmation boost
+- [15-02]: RATES-05/06 use hardcoded FOMC/COPOM date lists for event window detection
+- [15-02]: BCB reaction function: IPCA vs 4.5%/3.0% bands -> hike/cut/neutral at 25bps
+- [15-02]: Taylor Rule: r_star=2.5 + CPI + 0.5*(CPI-2.0) + 0.5*output_gap_proxy
+- [15-02]: Market pricing only for expectation baselines (DI1 for COPOM, UST for FOMC)
 
 ### Pending Todos
 
@@ -84,6 +90,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 15-01-PLAN.md (FX-02, FX-03, FX-04, FX-05)
+Stopped at: Completed 15-02-PLAN.md (RATES-03, RATES-04, RATES-05, RATES-06)
 Resume file: .planning/phases/15-new-trading-strategies/
-Resume action: Execute 15-02-PLAN.md or 15-04-PLAN.md (remaining plans)
+Resume action: Execute 15-04-PLAN.md (remaining plan)
