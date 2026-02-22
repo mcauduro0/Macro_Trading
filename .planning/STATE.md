@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
-Plan: 0 of 3 complete in current phase
-Status: Ready for Phase 16 planning
-Last activity: 2026-02-22 — Phase 15 verified and approved (5/5 criteria, 16/16 requirements, 371 tests passing)
+Plan: 2 of 3 complete in current phase
+Status: Executing Phase 16 plans
+Last activity: 2026-02-22 — Completed 16-02 (NLP Document Scrapers)
 
 Progress: [########################......] 79% (15/19 phases complete)
 
@@ -42,6 +42,8 @@ Progress: [########################......] 79% (15/19 phases complete)
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 | Phase 15 P04 | 14min | 2 tasks | 7 files |
 | Phase 15 P05 | 4min | 2 tasks | 2 files |
+| Phase 16 P01 | -- | -- | -- |
+| Phase 16 P02 | 8min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -84,6 +86,10 @@ Recent decisions affecting current work:
 - [15-05]: Duck-typing detection (hasattr) for signal adapter instead of strict isinstance
 - [15-05]: Multiple signals targeting same instrument have weights summed, not overwritten
 - [15-05]: Portfolio-level trade count uses individual strategy aggregation
+- [16-02]: ScrapedDocument dataclass shared between COPOM and FOMC scrapers for uniform output
+- [16-02]: HTML extraction via stdlib html.parser (no BeautifulSoup dependency)
+- [16-02]: Cache files named {source}_{doc_type}_{YYYY-MM-DD}.json for deterministic lookup
+- [16-02]: Sync httpx.Client (not async) for scraper simplicity -- async not needed for batch scraping
 
 ### Pending Todos
 
@@ -99,6 +105,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 15 approved — all 5 success criteria verified, 371 tests passing, 16/16 requirements satisfied
+Stopped at: Completed 16-02-PLAN.md (NLP Document Scrapers)
 Resume file: .planning/phases/16-crossasset-nlp/
-Resume action: Begin Phase 16 planning (/gsd:plan-phase or /gsd:discuss-phase)
+Resume action: Execute 16-03-PLAN.md (Sentiment Scoring Pipeline)
