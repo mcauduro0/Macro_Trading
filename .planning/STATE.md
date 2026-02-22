@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 15 of 19 (New Trading Strategies)
-Plan: 3 of 4 in current phase
+Plan: 2 of 4 complete in current phase (15-01, 15-03 done; 15-02, 15-04 remaining)
 Status: Executing Phase 15 plans
-Last activity: 2026-02-22 — Completed 15-03-PLAN.md (INF-02, INF-03, CUPOM-02)
+Last activity: 2026-02-22 — Completed 15-01-PLAN.md (FX-02, FX-03, FX-04, FX-05 strategies)
 
 Progress: [######################........] 74% (14/19 phases complete)
 
@@ -37,6 +37,7 @@ Progress: [######################........] 74% (14/19 phases complete)
 | Phase 14 P01 | 7min | 3 tasks | 11 files |
 | Phase 14 P02 | 6min | 2 tasks | 4 files |
 | Phase 14 P03 | 7min | 2 tasks | 3 files |
+| Phase 15 P01 | 9min | 2 tasks | 6 files |
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -60,6 +61,11 @@ Recent decisions affecting current work:
 - [14-03]: deflated_sharpe uses Euler-Mascheroni approximation for expected max SR from i.i.d. trials
 - [14-03]: generate_tearsheet uses 63-day rolling window for quarterly rolling Sharpe
 - [14-03]: All analytics functions use ddof=0 for std to handle small samples gracefully
+- [15-01]: FX-02 vol-adjusted sizing: min(1.0, target_vol/realized_vol) * base_size
+- [15-01]: FX-03 contrarian threshold at |z|>2.0 inverts signal direction for extreme positioning
+- [15-01]: FX-04 implied vol proxy from mean absolute deviation when no direct IV series
+- [15-01]: FX-05 commodity weights: soy 30%, iron 25%, oil 20%, sugar 15%, coffee 10%
+- [15-01]: Updated __init__.py to import new strategies for automatic StrategyRegistry population
 - [15-03]: INF-02 uses IPCA-15 as primary model forecast with seasonal average fallback
 - [15-03]: INF-03 composite z-score: average of 3 z-scores vs BCB target, IPCA 12M, Focus
 - [15-03]: CUPOM-02 uses DI - UST as CIP basis proxy for onshore-offshore spread
@@ -78,6 +84,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 15-03-PLAN.md (INF-02, INF-03, CUPOM-02)
+Stopped at: Completed 15-01-PLAN.md (FX-02, FX-03, FX-04, FX-05)
 Resume file: .planning/phases/15-new-trading-strategies/
-Resume action: Execute 15-04-PLAN.md
+Resume action: Execute 15-02-PLAN.md or 15-04-PLAN.md (remaining plans)

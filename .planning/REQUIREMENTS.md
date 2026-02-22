@@ -37,10 +37,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### FX Strategies
 
-- [ ] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
-- [ ] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
-- [ ] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
-- [ ] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
+- [x] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
+- [x] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
+- [x] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
+- [x] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
 
 ### Rates Strategies
 
@@ -179,10 +179,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | BTST-04 | Phase 14 | Complete |
 | BTST-05 | Phase 14 | Complete |
 | BTST-06 | Phase 14 | Complete |
-| FXST-01 | Phase 15 | Pending |
-| FXST-02 | Phase 15 | Pending |
-| FXST-03 | Phase 15 | Pending |
-| FXST-04 | Phase 15 | Pending |
+| FXST-01 | Phase 15 | Complete |
+| FXST-02 | Phase 15 | Complete |
+| FXST-03 | Phase 15 | Complete |
+| FXST-04 | Phase 15 | Complete |
 | RTST-01 | Phase 15 | Pending |
 | RTST-02 | Phase 15 | Pending |
 | RTST-03 | Phase 15 | Pending |
