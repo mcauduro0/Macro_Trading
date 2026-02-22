@@ -75,13 +75,14 @@ Plans:
   3. Rates strategies produce valid signals: RATES-03 (BR-US spread adjusted for CDS), RATES-04 (term premium extraction from DI vs Focus), RATES-05 (FOMC event positioning), RATES-06 (COPOM event positioning)
   4. All 16 new strategies register via @StrategyRegistry.register, populate z_score/entry_level/stop_loss/take_profit in StrategySignal, and pass backtesting with the TransactionCostModel
   5. Each strategy backtests without error over 2+ years of historical data and produces a valid tearsheet with Sharpe, drawdown, and trade statistics
-**Plans:** 4/4 plans complete
+**Plans:** 5 plans (4 complete, 1 gap closure)
 
 Plans:
-- [ ] 15-01-PLAN.md -- FX strategies: FX-02 Carry-Adjusted Momentum, FX-03 Flow-Based Tactical, FX-04 Vol Surface RV, FX-05 Terms of Trade
-- [ ] 15-02-PLAN.md -- Rates strategies: RATES-03 BR-US Spread, RATES-04 Term Premium, RATES-05 FOMC Event, RATES-06 COPOM Event
-- [ ] 15-03-PLAN.md -- Inflation (INF-02 IPCA Surprise, INF-03 Inflation Carry) and Cupom Cambial (CUPOM-02 Onshore-Offshore Spread)
-- [ ] 15-04-PLAN.md -- Sovereign (SOV-01 CDS Curve, SOV-02 EM Relative Value, SOV-03 Rating Migration) and Cross-Asset (CROSS-01 Regime Allocation, CROSS-02 Risk Appetite)
+- [x] 15-01-PLAN.md -- FX strategies: FX-02 Carry-Adjusted Momentum, FX-03 Flow-Based Tactical, FX-04 Vol Surface RV, FX-05 Terms of Trade
+- [x] 15-02-PLAN.md -- Rates strategies: RATES-03 BR-US Spread, RATES-04 Term Premium, RATES-05 FOMC Event, RATES-06 COPOM Event
+- [x] 15-03-PLAN.md -- Inflation (INF-02 IPCA Surprise, INF-03 Inflation Carry) and Cupom Cambial (CUPOM-02 Onshore-Offshore Spread)
+- [x] 15-04-PLAN.md -- Sovereign (SOV-01 CDS Curve, SOV-02 EM Relative Value, SOV-03 Rating Migration) and Cross-Asset (CROSS-01 Regime Allocation, CROSS-02 Risk Appetite)
+- [ ] 15-05-PLAN.md -- Gap closure: BacktestEngine signal adapter for list[StrategySignal] compatibility + integration tests for non-zero-trade backtesting
 
 ### Phase 16: Cross-Asset Agent v2 & NLP Pipeline
 **Goal**: Enhanced Cross-Asset Agent with HMM-based regime classification and LLM-powered narrative, plus a complete NLP pipeline that scrapes and analyzes COPOM and FOMC communications for hawk/dove sentiment -- feeding intelligence into strategies and agents
