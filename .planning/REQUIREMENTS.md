@@ -21,10 +21,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Strategy Framework Enhancement
 
-- [ ] **SFWK-01**: Enhanced StrategySignal dataclass with z_score, raw_value, suggested_size, entry_level, stop_loss, take_profit, holding_period_days, metadata dict
-- [ ] **SFWK-02**: StrategyRegistry class with register decorator, get, list_all, list_by_asset_class, instantiate, instantiate_all methods
-- [ ] **SFWK-03**: strategy_state table (strategy_id, timestamp, direction, strength, confidence, z_score, instruments JSON) with Alembic migration
-- [ ] **SFWK-04**: backtest_results v2 table with params_json, daily_returns_json, monthly_returns expanded fields
+- [x] **SFWK-01**: Enhanced StrategySignal dataclass with z_score, raw_value, suggested_size, entry_level, stop_loss, take_profit, holding_period_days, metadata dict
+- [x] **SFWK-02**: StrategyRegistry class with register decorator, get, list_all, list_by_asset_class, instantiate, instantiate_all methods
+- [x] **SFWK-03**: strategy_state table (strategy_id, timestamp, direction, strength, confidence, z_score, instruments JSON) with Alembic migration
+- [x] **SFWK-04**: backtest_results v2 table with params_json, daily_returns_json, monthly_returns expanded fields
 
 ### Backtesting Engine v2
 
@@ -169,10 +169,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SFWK-01 | Phase 14 | Pending |
-| SFWK-02 | Phase 14 | Pending |
-| SFWK-03 | Phase 14 | Pending |
-| SFWK-04 | Phase 14 | Pending |
+| SFWK-01 | Phase 14 | Complete |
+| SFWK-02 | Phase 14 | Complete |
+| SFWK-03 | Phase 14 | Complete |
+| SFWK-04 | Phase 14 | Complete |
 | BTST-01 | Phase 14 | Pending |
 | BTST-02 | Phase 14 | Pending |
 | BTST-03 | Phase 14 | Pending |
