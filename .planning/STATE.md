@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
-Plan: 2 of 3 complete in current phase
-Status: Executing Phase 16 plans
-Last activity: 2026-02-22 — Completed 16-01 (CrossAssetAgent v2) and 16-02 (NLP Document Scrapers)
+Plan: 3 of 3 complete in current phase
+Status: Phase 16 complete -- ready for Phase 17
+Last activity: 2026-02-22 — Completed 16-03 (Sentiment Scoring Pipeline)
 
-Progress: [########################......] 79% (15/19 phases complete)
+Progress: [##########################....] 84% (16/19 phases complete)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [########################......] 79% (15/19 phases complete)
 | Phase 15 P05 | 4min | 2 tasks | 2 files |
 | Phase 16 P01 | 10min | 2 tasks | 9 files |
 | Phase 16 P02 | 8min | 2 tasks | 9 files |
+| Phase 16 P03 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,10 @@ Recent decisions affecting current work:
 - [16-02]: HTML extraction via stdlib html.parser (no BeautifulSoup dependency)
 - [16-02]: Cache files named {source}_{doc_type}_{YYYY-MM-DD}.json for deterministic lookup
 - [16-02]: Sync httpx.Client (not async) for scraper simplicity -- async not needed for batch scraping
+- [16-03]: Dictionary-based scoring as primary method with 0.7 dict + 0.3 LLM blend when API key available
+- [16-03]: Change score thresholds: |delta| > 0.3 = major shift, > 0.1 = minor shift, else neutral
+- [16-03]: NLPProcessor batch processing sorts by date ascending for sequential change detection
+- [16-03]: Term weights in [0.0, 1.0] range with higher values for stronger hawk/dove signals
 
 ### Pending Todos
 
@@ -109,6 +114,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 16-01-PLAN.md (CrossAssetAgent v2)
-Resume file: .planning/phases/16-crossasset-nlp/
-Resume action: Execute 16-03-PLAN.md (Sentiment Scoring Pipeline)
+Stopped at: Completed 16-03-PLAN.md (Sentiment Scoring Pipeline) -- Phase 16 complete
+Resume file: .planning/phases/
+Resume action: Begin Phase 17 planning/execution

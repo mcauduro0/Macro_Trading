@@ -41,7 +41,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 
 - [x] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations (completed 2026-02-22)
 - [x] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2) (completed 2026-02-22)
-- [ ] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis
+- [x] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis (completed 2026-02-22)
 - [ ] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing
 - [ ] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator
 - [ ] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script
@@ -94,7 +94,7 @@ Plans:
   3. Cross-asset consistency checker flags contradictions (e.g., FX bullish + rates higher = inconsistent) and LLM generates structured narrative explaining regime, key drivers, and trade rationale
   4. COPOMScraper retrieves atas/comunicados from bcb.gov.br and FOMCScraper retrieves statements/minutes from federalreserve.gov, both covering 2010-present with persistent storage
   5. CentralBankSentimentAnalyzer produces hawk/dove scores [-1, +1] with change_score vs previous document, key phrases extraction, and results persist to nlp_documents table via Alembic migration
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 16-01-PLAN.md -- CrossAssetView dataclass + builder, HMM regime classification (with rule-based fallback), consistency checking (7 rules), LLM narrative generation
@@ -189,7 +189,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 |-------|----------------|--------|-----------|
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
-| 16. Cross-Asset Agent v2 & NLP Pipeline | 2/3 | In Progress|  |
+| 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete   | 2026-02-22 |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |
