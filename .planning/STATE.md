@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 13 — Pipeline, LLM, Dashboard, API & Tests
-Plan: 3 of 4 complete (13-02, 13-03 done; next: 13-04)
-Status: Executing Phase 13 — Bloomberg-inspired HTML dashboard at GET /dashboard with 4 tabs, 5 tests
-Last activity: 2026-02-22 — Completed 13-03-PLAN.md (dashboard HTML, FastAPI route, 5 tests)
+Plan: 3 of 4 complete (13-01, 13-02, 13-03 done; next: 13-04)
+Status: Executing Phase 13 — Daily pipeline orchestration with 8-step CI-style output, CLI, 17 tests
+Last activity: 2026-02-22 — Completed 13-01-PLAN.md (DailyPipeline, CLI, pipeline_runs migration, 17 tests)
 
-Progress: [#############-] 85%  (17/20 plans complete)
+Progress: [##############] 90%  (18/20 plans complete)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [#############-] 85%  (17/20 plans complete)
 | 12 | 02 | 7 min | 2 | 6 |
 | 12 | 03 | 10 min | 2 | 7 |
 | 13 | 02 | 5 min | 2 | 7 |
+| 13 | 01 | 9 min | 2 | 7 |
 | 13 | 03 | 6 min | 2 | 5 |
 
 *Updated after each plan completion*
@@ -147,6 +148,9 @@ Recent decisions affecting current work:
 - [v2.0-13-02]: Graceful fallback on any API error with source="template_fallback" to distinguish from deliberate template use
 - [v2.0-13-03]: CDN-only dashboard (React 18 + Tailwind + Recharts + Babel) — no build step required
 - [v2.0-13-03]: FileResponse for static HTML serving — simple, no template engine needed
+- [v2.0-13-01]: Pipeline uses sync execution (batch script, not async) with sync SQLAlchemy sessions for DB persistence
+- [v2.0-13-01]: Agent/strategy/portfolio/risk steps use try/except for graceful degradation; pipeline abort only on unrecoverable errors
+- [v2.0-13-01]: Placeholder steps for ingest/quality when Docker services unavailable
 - [v2.0-13-03]: Isolated test app fixture bypasses DB lifespan for pure HTML endpoint tests
 
 ### Pending Todos
@@ -163,6 +167,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 13-03-PLAN.md
-Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-03-SUMMARY.md
-Resume action: Plan 13-03 complete. Continue with 13-01 or 13-04.
+Stopped at: Completed 13-01-PLAN.md
+Resume file: .planning/phases/13-pipeline-llm-dashboard-api-tests/13-01-SUMMARY.md
+Resume action: Plan 13-01 complete. Continue with 13-04.

@@ -98,9 +98,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Daily Pipeline
 
-- [ ] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
-- [ ] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
-- [ ] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
+- [x] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
+- [x] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
+- [x] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
 
 ### LLM Narrative
 
@@ -219,9 +219,9 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | RISK-06 | Phase 12 | Complete |
 | RISK-07 | Phase 12 | Complete |
 | RISK-08 | Phase 12 | Complete |
-| PIPE-01 | Phase 13 | Pending |
-| PIPE-02 | Phase 13 | Pending |
-| PIPE-03 | Phase 13 | Pending |
+| PIPE-01 | Phase 13 | Complete |
+| PIPE-02 | Phase 13 | Complete |
+| PIPE-03 | Phase 13 | Complete |
 | LLM-01 | Phase 13 | Complete |
 | LLM-02 | Phase 13 | Complete |
 | LLM-03 | Phase 13 | Complete |
