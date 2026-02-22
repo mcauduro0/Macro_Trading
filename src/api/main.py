@@ -13,7 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from src.core.database import async_engine
-from src.api.routes import health, macro, curves, market_data, flows, dashboard
+from src.api.routes import (
+    health, macro, curves, market_data, flows, dashboard,
+    agents, signals, strategies_api, portfolio_api, risk_api, reports,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +79,14 @@ app.include_router(macro.router, prefix="/api/v1")
 app.include_router(curves.router, prefix="/api/v1")
 app.include_router(market_data.router, prefix="/api/v1")
 app.include_router(flows.router, prefix="/api/v1")
+
+# v2 endpoints: agents, signals, strategies, portfolio, risk, reports
+app.include_router(agents.router, prefix="/api/v1")
+app.include_router(signals.router, prefix="/api/v1")
+app.include_router(strategies_api.router, prefix="/api/v1")
+app.include_router(portfolio_api.router, prefix="/api/v1")
+app.include_router(risk_api.router, prefix="/api/v1")
+app.include_router(reports.router, prefix="/api/v1")
 
 # Dashboard served at root (no prefix) — GET /dashboard
 app.include_router(dashboard.router)
