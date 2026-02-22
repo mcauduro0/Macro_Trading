@@ -1,6 +1,6 @@
 """Trading strategy framework for the Macro Trading system.
 
-Re-exports the core strategy infrastructure and all 12 concrete strategies:
+Re-exports the core strategy infrastructure and all 16 concrete strategies:
 - BaseStrategy: Abstract base class for all trading strategies
 - StrategyConfig: Immutable strategy configuration dataclass
 - StrategyPosition: Target position output dataclass
@@ -10,6 +10,10 @@ Re-exports the core strategy infrastructure and all 12 concrete strategies:
 - RatesBR02TaylorStrategy: BR Taylor Rule Misalignment strategy
 - RatesBR03SlopeStrategy: BR DI Curve Slope (Flattener/Steepener) strategy
 - RatesBR04SpilloverStrategy: US Rates Spillover to BR DI strategy
+- Rates03BrUsSpreadStrategy: BR-US Rate Spread mean reversion (v3.0)
+- Rates04TermPremiumStrategy: Term Premium Extraction (v3.0)
+- Rates05FomcEventStrategy: FOMC Event Strategy (v3.0)
+- Rates06CopomEventStrategy: COPOM Event Strategy (v3.0)
 - InfBR01BreakevenStrategy: BR Breakeven Inflation Trade strategy
 - FxBR01CarryFundamentalStrategy: USDBRL Carry & Fundamental composite strategy
 - Fx02CarryMomentumStrategy: USDBRL Carry-Adjusted Momentum strategy (v3.0)
@@ -40,6 +44,10 @@ from src.strategies.fx_04_vol_surface_rv import Fx04VolSurfaceRvStrategy
 from src.strategies.fx_05_terms_of_trade import Fx05TermsOfTradeStrategy
 from src.strategies.fx_br_01_carry_fundamental import FxBR01CarryFundamentalStrategy
 from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
+from src.strategies.rates_03_br_us_spread import Rates03BrUsSpreadStrategy
+from src.strategies.rates_04_term_premium import Rates04TermPremiumStrategy
+from src.strategies.rates_05_fomc_event import Rates05FomcEventStrategy
+from src.strategies.rates_06_copom_event import Rates06CopomEventStrategy
 from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
 from src.strategies.rates_br_02_taylor import RatesBR02TaylorStrategy
 from src.strategies.rates_br_03_slope import RatesBR03SlopeStrategy
@@ -105,6 +113,10 @@ __all__ = [
     "Fx05TermsOfTradeStrategy",
     "FxBR01CarryFundamentalStrategy",
     "InfBR01BreakevenStrategy",
+    "Rates03BrUsSpreadStrategy",
+    "Rates04TermPremiumStrategy",
+    "Rates05FomcEventStrategy",
+    "Rates06CopomEventStrategy",
     "RatesBR01CarryStrategy",
     "RatesBR02TaylorStrategy",
     "RatesBR03SlopeStrategy",
