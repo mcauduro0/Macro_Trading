@@ -1,6 +1,6 @@
 """Trading strategy framework for the Macro Trading system.
 
-Re-exports the core strategy infrastructure and all 8 concrete strategies:
+Re-exports the core strategy infrastructure and all 12 concrete strategies:
 - BaseStrategy: Abstract base class for all trading strategies
 - StrategyConfig: Immutable strategy configuration dataclass
 - StrategyPosition: Target position output dataclass
@@ -12,6 +12,10 @@ Re-exports the core strategy infrastructure and all 8 concrete strategies:
 - RatesBR04SpilloverStrategy: US Rates Spillover to BR DI strategy
 - InfBR01BreakevenStrategy: BR Breakeven Inflation Trade strategy
 - FxBR01CarryFundamentalStrategy: USDBRL Carry & Fundamental composite strategy
+- Fx02CarryMomentumStrategy: USDBRL Carry-Adjusted Momentum strategy (v3.0)
+- Fx03FlowTacticalStrategy: USDBRL Flow-Based Tactical strategy (v3.0)
+- Fx04VolSurfaceRvStrategy: USDBRL Vol Surface Relative Value strategy (v3.0)
+- Fx05TermsOfTradeStrategy: USDBRL Terms of Trade Misalignment strategy (v3.0)
 - Cupom01CipBasisStrategy: Cupom Cambial CIP Basis Mean Reversion strategy
 - SovBR01FiscalRiskStrategy: BR Fiscal Risk Premium strategy
 
@@ -30,6 +34,10 @@ from src.strategies.base import (
     StrategySignal,
 )
 from src.strategies.cupom_01_cip_basis import Cupom01CipBasisStrategy
+from src.strategies.fx_02_carry_momentum import Fx02CarryMomentumStrategy
+from src.strategies.fx_03_flow_tactical import Fx03FlowTacticalStrategy
+from src.strategies.fx_04_vol_surface_rv import Fx04VolSurfaceRvStrategy
+from src.strategies.fx_05_terms_of_trade import Fx05TermsOfTradeStrategy
 from src.strategies.fx_br_01_carry_fundamental import FxBR01CarryFundamentalStrategy
 from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
 from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
@@ -91,6 +99,10 @@ __all__ = [
     "ALL_STRATEGIES",
     "BaseStrategy",
     "Cupom01CipBasisStrategy",
+    "Fx02CarryMomentumStrategy",
+    "Fx03FlowTacticalStrategy",
+    "Fx04VolSurfaceRvStrategy",
+    "Fx05TermsOfTradeStrategy",
     "FxBR01CarryFundamentalStrategy",
     "InfBR01BreakevenStrategy",
     "RatesBR01CarryStrategy",
