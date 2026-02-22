@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 
 ## Current Position
 
-Phase: 14 of 19 (Backtesting Engine v2 & Strategy Framework) -- COMPLETE
-Plan: 3 of 3 in current phase (ALL COMPLETE)
-Status: Phase 14 complete, ready for Phase 15
-Last activity: 2026-02-22 — Completed 14-03-PLAN.md (Analytics & Tearsheet)
+Phase: 15 of 19 (New Trading Strategies)
+Plan: 3 of 4 in current phase
+Status: Executing Phase 15 plans
+Last activity: 2026-02-22 — Completed 15-03-PLAN.md (INF-02, INF-03, CUPOM-02)
 
 Progress: [######################........] 74% (14/19 phases complete)
 
@@ -37,6 +37,7 @@ Progress: [######################........] 74% (14/19 phases complete)
 | Phase 14 P01 | 7min | 3 tasks | 11 files |
 | Phase 14 P02 | 6min | 2 tasks | 4 files |
 | Phase 14 P03 | 7min | 2 tasks | 3 files |
+| Phase 15 P03 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,9 @@ Recent decisions affecting current work:
 - [14-03]: deflated_sharpe uses Euler-Mascheroni approximation for expected max SR from i.i.d. trials
 - [14-03]: generate_tearsheet uses 63-day rolling window for quarterly rolling Sharpe
 - [14-03]: All analytics functions use ddof=0 for std to handle small samples gracefully
+- [15-03]: INF-02 uses IPCA-15 as primary model forecast with seasonal average fallback
+- [15-03]: INF-03 composite z-score: average of 3 z-scores vs BCB target, IPCA 12M, Focus
+- [15-03]: CUPOM-02 uses DI - UST as CIP basis proxy for onshore-offshore spread
 
 ### Pending Todos
 
@@ -74,6 +78,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 14-03-PLAN.md (Phase 14 COMPLETE)
-Resume file: .planning/phases/
-Resume action: Start Phase 15 planning/execution
+Stopped at: Completed 15-03-PLAN.md (INF-02, INF-03, CUPOM-02)
+Resume file: .planning/phases/15-new-trading-strategies/
+Resume action: Execute 15-04-PLAN.md

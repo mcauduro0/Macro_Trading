@@ -51,12 +51,12 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Inflation Strategies
 
-- [ ] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
-- [ ] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
+- [x] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
+- [x] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
 
 ### Cupom Cambial Strategies
 
-- [ ] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
+- [x] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
 
 ### Sovereign Credit Strategies
 
@@ -187,9 +187,9 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | RTST-02 | Phase 15 | Pending |
 | RTST-03 | Phase 15 | Pending |
 | RTST-04 | Phase 15 | Pending |
-| INST-01 | Phase 15 | Pending |
-| INST-02 | Phase 15 | Pending |
-| CPST-01 | Phase 15 | Pending |
+| INST-01 | Phase 15 | Complete |
+| INST-02 | Phase 15 | Complete |
+| CPST-01 | Phase 15 | Complete |
 | SVST-01 | Phase 15 | Pending |
 | SVST-02 | Phase 15 | Pending |
 | SVST-03 | Phase 15 | Pending |
