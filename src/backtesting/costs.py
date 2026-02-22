@@ -80,6 +80,9 @@ class TransactionCostModel:
         "IBOV_FUT": {"spread": 1.0, "commission": 0.3, "exchange_fee": 0.2},
     }
 
+    def __init__(self, default_bps: float = DEFAULT_COST_BPS) -> None:
+        self.default_bps = default_bps
+
     def _resolve_instrument(self, instrument: str) -> str | None:
         """Resolve an instrument name to a COST_TABLE key.
 
@@ -123,9 +126,9 @@ class TransactionCostModel:
         logger.debug(
             "instrument_not_in_cost_table instrument=%s using_default_bps=%.1f",
             instrument,
-            DEFAULT_COST_BPS,
+            self.default_bps,
         )
-        return DEFAULT_COST_BPS
+        return self.default_bps
 
     def get_cost(
         self, instrument: str, notional: float, is_entry: bool = True
