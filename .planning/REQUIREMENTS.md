@@ -1,6 +1,6 @@
 # Requirements: Macro Fund System
 
-**Defined:** 2026-02-19 (v1) | 2026-02-20 (v2)
+**Defined:** 2026-02-19 (v1) | 2026-02-20 (v2) | 2026-02-22 (v3)
 **Core Value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation for analytical agents, quantitative strategies, and risk management
 
 ## v1 Requirements (Complete)
@@ -9,250 +9,175 @@ All 65 v1 requirements delivered in milestone v1.0 Data Infrastructure. See `.pl
 
 Summary: INFRA (7/7), CONN (12/12), DATA (5/5), SEED (5/5), XFORM (14/14), API (12/12), QUAL (6/6), TEST (4/4)
 
-## v2 Requirements
+## v2 Requirements (Complete)
 
-Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadmap phases.
+All 88 v2 requirements delivered in milestone v2.0 Quantitative Models & Agents.
 
-### Agent Framework
+Summary: AGENT (7/7), INFL (7/7), MONP (6/6), FISC (4/4), FXEQ (5/5), CRSA (3/3), BACK (8/8), STRAT (9/9), PORT (4/4), RISK (8/8), PIPE (3/3), LLM (4/4), DASH (5/5), APIV2 (9/9), TESTV2 (7/7)
 
-- [x] **AGENT-01**: BaseAgent abstract class with Template Method pattern: load_data → compute_features → run_models → generate_narrative → persist_signals
-- [x] **AGENT-02**: AgentSignal dataclass with signal_id, direction (LONG/SHORT/NEUTRAL), strength, confidence (0-1), value, horizon_days, metadata
-- [x] **AGENT-03**: AgentReport dataclass combining signals, narrative text, model diagnostics, and data quality flags
-- [x] **AGENT-04**: PointInTimeDataLoader utility querying macro_series, curves, market_data with release_time <= as_of_date constraint
-- [x] **AGENT-05**: AgentRegistry managing execution order (inflation → monetary → fiscal → fx → cross_asset) with run_all(as_of_date)
-- [x] **AGENT-06**: Signal persistence to signals hypertable with ON CONFLICT DO NOTHING idempotency
-- [x] **AGENT-07**: Alembic migration adding agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON)
+## v3 Requirements
 
-### Analytical Agents
+Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Each maps to roadmap phases.
 
-- [x] **INFL-01**: InflationAgent with InflationFeatureEngine computing ~30 BR features (IPCA headline/cores/components/diffusion, Focus expectations, activity context) and ~15 US features (CPI/PCE core, breakevens, Michigan survey)
-- [x] **INFL-02**: PhillipsCurveModel — expectations-augmented OLS: core_inflation = f(expectations, output_gap, fx_passthrough, commodity_change) on trailing 10Y window
-- [x] **INFL-03**: IpcaBottomUpModel — component-level forecast for 9 IPCA groups using seasonal patterns + specific drivers, aggregated by IBGE weights
-- [x] **INFL-04**: InflationSurpriseModel — z-score of rolling 3-month actual-vs-Focus surprise average as regime indicator
-- [x] **INFL-05**: InflationPersistenceModel — composite score (0-100) from diffusion level, core acceleration, services momentum, expectations anchoring
-- [x] **INFL-06**: UsInflationTrendModel — PCE core 3M SAAR analysis, target gap, supercore momentum
-- [x] **INFL-07**: Composite INFLATION_BR_COMPOSITE signal aggregating sub-model outputs
+### Strategy Framework Enhancement
 
-- [x] **MONP-01**: MonetaryPolicyAgent with MonetaryFeatureEngine computing BR features (Selic target, DI curve shape/slope/curvature, real rate gap, policy inertia) and US features (Fed Funds, UST curve, Taylor Rule inputs, NFCI)
-- [x] **MONP-02**: TaylorRuleModel — classic and BCB-modified: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia), with policy gap signal
-- [x] **MONP-03**: KalmanFilterRStar — state-space estimation of time-varying natural rate r* using Selic history, inflation expectations, output gap
-- [x] **MONP-04**: SelicPathModel — extract meeting-by-meeting implied Selic from DI curve, compare with Focus survey and model terminal rate
-- [x] **MONP-05**: TermPremiumModel — estimate term premium as DI(n) minus expected short rate path from Focus, signal when TP extreme
-- [x] **MONP-06**: UsFedAnalysis — US Taylor Rule, Fed policy gap, financial conditions assessment
+- [ ] **SFWK-01**: Enhanced StrategySignal dataclass with z_score, raw_value, suggested_size, entry_level, stop_loss, take_profit, holding_period_days, metadata dict
+- [ ] **SFWK-02**: StrategyRegistry class with register decorator, get, list_all, list_by_asset_class, instantiate, instantiate_all methods
+- [ ] **SFWK-03**: strategy_state table (strategy_id, timestamp, direction, strength, confidence, z_score, instruments JSON) with Alembic migration
+- [ ] **SFWK-04**: backtest_results v2 table with params_json, daily_returns_json, monthly_returns expanded fields
 
-- [x] **FISC-01**: FiscalAgent with FiscalFeatureEngine computing debt ratios, primary balance, r-g dynamics, debt composition, financing needs, market signals
-- [x] **FISC-02**: DebtSustainabilityModel — IMF DSA projecting debt/GDP under 4 scenarios (baseline, adjustment, stress, tailwind) over 5Y horizon
-- [x] **FISC-03**: FiscalImpulseModel — cyclically-adjusted primary balance change as fiscal expansion/contraction indicator
-- [x] **FISC-04**: FiscalDominanceRisk — composite score (0-100) assessing when fiscal policy overwhelms monetary policy
+### Backtesting Engine v2
 
-- [x] **FXEQ-01**: FxEquilibriumAgent with FxFeatureEngine computing BEER inputs (terms of trade, real rate differential, NFA, productivity), carry-to-risk, flows, CIP basis, CFTC positioning, global context
-- [x] **FXEQ-02**: BeerModel — Behavioral Equilibrium Exchange Rate via OLS: USDBRL_fair = f(ToT, r_diff, NFA, productivity_diff), misalignment signal
-- [x] **FXEQ-03**: CarryToRiskModel — (BR_rate - US_rate) / implied_vol as carry attractiveness signal
-- [x] **FXEQ-04**: FlowModel — composite flow score from BCB FX flow z-score, CFTC positioning z-score, BCB swap stock changes
-- [x] **FXEQ-05**: CipBasisModel — cupom cambial minus SOFR as CIP deviation signal for funding stress
+- [ ] **BTST-01**: BacktestEngine v2 with portfolio-level backtesting — run_portfolio(strategies, weights) aggregating multiple strategies with risk allocation
+- [ ] **BTST-02**: Walk-forward validation — split period into train/test windows, optimize params in-sample, evaluate out-of-sample
+- [ ] **BTST-03**: Deflated Sharpe Ratio (Bailey & Lopez de Prado, 2014) adjusting for multiple testing
+- [ ] **BTST-04**: TransactionCostModel with per-instrument cost table (12 instruments: DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT)
+- [ ] **BTST-05**: Analytics functions: compute_sortino, compute_information_ratio, compute_tail_ratio, compute_turnover, compute_rolling_sharpe
+- [ ] **BTST-06**: generate_tearsheet producing complete dict for dashboard rendering (equity curve, drawdown chart, monthly heatmap, rolling sharpe, trade analysis)
 
-- [x] **CRSA-01**: CrossAssetAgent with RegimeDetectionModel scoring -1 (risk-off) to +1 (risk-on) from VIX, credit spreads, DXY, EM flows, UST curve slope, BR fiscal
-- [x] **CRSA-02**: CorrelationAnalysis — rolling 63d correlations for 5 key pairs (USDBRL/DXY, DI/UST, IBOV/SP500, USDBRL/VIX, Oil/BRL) with break detection at |z|>2
-- [x] **CRSA-03**: RiskSentimentIndex — composite 0-100 index (fear-to-greed) from VIX, HY OAS, DXY, CFTC BRL, BCB flows, CDS/EMBI proxy
+### FX Strategies
 
-### Backtesting Engine
+- [ ] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
+- [ ] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
+- [ ] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
+- [ ] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
 
-- [x] **BACK-01**: BacktestEngine with BacktestConfig (start/end date, initial capital, rebalance frequency, transaction costs, slippage, max leverage)
-- [x] **BACK-02**: Portfolio class tracking positions, cash, equity curve, trade log with mark-to-market using PointInTimeDataLoader
-- [x] **BACK-03**: Rebalance execution applying target weights, transaction cost (bps), slippage (bps), and position limit enforcement
-- [x] **BACK-04**: BacktestResult with complete metrics: total/annualized return, volatility, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
-- [x] **BACK-05**: Point-in-time correctness enforcement — strategy.generate_signals(as_of_date) only sees data with release_time <= as_of_date
-- [x] **BACK-06**: Formatted backtest report (text) and optional equity curve chart (matplotlib PNG)
-- [x] **BACK-07**: Backtest results persistence to backtest_results table with equity_curve and monthly_returns JSON
-- [x] **BACK-08**: Alembic migration adding strategy_signals hypertable and backtest_results table
+### Rates Strategies
 
-### Trading Strategies
+- [ ] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
+- [ ] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
+- [ ] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
+- [ ] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
 
-- [x] **STRAT-01**: BaseStrategy abstract class with StrategyConfig (id, asset class, instruments, rebalance freq, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
-- [x] **STRAT-02**: RATES_BR_01 Carry & Roll-Down — capture carry-to-risk at optimal DI curve tenor, sized by carry/risk ratio vs threshold
-- [x] **STRAT-03**: RATES_BR_02 Taylor Rule Misalignment — trade DI direction based on gap between current Selic and Taylor-implied fair rate
-- [x] **STRAT-04**: RATES_BR_03 Curve Slope — flattener/steepener on DI 2Y-5Y spread based on monetary cycle position and inflation expectations
-- [x] **STRAT-05**: RATES_BR_04 US Rates Spillover — fade DI-UST spread overshoot after large UST weekly moves (mean reversion)
-- [x] **STRAT-06**: INF_BR_01 Breakeven Inflation — trade breakeven (DI_PRE minus NTN_B_REAL) when agent forecast diverges from market-implied inflation
-- [x] **STRAT-07**: FX_BR_01 Carry & Fundamental — composite of FX carry-to-risk (40%), BEER misalignment (35%), flow score (25%) with regime adjustment
-- [x] **STRAT-08**: CUPOM_01 CIP Basis Mean Reversion — fade extreme z-scores in cupom cambial minus SOFR basis
-- [x] **STRAT-09**: SOV_BR_01 Fiscal Risk Premium — trade long-end DI and USDBRL based on fiscal dominance risk vs sovereign spread level
+### Inflation Strategies
 
-### Signal Aggregation & Portfolio
+- [ ] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
+- [ ] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
 
-- [x] **PORT-01**: SignalAggregator combining agent signals into directional consensus per asset class with conflict detection
-- [x] **PORT-02**: PortfolioConstructor converting strategy positions to net portfolio weights with risk-budget scaling and regime adjustment (RISK_OFF → -50%)
-- [x] **PORT-03**: CapitalAllocator enforcing portfolio constraints (max leverage, max single position, max asset class concentration)
-- [x] **PORT-04**: Rebalance threshold check (drift > 5% triggers rebalance) and trade computation
+### Cupom Cambial Strategies
 
-### Risk Management
+- [ ] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
 
-- [x] **RISK-01**: VaR calculator with historical VaR (95% and 99%, 1-day horizon) from portfolio returns
-- [x] **RISK-02**: Parametric VaR using Gaussian assumption with portfolio covariance
-- [x] **RISK-03**: Expected Shortfall (CVaR) as conditional expectation beyond VaR threshold
-- [x] **RISK-04**: Stress testing against 4+ historical scenarios (2013 Taper Tantrum, 2015 BR Crisis, 2020 COVID, 2022 Rate Shock)
-- [x] **RISK-05**: Risk limits configuration (max VaR, max drawdown, max leverage, max position, max asset class concentration)
-- [x] **RISK-06**: Pre-trade limit checking — verify proposed trades don't breach limits before execution
-- [x] **RISK-07**: DrawdownManager with 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
-- [x] **RISK-08**: RiskMonitor generating aggregate risk report (portfolio VaR, stress tests, limit utilization, circuit breaker status)
+### Sovereign Credit Strategies
 
-### Daily Pipeline
+- [ ] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
+- [ ] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
+- [ ] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
 
-- [x] **PIPE-01**: Daily orchestration pipeline: ingest → quality → agents → aggregate → strategies → portfolio → risk → report
-- [x] **PIPE-02**: CLI interface (scripts/daily_run.py) with --date and --dry-run options
-- [x] **PIPE-03**: Formatted summary output with agent count, signal count, position count, regime, elapsed time
+### Cross-Asset Strategies
 
-### LLM Narrative
+- [ ] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
+- [ ] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
 
-- [x] **LLM-01**: NarrativeGenerator using Claude API (Anthropic Python SDK) with structured prompt from agent signals and features
-- [x] **LLM-02**: Daily macro brief covering regime, inflation, monetary policy, fiscal, FX, portfolio positioning, key risks
-- [x] **LLM-03**: Fallback template-based narrative when Anthropic API key is unavailable
-- [x] **LLM-04**: ANTHROPIC_API_KEY added to .env.example and settings
+### Cross-Asset Agent v2
 
-### Dashboard
+- [ ] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
+- [ ] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
+- [ ] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
+- [ ] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
 
-- [x] **DASH-01**: Single-file HTML dashboard served by FastAPI at GET /dashboard using React + Tailwind + Recharts via CDN
-- [x] **DASH-02**: Macro Dashboard tab showing key indicators from /api/v1/macro/dashboard
-- [x] **DASH-03**: Agent Signals tab with 5 agent cards (direction, confidence, signals) and consensus view
-- [x] **DASH-04**: Portfolio tab with positions table, risk metrics (VaR, leverage, drawdown)
-- [x] **DASH-05**: Backtests tab with strategy results table and equity curve chart
+### NLP Pipeline
 
-### API Extensions
+- [ ] **NLP-01**: COPOMScraper — scrape COPOM atas and comunicados from bcb.gov.br (2010-present)
+- [ ] **NLP-02**: FOMCScraper — scrape FOMC statements and minutes from federalreserve.gov (2010-present)
+- [ ] **NLP-03**: CentralBankSentimentAnalyzer — hawk/dove scoring [-1,+1] via term dictionary (PT+EN), optional LLM scoring, change_score vs previous document
+- [ ] **NLP-04**: NLPProcessor pipeline: clean → score → extract key phrases → compare vs previous → persist
+- [ ] **NLP-05**: nlp_documents table (document_type, institution, date, hawk_dove_score, change_score, key_phrases JSON) with Alembic migration
 
-- [x] **APIV2-01**: GET /api/v1/agents — list registered agents with last run and signal count
-- [x] **APIV2-02**: GET /api/v1/agents/{agent_id}/latest — latest AgentReport with signals and narrative
-- [x] **APIV2-03**: POST /api/v1/agents/{agent_id}/run — trigger agent execution for specific date
-- [x] **APIV2-04**: GET /api/v1/signals/latest — latest signals from all agents with consensus
-- [x] **APIV2-05**: GET /api/v1/strategies — list 8 strategies with metadata and status
-- [x] **APIV2-06**: GET /api/v1/strategies/{strategy_id}/backtest — backtest results with equity curve
-- [x] **APIV2-07**: GET /api/v1/portfolio/current — consolidated positions with contributing strategies
-- [x] **APIV2-08**: GET /api/v1/portfolio/risk — risk report (VaR, stress tests, limits, circuit breakers)
-- [x] **APIV2-09**: GET /api/v1/reports/daily-brief — daily macro brief (LLM or template)
+### Signal Aggregation v2
 
-### Testing
+- [ ] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
+- [ ] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
+- [ ] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
+- [ ] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
 
-- [x] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
-- [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
-- [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
-- [x] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
-- [x] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
-- [x] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
-- [x] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
+### Risk Engine v2
 
-## Out of Scope (v2.0)
+- [ ] **RSKV-01**: Monte Carlo VaR with t-Student marginals, Gaussian copula, Cholesky decomposition (10,000 simulations)
+- [ ] **RSKV-02**: Parametric VaR with Ledoit-Wolf shrinkage covariance estimation
+- [ ] **RSKV-03**: Marginal VaR and Component VaR decomposition by position
+- [ ] **RSKV-04**: Expanded stress scenarios: add BR Fiscal Crisis (teto de gastos) and Global Risk-Off (geopolitical) to existing 4 scenarios
+- [ ] **RSKV-05**: Reverse stress testing — find scenarios that produce a given max loss
+- [ ] **RSKV-06**: Historical replay stress test — replay actual returns from a crisis period
+- [ ] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
+- [ ] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
+
+### Portfolio Optimization
+
+- [ ] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
+- [ ] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
+- [ ] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
+- [ ] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
+- [ ] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
+
+### Production Orchestration (Dagster)
+
+- [ ] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
+- [ ] **ORCH-02**: Dagster assets for Signals, Aggregated Signals, Portfolio Targets, Risk Metrics, Daily Report with full dependency graph
+- [ ] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
+- [ ] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
+
+### Monitoring & Alerting
+
+- [ ] **MNTR-01**: Grafana Docker Compose service (port 3002) with TimescaleDB datasource provisioning
+- [ ] **MNTR-02**: 4 provisioned Grafana dashboards JSON: pipeline_health, signal_overview, risk_dashboard, portfolio_performance
+- [ ] **MNTR-03**: AlertManager with 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale)
+- [ ] **MNTR-04**: Monitoring API: GET /api/v1/monitoring/alerts, /pipeline-status, /system-health, POST /test-alert
+
+### Dashboard v2 (React)
+
+- [ ] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
+- [ ] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
+- [ ] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
+- [ ] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
+- [ ] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
+- [ ] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
+
+### Daily Reporting
+
+- [ ] **REPT-01**: DailyReportGenerator with sections: Market Snapshot, Regime Assessment, Agent Views, Signal Summary, Portfolio Status, Risk Metrics, Action Items
+- [ ] **REPT-02**: Output formats: to_markdown, to_html, send_email, send_slack
+- [ ] **REPT-03**: Report API: GET /api/v1/reports/daily, /reports/daily/latest, POST /reports/daily/send
+
+### API Expansion & WebSocket
+
+- [ ] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
+- [ ] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
+- [ ] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
+- [ ] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
+
+### Testing & Verification
+
+- [ ] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
+- [ ] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
+- [ ] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
+- [ ] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
+
+## Out of Scope (v3.0)
 
 | Feature | Reason |
 |---------|--------|
-| Live order execution | Research/backtesting focus first |
+| Live order execution / FIX protocol | Phase 3 — production deployment |
 | Multi-user authentication | Solo user for now |
 | Bloomberg/Refinitiv integration | Free data sources only |
-| ETFs/mutual funds as instruments | Stocks only per constraints |
-| Production deployment (Kubernetes) | Phase 2+ |
-| Real-time streaming execution | Phase 2+ |
-| NLP pipeline for central bank comms | Phase 2+ |
-| Additional 17 strategies (total 25) | Phase 2+ |
-| Dagster/Airflow orchestration | Phase 2+ |
-| Full React frontend app | Single HTML sufficient for v2.0 |
+| Kubernetes / Helm deployment | Phase 3 — production infrastructure |
+| Real-time streaming execution | Phase 3 — live trading |
+| Paper trading simulation | Phase 3 — requires execution engine |
+| Mobile app / PWA | Web-first, desktop only |
 
 ## Traceability
 
+(To be populated by roadmap creation)
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGENT-01 | Phase 7 | Complete |
-| AGENT-02 | Phase 7 | Complete |
-| AGENT-03 | Phase 7 | Complete |
-| AGENT-04 | Phase 7 | Complete |
-| AGENT-05 | Phase 7 | Complete |
-| AGENT-06 | Phase 7 | Complete |
-| AGENT-07 | Phase 7 | Complete |
-| INFL-01 | Phase 8 | Complete |
-| INFL-02 | Phase 8 | Complete |
-| INFL-03 | Phase 8 | Complete |
-| INFL-04 | Phase 8 | Complete |
-| INFL-05 | Phase 8 | Complete |
-| INFL-06 | Phase 8 | Complete |
-| INFL-07 | Phase 8 | Complete |
-| MONP-01 | Phase 8 | Complete |
-| MONP-02 | Phase 8 | Complete |
-| MONP-03 | Phase 8 | Complete |
-| MONP-04 | Phase 8 | Complete |
-| MONP-05 | Phase 8 | Complete |
-| MONP-06 | Phase 8 | Complete |
-| FISC-01 | Phase 9 | Complete |
-| FISC-02 | Phase 9 | Complete |
-| FISC-03 | Phase 9 | Complete |
-| FISC-04 | Phase 9 | Complete |
-| FXEQ-01 | Phase 9 | Complete |
-| FXEQ-02 | Phase 9 | Complete |
-| FXEQ-03 | Phase 9 | Complete |
-| FXEQ-04 | Phase 9 | Complete |
-| FXEQ-05 | Phase 9 | Complete |
-| CRSA-01 | Phase 10 | Complete |
-| CRSA-02 | Phase 10 | Complete |
-| CRSA-03 | Phase 10 | Complete |
-| BACK-01 | Phase 10 | Complete |
-| BACK-02 | Phase 10 | Complete |
-| BACK-03 | Phase 10 | Complete |
-| BACK-04 | Phase 10 | Complete |
-| BACK-05 | Phase 10 | Complete |
-| BACK-06 | Phase 10 | Complete |
-| BACK-07 | Phase 10 | Complete |
-| BACK-08 | Phase 10 | Complete |
-| STRAT-01 | Phase 11 | Complete |
-| STRAT-02 | Phase 11 | Complete |
-| STRAT-03 | Phase 11 | Complete |
-| STRAT-04 | Phase 11 | Complete |
-| STRAT-05 | Phase 11 | Complete |
-| STRAT-06 | Phase 11 | Complete |
-| STRAT-07 | Phase 11 | Complete |
-| STRAT-08 | Phase 11 | Complete |
-| STRAT-09 | Phase 11 | Complete |
-| PORT-01 | Phase 12 | Complete |
-| PORT-02 | Phase 12 | Complete |
-| PORT-03 | Phase 12 | Complete |
-| PORT-04 | Phase 12 | Complete |
-| RISK-01 | Phase 12 | Complete |
-| RISK-02 | Phase 12 | Complete |
-| RISK-03 | Phase 12 | Complete |
-| RISK-04 | Phase 12 | Complete |
-| RISK-05 | Phase 12 | Complete |
-| RISK-06 | Phase 12 | Complete |
-| RISK-07 | Phase 12 | Complete |
-| RISK-08 | Phase 12 | Complete |
-| PIPE-01 | Phase 13 | Complete |
-| PIPE-02 | Phase 13 | Complete |
-| PIPE-03 | Phase 13 | Complete |
-| LLM-01 | Phase 13 | Complete |
-| LLM-02 | Phase 13 | Complete |
-| LLM-03 | Phase 13 | Complete |
-| LLM-04 | Phase 13 | Complete |
-| DASH-01 | Phase 13 | Complete |
-| DASH-02 | Phase 13 | Complete |
-| DASH-03 | Phase 13 | Complete |
-| DASH-04 | Phase 13 | Complete |
-| DASH-05 | Phase 13 | Complete |
-| APIV2-01 | Phase 13 | Complete |
-| APIV2-02 | Phase 13 | Complete |
-| APIV2-03 | Phase 13 | Complete |
-| APIV2-04 | Phase 13 | Complete |
-| APIV2-05 | Phase 13 | Complete |
-| APIV2-06 | Phase 13 | Complete |
-| APIV2-07 | Phase 13 | Complete |
-| APIV2-08 | Phase 13 | Complete |
-| APIV2-09 | Phase 13 | Complete |
-| TESTV2-01 | Phase 8-13 | Complete |
-| TESTV2-02 | Phase 8-13 | Complete |
-| TESTV2-03 | Phase 10 | Complete |
-| TESTV2-04 | Phase 12 | Complete |
-| TESTV2-05 | Phase 13 | Complete |
-| TESTV2-06 | Phase 13 | Complete |
-| TESTV2-07 | Phase 13 | Complete |
+| — | — | — |
 
 **Coverage:**
-- v2 requirements: 88 total
-- Mapped to phases: 88
-- Unmapped: 0
+- v3 requirements: 62 total
+- Mapped to phases: 0
+- Unmapped: 62
 
 ---
-*Requirements defined: 2026-02-20*
-*Milestone: v2.0 Quantitative Models & Agents*
+*Requirements defined: 2026-02-22*
+*Milestone: v3.0 Strategy Engine, Risk & Portfolio Management*
