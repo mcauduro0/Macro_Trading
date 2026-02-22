@@ -58,7 +58,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
   3. User can run walk-forward validation that splits a backtest period into train/test windows, optimizes parameters in-sample, and reports out-of-sample performance -- detecting overfitting
   4. User can compute deflated Sharpe ratio (Bailey & Lopez de Prado) that adjusts for multiple testing bias, and generate a complete tearsheet (equity curve, drawdown chart, monthly heatmap, rolling Sharpe, trade analysis)
   5. TransactionCostModel applies per-instrument costs for 12 instruments (DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT) and Alembic migrations create strategy_state and backtest_results v2 tables
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
 - [ ] 14-01: Enhanced StrategySignal dataclass, StrategyRegistry with decorator, strategy_state table migration, backtest_results v2 table migration
