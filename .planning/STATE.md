@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 15 of 19 (New Trading Strategies)
-Plan: 3 of 4 complete in current phase (15-01, 15-02, 15-03 done; 15-04 remaining)
-Status: Executing Phase 15 plans
-Last activity: 2026-02-22 — Completed 15-02-PLAN.md (RATES-03, RATES-04, RATES-05, RATES-06 strategies)
+Plan: 4 of 4 complete in current phase (15-01, 15-02, 15-03, 15-04 done)
+Status: Phase 15 complete
+Last activity: 2026-02-22 — Completed 15-04-PLAN.md (SOV-01/02/03, CROSS-01/02 strategies)
 
-Progress: [######################........] 74% (14/19 phases complete)
+Progress: [########################......] 79% (15/19 phases complete)
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [######################........] 74% (14/19 phases complete)
 | Phase 15 P01 | 9min | 2 tasks | 6 files |
 | Phase 15 P02 | 14min | 2 tasks | 6 files |
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
+| Phase 15 P04 | 14min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,10 @@ Recent decisions affecting current work:
 - [15-02]: BCB reaction function: IPCA vs 4.5%/3.0% bands -> hike/cut/neutral at 25bps
 - [15-02]: Taylor Rule: r_star=2.5 + CPI + 0.5*(CPI-2.0) + 0.5*output_gap_proxy
 - [15-02]: Market pricing only for expectation baselines (DI1 for COPOM, UST for FOMC)
+- [15-04]: SOV-02 OLS via Gaussian elimination (no numpy) for 6-variable cross-section across 10 EM peers
+- [15-04]: CROSS-01 rule-based regime (Goldilocks/Reflation/Stagflation/Deflation); Phase 16 adds HMM
+- [15-04]: CROSS-02 uses only market indicators (VIX, CDS, vol, corr, funding, momentum) -- no flow/positioning
+- [15-04]: Regime modulates sizing (0.5x multiplier), never hard-suppresses (locked decision)
 
 ### Pending Todos
 
@@ -90,6 +95,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 15-02-PLAN.md (RATES-03, RATES-04, RATES-05, RATES-06)
-Resume file: .planning/phases/15-new-trading-strategies/
-Resume action: Execute 15-04-PLAN.md (remaining plan)
+Stopped at: Completed 15-04-PLAN.md (SOV-01/02/03, CROSS-01/02 -- Phase 15 complete)
+Resume file: .planning/phases/
+Resume action: Begin Phase 16 planning

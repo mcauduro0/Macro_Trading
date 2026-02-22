@@ -40,7 +40,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 ### v3.0 Phases (Active)
 
 - [x] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations (completed 2026-02-22)
-- [ ] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2)
+- [x] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2) (completed 2026-02-22)
 - [ ] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis
 - [ ] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing
 - [ ] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator
@@ -75,7 +75,7 @@ Plans:
   3. Rates strategies produce valid signals: RATES-03 (BR-US spread adjusted for CDS), RATES-04 (term premium extraction from DI vs Focus), RATES-05 (FOMC event positioning), RATES-06 (COPOM event positioning)
   4. All 16 new strategies register via @StrategyRegistry.register, populate z_score/entry_level/stop_loss/take_profit in StrategySignal, and pass backtesting with the TransactionCostModel
   5. Each strategy backtests without error over 2+ years of historical data and produces a valid tearsheet with Sharpe, drawdown, and trade statistics
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 15-01-PLAN.md -- FX strategies: FX-02 Carry-Adjusted Momentum, FX-03 Flow-Based Tactical, FX-04 Vol Surface RV, FX-05 Terms of Trade
@@ -187,7 +187,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
-| 15. New Trading Strategies | 3/4 | In Progress|  |
+| 15. New Trading Strategies | 4/4 | Complete   | 2026-02-22 |
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 0/3 | Not started | - |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |

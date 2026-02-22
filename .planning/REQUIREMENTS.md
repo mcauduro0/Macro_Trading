@@ -60,14 +60,14 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Sovereign Credit Strategies
 
-- [ ] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
-- [ ] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
-- [ ] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
+- [x] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
+- [x] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
+- [x] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
 
 ### Cross-Asset Strategies
 
-- [ ] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
-- [ ] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
+- [x] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
+- [x] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
 
 ### Cross-Asset Agent v2
 
@@ -190,11 +190,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | INST-01 | Phase 15 | Complete |
 | INST-02 | Phase 15 | Complete |
 | CPST-01 | Phase 15 | Complete |
-| SVST-01 | Phase 15 | Pending |
-| SVST-02 | Phase 15 | Pending |
-| SVST-03 | Phase 15 | Pending |
-| CAST-01 | Phase 15 | Pending |
-| CAST-02 | Phase 15 | Pending |
+| SVST-01 | Phase 15 | Complete |
+| SVST-02 | Phase 15 | Complete |
+| SVST-03 | Phase 15 | Complete |
+| CAST-01 | Phase 15 | Complete |
+| CAST-02 | Phase 15 | Complete |
 | CRSV-01 | Phase 16 | Pending |
 | CRSV-02 | Phase 16 | Pending |
 | CRSV-03 | Phase 16 | Pending |
