@@ -94,12 +94,12 @@ Plans:
   3. Cross-asset consistency checker flags contradictions (e.g., FX bullish + rates higher = inconsistent) and LLM generates structured narrative explaining regime, key drivers, and trade rationale
   4. COPOMScraper retrieves atas/comunicados from bcb.gov.br and FOMCScraper retrieves statements/minutes from federalreserve.gov, both covering 2010-present with persistent storage
   5. CentralBankSentimentAnalyzer produces hawk/dove scores [-1, +1] with change_score vs previous document, key phrases extraction, and results persist to nlp_documents table via Alembic migration
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 16-01: CrossAssetView dataclass, HMM regime classification (with rule-based fallback), consistency checking, LLM narrative generation
-- [ ] 16-02: COPOMScraper, FOMCScraper, nlp_documents table migration
-- [ ] 16-03: CentralBankSentimentAnalyzer (term dictionary PT+EN, optional LLM), NLPProcessor pipeline (clean, score, extract, compare, persist)
+- [ ] 16-01-PLAN.md -- CrossAssetView dataclass + builder, HMM regime classification (with rule-based fallback), consistency checking (7 rules), LLM narrative generation
+- [ ] 16-02-PLAN.md -- COPOMScraper, FOMCScraper, NlpDocumentRecord ORM, nlp_documents Alembic migration 007
+- [ ] 16-03-PLAN.md -- CentralBankSentimentAnalyzer (PT+EN dictionaries, optional LLM), NLPProcessor pipeline (clean, score, extract, compare, persist)
 
 ### Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization
 **Goal**: Users can aggregate signals with Bayesian methods and anti-crowding protection, compute Monte Carlo VaR with copula dependence, run reverse stress tests, and optimize portfolios using Black-Litterman with agent views -- the quantitative core of portfolio management
