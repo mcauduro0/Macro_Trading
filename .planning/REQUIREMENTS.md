@@ -248,11 +248,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | TSTV-04 | Phase 19 | Pending |
 
 **Coverage:**
-- v3 requirements: 62 total
-- Mapped to phases: 62
+- v3 requirements: 77 total (SFWK:4, BTST:6, FXST:4, RTST:4, INST:2, CPST:1, SVST:3, CAST:2, CRSV:4, NLP:5, SAGG:4, RSKV:8, POPT:5, ORCH:4, MNTR:4, DSHV:6, REPT:3, APIV:4, TSTV:4)
+- Mapped to phases: 77
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after roadmap creation*
+*Traceability updated: 2026-02-22 after roadmap creation*
 *Milestone: v3.0 Strategy Engine, Risk & Portfolio Management*
