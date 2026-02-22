@@ -94,7 +94,7 @@ Plans:
   3. Cross-asset consistency checker flags contradictions (e.g., FX bullish + rates higher = inconsistent) and LLM generates structured narrative explaining regime, key drivers, and trade rationale
   4. COPOMScraper retrieves atas/comunicados from bcb.gov.br and FOMCScraper retrieves statements/minutes from federalreserve.gov, both covering 2010-present with persistent storage
   5. CentralBankSentimentAnalyzer produces hawk/dove scores [-1, +1] with change_score vs previous document, key phrases extraction, and results persist to nlp_documents table via Alembic migration
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 16-01-PLAN.md -- CrossAssetView dataclass + builder, HMM regime classification (with rule-based fallback), consistency checking (7 rules), LLM narrative generation
@@ -189,7 +189,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 |-------|----------------|--------|-----------|
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
-| 16. Cross-Asset Agent v2 & NLP Pipeline | 1/3 | In Progress|  |
+| 16. Cross-Asset Agent v2 & NLP Pipeline | 2/3 | In Progress|  |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |

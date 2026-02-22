@@ -71,10 +71,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Cross-Asset Agent v2
 
-- [ ] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
-- [ ] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
-- [ ] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
-- [ ] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
+- [x] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
+- [x] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
+- [x] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
+- [x] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
 
 ### NLP Pipeline
 
@@ -195,10 +195,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | SVST-03 | Phase 15 | Complete |
 | CAST-01 | Phase 15 | Complete |
 | CAST-02 | Phase 15 | Complete |
-| CRSV-01 | Phase 16 | Pending |
-| CRSV-02 | Phase 16 | Pending |
-| CRSV-03 | Phase 16 | Pending |
-| CRSV-04 | Phase 16 | Pending |
+| CRSV-01 | Phase 16 | Complete |
+| CRSV-02 | Phase 16 | Complete |
+| CRSV-03 | Phase 16 | Complete |
+| CRSV-04 | Phase 16 | Complete |
 | NLP-01 | Phase 16 | Complete |
 | NLP-02 | Phase 16 | Complete |
 | NLP-03 | Phase 16 | Pending |

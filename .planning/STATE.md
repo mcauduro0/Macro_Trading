@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
 Plan: 2 of 3 complete in current phase
 Status: Executing Phase 16 plans
-Last activity: 2026-02-22 — Completed 16-02 (NLP Document Scrapers)
+Last activity: 2026-02-22 — Completed 16-01 (CrossAssetAgent v2) and 16-02 (NLP Document Scrapers)
 
 Progress: [########################......] 79% (15/19 phases complete)
 
@@ -42,7 +42,7 @@ Progress: [########################......] 79% (15/19 phases complete)
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 | Phase 15 P04 | 14min | 2 tasks | 7 files |
 | Phase 15 P05 | 4min | 2 tasks | 2 files |
-| Phase 16 P01 | -- | -- | -- |
+| Phase 16 P01 | 10min | 2 tasks | 9 files |
 | Phase 16 P02 | 8min | 2 tasks | 9 files |
 
 ## Accumulated Context
@@ -86,6 +86,10 @@ Recent decisions affecting current work:
 - [15-05]: Duck-typing detection (hasattr) for signal adapter instead of strict isinstance
 - [15-05]: Multiple signals targeting same instrument have weights summed, not overwritten
 - [15-05]: Portfolio-level trade count uses individual strategy aggregation
+- [16-01]: HMM features mapped from CrossAssetFeatureEngine z-scores to 6-column DataFrame
+- [16-01]: Rule-based fallback assigns 0.7 to classified regime, 0.1 to each other
+- [16-01]: Tail risk composite = 30% VIX_z + 30% credit_z + 40% regime_transition_prob
+- [16-01]: CrossAssetView narrative generated inline (template) in agent, LLM path in NarrativeGenerator
 - [16-02]: ScrapedDocument dataclass shared between COPOM and FOMC scrapers for uniform output
 - [16-02]: HTML extraction via stdlib html.parser (no BeautifulSoup dependency)
 - [16-02]: Cache files named {source}_{doc_type}_{YYYY-MM-DD}.json for deterministic lookup
@@ -105,6 +109,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 16-02-PLAN.md (NLP Document Scrapers)
+Stopped at: Completed 16-01-PLAN.md (CrossAssetAgent v2)
 Resume file: .planning/phases/16-crossasset-nlp/
 Resume action: Execute 16-03-PLAN.md (Sentiment Scoring Pipeline)
