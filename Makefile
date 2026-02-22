@@ -1,4 +1,4 @@
-.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date
+.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all
 
 # ── Setup ────────────────────────────────────────────────────────────
 # Full first-time setup
@@ -104,3 +104,12 @@ daily-dry:
 # Run daily pipeline for a specific date
 daily-date:
 	python scripts/daily_run.py --date $(DATE)
+
+# ── Integration Tests ────────────────────────────────────────────────
+# Run integration tests only
+test-integration:
+	pytest tests/test_integration/ -v
+
+# Run all tests (unit + integration)
+test-all:
+	pytest tests/ -v --cov=src

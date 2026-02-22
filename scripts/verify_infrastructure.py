@@ -401,6 +401,172 @@ def check_api() -> bool:
 
 
 # ---------------------------------------------------------------------------
+# 9. Phase 1 (v2.0): Quantitative Models & Agents
+# ---------------------------------------------------------------------------
+def check_phase1_components() -> None:
+    """Verify Phase 1 v2.0 components are importable and functional."""
+    print(f"\n {_BOLD}{'=' * 54}{_RESET}")
+    print(f" {_BOLD}Phase 1 (v2.0): Quantitative Models & Agents{_RESET}")
+    print(f" {_BOLD}{'=' * 54}{_RESET}")
+
+    # Agent framework
+    _section("Agent Framework")
+    try:
+        from src.agents.base import BaseAgent, AgentReport, AgentSignal
+        _pass("BaseAgent, AgentReport, AgentSignal")
+    except Exception as exc:
+        _warn("Agent base imports", str(exc)[:80])
+
+    try:
+        from src.agents.registry import AgentRegistry
+        _pass("AgentRegistry")
+    except Exception as exc:
+        _warn("AgentRegistry import", str(exc)[:80])
+
+    # 5 agents
+    _section("Agents (5)")
+    agent_imports = {
+        "InflationAgent": "src.agents.inflation_agent",
+        "MonetaryPolicyAgent": "src.agents.monetary_agent",
+        "FiscalAgent": "src.agents.fiscal_agent",
+        "FxEquilibriumAgent": "src.agents.fx_agent",
+        "CrossAssetAgent": "src.agents.cross_asset_agent",
+    }
+    for class_name, module_path in agent_imports.items():
+        try:
+            import importlib
+            mod = importlib.import_module(module_path)
+            getattr(mod, class_name)
+            _pass(class_name)
+        except Exception as exc:
+            _warn(class_name, str(exc)[:80])
+
+    # Strategy framework
+    _section("Strategy Framework")
+    try:
+        from src.strategies.base import BaseStrategy
+        _pass("BaseStrategy")
+    except Exception as exc:
+        _warn("BaseStrategy import", str(exc)[:80])
+
+    try:
+        from src.strategies import ALL_STRATEGIES
+        count = len(ALL_STRATEGIES)
+        if count == 8:
+            _pass(f"ALL_STRATEGIES: {count} entries")
+        else:
+            _warn(f"ALL_STRATEGIES: {count} entries (expected 8)")
+    except Exception as exc:
+        _warn("ALL_STRATEGIES import", str(exc)[:80])
+
+    # Backtesting engine
+    _section("Backtesting Engine")
+    try:
+        from src.backtesting.engine import BacktestEngine
+        _pass("BacktestEngine")
+    except Exception as exc:
+        _warn("BacktestEngine import", str(exc)[:80])
+
+    try:
+        from src.backtesting.metrics import BacktestResult
+        _pass("BacktestResult")
+    except Exception as exc:
+        _warn("BacktestResult import", str(exc)[:80])
+
+    try:
+        from src.backtesting.portfolio import Portfolio
+        _pass("Portfolio")
+    except Exception as exc:
+        _warn("Portfolio import", str(exc)[:80])
+
+    # Portfolio construction
+    _section("Portfolio Construction")
+    try:
+        from src.portfolio.signal_aggregator import SignalAggregator
+        _pass("SignalAggregator")
+    except Exception as exc:
+        _warn("SignalAggregator import", str(exc)[:80])
+
+    try:
+        from src.portfolio.portfolio_constructor import PortfolioConstructor
+        _pass("PortfolioConstructor")
+    except Exception as exc:
+        _warn("PortfolioConstructor import", str(exc)[:80])
+
+    try:
+        from src.portfolio.capital_allocator import CapitalAllocator
+        _pass("CapitalAllocator")
+    except Exception as exc:
+        _warn("CapitalAllocator import", str(exc)[:80])
+
+    # Risk management
+    _section("Risk Management")
+    try:
+        from src.risk.var_calculator import VaRCalculator
+        _pass("VaRCalculator")
+    except Exception as exc:
+        _warn("VaRCalculator import", str(exc)[:80])
+
+    try:
+        from src.risk.stress_tester import StressTester
+        _pass("StressTester")
+    except Exception as exc:
+        _warn("StressTester import", str(exc)[:80])
+
+    try:
+        from src.risk.risk_monitor import RiskMonitor
+        _pass("RiskMonitor")
+    except Exception as exc:
+        _warn("RiskMonitor import", str(exc)[:80])
+
+    try:
+        from src.risk.drawdown_manager import DrawdownManager
+        _pass("DrawdownManager")
+    except Exception as exc:
+        _warn("DrawdownManager import", str(exc)[:80])
+
+    # Pipeline
+    _section("Pipeline")
+    try:
+        from src.pipeline import DailyPipeline, PipelineResult
+        _pass("DailyPipeline, PipelineResult")
+    except Exception as exc:
+        _warn("Pipeline imports", str(exc)[:80])
+
+    # Narrative
+    _section("Narrative Generation")
+    try:
+        from src.narrative import NarrativeGenerator, NarrativeBrief
+        _pass("NarrativeGenerator, NarrativeBrief")
+    except Exception as exc:
+        _warn("Narrative imports", str(exc)[:80])
+
+    # API routes count
+    _section("API Routes")
+    try:
+        from unittest.mock import patch as mock_patch, AsyncMock
+        from contextlib import asynccontextmanager
+        from collections.abc import AsyncIterator
+        from fastapi import FastAPI
+
+        @asynccontextmanager
+        async def _noop(app):
+            yield
+
+        with mock_patch("src.api.main.lifespan", _noop):
+            import importlib
+            import src.api.main
+            importlib.reload(src.api.main)
+            route_count = len(src.api.main.app.routes)
+            if route_count > 15:
+                _pass(f"Total routes: {route_count}")
+            else:
+                _warn(f"Total routes: {route_count} (expected > 15)")
+    except Exception as exc:
+        _warn("API route count", str(exc)[:80])
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
@@ -440,6 +606,9 @@ def main() -> None:
     elif args.quick:
         _section("Data Quality")
         _warn("Skipped (--quick)")
+
+    # --- Phase 1 (v2.0) checks ---
+    check_phase1_components()
 
     api_ok = check_api()
 
