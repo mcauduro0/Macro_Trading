@@ -73,7 +73,7 @@ def _generate_brief(as_of: date):
         except Exception:
             pass
 
-    # Generate narrative (uses template fallback if no API key)
-    generator = NarrativeGenerator(api_key="")
+    # Generate narrative (reads ANTHROPIC_API_KEY from settings; template fallback if empty)
+    generator = NarrativeGenerator()
     brief = generator.generate(agent_reports, as_of_date=as_of)
     return brief
