@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 Phase: 12 — Portfolio Construction & Risk Management (IN PROGRESS)
 Plan: 2 of 3 complete (12-01, 12-02 done)
-Status: VaR/CVaR engine + stress testing delivered; RiskMonitor (12-03) remaining
-Last activity: 2026-02-22 — Completed 12-02-PLAN.md (VaRCalculator, StressTester, 36 tests)
+Status: Signal aggregation + portfolio construction + VaR/CVaR delivered; RiskMonitor (12-03) remaining
+Last activity: 2026-02-22 — Completed 12-01-PLAN.md (SignalAggregator, PortfolioConstructor, CapitalAllocator, 29 tests)
 
 Progress: [###########] 70%  (14/20 plans complete)
 
@@ -38,6 +38,7 @@ Progress: [###########] 70%  (14/20 plans complete)
 | 11 | 01 | 10 min | 2 | 7 |
 | 11 | 02 | 10 min | 2 | 7 |
 | 11 | 03 | 10 min | 2 | 7 |
+| 12 | 01 | 12 min | 2 | 8 |
 | 12 | 02 | 7 min | 2 | 6 |
 
 *Updated after each plan completion*
@@ -119,6 +120,13 @@ Recent decisions affecting current work:
 - [v2.0-11-03]: SOV_BR_01 fiscal risk = linear 60-100% GDP debt mapping + primary balance (deficit +20x, surplus -10x)
 - [v2.0-11-03]: SOV_BR_01 produces 2 correlated positions (DI + USDBRL) for fiscal dominance risk trade
 - [v2.0-11-03]: ALL_STRATEGIES uses type[BaseStrategy] values (not instances) for lazy instantiation by caller
+- [v2.0-12-01]: DEFAULT_AGENT_WEIGHTS: cross_asset_agent highest for EQUITY_INDEX (0.45) and COMMODITY (0.55), monetary_agent highest for FIXED_INCOME (0.35)
+- [v2.0-12-01]: Bilateral veto at |regime_score| > 0.7 reduces net_score by 50% for both extreme risk-off and euphoria/risk-on
+- [v2.0-12-01]: Risk parity uses SLSQP with ftol=1e-12, Ledoit-Wolf covariance; falls back to equal weights with < 60 obs
+- [v2.0-12-01]: Regime thresholds: > 0.3 = RISK_OFF (0.4x), < -0.3 = RISK_ON (1.0x), else NEUTRAL (0.7x)
+- [v2.0-12-01]: Gradual regime transition: linear ramp over 3 days from previous to target scale
+- [v2.0-12-01]: Conflict dampening locked at 0.60 within [0.50, 0.70] range
+- [v2.0-12-01]: Constraint pipeline order: single position (25%) -> asset class (50%) -> leverage (3x) -> drift (5%)
 - [v2.0-12-02]: Eigenvalue floor at 1e-8 for near-singular covariance matrices during Cholesky decomposition
 - [v2.0-12-02]: Student-t fit fallback to normal (df=1e6) when asset has < 30 observations for MC VaR
 - [v2.0-12-02]: Uniform clipping to [1e-6, 1-1e-6] before ppf to avoid infinities in Monte Carlo draws
@@ -139,5 +147,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 12-02-PLAN.md (VaRCalculator with 3 methods, StressTester with 4 scenarios, 36 tests)
+Stopped at: Completed 12-01-PLAN.md (SignalAggregator, PortfolioConstructor, CapitalAllocator, 29 tests)
 Resume action: Continue to 12-03-PLAN.md (RiskMonitor).

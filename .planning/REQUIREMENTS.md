@@ -80,10 +80,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 
 ### Signal Aggregation & Portfolio
 
-- [ ] **PORT-01**: SignalAggregator combining agent signals into directional consensus per asset class with conflict detection
-- [ ] **PORT-02**: PortfolioConstructor converting strategy positions to net portfolio weights with risk-budget scaling and regime adjustment (RISK_OFF → -50%)
-- [ ] **PORT-03**: CapitalAllocator enforcing portfolio constraints (max leverage, max single position, max asset class concentration)
-- [ ] **PORT-04**: Rebalance threshold check (drift > 5% triggers rebalance) and trade computation
+- [x] **PORT-01**: SignalAggregator combining agent signals into directional consensus per asset class with conflict detection
+- [x] **PORT-02**: PortfolioConstructor converting strategy positions to net portfolio weights with risk-budget scaling and regime adjustment (RISK_OFF → -50%)
+- [x] **PORT-03**: CapitalAllocator enforcing portfolio constraints (max leverage, max single position, max asset class concentration)
+- [x] **PORT-04**: Rebalance threshold check (drift > 5% triggers rebalance) and trade computation
 
 ### Risk Management
 
@@ -207,10 +207,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | STRAT-07 | Phase 11 | Complete |
 | STRAT-08 | Phase 11 | Complete |
 | STRAT-09 | Phase 11 | Complete |
-| PORT-01 | Phase 12 | Pending |
-| PORT-02 | Phase 12 | Pending |
-| PORT-03 | Phase 12 | Pending |
-| PORT-04 | Phase 12 | Pending |
+| PORT-01 | Phase 12 | Complete |
+| PORT-02 | Phase 12 | Complete |
+| PORT-03 | Phase 12 | Complete |
+| PORT-04 | Phase 12 | Complete |
 | RISK-01 | Phase 12 | Complete |
 | RISK-02 | Phase 12 | Complete |
 | RISK-03 | Phase 12 | Complete |
