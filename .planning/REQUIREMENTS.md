@@ -91,10 +91,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **RISK-02**: Parametric VaR using Gaussian assumption with portfolio covariance
 - [x] **RISK-03**: Expected Shortfall (CVaR) as conditional expectation beyond VaR threshold
 - [x] **RISK-04**: Stress testing against 4+ historical scenarios (2013 Taper Tantrum, 2015 BR Crisis, 2020 COVID, 2022 Rate Shock)
-- [ ] **RISK-05**: Risk limits configuration (max VaR, max drawdown, max leverage, max position, max asset class concentration)
-- [ ] **RISK-06**: Pre-trade limit checking — verify proposed trades don't breach limits before execution
-- [ ] **RISK-07**: DrawdownManager with 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
-- [ ] **RISK-08**: RiskMonitor generating aggregate risk report (portfolio VaR, stress tests, limit utilization, circuit breaker status)
+- [x] **RISK-05**: Risk limits configuration (max VaR, max drawdown, max leverage, max position, max asset class concentration)
+- [x] **RISK-06**: Pre-trade limit checking — verify proposed trades don't breach limits before execution
+- [x] **RISK-07**: DrawdownManager with 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
+- [x] **RISK-08**: RiskMonitor generating aggregate risk report (portfolio VaR, stress tests, limit utilization, circuit breaker status)
 
 ### Daily Pipeline
 
@@ -134,7 +134,7 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 - [x] **TESTV2-01**: Unit tests for each agent's feature computation (expected keys, correct types)
 - [x] **TESTV2-02**: Unit tests for quantitative models (Phillips Curve, Taylor Rule, BEER) with known-input/known-output verification
 - [x] **TESTV2-03**: Unit tests for backtesting engine (portfolio mark-to-market, rebalance with costs, metrics computation)
-- [ ] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
+- [x] **TESTV2-04**: Unit tests for risk management (VaR calculation, limit checking, circuit breakers)
 - [ ] **TESTV2-05**: Integration test: full pipeline (agents → strategies → portfolio → risk) runs without error for a known date
 - [ ] **TESTV2-06**: Integration test: all API endpoints return 200 OK via FastAPI TestClient
 - [ ] **TESTV2-07**: Verification script updated for Phase 0 + Phase 1 coverage
@@ -215,10 +215,10 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | RISK-02 | Phase 12 | Complete |
 | RISK-03 | Phase 12 | Complete |
 | RISK-04 | Phase 12 | Complete |
-| RISK-05 | Phase 12 | Pending |
-| RISK-06 | Phase 12 | Pending |
-| RISK-07 | Phase 12 | Pending |
-| RISK-08 | Phase 12 | Pending |
+| RISK-05 | Phase 12 | Complete |
+| RISK-06 | Phase 12 | Complete |
+| RISK-07 | Phase 12 | Complete |
+| RISK-08 | Phase 12 | Complete |
 | PIPE-01 | Phase 13 | Pending |
 | PIPE-02 | Phase 13 | Pending |
 | PIPE-03 | Phase 13 | Pending |
@@ -243,7 +243,7 @@ Requirements for milestone v2.0 Quantitative Models & Agents. Each maps to roadm
 | TESTV2-01 | Phase 8-13 | Complete |
 | TESTV2-02 | Phase 8-13 | Complete |
 | TESTV2-03 | Phase 10 | Complete |
-| TESTV2-04 | Phase 12 | Pending |
+| TESTV2-04 | Phase 12 | Complete |
 | TESTV2-05 | Phase 13 | Pending |
 | TESTV2-06 | Phase 13 | Pending |
 | TESTV2-07 | Phase 13 | Pending |

@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 
 ## Current Position
 
-Phase: 12 — Portfolio Construction & Risk Management (IN PROGRESS)
-Plan: 2 of 3 complete (12-01, 12-02 done)
-Status: Signal aggregation + portfolio construction + VaR/CVaR delivered; RiskMonitor (12-03) remaining
-Last activity: 2026-02-22 — Completed 12-01-PLAN.md (SignalAggregator, PortfolioConstructor, CapitalAllocator, 29 tests)
+Phase: 12 — Portfolio Construction & Risk Management (COMPLETE)
+Plan: 3 of 3 complete (12-01, 12-02, 12-03 done)
+Status: Phase 12 complete — signal aggregation, VaR/stress, risk limits/monitoring all delivered (107 tests)
+Last activity: 2026-02-22 — Completed 12-03-PLAN.md (RiskLimitChecker, DrawdownManager, RiskMonitor, 42 tests)
 
-Progress: [###########] 70%  (14/20 plans complete)
+Progress: [############] 75%  (15/20 plans complete)
 
 ## Performance Metrics
 
 **Velocity (from v1.0 + v2.0):**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 9.8 min
-- Total execution time: 3.07 hours
+- Total execution time: 3.24 hours
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -40,6 +40,7 @@ Progress: [###########] 70%  (14/20 plans complete)
 | 11 | 03 | 10 min | 2 | 7 |
 | 12 | 01 | 12 min | 2 | 8 |
 | 12 | 02 | 7 min | 2 | 6 |
+| 12 | 03 | 10 min | 2 | 7 |
 
 *Updated after each plan completion*
 
@@ -132,6 +133,12 @@ Recent decisions affecting current work:
 - [v2.0-12-02]: Uniform clipping to [1e-6, 1-1e-6] before ppf to avoid infinities in Monte Carlo draws
 - [v2.0-12-02]: Stress scenario prefix matching: startswith() for DI_PRE instrument family (DI_PRE_365 -> DI_PRE)
 - [v2.0-12-02]: Stress tests are advisory only — no position modifications (locked CONTEXT.md decision)
+- [v2.0-12-03]: L3_TRIGGERED immediately chains to COOLDOWN within same update() call (transient state)
+- [v2.0-12-03]: AlertDispatcher uses stdlib urllib.request (no new dep), catches URLError/HTTPError/OSError, never crashes
+- [v2.0-12-03]: Recovery scale: recovery_day / recovery_days (0.33, 0.66, 1.0 for 3-day default)
+- [v2.0-12-03]: L1 recovery requires drawdown < l1_threshold * 0.5 to prevent whipsaw at boundary
+- [v2.0-12-03]: Risk level: CRITICAL (breach) > HIGH (>80% util or >2% dd) > MODERATE (>1% dd) > LOW
+- [v2.0-12-03]: Strategy/AssetClass loss trackers fire independently from portfolio DrawdownManager
 
 ### Pending Todos
 
@@ -147,5 +154,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 12-01-PLAN.md (SignalAggregator, PortfolioConstructor, CapitalAllocator, 29 tests)
-Resume action: Continue to 12-03-PLAN.md (RiskMonitor).
+Stopped at: Completed 12-03-PLAN.md (RiskLimitChecker, DrawdownManager, RiskMonitor, 42 new tests)
+Resume action: Phase 12 complete. Continue to Phase 13 (Orchestration).

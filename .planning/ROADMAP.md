@@ -32,7 +32,7 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 - [x] **Phase 9: Fiscal & FX Equilibrium Agents** - FiscalAgent (DSA model, fiscal impulse, dominance risk) and FxEquilibriumAgent (BEER model, carry-to-risk, flows, CIP basis)
 - [x] **Phase 10: Cross-Asset Agent & Backtesting Engine** - CrossAssetAgent (regime detection, correlations, sentiment) and BacktestEngine (portfolio tracking, metrics, PIT enforcement) (completed 2026-02-21)
 - [x] **Phase 11: Trading Strategies** - BaseStrategy ABC, 8 initial strategies (4 rates, 1 inflation, 1 FX, 1 cupom cambial, 1 sovereign) (completed 2026-02-21)
-- [ ] **Phase 12: Portfolio Construction & Risk Management** - Signal aggregation, portfolio constructor, capital allocator, VaR, stress testing, limits, circuit breakers
+- [x] **Phase 12: Portfolio Construction & Risk Management** - Signal aggregation, portfolio constructor, capital allocator, VaR, stress testing, limits, circuit breakers (completed 2026-02-22)
 - [ ] **Phase 13: Pipeline, LLM, Dashboard, API & Tests** - Daily orchestration pipeline, Claude API narrative, HTML dashboard, 9 new API endpoints, integration tests, verification script
 
 ## Phase Details
@@ -189,5 +189,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Fiscal & FX Agents | 2/2 | Complete    | 2026-02-21 |
 | 10. Cross-Asset & Backtesting | 3/3 | Complete    | 2026-02-21 |
 | 11. Trading Strategies | 3/3 | Complete    | 2026-02-21 |
-| 12. Portfolio & Risk | 2/3 | In Progress|  |
+| 12. Portfolio & Risk | 3/3 | Complete   | 2026-02-22 |
 | 13. Pipeline, LLM, Dashboard, API & Tests | 0/4 | Not started | - |
