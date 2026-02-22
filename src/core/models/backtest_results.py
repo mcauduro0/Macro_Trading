@@ -2,6 +2,12 @@
 
 Regular PostgreSQL table (NOT a hypertable -- low volume: one row per backtest run).
 Equity curve and monthly returns stored as JSONB for flexible querying.
+
+v3.0 additions (SFWK-04):
+- run_timestamp: When the backtest was executed
+- params_json: Strategy parameters used in this run
+- daily_returns_json: Array of daily returns for distribution analysis
+- avg_holding_days: Average trade holding period in days
 """
 from __future__ import annotations
 from datetime import date, datetime
@@ -41,6 +47,13 @@ class BacktestResultRecord(Base):
     equity_curve: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     monthly_returns: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     config_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    # v3.0 additions (SFWK-04)
+    run_timestamp: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    params_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    daily_returns_json: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    avg_holding_days: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

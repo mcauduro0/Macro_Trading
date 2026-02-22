@@ -19,6 +19,7 @@ from .vol_surfaces import VolSurface
 from .signals import Signal
 from .agent_reports import AgentReportRecord
 from .backtest_results import BacktestResultRecord
+from .strategy_state import StrategyStateRecord
 
 __all__ = [
     "Base",
@@ -34,4 +35,5 @@ __all__ = [
     "Signal",
     "AgentReportRecord",
     "BacktestResultRecord",
+    "StrategyStateRecord",
 ]

@@ -14,6 +14,7 @@ from alembic import context
 # Import all model modules so they register with Base.metadata
 from src.core.models import (  # noqa: F401
     agent_reports,
+    backtest_results,
     curves,
     data_sources,
     fiscal_data,
@@ -23,6 +24,7 @@ from src.core.models import (  # noqa: F401
     market_data,
     series_metadata,
     signals,
+    strategy_state,
     vol_surfaces,
 )
 from src.core.models.base import Base
