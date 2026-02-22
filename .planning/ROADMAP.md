@@ -2,19 +2,21 @@
 
 ## Overview
 
-This roadmap covers two milestones of the macro trading system for a global macro hedge fund focused on Brazil and the US.
+This roadmap covers three milestones of the macro trading system for a global macro hedge fund focused on Brazil and the US.
 
 **v1.0 (Phases 1-6, Complete):** Data infrastructure — Docker stack, 11 connectors, 250+ series, TimescaleDB hypertables, transforms, FastAPI API, data quality framework. All 65 requirements delivered.
 
-**v2.0 (Phases 7-13, Active):** Quantitative models and agents — 5 analytical agents with quantitative models, event-driven backtesting engine, 8 trading strategies, signal aggregation, risk management, daily orchestration pipeline, LLM narrative generation, and monitoring dashboard. All 88 requirements mapped.
+**v2.0 (Phases 7-13, Complete):** Quantitative models and agents — 5 analytical agents with quantitative models, event-driven backtesting engine, 8 trading strategies, signal aggregation, risk management, daily orchestration pipeline, LLM narrative generation, and monitoring dashboard. All 88 requirements delivered.
 
-The build follows the agent pipeline: framework (base classes, data loader) enables agents (models, signals), agents enable strategies (trading logic), strategies feed into portfolio construction and risk management, and everything converges at the daily pipeline with dashboard and API. Point-in-time correctness — established in v1.0 via release_time tracking — is the foundation for backtesting integrity across all v2.0 components.
+**v3.0 (Phases 14-19, Active):** Strategy engine, risk & portfolio management — expand from 8 to 24+ trading strategies across all asset classes (FX, rates, inflation, cupom cambial, sovereign, cross-asset), enhanced backtesting engine (portfolio-level, walk-forward, deflated Sharpe), NLP pipeline for COPOM/FOMC communications, enhanced Cross-Asset Agent with LLM narrative, signal aggregation v2 (Bayesian, crowding, staleness), risk engine v2 (Monte Carlo VaR, reverse stress, component VaR), portfolio optimization (Black-Litterman, Kelly sizing), Dagster production orchestration, Grafana monitoring, React multi-page dashboard, and comprehensive integration testing. 77 requirements mapped across 6 phases.
 
 ## Phases
 
 **Phase Numbering:**
 - Phases 1-6: v1.0 Data Infrastructure (complete)
-- Phases 7-13: v2.0 Quantitative Models & Agents (active)
+- Phases 7-13: v2.0 Quantitative Models & Agents (complete)
+- Phases 14-19: v3.0 Strategy Engine, Risk & Portfolio Management (active)
+- Decimal phases (e.g., 14.1): Urgent insertions (marked with INSERTED)
 
 ### v1.0 Phases (Complete)
 
@@ -25,149 +27,137 @@ The build follows the agent pipeline: framework (base classes, data loader) enab
 - [x] **Phase 5: Transforms** - Curve construction, returns/vol/z-scores, macro calculations, and advanced indicators (silver layer)
 - [x] **Phase 6: API and Quality** - FastAPI serving layer, all endpoints, data quality framework, verification, and CI pipeline (gold layer)
 
-### v2.0 Phases (Active)
+### v2.0 Phases (Complete)
 
 - [x] **Phase 7: Agent Framework & Data Loader** - BaseAgent ABC, signal/report dataclasses, PointInTimeDataLoader, AgentRegistry, DB migration, dependency installation
-- [x] **Phase 8: Inflation & Monetary Policy Agents** - InflationAgent (Phillips Curve, IPCA bottom-up, surprise, persistence) and MonetaryPolicyAgent (Taylor Rule, Kalman r*, Selic path, term premium) (completed 2026-02-21)
-- [x] **Phase 9: Fiscal & FX Equilibrium Agents** - FiscalAgent (DSA model, fiscal impulse, dominance risk) and FxEquilibriumAgent (BEER model, carry-to-risk, flows, CIP basis)
-- [x] **Phase 10: Cross-Asset Agent & Backtesting Engine** - CrossAssetAgent (regime detection, correlations, sentiment) and BacktestEngine (portfolio tracking, metrics, PIT enforcement) (completed 2026-02-21)
-- [x] **Phase 11: Trading Strategies** - BaseStrategy ABC, 8 initial strategies (4 rates, 1 inflation, 1 FX, 1 cupom cambial, 1 sovereign) (completed 2026-02-21)
-- [x] **Phase 12: Portfolio Construction & Risk Management** - Signal aggregation, portfolio constructor, capital allocator, VaR, stress testing, limits, circuit breakers (completed 2026-02-22)
-- [x] **Phase 13: Pipeline, LLM, Dashboard, API & Tests** - Daily orchestration pipeline, Claude API narrative, HTML dashboard, 9 new API endpoints, integration tests, verification script (completed 2026-02-22)
+- [x] **Phase 8: Inflation & Monetary Policy Agents** - InflationAgent and MonetaryPolicyAgent with quantitative models
+- [x] **Phase 9: Fiscal & FX Equilibrium Agents** - FiscalAgent and FxEquilibriumAgent with DSA, BEER, carry models
+- [x] **Phase 10: Cross-Asset Agent & Backtesting Engine** - CrossAssetAgent and BacktestEngine with PIT enforcement
+- [x] **Phase 11: Trading Strategies** - BaseStrategy ABC and 8 initial strategies (rates, inflation, FX, cupom, sovereign)
+- [x] **Phase 12: Portfolio Construction & Risk Management** - Signal aggregation, portfolio construction, VaR, stress testing, limits, circuit breakers
+- [x] **Phase 13: Pipeline, LLM, Dashboard, API & Tests** - Daily pipeline, Claude API narrative, HTML dashboard, 9 API endpoints, integration tests
+
+### v3.0 Phases (Active)
+
+- [x] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations (completed 2026-02-22)
+- [ ] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2)
+- [ ] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis
+- [ ] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing
+- [ ] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator
+- [ ] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script
 
 ## Phase Details
 
-### Phase 7: Agent Framework & Data Loader
-**Goal**: A complete agent infrastructure — abstract base class, typed signal/report structures, point-in-time data access layer, and agent registry — that all 5 analytical agents can build on
-**Depends on**: Phase 6 (v1.0 complete — data flowing, API serving, transforms available)
-**Requirements**: AGENT-01, AGENT-02, AGENT-03, AGENT-04, AGENT-05, AGENT-06, AGENT-07
+### Phase 14: Backtesting Engine v2 & Strategy Framework
+**Goal**: Enhanced strategy infrastructure and backtesting capabilities that support portfolio-level analysis, walk-forward validation, and statistically rigorous performance measurement -- the foundation all 16 new strategies will build on
+**Depends on**: Phase 13 (v2.0 complete -- existing 8 strategies, BacktestEngine, BaseStrategy, signal pipeline all functional)
+**Requirements**: SFWK-01, SFWK-02, SFWK-03, SFWK-04, BTST-01, BTST-02, BTST-03, BTST-04, BTST-05, BTST-06
 **Success Criteria** (what must be TRUE):
-  1. BaseAgent abstract class enforces Template Method pattern: load_data → compute_features → run_models → generate_narrative, with concrete run() and backtest_run() methods
-  2. AgentSignal dataclass captures signal_id, direction (LONG/SHORT/NEUTRAL), strength (STRONG/MODERATE/WEAK/NO_SIGNAL), confidence (0-1), value, horizon_days, and metadata dict
-  3. PointInTimeDataLoader queries macro_series, curves, market_data, and flow_data with WHERE release_time <= as_of_date constraint, returning pandas DataFrames
-  4. AgentRegistry.run_all(as_of_date) executes agents in dependency order (inflation → monetary → fiscal → fx → cross_asset) and returns dict of AgentReports
-  5. Alembic migration creates agent_reports table (agent_id, as_of_date, narrative, diagnostics JSON) and signals persist via ON CONFLICT DO NOTHING
-  6. statsmodels and scikit-learn are installed and importable for quantitative models
-**Plans**: 2 plans
+  1. User can register strategies via @StrategyRegistry.register decorator, list all strategies by asset class, and instantiate any strategy by ID -- replacing the manual ALL_STRATEGIES dict
+  2. User can run BacktestEngine.run_portfolio(strategies, weights) to backtest multiple strategies together with risk allocation and see combined equity curve, drawdown, and per-strategy attribution
+  3. User can run walk-forward validation that splits a backtest period into train/test windows, optimizes parameters in-sample, and reports out-of-sample performance -- detecting overfitting
+  4. User can compute deflated Sharpe ratio (Bailey & Lopez de Prado) that adjusts for multiple testing bias, and generate a complete tearsheet (equity curve, drawdown chart, monthly heatmap, rolling Sharpe, trade analysis)
+  5. TransactionCostModel applies per-instrument costs for 12 instruments (DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT) and Alembic migrations create strategy_state and backtest_results v2 tables
+**Plans:** 3/3 plans complete
 
 Plans:
-- [x] 07-01-PLAN.md — BaseAgent ABC, AgentSignal/AgentReport dataclasses, SignalDirection/SignalStrength enums, PointInTimeDataLoader with PIT queries, and dependency installation (statsmodels, scikit-learn)
-- [x] 07-02-PLAN.md — AgentRegistry with ordered execution, signal persistence to signals hypertable, Alembic migration for agent_reports table, and agent framework tests
+- [ ] 14-01: Enhanced StrategySignal dataclass, StrategyRegistry with decorator, strategy_state table migration, backtest_results v2 table migration
+- [ ] 14-02: BacktestEngine v2 with portfolio-level backtesting, TransactionCostModel, walk-forward validation
+- [ ] 14-03: Deflated Sharpe ratio, expanded analytics (Sortino, information ratio, tail ratio, turnover, rolling Sharpe), tearsheet generation
 
-### Phase 8: Inflation & Monetary Policy Agents
-**Goal**: Two fully functional analytical agents — InflationAgent monitoring BR+US inflation dynamics and MonetaryPolicyAgent analyzing central bank policy — each producing quantitative signals from real models
-**Depends on**: Phase 7
-**Requirements**: INFL-01, INFL-02, INFL-03, INFL-04, INFL-05, INFL-06, INFL-07, MONP-01, MONP-02, MONP-03, MONP-04, MONP-05, MONP-06, TESTV2-01, TESTV2-02
+### Phase 15: New Trading Strategies
+**Goal**: 16 new trading strategies spanning all major asset classes -- FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), and cross-asset (2) -- each producing StrategySignal outputs compatible with the enhanced framework
+**Depends on**: Phase 14 (StrategyRegistry, enhanced StrategySignal, BacktestEngine v2 all operational)
+**Requirements**: FXST-01, FXST-02, FXST-03, FXST-04, RTST-01, RTST-02, RTST-03, RTST-04, INST-01, INST-02, CPST-01, SVST-01, SVST-02, SVST-03, CAST-01, CAST-02
 **Success Criteria** (what must be TRUE):
-  1. InflationAgent.run(as_of_date) produces 6+ signals: INFLATION_BR_PHILLIPS (OLS Phillips Curve), INFLATION_BR_BOTTOMUP (9-component IPCA forecast), INFLATION_BR_SURPRISE (actual vs Focus z-score), INFLATION_BR_PERSISTENCE (composite 0-100 score), INFLATION_US_TREND (PCE core analysis), INFLATION_BR_COMPOSITE (weighted average)
-  2. PhillipsCurveModel fits OLS regression (core_inflation ~ expectations + output_gap + fx_passthrough + commodity_change) on trailing data and predicts 12M core inflation
-  3. MonetaryPolicyAgent.run(as_of_date) produces 5+ signals: MONETARY_BR_TAYLOR (policy gap), MONETARY_BR_SELIC_PATH (market vs model), MONETARY_BR_TERM_PREMIUM (DI term premium estimate), MONETARY_US_FED_STANCE (US policy gap), MONETARY_BR_COMPOSITE
-  4. TaylorRuleModel computes BCB-modified Taylor rate: i* = r* + π_e + α(π_e - π*) + β(y_gap) + γ(inertia) and signals when policy gap exceeds 100bps
-  5. KalmanFilterRStar estimates time-varying natural rate r* from Selic history, inflation expectations, and output gap using state-space model
-  6. Unit tests verify feature computation returns expected keys and model signals have correct direction for known inputs
-**Plans**: 3 plans
+  1. User can list all strategies by asset class and see 24+ strategies total (8 existing + 16 new) across FX, rates, inflation, cupom cambial, sovereign, and cross-asset categories
+  2. FX strategies produce valid signals: FX-02 (carry-adjusted momentum combining Selic-FFR spread with USDBRL momentum), FX-03 (flow-based from BCB/CFTC/B3 with contrarian logic at |z|>2), FX-04 (vol surface relative value), FX-05 (terms of trade misalignment)
+  3. Rates strategies produce valid signals: RATES-03 (BR-US spread adjusted for CDS), RATES-04 (term premium extraction from DI vs Focus), RATES-05 (FOMC event positioning), RATES-06 (COPOM event positioning)
+  4. All 16 new strategies register via @StrategyRegistry.register, populate z_score/entry_level/stop_loss/take_profit in StrategySignal, and pass backtesting with the TransactionCostModel
+  5. Each strategy backtests without error over 2+ years of historical data and produces a valid tearsheet with Sharpe, drawdown, and trade statistics
+**Plans**: TBD
 
 Plans:
-- [ ] 08-01-PLAN.md — InflationFeatureEngine (~30 BR + ~15 US features), PhillipsCurveModel (OLS), IpcaBottomUpModel (9-component seasonal forecast)
-- [ ] 08-02-PLAN.md — InflationSurpriseModel, InflationPersistenceModel, UsInflationTrendModel, InflationAgent orchestration, composite signal, and inflation tests
-- [ ] 08-03-PLAN.md — MonetaryFeatureEngine (BR DI curve shape + US UST curve), TaylorRuleModel, KalmanFilterRStar, SelicPathModel, TermPremiumModel, UsFedAnalysis, MonetaryPolicyAgent orchestration, and monetary tests
+- [ ] 15-01: FX strategies -- FX-02 Carry-Adjusted Momentum, FX-03 Flow-Based Tactical, FX-04 Vol Surface RV, FX-05 Terms of Trade
+- [ ] 15-02: Rates strategies -- RATES-03 BR-US Spread, RATES-04 Term Premium, RATES-05 FOMC Event, RATES-06 COPOM Event
+- [ ] 15-03: Inflation strategies (INF-02 IPCA Surprise, INF-03 Inflation Carry) and Cupom Cambial (CUPOM-02 Onshore-Offshore Spread)
+- [ ] 15-04: Sovereign strategies (SOV-01 CDS Curve, SOV-02 EM Relative Value, SOV-03 Rating Migration) and Cross-Asset (CROSS-01 Regime Allocation, CROSS-02 Risk Appetite)
 
-### Phase 9: Fiscal & FX Equilibrium Agents
-**Goal**: Two more analytical agents — FiscalAgent assessing Brazil's debt sustainability and FxEquilibriumAgent modeling USDBRL fair value — completing 4 of 5 agents
-**Depends on**: Phase 8
-**Requirements**: FISC-01, FISC-02, FISC-03, FISC-04, FXEQ-01, FXEQ-02, FXEQ-03, FXEQ-04, FXEQ-05
+### Phase 16: Cross-Asset Agent v2 & NLP Pipeline
+**Goal**: Enhanced Cross-Asset Agent with HMM-based regime classification and LLM-powered narrative, plus a complete NLP pipeline that scrapes and analyzes COPOM and FOMC communications for hawk/dove sentiment -- feeding intelligence into strategies and agents
+**Depends on**: Phase 14 (strategy framework for consuming NLP signals)
+**Requirements**: CRSV-01, CRSV-02, CRSV-03, CRSV-04, NLP-01, NLP-02, NLP-03, NLP-04, NLP-05
 **Success Criteria** (what must be TRUE):
-  1. FiscalAgent.run(as_of_date) produces 3+ signals: FISCAL_BR_DSA (debt trajectory under 4 scenarios), FISCAL_BR_IMPULSE (cyclically-adjusted fiscal expansion/contraction), FISCAL_BR_DOMINANCE_RISK (composite 0-100 score)
-  2. DebtSustainabilityModel projects debt/GDP over 5Y horizon under baseline, adjustment, stress, and tailwind scenarios using d_{t+1} = d_t*(1+r)/(1+g) - pb
-  3. FxEquilibriumAgent.run(as_of_date) produces 4+ signals: FX_BR_BEER (USDBRL misalignment vs BEER fair value), FX_BR_CARRY_RISK (carry-to-risk ratio), FX_BR_FLOW (composite flow z-score), FX_BR_CIP_BASIS (CIP deviation)
-  4. BeerModel fits OLS: USDBRL = f(terms_of_trade, real_rate_diff, NFA, productivity_diff) and signals when misalignment exceeds 5%
-  5. All agent signals have confidence in [0,1] and direction in {LONG, SHORT, NEUTRAL}
-**Plans**: 2 plans
+  1. CrossAssetAgent produces a CrossAssetView with regime (4 states: Goldilocks, Reflation, Stagflation, Deflation), per-asset-class views, risk_appetite score, tail_risk assessment, key_trades recommendations, and risk_warnings
+  2. HMM regime classifier outputs regime probabilities (not just point estimate) with fallback to rule-based classification when HMM fails to converge
+  3. Cross-asset consistency checker flags contradictions (e.g., FX bullish + rates higher = inconsistent) and LLM generates structured narrative explaining regime, key drivers, and trade rationale
+  4. COPOMScraper retrieves atas/comunicados from bcb.gov.br and FOMCScraper retrieves statements/minutes from federalreserve.gov, both covering 2010-present with persistent storage
+  5. CentralBankSentimentAnalyzer produces hawk/dove scores [-1, +1] with change_score vs previous document, key phrases extraction, and results persist to nlp_documents table via Alembic migration
+**Plans**: TBD
 
 Plans:
-- [x] 09-01-PLAN.md — FiscalFeatureEngine (debt ratios, r-g dynamics, debt composition), DebtSustainabilityModel (IMF DSA), FiscalImpulseModel, FiscalDominanceRisk, FiscalAgent orchestration, and fiscal tests
-- [x] 09-02-PLAN.md — FxFeatureEngine (BEER inputs, carry, flows, CIP, CFTC), BeerModel (OLS), CarryToRiskModel, FlowModel, CipBasisModel, FxEquilibriumAgent orchestration, and FX tests
+- [ ] 16-01: CrossAssetView dataclass, HMM regime classification (with rule-based fallback), consistency checking, LLM narrative generation
+- [ ] 16-02: COPOMScraper, FOMCScraper, nlp_documents table migration
+- [ ] 16-03: CentralBankSentimentAnalyzer (term dictionary PT+EN, optional LLM), NLPProcessor pipeline (clean, score, extract, compare, persist)
 
-### Phase 10: Cross-Asset Agent & Backtesting Engine
-**Goal**: The final agent (CrossAssetAgent providing regime context) and a complete event-driven backtesting engine with point-in-time correctness for strategy validation
-**Depends on**: Phase 9
-**Requirements**: CRSA-01, CRSA-02, CRSA-03, BACK-01, BACK-02, BACK-03, BACK-04, BACK-05, BACK-06, BACK-07, BACK-08, TESTV2-03
+### Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization
+**Goal**: Users can aggregate signals with Bayesian methods and anti-crowding protection, compute Monte Carlo VaR with copula dependence, run reverse stress tests, and optimize portfolios using Black-Litterman with agent views -- the quantitative core of portfolio management
+**Depends on**: Phase 15 (16+ new strategies producing signals), Phase 16 (enhanced Cross-Asset Agent views for regime-aware aggregation and Black-Litterman inputs)
+**Requirements**: SAGG-01, SAGG-02, SAGG-03, SAGG-04, RSKV-01, RSKV-02, RSKV-03, RSKV-04, RSKV-05, RSKV-06, RSKV-07, RSKV-08, POPT-01, POPT-02, POPT-03, POPT-04, POPT-05
 **Success Criteria** (what must be TRUE):
-  1. CrossAssetAgent.run(as_of_date) produces 3 signals: CROSSASSET_REGIME (risk-on/off score -1 to +1), CROSSASSET_SENTIMENT (fear-to-greed 0-100), CROSSASSET_CORRELATION (correlation break detection)
-  2. RegimeDetectionModel scores VIX, credit spreads, DXY, EM flows, UST curve slope, and BR fiscal into a composite regime indicator
-  3. BacktestEngine.run(strategy) iterates over business days, calls strategy.generate_signals(as_of_date) with point-in-time data, applies rebalance with transaction costs and slippage, and computes complete equity curve
-  4. Portfolio class tracks positions, cash, equity, and trade log with mark-to-market using PointInTimeDataLoader
-  5. BacktestResult contains all metrics: annualized return/vol, Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor, monthly returns
-  6. Alembic migration creates strategy_signals hypertable and backtest_results table
-  7. Point-in-time enforcement verified: strategy cannot access data with release_time > as_of_date during backtest
-**Plans**: 3 plans
+  1. SignalAggregator supports 3 aggregation methods (confidence-weighted average, rank-based, Bayesian with regime prior), applies crowding penalty when >80% of strategies agree, and discounts stale signals based on data freshness
+  2. SignalMonitor detects signal flips, conviction surges, and strategy divergence, and generates a daily signal summary report
+  3. Monte Carlo VaR (10,000 simulations with t-Student marginals and Gaussian copula) and parametric VaR (Ledoit-Wolf shrinkage) produce 95% and 99% confidence VaR estimates, with marginal and component VaR decomposition by position
+  4. Stress testing includes 6+ scenarios (existing 4 + BR Fiscal Crisis + Global Risk-Off), reverse stress testing finds scenarios producing a given max loss, and historical replay replays actual returns from crisis periods
+  5. Black-Litterman model combines market equilibrium with agent views via confidence-weighted P/Q matrices, PositionSizer offers vol_target/fractional_kelly/risk_budget methods, and portfolio_state table persists positions with strategy attribution
+**Plans**: TBD
 
 Plans:
-- [ ] 10-01-PLAN.md — RegimeDetectionModel, CorrelationAnalysis, RiskSentimentIndex, CrossAssetAgent orchestration (runs last in registry), and cross-asset tests
-- [ ] 10-02-PLAN.md — BacktestEngine with BacktestConfig, Portfolio class (positions, equity curve, trade log), rebalance with costs/slippage, PIT enforcement, Alembic migration for strategy_signals and backtest_results
-- [ ] 10-03-PLAN.md — BacktestResult metrics computation (Sharpe, Sortino, Calmar, max DD, win rate, profit factor), formatted report generation, equity curve chart, persistence to backtest_results, and backtesting tests
+- [ ] 17-01: SignalAggregator v2 (3 methods, crowding penalty, staleness discount), SignalMonitor (flips, surges, divergence, daily summary)
+- [ ] 17-02: Monte Carlo VaR (t-Student, Gaussian copula, Cholesky), parametric VaR (Ledoit-Wolf), marginal/component VaR decomposition, expanded stress scenarios, reverse stress, historical replay
+- [ ] 17-03: RiskLimitsManager v2 (daily/weekly loss, risk budget), risk API routes (/var, /stress, /limits, /dashboard)
+- [ ] 17-04: Black-Litterman model, mean-variance optimization, PositionSizer (vol_target, Kelly, risk_budget), portfolio_state table migration, portfolio API routes
 
-### Phase 11: Trading Strategies
-**Goal**: BaseStrategy abstraction and 8 initial trading strategies spanning rates, inflation, FX, cupom cambial, and sovereign risk — each consuming agent signals and producing tradeable positions
-**Depends on**: Phase 10
-**Requirements**: STRAT-01, STRAT-02, STRAT-03, STRAT-04, STRAT-05, STRAT-06, STRAT-07, STRAT-08, STRAT-09
+### Phase 18: Dagster Orchestration, Monitoring & Reporting
+**Goal**: Production-grade orchestration with Dagster replacing the custom pipeline, Grafana monitoring dashboards with alerting, and automated daily report generation -- making the system observable and operationally reliable
+**Depends on**: Phase 17 (risk engine, portfolio optimization, and signal aggregation all functional -- the pipeline needs all components to orchestrate)
+**Requirements**: ORCH-01, ORCH-02, ORCH-03, ORCH-04, MNTR-01, MNTR-02, MNTR-03, MNTR-04, REPT-01, REPT-02, REPT-03
 **Success Criteria** (what must be TRUE):
-  1. BaseStrategy ABC enforces StrategyConfig (id, asset class, instruments, rebalance frequency, leverage/position limits, stop/take-profit) and generate_signals(as_of_date) → list[StrategyPosition]
-  2. RATES_BR_01 Carry & Roll-Down computes carry-to-risk at each DI curve tenor and goes long at optimal point when ratio exceeds threshold
-  3. RATES_BR_02 Taylor Rule Misalignment trades DI direction when gap between Taylor-implied rate and market pricing exceeds 100bps
-  4. FX_BR_01 Carry & Fundamental composites carry-to-risk (40%), BEER misalignment (35%), and flow score (25%) with regime adjustment from CrossAssetAgent
-  5. All 8 strategies produce valid StrategyPosition outputs with weight in [-1,1], confidence in [0,1], and respect their configured position limits
-  6. ALL_STRATEGIES dict exports all 8 strategies by ID for backtesting and pipeline integration
-**Plans**: 3 plans
+  1. Dagster asset definitions cover the full pipeline: Bronze layer (6 connectors with cron schedules), Silver transforms, 5 Agents (with dependency chain), Signals, Portfolio Targets, Risk Metrics, and Daily Report -- all visible in dagster-webserver UI at port 3001
+  2. User can run `make dagster` to start dagster-webserver and `make dagster-run-all` to materialize all assets in dependency order
+  3. Grafana runs at port 3002 with TimescaleDB datasource and 4 provisioned dashboards (pipeline health, signal overview, risk dashboard, portfolio performance) loading automatically on first start
+  4. AlertManager evaluates 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale) and sends notifications via Slack and email
+  5. DailyReportGenerator produces reports with 7 sections (Market Snapshot, Regime, Agent Views, Signals, Portfolio, Risk, Actions) in markdown and HTML formats, accessible via GET /api/v1/reports/daily/latest and sendable via POST /reports/daily/send
+**Plans**: TBD
 
 Plans:
-- [ ] 11-01-PLAN.md — BaseStrategy ABC with StrategyConfig and StrategyPosition dataclasses, signals_to_positions with constraint enforcement, and RATES_BR_01 Carry & Roll-Down + RATES_BR_02 Taylor Misalignment strategies with tests
-- [ ] 11-02-PLAN.md — RATES_BR_03 Curve Slope (flattener/steepener), RATES_BR_04 US Rates Spillover (spread mean reversion), INF_BR_01 Breakeven Inflation Trade, and strategy tests
-- [ ] 11-03-PLAN.md — FX_BR_01 Carry & Fundamental, CUPOM_01 CIP Basis Mean Reversion, SOV_BR_01 Fiscal Risk Premium, ALL_STRATEGIES registry, and strategy tests
+- [ ] 18-01: Dagster asset definitions (Bronze, Silver, Agents), Dagster definitions module, Docker Compose service, Makefile targets
+- [ ] 18-02: Dagster assets for Signals, Portfolio, Risk, Report with full dependency graph
+- [ ] 18-03: Grafana Docker Compose service, datasource provisioning, 4 dashboard JSONs
+- [ ] 18-04: AlertManager (10 rules, Slack + email), monitoring API routes, DailyReportGenerator (7 sections, markdown/HTML/email/Slack), report API routes
 
-### Phase 12: Portfolio Construction & Risk Management
-**Goal**: Signal aggregation across agents and strategies, portfolio construction with risk-budget scaling, and a complete risk management engine with VaR, stress testing, limits, and circuit breakers
-**Depends on**: Phase 11
-**Requirements**: PORT-01, PORT-02, PORT-03, PORT-04, RISK-01, RISK-02, RISK-03, RISK-04, RISK-05, RISK-06, RISK-07, RISK-08, TESTV2-04
+### Phase 19: Dashboard v2, API Expansion, Testing & Verification
+**Goal**: A React multi-page dashboard replacing the single-page HTML dashboard, expanded API with backtest/strategy/WebSocket endpoints, and comprehensive integration tests validating all v3.0 components end-to-end
+**Depends on**: Phase 18 (all v3.0 components operational -- dashboard needs data from all subsystems, tests validate the complete system)
+**Requirements**: DSHV-01, DSHV-02, DSHV-03, DSHV-04, DSHV-05, DSHV-06, APIV-01, APIV-02, APIV-03, APIV-04, TSTV-01, TSTV-02, TSTV-03, TSTV-04
 **Success Criteria** (what must be TRUE):
-  1. SignalAggregator combines agent signals into directional consensus per asset class and detects conflicting signals (e.g., inflation hawkish but monetary dovish)
-  2. PortfolioConstructor converts strategy positions to net portfolio weights with risk-budget scaling and regime adjustment (RISK_OFF → reduce 50%)
-  3. CapitalAllocator enforces portfolio constraints: max 3x leverage, max 25% single position, max 50% asset class concentration
-  4. VaRCalculator computes historical VaR (95% and 99%) and Expected Shortfall from portfolio returns
-  5. StressTester runs 4+ historical scenarios (Taper Tantrum 2013, BR Crisis 2015, COVID 2020, Rate Shock 2022) and reports portfolio P&L impact
-  6. DrawdownManager implements 3-level circuit breakers: L1 (-3%) reduce 25%, L2 (-5%) reduce 50%, L3 (-8%) close all
-  7. RiskMonitor generates aggregate report: VaR, stress tests, limit utilization, circuit breaker status
-**Plans**: 3 plans
+  1. React dashboard with sidebar navigation serves 5 pages: Strategies (table with expandable backtest metrics), Signals (heatmap + flip timeline), Risk (VaR gauges, stress chart, limits, concentration pie), Portfolio (positions, equity curve, monthly heatmap, attribution), Agents (cards with signal/confidence/drivers + Cross-Asset narrative)
+  2. Backtest API supports POST /backtest/run (trigger backtest), GET /backtest/results (retrieve results), POST /backtest/portfolio (portfolio backtest), GET /backtest/comparison (compare strategies)
+  3. Strategy API serves GET /strategies/{id} (detail), GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params (update parameters), and WebSocket channels push real-time updates for signals, portfolio, and alerts
+  4. Full pipeline integration test runs DB -> transforms -> agents -> strategies -> signals -> portfolio -> risk -> report without error, and all API endpoints (v1 + v2 + v3) return 200 OK
+  5. CI/CD pipeline updated with lint, unit tests, and integration tests (with service containers), and verification script (scripts/verify_phase2.py) validates all v3.0 components with a formatted pass/fail report
+**Plans**: TBD
 
 Plans:
-- [ ] 12-01-PLAN.md — SignalAggregator (directional consensus, conflict detection), PortfolioConstructor (risk-budget scaling, regime adjustment), CapitalAllocator (constraint enforcement, rebalance threshold)
-- [ ] 12-02-PLAN.md — VaRCalculator (historical + parametric), Expected Shortfall, StressTester (4+ scenarios with position-level P&L), stress scenario definitions
-- [ ] 12-03-PLAN.md — RiskLimitChecker (9 configurable limits), pre-trade checking, DrawdownManager (3-level circuit breakers), RiskMonitor (aggregate report), and risk management tests
-
-### Phase 13: Pipeline, LLM, Dashboard, API & Tests
-**Goal**: A complete daily orchestration pipeline from data ingestion to risk report, LLM-powered narrative generation, a self-contained HTML dashboard, extended API endpoints, and comprehensive tests validating the entire v2.0 system
-**Depends on**: Phase 12
-**Requirements**: PIPE-01, PIPE-02, PIPE-03, LLM-01, LLM-02, LLM-03, LLM-04, DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, APIV2-01, APIV2-02, APIV2-03, APIV2-04, APIV2-05, APIV2-06, APIV2-07, APIV2-08, APIV2-09, TESTV2-05, TESTV2-06, TESTV2-07
-**Success Criteria** (what must be TRUE):
-  1. Daily pipeline (scripts/daily_run.py) executes 8 steps in sequence: ingest → quality → agents → aggregate → strategies → portfolio → risk → report, with --date and --dry-run CLI options
-  2. NarrativeGenerator uses Claude API (Anthropic SDK) to produce a daily macro brief from agent signals and features, with template-based fallback when API key is unavailable
-  3. HTML dashboard served at GET /dashboard shows 4 tabs: Macro Dashboard (key indicators), Agent Signals (5 agent cards with consensus), Portfolio (positions, VaR, leverage), Backtests (strategy results table, equity curve chart)
-  4. 9 new API endpoints serve agent reports, signals, strategies, portfolio positions, risk metrics, and daily brief — all returning 200 OK
-  5. Integration test runs full pipeline (agents → strategies → portfolio → risk) for a known date without error
-  6. All API endpoints (v1 + v2) return 200 OK via FastAPI TestClient
-  7. Verification script updated to validate Phase 0 + Phase 1 components end-to-end
-**Plans**: 4 plans
-
-Plans:
-- [ ] 13-01-PLAN.md — Daily pipeline script (8-step orchestration with CLI), formatted summary output, Makefile targets (daily, daily-dry)
-- [ ] 13-02-PLAN.md — NarrativeGenerator (Claude API + template fallback), ANTHROPIC_API_KEY config, agent narrative integration, daily-brief endpoint
-- [ ] 13-03-PLAN.md — HTML dashboard (React + Tailwind + Recharts via CDN, 4 tabs, auto-refresh, dark theme), FastAPI static serving at /dashboard
-- [ ] 13-04-PLAN.md — 9 new API endpoints (agents, signals, strategies, portfolio, risk), integration tests (pipeline + API), verification script update, Makefile targets
+- [ ] 19-01: React dashboard App.tsx with Router, Tailwind CSS, recharts, sidebar navigation
+- [ ] 19-02: StrategiesPage, SignalsPage, RiskPage, PortfolioPage, AgentsPage components
+- [ ] 19-03: Backtest API routes, strategy detail API routes, WebSocket ConnectionManager (3 channels), updated main.py with all routers and Swagger tags
+- [ ] 19-04: Integration tests (full pipeline E2E, all API endpoints), CI/CD update, verification script
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13
+Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19
 
 ### v1.0 Data Infrastructure
 
@@ -185,9 +175,20 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 7. Agent Framework | 2/2 | Complete | 2026-02-20 |
-| 8. Inflation & Monetary Agents | 3/3 | Complete    | 2026-02-21 |
-| 9. Fiscal & FX Agents | 2/2 | Complete    | 2026-02-21 |
-| 10. Cross-Asset & Backtesting | 3/3 | Complete    | 2026-02-21 |
-| 11. Trading Strategies | 3/3 | Complete    | 2026-02-21 |
-| 12. Portfolio & Risk | 3/3 | Complete    | 2026-02-22 |
-| 13. Pipeline, LLM, Dashboard, API & Tests | 4/4 | Complete    | 2026-02-22 |
+| 8. Inflation & Monetary Agents | 3/3 | Complete | 2026-02-21 |
+| 9. Fiscal & FX Agents | 2/2 | Complete | 2026-02-21 |
+| 10. Cross-Asset & Backtesting | 3/3 | Complete | 2026-02-21 |
+| 11. Trading Strategies | 3/3 | Complete | 2026-02-21 |
+| 12. Portfolio & Risk | 3/3 | Complete | 2026-02-22 |
+| 13. Pipeline, LLM, Dashboard, API & Tests | 4/4 | Complete | 2026-02-22 |
+
+### v3.0 Strategy Engine, Risk & Portfolio Management
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
+| 15. New Trading Strategies | 0/4 | Not started | - |
+| 16. Cross-Asset Agent v2 & NLP Pipeline | 0/3 | Not started | - |
+| 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
+| 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
+| 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |

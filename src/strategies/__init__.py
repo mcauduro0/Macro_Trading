@@ -4,6 +4,8 @@ Re-exports the core strategy infrastructure and all 8 concrete strategies:
 - BaseStrategy: Abstract base class for all trading strategies
 - StrategyConfig: Immutable strategy configuration dataclass
 - StrategyPosition: Target position output dataclass
+- StrategySignal: Rich signal dataclass with z_score, entry/stop/take-profit (v3.0)
+- StrategyRegistry: Decorator-based strategy registration (v3.0)
 - RatesBR01CarryStrategy: BR DI Carry & Roll-Down strategy
 - RatesBR02TaylorStrategy: BR Taylor Rule Misalignment strategy
 - RatesBR03SlopeStrategy: BR DI Curve Slope (Flattener/Steepener) strategy
@@ -15,9 +17,18 @@ Re-exports the core strategy infrastructure and all 8 concrete strategies:
 
 ALL_STRATEGIES: dict mapping strategy_id to strategy class for programmatic
 discovery by the backtesting engine (Phase 10) and daily pipeline (Phase 13).
+
+StrategyRegistry: Class-level registry that provides the same mapping plus
+decorator-based registration, asset-class filtering, and instantiation helpers.
+Both ALL_STRATEGIES and StrategyRegistry are populated at import time.
 """
 
-from src.strategies.base import BaseStrategy, StrategyConfig, StrategyPosition
+from src.strategies.base import (
+    BaseStrategy,
+    StrategyConfig,
+    StrategyPosition,
+    StrategySignal,
+)
 from src.strategies.cupom_01_cip_basis import Cupom01CipBasisStrategy
 from src.strategies.fx_br_01_carry_fundamental import FxBR01CarryFundamentalStrategy
 from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
@@ -25,6 +36,7 @@ from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
 from src.strategies.rates_br_02_taylor import RatesBR02TaylorStrategy
 from src.strategies.rates_br_03_slope import RatesBR03SlopeStrategy
 from src.strategies.rates_br_04_spillover import RatesBR04SpilloverStrategy
+from src.strategies.registry import StrategyRegistry
 from src.strategies.sov_br_01_fiscal_risk import SovBR01FiscalRiskStrategy
 
 # ---------------------------------------------------------------------------
@@ -41,6 +53,40 @@ ALL_STRATEGIES: dict[str, type[BaseStrategy]] = {
     "SOV_BR_01": SovBR01FiscalRiskStrategy,
 }
 
+# ---------------------------------------------------------------------------
+# Auto-register existing 8 strategies in StrategyRegistry (v3.0)
+# ---------------------------------------------------------------------------
+# This bridges the legacy ALL_STRATEGIES dict with the new StrategyRegistry
+# so both access patterns work.  New strategies (Phase 15+) should use the
+# @StrategyRegistry.register decorator directly.
+for _sid, _cls in ALL_STRATEGIES.items():
+    StrategyRegistry._strategies[_sid] = _cls
+    # Extract asset_class and instruments from the strategy's default config
+    # Each strategy module defines a module-level config constant
+    _asset_class = None
+    _instruments: list[str] = []
+    try:
+        # Convention: each strategy class has a module-level *_CONFIG constant
+        # but we can also check if they have a default config attribute.
+        # Safest: instantiation without data_loader may fail, so inspect module.
+        import importlib
+        _mod = importlib.import_module(_cls.__module__)
+        for _attr_name in dir(_mod):
+            _attr = getattr(_mod, _attr_name)
+            if isinstance(_attr, StrategyConfig) and _attr.strategy_id == _sid:
+                _asset_class = _attr.asset_class
+                _instruments = list(_attr.instruments)
+                break
+    except Exception:
+        pass
+    StrategyRegistry._metadata[_sid] = {
+        "asset_class": _asset_class,
+        "instruments": _instruments,
+    }
+
+# Clean up loop variables from module namespace
+del _sid, _cls, _asset_class, _instruments
+
 __all__ = [
     "ALL_STRATEGIES",
     "BaseStrategy",
@@ -54,4 +100,6 @@ __all__ = [
     "SovBR01FiscalRiskStrategy",
     "StrategyConfig",
     "StrategyPosition",
+    "StrategyRegistry",
+    "StrategySignal",
 ]
