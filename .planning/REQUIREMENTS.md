@@ -37,37 +37,37 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### FX Strategies
 
-- [ ] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
-- [ ] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
-- [ ] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
-- [ ] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
+- [x] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
+- [x] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
+- [x] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
+- [x] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
 
 ### Rates Strategies
 
-- [ ] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
-- [ ] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
-- [ ] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
-- [ ] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
+- [x] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
+- [x] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
+- [x] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
+- [x] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
 
 ### Inflation Strategies
 
-- [ ] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
-- [ ] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
+- [x] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
+- [x] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
 
 ### Cupom Cambial Strategies
 
-- [ ] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
+- [x] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
 
 ### Sovereign Credit Strategies
 
-- [ ] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
-- [ ] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
-- [ ] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
+- [x] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
+- [x] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
+- [x] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
 
 ### Cross-Asset Strategies
 
-- [ ] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
-- [ ] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
+- [x] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
+- [x] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
 
 ### Cross-Asset Agent v2
 
@@ -179,22 +179,22 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | BTST-04 | Phase 14 | Complete |
 | BTST-05 | Phase 14 | Complete |
 | BTST-06 | Phase 14 | Complete |
-| FXST-01 | Phase 15 | Pending |
-| FXST-02 | Phase 15 | Pending |
-| FXST-03 | Phase 15 | Pending |
-| FXST-04 | Phase 15 | Pending |
-| RTST-01 | Phase 15 | Pending |
-| RTST-02 | Phase 15 | Pending |
-| RTST-03 | Phase 15 | Pending |
-| RTST-04 | Phase 15 | Pending |
-| INST-01 | Phase 15 | Pending |
-| INST-02 | Phase 15 | Pending |
-| CPST-01 | Phase 15 | Pending |
-| SVST-01 | Phase 15 | Pending |
-| SVST-02 | Phase 15 | Pending |
-| SVST-03 | Phase 15 | Pending |
-| CAST-01 | Phase 15 | Pending |
-| CAST-02 | Phase 15 | Pending |
+| FXST-01 | Phase 15 | Complete |
+| FXST-02 | Phase 15 | Complete |
+| FXST-03 | Phase 15 | Complete |
+| FXST-04 | Phase 15 | Complete |
+| RTST-01 | Phase 15 | Complete |
+| RTST-02 | Phase 15 | Complete |
+| RTST-03 | Phase 15 | Complete |
+| RTST-04 | Phase 15 | Complete |
+| INST-01 | Phase 15 | Complete |
+| INST-02 | Phase 15 | Complete |
+| CPST-01 | Phase 15 | Complete |
+| SVST-01 | Phase 15 | Complete |
+| SVST-02 | Phase 15 | Complete |
+| SVST-03 | Phase 15 | Complete |
+| CAST-01 | Phase 15 | Complete |
+| CAST-02 | Phase 15 | Complete |
 | CRSV-01 | Phase 16 | Pending |
 | CRSV-02 | Phase 16 | Pending |
 | CRSV-03 | Phase 16 | Pending |

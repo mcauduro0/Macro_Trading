@@ -23,6 +23,8 @@ from src.backtesting.portfolio import Portfolio
 from src.backtesting.metrics import BacktestResult, compute_metrics
 from src.backtesting.costs import TransactionCostModel
 from src.agents.data_loader import PointInTimeDataLoader
+from src.strategies.base import StrategySignal, StrategyPosition
+from src.core.enums import SignalDirection
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +54,23 @@ class BacktestConfig:
 
 
 class StrategyProtocol(Protocol):
-    """Protocol that all strategies must satisfy for BacktestEngine."""
+    """Protocol that all strategies must satisfy for BacktestEngine.
+
+    The canonical return type of ``generate_signals`` is ``dict[str, float]``,
+    but BacktestEngine also accepts ``list[StrategyPosition]`` (v2 strategies)
+    and ``list[StrategySignal]`` (v3 strategies) via its internal
+    ``_adapt_signals_to_weights`` adapter.  The Protocol signature is kept as
+    ``dict[str, float]`` for backward compatibility.
+    """
     strategy_id: str
 
     def generate_signals(self, as_of_date: date) -> dict[str, float]:
         """Return {ticker: target_weight} for the given as_of_date.
 
         Only data with release_time <= as_of_date may be accessed.
+
+        v3 note: Strategies may also return ``list[StrategySignal]`` or
+        ``list[StrategyPosition]``; BacktestEngine converts them internally.
         """
         ...
 
@@ -107,7 +119,13 @@ class BacktestEngine:
             try:
                 # PIT: strategy sees only data with release_time <= as_of_date
                 # (enforced inside strategy.generate_signals via PointInTimeDataLoader)
-                target_weights = strategy.generate_signals(as_of_date)
+                raw_signals = strategy.generate_signals(as_of_date)
+                target_weights = self._adapt_signals_to_weights(raw_signals)
+
+                if not target_weights:
+                    # No signal for this date -- record equity and continue
+                    portfolio.equity_curve.append((as_of_date, portfolio.total_equity))
+                    continue
 
                 # Get current prices (PIT enforced by loader)
                 prices = self._get_prices(as_of_date, list(target_weights.keys()))
@@ -138,6 +156,57 @@ class BacktestEngine:
         )
 
         return compute_metrics(portfolio, self.config, strategy.strategy_id)
+
+    def _adapt_signals_to_weights(self, raw: Any) -> dict[str, float]:
+        """Convert strategy output to ``{ticker: target_weight}`` dict.
+
+        Handles three return types from ``generate_signals()``:
+
+        1. ``dict[str, float]``: Returned as-is (existing StrategyProtocol).
+        2. ``list[StrategyPosition]``: Extracts ``{pos.instrument: pos.weight}``.
+        3. ``list[StrategySignal]``: Extracts signed size per instrument.
+           LONG -> +suggested_size, SHORT -> -suggested_size, NEUTRAL -> 0.0.
+           Multiple signals targeting the same instrument are summed.
+        4. ``None`` or empty list: Returns ``{}``.
+
+        Args:
+            raw: Return value of ``strategy.generate_signals()``.
+
+        Returns:
+            Target weights dict suitable for ``Portfolio.rebalance()``.
+        """
+        if raw is None:
+            return {}
+
+        if isinstance(raw, dict):
+            return raw
+
+        if isinstance(raw, list):
+            if len(raw) == 0:
+                return {}
+
+            first = raw[0]
+
+            # list[StrategySignal] detection: has .instruments and .suggested_size
+            if hasattr(first, "instruments") and hasattr(first, "suggested_size"):
+                weights: dict[str, float] = {}
+                for signal in raw:
+                    size = signal.suggested_size
+                    if signal.direction == SignalDirection.SHORT:
+                        size = -size
+                    elif signal.direction == SignalDirection.NEUTRAL:
+                        size = 0.0
+                    for instrument in signal.instruments:
+                        weights[instrument] = weights.get(instrument, 0.0) + size
+                return weights
+
+            # list[StrategyPosition] detection: has .instrument and .weight
+            if hasattr(first, "instrument") and hasattr(first, "weight"):
+                return {pos.instrument: pos.weight for pos in raw}
+
+        # Fallback: attempt to use as-is (will fail at .keys() if invalid,
+        # caught by the outer try/except in run())
+        return raw
 
     def _get_rebalance_dates(self) -> list[date]:
         """Generate rebalance dates based on config.rebalance_frequency."""

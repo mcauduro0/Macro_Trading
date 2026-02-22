@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 15: New Trading Strategies (v3.0)
+**Current focus:** Phase 16: Cross-Asset Agent v2 & NLP Pipeline (v3.0)
 
 ## Current Position
 
-Phase: 14 of 19 (Backtesting Engine v2 & Strategy Framework) -- COMPLETE
-Plan: 3 of 3 in current phase (ALL COMPLETE)
-Status: Phase 14 complete, ready for Phase 15
-Last activity: 2026-02-22 — Completed 14-03-PLAN.md (Analytics & Tearsheet)
+Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
+Plan: 0 of 3 complete in current phase
+Status: Ready for Phase 16 planning
+Last activity: 2026-02-22 — Phase 15 verified and approved (5/5 criteria, 16/16 requirements, 371 tests passing)
 
-Progress: [######################........] 74% (14/19 phases complete)
+Progress: [########################......] 79% (15/19 phases complete)
 
 ## Performance Metrics
 
@@ -37,6 +37,11 @@ Progress: [######################........] 74% (14/19 phases complete)
 | Phase 14 P01 | 7min | 3 tasks | 11 files |
 | Phase 14 P02 | 6min | 2 tasks | 4 files |
 | Phase 14 P03 | 7min | 2 tasks | 3 files |
+| Phase 15 P01 | 9min | 2 tasks | 6 files |
+| Phase 15 P02 | 14min | 2 tasks | 6 files |
+| Phase 15 P03 | 7min | 2 tasks | 4 files |
+| Phase 15 P04 | 14min | 2 tasks | 7 files |
+| Phase 15 P05 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -59,6 +64,26 @@ Recent decisions affecting current work:
 - [14-03]: deflated_sharpe uses Euler-Mascheroni approximation for expected max SR from i.i.d. trials
 - [14-03]: generate_tearsheet uses 63-day rolling window for quarterly rolling Sharpe
 - [14-03]: All analytics functions use ddof=0 for std to handle small samples gracefully
+- [15-01]: FX-02 vol-adjusted sizing: min(1.0, target_vol/realized_vol) * base_size
+- [15-01]: FX-03 contrarian threshold at |z|>2.0 inverts signal direction for extreme positioning
+- [15-01]: FX-04 implied vol proxy from mean absolute deviation when no direct IV series
+- [15-01]: FX-05 commodity weights: soy 30%, iron 25%, oil 20%, sugar 15%, coffee 10%
+- [15-01]: Updated __init__.py to import new strategies for automatic StrategyRegistry population
+- [15-03]: INF-02 uses IPCA-15 as primary model forecast with seasonal average fallback
+- [15-03]: INF-03 composite z-score: average of 3 z-scores vs BCB target, IPCA 12M, Focus
+- [15-03]: CUPOM-02 uses DI - UST as CIP basis proxy for onshore-offshore spread
+- [15-02]: RATES-03 uses 2Y as primary signal with 5Y confirmation boost
+- [15-02]: RATES-05/06 use hardcoded FOMC/COPOM date lists for event window detection
+- [15-02]: BCB reaction function: IPCA vs 4.5%/3.0% bands -> hike/cut/neutral at 25bps
+- [15-02]: Taylor Rule: r_star=2.5 + CPI + 0.5*(CPI-2.0) + 0.5*output_gap_proxy
+- [15-02]: Market pricing only for expectation baselines (DI1 for COPOM, UST for FOMC)
+- [15-04]: SOV-02 OLS via Gaussian elimination (no numpy) for 6-variable cross-section across 10 EM peers
+- [15-04]: CROSS-01 rule-based regime (Goldilocks/Reflation/Stagflation/Deflation); Phase 16 adds HMM
+- [15-04]: CROSS-02 uses only market indicators (VIX, CDS, vol, corr, funding, momentum) -- no flow/positioning
+- [15-04]: Regime modulates sizing (0.5x multiplier), never hard-suppresses (locked decision)
+- [15-05]: Duck-typing detection (hasattr) for signal adapter instead of strict isinstance
+- [15-05]: Multiple signals targeting same instrument have weights summed, not overwritten
+- [15-05]: Portfolio-level trade count uses individual strategy aggregation
 
 ### Pending Todos
 
@@ -74,6 +99,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 14-03-PLAN.md (Phase 14 COMPLETE)
-Resume file: .planning/phases/
-Resume action: Start Phase 15 planning/execution
+Stopped at: Phase 15 approved — all 5 success criteria verified, 371 tests passing, 16/16 requirements satisfied
+Resume file: .planning/phases/16-crossasset-nlp/
+Resume action: Begin Phase 16 planning (/gsd:plan-phase or /gsd:discuss-phase)
