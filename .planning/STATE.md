@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
-Plan: 0 of 3 complete in current phase
-Status: Ready for Phase 16 planning
-Last activity: 2026-02-22 — Phase 15 verified and approved (5/5 criteria, 16/16 requirements, 371 tests passing)
+Plan: 3 of 3 complete in current phase
+Status: Phase 16 complete -- ready for Phase 17
+Last activity: 2026-02-22 — Completed 16-03 (Sentiment Scoring Pipeline)
 
-Progress: [########################......] 79% (15/19 phases complete)
+Progress: [##########################....] 84% (16/19 phases complete)
 
 ## Performance Metrics
 
@@ -42,6 +42,9 @@ Progress: [########################......] 79% (15/19 phases complete)
 | Phase 15 P03 | 7min | 2 tasks | 4 files |
 | Phase 15 P04 | 14min | 2 tasks | 7 files |
 | Phase 15 P05 | 4min | 2 tasks | 2 files |
+| Phase 16 P01 | 10min | 2 tasks | 9 files |
+| Phase 16 P02 | 8min | 2 tasks | 9 files |
+| Phase 16 P03 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -84,6 +87,18 @@ Recent decisions affecting current work:
 - [15-05]: Duck-typing detection (hasattr) for signal adapter instead of strict isinstance
 - [15-05]: Multiple signals targeting same instrument have weights summed, not overwritten
 - [15-05]: Portfolio-level trade count uses individual strategy aggregation
+- [16-01]: HMM features mapped from CrossAssetFeatureEngine z-scores to 6-column DataFrame
+- [16-01]: Rule-based fallback assigns 0.7 to classified regime, 0.1 to each other
+- [16-01]: Tail risk composite = 30% VIX_z + 30% credit_z + 40% regime_transition_prob
+- [16-01]: CrossAssetView narrative generated inline (template) in agent, LLM path in NarrativeGenerator
+- [16-02]: ScrapedDocument dataclass shared between COPOM and FOMC scrapers for uniform output
+- [16-02]: HTML extraction via stdlib html.parser (no BeautifulSoup dependency)
+- [16-02]: Cache files named {source}_{doc_type}_{YYYY-MM-DD}.json for deterministic lookup
+- [16-02]: Sync httpx.Client (not async) for scraper simplicity -- async not needed for batch scraping
+- [16-03]: Dictionary-based scoring as primary method with 0.7 dict + 0.3 LLM blend when API key available
+- [16-03]: Change score thresholds: |delta| > 0.3 = major shift, > 0.1 = minor shift, else neutral
+- [16-03]: NLPProcessor batch processing sorts by date ascending for sequential change detection
+- [16-03]: Term weights in [0.0, 1.0] range with higher values for stronger hawk/dove signals
 
 ### Pending Todos
 
@@ -99,6 +114,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 15 approved — all 5 success criteria verified, 371 tests passing, 16/16 requirements satisfied
-Resume file: .planning/phases/16-crossasset-nlp/
-Resume action: Begin Phase 16 planning (/gsd:plan-phase or /gsd:discuss-phase)
+Stopped at: Completed 16-03-PLAN.md (Sentiment Scoring Pipeline) -- Phase 16 complete
+Resume file: .planning/phases/
+Resume action: Begin Phase 17 planning/execution

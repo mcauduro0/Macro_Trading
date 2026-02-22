@@ -71,18 +71,18 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Cross-Asset Agent v2
 
-- [ ] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
-- [ ] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
-- [ ] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
-- [ ] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
+- [x] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
+- [x] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
+- [x] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
+- [x] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
 
 ### NLP Pipeline
 
-- [ ] **NLP-01**: COPOMScraper — scrape COPOM atas and comunicados from bcb.gov.br (2010-present)
-- [ ] **NLP-02**: FOMCScraper — scrape FOMC statements and minutes from federalreserve.gov (2010-present)
-- [ ] **NLP-03**: CentralBankSentimentAnalyzer — hawk/dove scoring [-1,+1] via term dictionary (PT+EN), optional LLM scoring, change_score vs previous document
-- [ ] **NLP-04**: NLPProcessor pipeline: clean → score → extract key phrases → compare vs previous → persist
-- [ ] **NLP-05**: nlp_documents table (document_type, institution, date, hawk_dove_score, change_score, key_phrases JSON) with Alembic migration
+- [x] **NLP-01**: COPOMScraper — scrape COPOM atas and comunicados from bcb.gov.br (2010-present)
+- [x] **NLP-02**: FOMCScraper — scrape FOMC statements and minutes from federalreserve.gov (2010-present)
+- [x] **NLP-03**: CentralBankSentimentAnalyzer — hawk/dove scoring [-1,+1] via term dictionary (PT+EN), optional LLM scoring, change_score vs previous document
+- [x] **NLP-04**: NLPProcessor pipeline: clean → score → extract key phrases → compare vs previous → persist
+- [x] **NLP-05**: nlp_documents table (document_type, institution, date, hawk_dove_score, change_score, key_phrases JSON) with Alembic migration
 
 ### Signal Aggregation v2
 
@@ -195,15 +195,15 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | SVST-03 | Phase 15 | Complete |
 | CAST-01 | Phase 15 | Complete |
 | CAST-02 | Phase 15 | Complete |
-| CRSV-01 | Phase 16 | Pending |
-| CRSV-02 | Phase 16 | Pending |
-| CRSV-03 | Phase 16 | Pending |
-| CRSV-04 | Phase 16 | Pending |
-| NLP-01 | Phase 16 | Pending |
-| NLP-02 | Phase 16 | Pending |
-| NLP-03 | Phase 16 | Pending |
-| NLP-04 | Phase 16 | Pending |
-| NLP-05 | Phase 16 | Pending |
+| CRSV-01 | Phase 16 | Complete |
+| CRSV-02 | Phase 16 | Complete |
+| CRSV-03 | Phase 16 | Complete |
+| CRSV-04 | Phase 16 | Complete |
+| NLP-01 | Phase 16 | Complete |
+| NLP-02 | Phase 16 | Complete |
+| NLP-03 | Phase 16 | Complete |
+| NLP-04 | Phase 16 | Complete |
+| NLP-05 | Phase 16 | Complete |
 | SAGG-01 | Phase 17 | Pending |
 | SAGG-02 | Phase 17 | Pending |
 | SAGG-03 | Phase 17 | Pending |
