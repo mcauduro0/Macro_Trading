@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization (v3.0)
+**Current focus:** Phase 18: Dagster Orchestration, Monitoring & Reporting (v3.0)
 
 ## Current Position
 
-Phase: 17 of 19 (Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization)
+Phase: 18 of 19 (Dagster Orchestration, Monitoring & Reporting)
 Plan: 4 of 4 complete in current phase
-Status: Phase 17 Complete
-Last activity: 2026-02-23 — Completed 17-04 (Portfolio Optimization)
+Status: Phase 18 COMPLETE — ready for Phase 19
+Last activity: 2026-02-23 — Completed all 4 plans (18-01 through 18-04)
 
-Progress: [############################..] 89% (17/19 phases complete)
+Progress: [#############################.] 95% (18/19 phases complete)
 
 ## Performance Metrics
 
@@ -49,6 +49,10 @@ Progress: [############################..] 89% (17/19 phases complete)
 | Phase 17 P02 | 6min | 2 tasks | 5 files |
 | Phase 17 P03 | 6min | 2 tasks | 5 files |
 | Phase 17 P04 | 7min | 2 tasks | 9 files |
+| Phase 18 P01 | 7min | 2 tasks | 8 files |
+| Phase 18 P03 | 5min | 2 tasks | 7 files |
+| Phase 18 P02 | 5min | 2 tasks | 5 files |
+| Phase 18 P04 | 8min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -120,6 +124,21 @@ Recent decisions affecting current work:
 - [17-04]: Rebalance dual-threshold: signal_change > 0.15 OR max position drift > 0.05
 - [17-04]: portfolio_state hypertable compressed after 30 days with instrument segmentby
 - [17-04]: Portfolio API endpoints use sample data for demo; live integration deferred
+- [18-01]: Removed from __future__ import annotations from Dagster asset modules -- incompatible with Dagster runtime type introspection
+- [18-01]: Silver assets use ImportError fallback for transform modules -- graceful degradation
+- [18-01]: Agent assets use _ensure_agents_registered() lazy pattern to avoid circular imports
+- [18-01]: Docker dagster profile keeps dagster-webserver opt-in, not started by default
+- [18-03]: Grafana under 'monitoring' Docker profile so it does not start with default docker compose up
+- [18-03]: Datasource UID 'timescaledb' referenced directly in all dashboard panels for consistent provisioning
+- [18-03]: All 4 dashboards auto-refresh every 15 minutes per user decision
+- [18-03]: Pipeline health as default home dashboard via GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+- [18-02]: All downstream assets use same RetryPolicy and DailyPartitionsDefinition as upstream layers
+- [18-02]: Bronze-only ingest job enables selective data refresh without full pipeline run
+- [18-04]: All alerts dispatch to both Slack and email per user decision
+- [18-04]: 30-minute cooldown per alert type prevents notification flooding
+- [18-04]: DailyReportGenerator uses sample data when no pipeline context for standalone demos
+- [18-04]: HTML report uses inline CSS for email compatibility
+- [18-04]: Slack gets condensed summary with link to full report, not inline
 
 ### Pending Todos
 
@@ -127,14 +146,14 @@ None yet.
 
 ### Blockers/Concerns
 
-- Dagster requires dagster>=1.6 + dagster-webserver -- new dependency
-- Grafana requires Docker container addition to docker-compose.yml
+- Dagster requires dagster>=1.6 + dagster-webserver -- new dependency (RESOLVED in 18-01)
+- Grafana Docker container added to docker-compose.yml (RESOLVED in 18-03)
 - React dashboard may need Node.js 18+ for build tooling (or continue CDN approach)
 - Anthropic API key needed for LLM narrative generation (fallback templates available)
 
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 17-04-PLAN.md (Portfolio Optimization)
-Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-04-SUMMARY.md
-Resume action: Execute Phase 18
+Stopped at: Completed Phase 18 (all 4 plans)
+Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-04-SUMMARY.md
+Resume action: Plan and execute Phase 19 (Dashboard v2, API Expansion, Testing & Verification)

@@ -112,15 +112,15 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Production Orchestration (Dagster)
 
-- [ ] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
+- [x] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
 - [ ] **ORCH-02**: Dagster assets for Signals, Aggregated Signals, Portfolio Targets, Risk Metrics, Daily Report with full dependency graph
-- [ ] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
-- [ ] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
+- [x] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
+- [x] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
 
 ### Monitoring & Alerting
 
-- [ ] **MNTR-01**: Grafana Docker Compose service (port 3002) with TimescaleDB datasource provisioning
-- [ ] **MNTR-02**: 4 provisioned Grafana dashboards JSON: pipeline_health, signal_overview, risk_dashboard, portfolio_performance
+- [x] **MNTR-01**: Grafana Docker Compose service (port 3002) with TimescaleDB datasource provisioning
+- [x] **MNTR-02**: 4 provisioned Grafana dashboards JSON: pipeline_health, signal_overview, risk_dashboard, portfolio_performance
 - [ ] **MNTR-03**: AlertManager with 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale)
 - [ ] **MNTR-04**: Monitoring API: GET /api/v1/monitoring/alerts, /pipeline-status, /system-health, POST /test-alert
 
@@ -221,12 +221,12 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | POPT-03 | Phase 17 | Complete |
 | POPT-04 | Phase 17 | Complete |
 | POPT-05 | Phase 17 | Complete |
-| ORCH-01 | Phase 18 | Pending |
+| ORCH-01 | Phase 18 | Complete |
 | ORCH-02 | Phase 18 | Pending |
-| ORCH-03 | Phase 18 | Pending |
-| ORCH-04 | Phase 18 | Pending |
-| MNTR-01 | Phase 18 | Pending |
-| MNTR-02 | Phase 18 | Pending |
+| ORCH-03 | Phase 18 | Complete |
+| ORCH-04 | Phase 18 | Complete |
+| MNTR-01 | Phase 18 | Complete |
+| MNTR-02 | Phase 18 | Complete |
 | MNTR-03 | Phase 18 | Pending |
 | MNTR-04 | Phase 18 | Pending |
 | REPT-01 | Phase 18 | Pending |

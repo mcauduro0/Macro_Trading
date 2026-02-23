@@ -1,4 +1,4 @@
-.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all
+.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all dagster dagster-run-all
 
 # ── Setup ────────────────────────────────────────────────────────────
 # Full first-time setup
@@ -113,3 +113,13 @@ test-integration:
 # Run all tests (unit + integration)
 test-all:
 	pytest tests/ -v --cov=src
+
+# ── Dagster Orchestration ────────────────────────────────────────────
+# Start Dagster webserver (UI at http://localhost:3001)
+dagster:
+	docker compose --profile dagster up -d dagster-webserver
+	@echo "Dagster UI available at http://localhost:3001"
+
+# Run full pipeline (materialize all assets in dependency order)
+dagster-run-all:
+	docker compose --profile dagster exec dagster-webserver dagster asset materialize --select '*' -m src.orchestration.definitions
