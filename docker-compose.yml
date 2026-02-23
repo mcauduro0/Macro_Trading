@@ -124,6 +124,32 @@ services:
       - monitoring
     restart: unless-stopped
 
+  dagster-webserver:
+    image: python:3.11-slim
+    container_name: macro_dagster
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3001:3001"
+    environment:
+      DAGSTER_HOME: /app/.dagster
+      DATABASE_URL: postgresql://macro_user:macro_pass@timescaledb:5432/macro_trading
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      bash -c "pip install -q dagster dagster-webserver dagster-postgres &&
+               pip install -q -e /app &&
+               mkdir -p /app/.dagster &&
+               dagster-webserver -h 0.0.0.0 -p 3001 -m src.orchestration.definitions"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - dagster
+    restart: unless-stopped
+
 volumes:
   timescaledb_data:
   redis_data:
