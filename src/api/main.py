@@ -21,6 +21,8 @@ from src.api.routes import (
 )
 from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.reports_api import router as reports_api_router
+from src.api.routes.backtest_api import router as backtest_router
+from src.api.routes.websocket_api import router as websocket_router
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,23 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 # ---------------------------------------------------------------------------
 # Application factory
 # ---------------------------------------------------------------------------
+openapi_tags = [
+    {"name": "Health", "description": "Health check endpoints"},
+    {"name": "Macro", "description": "Macroeconomic data series"},
+    {"name": "Curves", "description": "Yield curve data"},
+    {"name": "Market Data", "description": "Market prices and indicators"},
+    {"name": "Flows", "description": "Capital flows and positioning"},
+    {"name": "Agents", "description": "Analytical agent signals and reports"},
+    {"name": "Signals", "description": "Trading signal aggregation"},
+    {"name": "Risk", "description": "VaR, stress testing, and risk limits"},
+    {"name": "Portfolio", "description": "Portfolio positions and optimization"},
+    {"name": "Backtest", "description": "Strategy backtesting endpoints"},
+    {"name": "Strategies", "description": "Strategy management and configuration"},
+    {"name": "Reports", "description": "Daily reports and notifications"},
+    {"name": "Monitoring", "description": "System monitoring and alerts"},
+    {"name": "WebSocket", "description": "Real-time WebSocket channels"},
+]
+
 app = FastAPI(
     title="Macro Trading API",
     version="0.1.0",
@@ -57,6 +76,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
+    openapi_tags=openapi_tags,
 )
 
 
@@ -97,6 +117,12 @@ app.include_router(monitoring_router, prefix="/api/v1")
 
 # Reports v2 endpoints (DailyReportGenerator)
 app.include_router(reports_api_router, prefix="/api/v1")
+
+# Backtest endpoints
+app.include_router(backtest_router, prefix="/api/v1")
+
+# WebSocket endpoints at root (no prefix — ws:// paths)
+app.include_router(websocket_router)
 
 # Dashboard served at root (no prefix) — GET /dashboard
 app.include_router(dashboard.router)
