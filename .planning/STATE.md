@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 
 ## Current Position
 
-Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
-Plan: 3 of 3 complete in current phase
-Status: Phase 16 complete -- ready for Phase 17
-Last activity: 2026-02-22 — Completed 16-03 (Sentiment Scoring Pipeline)
+Phase: 17 of 19 (Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization)
+Plan: 2 of 4 complete in current phase
+Status: Executing Phase 17
+Last activity: 2026-02-23 — Completed 17-02 (Risk Engine v2)
 
 Progress: [##########################....] 84% (16/19 phases complete)
 
@@ -45,6 +45,7 @@ Progress: [##########################....] 84% (16/19 phases complete)
 | Phase 16 P01 | 10min | 2 tasks | 9 files |
 | Phase 16 P02 | 8min | 2 tasks | 9 files |
 | Phase 16 P03 | 7min | 2 tasks | 7 files |
+| Phase 17 P02 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,10 @@ Recent decisions affecting current work:
 - [16-03]: Change score thresholds: |delta| > 0.3 = major shift, > 0.1 = minor shift, else neutral
 - [16-03]: NLPProcessor batch processing sorts by date ascending for sequential change detection
 - [16-03]: Term weights in [0.0, 1.0] range with higher values for stronger hawk/dove signals
+- [17-02]: Component VaR tolerance 2% vs total parametric VaR (Ledoit-Wolf shrinkage vs sample variance)
+- [17-02]: Default lookback updated 252->756 days (3-year window) for both min_historical_obs and Monte Carlo
+- [17-02]: Historical replay reports worst cumulative drawdown point, not final-day P&L
+- [17-02]: Reverse stress binary search [0.01, 5.0x] with feasibility flag for unexposed scenarios
 
 ### Pending Todos
 
@@ -113,7 +118,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-CONTEXT.md
-Resume action: Run /gsd:plan-phase 17
+Last session: 2026-02-23
+Stopped at: Completed 17-02-PLAN.md (Risk Engine v2)
+Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-02-SUMMARY.md
+Resume action: Execute 17-03-PLAN.md
