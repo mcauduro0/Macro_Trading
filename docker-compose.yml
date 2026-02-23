@@ -104,9 +104,30 @@ services:
       retries: 5
     restart: unless-stopped
 
+  grafana:
+    image: grafana/grafana-oss:11.4.0
+    container_name: macro_grafana
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: macro_grafana
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/pipeline_health.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
 volumes:
   timescaledb_data:
   redis_data:
   mongodb_data:
   kafka_data:
   minio_data:
+  grafana_data:

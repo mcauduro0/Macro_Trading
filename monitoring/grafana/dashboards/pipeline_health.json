@@ -1,0 +1,446 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_TIMESCALEDB",
+      "label": "TimescaleDB",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "postgres",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.4.0"
+    },
+    {
+      "type": "datasource",
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "id": null,
+  "uid": "pipeline-health",
+  "title": "Pipeline Health",
+  "description": "Monitor data pipeline connector status, run durations, and errors",
+  "tags": ["macro-trading", "pipeline", "monitoring"],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "refresh": "15m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Connector Status Grid",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "title": "BCB SGS",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'bcb_sgs'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": "/^status$/"
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "FRED",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'fred'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "/^status$/" },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Yahoo Finance",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'yahoo'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "/^status$/" },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "BCB PTAX",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 5 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'bcb_ptax'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "/^status$/" },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "B3 Market Data",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 5 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'b3_market_data'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "/^status$/" },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Treasury Gov",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 5 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT status, duration_seconds, started_at\nFROM pipeline_runs\nWHERE step_name = 'treasury_gov'\nORDER BY started_at DESC LIMIT 1",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "SUCCESS": { "text": "SUCCESS", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "FAILED": { "text": "FAILED", "color": "red", "index": 1 } } },
+            { "type": "value", "options": { "RUNNING": { "text": "RUNNING", "color": "yellow", "index": 2 } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "/^status$/" },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "title": "Pipeline Timeline",
+      "type": "row"
+    },
+    {
+      "id": 7,
+      "title": "Pipeline Run Duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT started_at AS time, duration_seconds AS \"Duration (s)\", step_name AS \"Step\"\nFROM pipeline_runs\nWHERE $__timeFilter(started_at)\nORDER BY started_at",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "stacking": { "mode": "none", "group": "A" },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "scaleDistribution": { "type": "linear" },
+            "hideFrom": { "tooltip": false, "viz": false, "legend": false },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom", "showValues": "auto", "calcs": [] }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 102,
+      "title": "Error Log",
+      "type": "row"
+    },
+    {
+      "id": 8,
+      "title": "Recent Pipeline Errors",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 19 },
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "timescaledb" },
+          "rawSql": "SELECT started_at AS \"Time\", step_name AS \"Step\", error_message AS \"Error\"\nFROM pipeline_runs\nWHERE status = 'FAILED' AND $__timeFilter(started_at)\nORDER BY started_at DESC LIMIT 20",
+          "format": "table",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "red", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Time" },
+            "properties": [{ "id": "custom.width", "value": 200 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Step" },
+            "properties": [{ "id": "custom.width", "value": 200 }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" },
+        "sortBy": []
+      }
+    }
+  ],
+  "links": [],
+  "version": 1
+}
