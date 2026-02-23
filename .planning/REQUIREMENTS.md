@@ -148,10 +148,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Testing & Verification
 
-- [ ] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
-- [ ] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
-- [ ] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
-- [ ] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
+- [x] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
+- [x] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
+- [x] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
+- [x] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
 
 ## Out of Scope (v3.0)
 
@@ -242,10 +242,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | APIV-02 | Phase 19 | Complete |
 | APIV-03 | Phase 19 | Complete |
 | APIV-04 | Phase 19 | Complete |
-| TSTV-01 | Phase 19 | Pending |
-| TSTV-02 | Phase 19 | Pending |
-| TSTV-03 | Phase 19 | Pending |
-| TSTV-04 | Phase 19 | Pending |
+| TSTV-01 | Phase 19 | Complete |
+| TSTV-02 | Phase 19 | Complete |
+| TSTV-03 | Phase 19 | Complete |
+| TSTV-04 | Phase 19 | Complete |
 
 **Coverage:**
 - v3 requirements: 77 total (SFWK:4, BTST:6, FXST:4, RTST:4, INST:2, CPST:1, SVST:3, CAST:2, CRSV:4, NLP:5, SAGG:4, RSKV:8, POPT:5, ORCH:4, MNTR:4, DSHV:6, REPT:3, APIV:4, TSTV:4)

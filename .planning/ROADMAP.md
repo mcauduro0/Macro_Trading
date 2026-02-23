@@ -44,7 +44,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 - [x] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis (completed 2026-02-22)
 - [x] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing (completed 2026-02-23)
 - [x] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator (completed 2026-02-23)
-- [ ] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script
+- [x] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script (completed 2026-02-23)
 
 ## Phase Details
 
@@ -147,7 +147,7 @@ Plans:
   3. Strategy API serves GET /strategies/{id} (detail), GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params (update parameters), and WebSocket channels push real-time updates for signals, portfolio, and alerts
   4. Full pipeline integration test runs DB -> transforms -> agents -> strategies -> signals -> portfolio -> risk -> report without error, and all API endpoints (v1 + v2 + v3) return 200 OK
   5. CI/CD pipeline updated with lint, unit tests, and integration tests (with service containers), and verification script (scripts/verify_phase2.py) validates all v3.0 components with a formatted pass/fail report
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 19-01-PLAN.md -- Dashboard shell: App.jsx with HashRouter, collapsible Sidebar, useFetch/useWebSocket hooks, updated dashboard.html and route serving
@@ -192,4 +192,4 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete    | 2026-02-22 |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 4/4 | Complete    | 2026-02-23 |
 | 18. Dagster Orchestration, Monitoring & Reporting | 4/4 | Complete    | 2026-02-23 |
-| 19. Dashboard v2, API Expansion, Testing & Verification | 3/4 | In Progress|  |
+| 19. Dashboard v2, API Expansion, Testing & Verification | 4/4 | Complete   | 2026-02-23 |
