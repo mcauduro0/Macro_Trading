@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 19 of 19 (Dashboard v2, API Expansion, Testing & Verification)
-Plan: 1 of 4 complete in current phase
+Plan: 3 of 4 complete in current phase
 Status: Executing Phase 19
-Last activity: 2026-02-23 — Completed 19-01 (Dashboard shell, HashRouter, sidebar, hooks)
+Last activity: 2026-02-23 — Completed 19-03 (API expansion: backtest, strategy detail, WebSocket endpoints)
 
 Progress: [#############################.] 95% (18/19 phases complete, 19 in progress)
 
@@ -54,6 +54,7 @@ Progress: [#############################.] 95% (18/19 phases complete, 19 in pro
 | Phase 18 P02 | 5min | 2 tasks | 5 files |
 | Phase 18 P04 | 8min | 2 tasks | 10 files |
 | Phase 19 P01 | 5min | 2 tasks | 6 files |
+| Phase 19 P03 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,11 @@ Recent decisions affecting current work:
 - [19-01]: ReactRouterDOM loaded from unpkg CDN, consistent with CDN-only approach
 - [19-01]: StaticFiles mount at /static in main.py after all router includes
 - [19-01]: WebSocket URL built from window.location for protocol-agnostic ws/wss support
+- [19-03]: Backtest endpoints use asyncio.to_thread() for CPU-bound BacktestEngine.run() calls
+- [19-03]: All API endpoints gracefully fallback to sample/placeholder data when DB or engine unavailable
+- [19-03]: ConnectionManager uses module-level singleton pattern for cross-module broadcast access
+- [19-03]: WebSocket routes mounted at root (no /api/v1 prefix) for ws:// protocol compatibility
+- [19-03]: Signal history endpoint uses seeded random for deterministic sample data per strategy_id
 
 ### Pending Todos
 
@@ -159,6 +165,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 19-01-PLAN.md
-Resume file: .planning/phases/19-dashboard-v2-api-expansion-testing-verification/19-01-SUMMARY.md
-Resume action: Execute Plan 19-02 (Dashboard page components)
+Stopped at: Completed 19-03-PLAN.md
+Resume file: .planning/phases/19-dashboard-v2-api-expansion-testing-verification/19-03-SUMMARY.md
+Resume action: Execute Plan 19-04 (Integration tests and verification)
