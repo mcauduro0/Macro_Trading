@@ -7,9 +7,11 @@ Run with:  uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from src.core.database import async_engine
@@ -98,3 +100,10 @@ app.include_router(reports_api_router, prefix="/api/v1")
 
 # Dashboard served at root (no prefix) — GET /dashboard
 app.include_router(dashboard.router)
+
+# Static files mount — serves .jsx files at /static/js/*.jsx for CDN Babel
+app.mount(
+    "/static",
+    StaticFiles(directory=str(Path(__file__).resolve().parent / "static")),
+    name="static",
+)

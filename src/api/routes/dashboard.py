@@ -1,17 +1,23 @@
-"""Dashboard route — serves the single-page HTML trading dashboard."""
+"""Dashboard route — serves the multi-file React trading dashboard.
+
+Serves the shell HTML at GET /dashboard, which loads .jsx files from
+the /static/js/ directory via Babel standalone transpilation.
+"""
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 router = APIRouter(tags=["dashboard"])
 
-DASHBOARD_HTML = Path(__file__).resolve().parent.parent / "static" / "dashboard.html"
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+DASHBOARD_HTML = STATIC_DIR / "dashboard.html"
 
 
 @router.get("/dashboard", response_class=FileResponse)
 async def get_dashboard():
-    """Serve the single-page HTML dashboard."""
+    """Serve the shell HTML that loads all .jsx scripts via Babel standalone."""
     return FileResponse(
         path=DASHBOARD_HTML,
         media_type="text/html",
