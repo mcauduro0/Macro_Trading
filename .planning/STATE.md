@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 18 of 19 (Dagster Orchestration, Monitoring & Reporting)
-Plan: 0 of 4 complete in current phase
-Status: Context gathered, ready for planning
-Last activity: 2026-02-23 — Phase 18 context gathered
+Plan: 3 of 4 complete in current phase
+Status: Executing phase 18 plans
+Last activity: 2026-02-23 — Completed 18-03-PLAN.md (Grafana monitoring)
 
 Progress: [############################..] 89% (17/19 phases complete)
 
@@ -49,6 +49,7 @@ Progress: [############################..] 89% (17/19 phases complete)
 | Phase 17 P02 | 6min | 2 tasks | 5 files |
 | Phase 17 P03 | 6min | 2 tasks | 5 files |
 | Phase 17 P04 | 7min | 2 tasks | 9 files |
+| Phase 18 P03 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,10 @@ Recent decisions affecting current work:
 - [17-04]: Rebalance dual-threshold: signal_change > 0.15 OR max position drift > 0.05
 - [17-04]: portfolio_state hypertable compressed after 30 days with instrument segmentby
 - [17-04]: Portfolio API endpoints use sample data for demo; live integration deferred
+- [18-03]: Grafana under 'monitoring' Docker profile so it does not start with default docker compose up
+- [18-03]: Datasource UID 'timescaledb' referenced directly in all dashboard panels for consistent provisioning
+- [18-03]: All 4 dashboards auto-refresh every 15 minutes per user decision
+- [18-03]: Pipeline health as default home dashboard via GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
 
 ### Pending Todos
 
@@ -128,13 +133,13 @@ None yet.
 ### Blockers/Concerns
 
 - Dagster requires dagster>=1.6 + dagster-webserver -- new dependency
-- Grafana requires Docker container addition to docker-compose.yml
+- Grafana Docker container added to docker-compose.yml (RESOLVED in 18-03)
 - React dashboard may need Node.js 18+ for build tooling (or continue CDN approach)
 - Anthropic API key needed for LLM narrative generation (fallback templates available)
 
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Phase 18 context gathered
-Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-CONTEXT.md
-Resume action: Plan Phase 18
+Stopped at: Completed 18-03-PLAN.md
+Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-03-SUMMARY.md
+Resume action: Execute 18-04-PLAN.md
