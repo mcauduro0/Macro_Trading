@@ -129,13 +129,13 @@ Plans:
   3. Grafana runs at port 3002 with TimescaleDB datasource and 4 provisioned dashboards (pipeline health, signal overview, risk dashboard, portfolio performance) loading automatically on first start
   4. AlertManager evaluates 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale) and sends notifications via Slack and email
   5. DailyReportGenerator produces reports with 7 sections (Market Snapshot, Regime, Agent Views, Signals, Portfolio, Risk, Actions) in markdown and HTML formats, accessible via GET /api/v1/reports/daily/latest and sendable via POST /reports/daily/send
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 18-01: Dagster asset definitions (Bronze, Silver, Agents), Dagster definitions module, Docker Compose service, Makefile targets
-- [ ] 18-02: Dagster assets for Signals, Portfolio, Risk, Report with full dependency graph
-- [ ] 18-03: Grafana Docker Compose service, datasource provisioning, 4 dashboard JSONs
-- [ ] 18-04: AlertManager (10 rules, Slack + email), monitoring API routes, DailyReportGenerator (7 sections, markdown/HTML/email/Slack), report API routes
+- [ ] 18-01-PLAN.md -- Dagster asset definitions (Bronze 6, Silver 3, Agents 5), Definitions module, Docker Compose dagster-webserver service, Makefile targets (make dagster, make dagster-run-all)
+- [ ] 18-02-PLAN.md -- Dagster assets for Signals (2), Portfolio (2), Risk (3), Report (1) with full dependency graph, updated Definitions with 22 total assets
+- [ ] 18-03-PLAN.md -- Grafana Docker Compose service (port 3002), TimescaleDB datasource provisioning, 4 dashboard JSONs (pipeline_health, signal_overview, risk_dashboard, portfolio_performance)
+- [ ] 18-04-PLAN.md -- AlertManager (10 rules, 30-min cooldown, Slack + email), 4 monitoring API routes, DailyReportGenerator (7 sections, markdown/HTML/email/Slack), 3 report API routes
 
 ### Phase 19: Dashboard v2, API Expansion, Testing & Verification
 **Goal**: A React multi-page dashboard replacing the single-page HTML dashboard, expanded API with backtest/strategy/WebSocket endpoints, and comprehensive integration tests validating all v3.0 components end-to-end
