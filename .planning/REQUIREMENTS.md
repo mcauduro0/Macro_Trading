@@ -126,11 +126,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Dashboard v2 (React)
 
-- [ ] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
-- [ ] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
-- [ ] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
-- [ ] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
-- [ ] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
+- [x] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
+- [x] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
+- [x] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
+- [x] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
+- [x] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
 - [x] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
 
 ### Daily Reporting
@@ -232,11 +232,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | REPT-01 | Phase 18 | Pending |
 | REPT-02 | Phase 18 | Pending |
 | REPT-03 | Phase 18 | Pending |
-| DSHV-01 | Phase 19 | Pending |
-| DSHV-02 | Phase 19 | Pending |
-| DSHV-03 | Phase 19 | Pending |
-| DSHV-04 | Phase 19 | Pending |
-| DSHV-05 | Phase 19 | Pending |
+| DSHV-01 | Phase 19 | Complete |
+| DSHV-02 | Phase 19 | Complete |
+| DSHV-03 | Phase 19 | Complete |
+| DSHV-04 | Phase 19 | Complete |
+| DSHV-05 | Phase 19 | Complete |
 | DSHV-06 | Phase 19 | Complete |
 | APIV-01 | Phase 19 | Complete |
 | APIV-02 | Phase 19 | Complete |
