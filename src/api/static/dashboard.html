@@ -72,67 +72,14 @@
 <body>
   <div id="root"></div>
 
-  <!-- Placeholder page components (will be replaced by individual .jsx files in Plan 19-02) -->
-  <script type="text/babel">
-    function StrategiesPage() {
-      return (
-        <div className="text-gray-400 text-center py-16">
-          <div className="text-gray-500 text-5xl mb-4">&#x2637;</div>
-          <h2 className="text-gray-300 text-xl font-semibold mb-2">Strategies</h2>
-          <p>Coming Soon</p>
-        </div>
-      );
-    }
-    window.StrategiesPage = StrategiesPage;
-
-    function SignalsPage() {
-      return (
-        <div className="text-gray-400 text-center py-16">
-          <div className="text-gray-500 text-5xl mb-4">&#x26A1;</div>
-          <h2 className="text-gray-300 text-xl font-semibold mb-2">Signals</h2>
-          <p>Coming Soon</p>
-        </div>
-      );
-    }
-    window.SignalsPage = SignalsPage;
-
-    function RiskPage() {
-      return (
-        <div className="text-gray-400 text-center py-16">
-          <div className="text-gray-500 text-5xl mb-4">&#x1F6E1;</div>
-          <h2 className="text-gray-300 text-xl font-semibold mb-2">Risk</h2>
-          <p>Coming Soon</p>
-        </div>
-      );
-    }
-    window.RiskPage = RiskPage;
-
-    function PortfolioPage() {
-      return (
-        <div className="text-gray-400 text-center py-16">
-          <div className="text-gray-500 text-5xl mb-4">&#x2696;</div>
-          <h2 className="text-gray-300 text-xl font-semibold mb-2">Portfolio</h2>
-          <p>Coming Soon</p>
-        </div>
-      );
-    }
-    window.PortfolioPage = PortfolioPage;
-
-    function AgentsPage() {
-      return (
-        <div className="text-gray-400 text-center py-16">
-          <div className="text-gray-500 text-5xl mb-4">&#x1F916;</div>
-          <h2 className="text-gray-300 text-xl font-semibold mb-2">Agents</h2>
-          <p>Coming Soon</p>
-        </div>
-      );
-    }
-    window.AgentsPage = AgentsPage;
-  </script>
-
-  <!-- Load .jsx files in dependency order -->
+  <!-- Load .jsx files in dependency order: hooks -> Sidebar -> pages -> App -->
   <script type="text/babel" src="/static/js/hooks.jsx"></script>
   <script type="text/babel" src="/static/js/Sidebar.jsx"></script>
+  <script type="text/babel" src="/static/js/pages/StrategiesPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pages/SignalsPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pages/RiskPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pages/PortfolioPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pages/AgentsPage.jsx"></script>
   <script type="text/babel" src="/static/js/App.jsx"></script>
 
   <!-- Mount the application -->
