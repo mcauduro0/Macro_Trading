@@ -86,29 +86,29 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Signal Aggregation v2
 
-- [ ] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
-- [ ] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
-- [ ] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
-- [ ] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
+- [x] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
+- [x] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
+- [x] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
+- [x] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
 
 ### Risk Engine v2
 
-- [ ] **RSKV-01**: Monte Carlo VaR with t-Student marginals, Gaussian copula, Cholesky decomposition (10,000 simulations)
-- [ ] **RSKV-02**: Parametric VaR with Ledoit-Wolf shrinkage covariance estimation
-- [ ] **RSKV-03**: Marginal VaR and Component VaR decomposition by position
-- [ ] **RSKV-04**: Expanded stress scenarios: add BR Fiscal Crisis (teto de gastos) and Global Risk-Off (geopolitical) to existing 4 scenarios
-- [ ] **RSKV-05**: Reverse stress testing — find scenarios that produce a given max loss
-- [ ] **RSKV-06**: Historical replay stress test — replay actual returns from a crisis period
-- [ ] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
-- [ ] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
+- [x] **RSKV-01**: Monte Carlo VaR with t-Student marginals, Gaussian copula, Cholesky decomposition (10,000 simulations)
+- [x] **RSKV-02**: Parametric VaR with Ledoit-Wolf shrinkage covariance estimation
+- [x] **RSKV-03**: Marginal VaR and Component VaR decomposition by position
+- [x] **RSKV-04**: Expanded stress scenarios: add BR Fiscal Crisis (teto de gastos) and Global Risk-Off (geopolitical) to existing 4 scenarios
+- [x] **RSKV-05**: Reverse stress testing — find scenarios that produce a given max loss
+- [x] **RSKV-06**: Historical replay stress test — replay actual returns from a crisis period
+- [x] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
+- [x] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
 
 ### Portfolio Optimization
 
-- [ ] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
-- [ ] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
-- [ ] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
-- [ ] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
-- [ ] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
+- [x] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
+- [x] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
+- [x] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
+- [x] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
+- [x] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
 
 ### Production Orchestration (Dagster)
 
@@ -204,23 +204,23 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | NLP-03 | Phase 16 | Complete |
 | NLP-04 | Phase 16 | Complete |
 | NLP-05 | Phase 16 | Complete |
-| SAGG-01 | Phase 17 | Pending |
-| SAGG-02 | Phase 17 | Pending |
-| SAGG-03 | Phase 17 | Pending |
-| SAGG-04 | Phase 17 | Pending |
-| RSKV-01 | Phase 17 | Pending |
-| RSKV-02 | Phase 17 | Pending |
-| RSKV-03 | Phase 17 | Pending |
-| RSKV-04 | Phase 17 | Pending |
-| RSKV-05 | Phase 17 | Pending |
-| RSKV-06 | Phase 17 | Pending |
-| RSKV-07 | Phase 17 | Pending |
-| RSKV-08 | Phase 17 | Pending |
-| POPT-01 | Phase 17 | Pending |
-| POPT-02 | Phase 17 | Pending |
-| POPT-03 | Phase 17 | Pending |
-| POPT-04 | Phase 17 | Pending |
-| POPT-05 | Phase 17 | Pending |
+| SAGG-01 | Phase 17 | Complete |
+| SAGG-02 | Phase 17 | Complete |
+| SAGG-03 | Phase 17 | Complete |
+| SAGG-04 | Phase 17 | Complete |
+| RSKV-01 | Phase 17 | Complete |
+| RSKV-02 | Phase 17 | Complete |
+| RSKV-03 | Phase 17 | Complete |
+| RSKV-04 | Phase 17 | Complete |
+| RSKV-05 | Phase 17 | Complete |
+| RSKV-06 | Phase 17 | Complete |
+| RSKV-07 | Phase 17 | Complete |
+| RSKV-08 | Phase 17 | Complete |
+| POPT-01 | Phase 17 | Complete |
+| POPT-02 | Phase 17 | Complete |
+| POPT-03 | Phase 17 | Complete |
+| POPT-04 | Phase 17 | Complete |
+| POPT-05 | Phase 17 | Complete |
 | ORCH-01 | Phase 18 | Pending |
 | ORCH-02 | Phase 18 | Pending |
 | ORCH-03 | Phase 18 | Pending |

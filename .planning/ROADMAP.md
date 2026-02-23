@@ -42,7 +42,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 - [x] **Phase 14: Backtesting Engine v2 & Strategy Framework** - Enhanced StrategySignal, StrategyRegistry, portfolio-level backtesting, walk-forward validation, deflated Sharpe, transaction cost model, tearsheet generation, DB migrations (completed 2026-02-22)
 - [x] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2) (completed 2026-02-22)
 - [x] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis (completed 2026-02-22)
-- [ ] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing
+- [x] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing (completed 2026-02-23)
 - [ ] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator
 - [ ] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script
 
@@ -111,13 +111,13 @@ Plans:
   3. Monte Carlo VaR (10,000 simulations with t-Student marginals and Gaussian copula) and parametric VaR (Ledoit-Wolf shrinkage) produce 95% and 99% confidence VaR estimates, with marginal and component VaR decomposition by position
   4. Stress testing includes 6+ scenarios (existing 4 + BR Fiscal Crisis + Global Risk-Off), reverse stress testing finds scenarios producing a given max loss, and historical replay replays actual returns from crisis periods
   5. Black-Litterman model combines market equilibrium with agent views via confidence-weighted P/Q matrices, PositionSizer offers vol_target/fractional_kelly/risk_budget methods, and portfolio_state table persists positions with strategy attribution
-**Plans**: TBD
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 17-01: SignalAggregator v2 (3 methods, crowding penalty, staleness discount), SignalMonitor (flips, surges, divergence, daily summary)
-- [ ] 17-02: Monte Carlo VaR (t-Student, Gaussian copula, Cholesky), parametric VaR (Ledoit-Wolf), marginal/component VaR decomposition, expanded stress scenarios, reverse stress, historical replay
-- [ ] 17-03: RiskLimitsManager v2 (daily/weekly loss, risk budget), risk API routes (/var, /stress, /limits, /dashboard)
-- [ ] 17-04: Black-Litterman model, mean-variance optimization, PositionSizer (vol_target, Kelly, risk_budget), portfolio_state table migration, portfolio API routes
+- [ ] 17-01-PLAN.md -- SignalAggregator v2 (3 methods: confidence-weighted, rank-based, Bayesian with regime prior), crowding penalty, staleness discount, SignalMonitor (flips, surges, divergence, daily summary)
+- [ ] 17-02-PLAN.md -- Enhanced VaR (756-day lookback, marginal/component VaR decomposition), expanded stress scenarios (+BR Fiscal Crisis, +Global Risk-Off), reverse stress testing, historical replay
+- [ ] 17-03-PLAN.md -- RiskLimitsManager v2 (daily/weekly loss tracking, risk budget), 4 risk API routes (/var, /stress, /limits, /dashboard)
+- [ ] 17-04-PLAN.md -- Black-Litterman model (regime-adjusted views), mean-variance optimization, PositionSizer (vol_target, half-Kelly, risk_budget), portfolio_state table migration, portfolio API routes (/target, /rebalance-trades, /attribution)
 
 ### Phase 18: Dagster Orchestration, Monitoring & Reporting
 **Goal**: Production-grade orchestration with Dagster replacing the custom pipeline, Grafana monitoring dashboards with alerting, and automated daily report generation -- making the system observable and operationally reliable
@@ -190,6 +190,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete    | 2026-02-22 |
-| 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 0/4 | Not started | - |
+| 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 4/4 | Complete    | 2026-02-23 |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |

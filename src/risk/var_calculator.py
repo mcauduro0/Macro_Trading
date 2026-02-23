@@ -2,8 +2,11 @@
 
 Provides three VaR methodologies:
 - Historical: empirical quantile of portfolio return series
-- Parametric: Gaussian assumption with analytical CVaR formula
-- Monte Carlo: Student-t fitted marginals with Cholesky-correlated draws
+- Parametric: Gaussian assumption with analytical CVaR formula (Ledoit-Wolf shrinkage)
+- Monte Carlo: Student-t fitted marginals with Gaussian copula (Cholesky decomposition)
+
+Enhanced with marginal VaR and component VaR decomposition, 756-day lookback,
+and always-report-both-VaR-and-CVaR at 95% and 99% confidence levels.
 
 All functions are pure computation -- no I/O or database access.
 """
@@ -33,6 +36,29 @@ class VaRResult:
     n_observations: int
     confidence_warning: str | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class VaRDecomposition:
+    """Decomposition of portfolio VaR into per-instrument contributions.
+
+    Attributes:
+        total_var: Total portfolio VaR (negative = loss).
+        total_cvar: Total portfolio CVaR (negative = loss).
+        confidence: Confidence level used (e.g., 0.95).
+        marginal_var: Per-instrument marginal VaR (change in portfolio VaR
+            from a small increase in position weight).
+        component_var: Per-instrument component VaR (weight * marginal VaR).
+            Sum of all component VaRs approximately equals total VaR.
+        pct_contribution: Per-instrument percentage contribution to total VaR.
+    """
+
+    total_var: float
+    total_cvar: float
+    confidence: float
+    marginal_var: dict[str, float]
+    component_var: dict[str, float]
+    pct_contribution: dict[str, float]
 
 
 # ---------------------------------------------------------------------------
@@ -213,6 +239,119 @@ def compute_monte_carlo_var(
 
 
 # ---------------------------------------------------------------------------
+# Marginal and component VaR decomposition
+# ---------------------------------------------------------------------------
+
+
+def compute_marginal_var(
+    returns_matrix: np.ndarray,
+    weights: np.ndarray,
+    confidence: float = 0.95,
+    method: str = "parametric",
+) -> dict[int, float]:
+    """Compute marginal VaR for each position.
+
+    Marginal VaR measures the change in portfolio VaR from a small increase
+    in each position's weight. Uses finite-difference approximation:
+    MarginalVaR_i = (VaR(w + eps*e_i) - VaR(w - eps*e_i)) / (2 * eps)
+
+    For parametric method, uses Ledoit-Wolf shrinkage covariance for robust
+    estimation.
+
+    Args:
+        returns_matrix: Shape (n_obs, n_assets) array of asset returns.
+        weights: Shape (n_assets,) portfolio weights.
+        confidence: Confidence level (0.95 or 0.99).
+        method: VaR method -- "parametric" or "historical".
+
+    Returns:
+        Dict mapping position index -> marginal VaR contribution.
+    """
+    weights = np.asarray(weights, dtype=np.float64)
+    returns_matrix = np.asarray(returns_matrix, dtype=np.float64)
+    n_assets = len(weights)
+    epsilon = 0.001
+
+    if method == "parametric":
+        # Analytical marginal VaR using Ledoit-Wolf covariance
+        lw = LedoitWolf().fit(returns_matrix)
+        cov = lw.covariance_
+        z_alpha = stats.norm.ppf(1.0 - confidence)  # negative
+
+        sigma_w = cov @ weights
+        port_vol = float(np.sqrt(weights @ cov @ weights))
+
+        if port_vol < 1e-12:
+            return {i: 0.0 for i in range(n_assets)}
+
+        marginal = {}
+        for i in range(n_assets):
+            marginal[i] = float(sigma_w[i] / port_vol * z_alpha)
+        return marginal
+    else:
+        # Finite-difference approximation for any method
+        marginal = {}
+        for i in range(n_assets):
+            w_plus = weights.copy()
+            w_minus = weights.copy()
+            w_plus[i] += epsilon
+            w_minus[i] -= epsilon
+
+            port_ret_plus = returns_matrix @ w_plus
+            port_ret_minus = returns_matrix @ w_minus
+
+            var_plus, _ = compute_historical_var(port_ret_plus, confidence)
+            var_minus, _ = compute_historical_var(port_ret_minus, confidence)
+
+            marginal[i] = float((var_plus - var_minus) / (2.0 * epsilon))
+
+        return marginal
+
+
+def compute_component_var(
+    returns_matrix: np.ndarray,
+    weights: np.ndarray,
+    confidence: float = 0.95,
+) -> dict[int, float]:
+    """Compute component VaR for each position.
+
+    Component VaR decomposes total VaR by position:
+    ComponentVaR_i = w_i * (Sigma @ w)_i / sqrt(w^T @ Sigma @ w) * z_alpha
+
+    Sum of all component VaRs equals total parametric VaR.
+
+    Uses Ledoit-Wolf shrinkage covariance for robust estimation.
+
+    Args:
+        returns_matrix: Shape (n_obs, n_assets) array of asset returns.
+        weights: Shape (n_assets,) portfolio weights.
+        confidence: Confidence level (0.95 or 0.99).
+
+    Returns:
+        Dict mapping position index -> component VaR.
+    """
+    weights = np.asarray(weights, dtype=np.float64)
+    returns_matrix = np.asarray(returns_matrix, dtype=np.float64)
+    n_assets = len(weights)
+
+    lw = LedoitWolf().fit(returns_matrix)
+    cov = lw.covariance_
+    z_alpha = stats.norm.ppf(1.0 - confidence)  # negative
+
+    sigma_w = cov @ weights
+    port_vol = float(np.sqrt(weights @ cov @ weights))
+
+    if port_vol < 1e-12:
+        return {i: 0.0 for i in range(n_assets)}
+
+    component = {}
+    for i in range(n_assets):
+        component[i] = float(weights[i] * sigma_w[i] / port_vol * z_alpha)
+
+    return component
+
+
+# ---------------------------------------------------------------------------
 # VaRCalculator orchestrator
 # ---------------------------------------------------------------------------
 
@@ -224,15 +363,20 @@ class VaRCalculator:
         min_historical_obs: Minimum observations for historical VaR.
             Falls back to parametric with a warning if insufficient.
         mc_simulations: Number of Monte Carlo simulations.
+        lookback_days: Number of days to use for Monte Carlo fitting.
+            Defaults to 756 (3 years). If returns_matrix has more rows,
+            only the last ``lookback_days`` rows are used.
     """
 
     def __init__(
         self,
-        min_historical_obs: int = 252,
+        min_historical_obs: int = 756,
         mc_simulations: int = 10_000,
+        lookback_days: int = 756,
     ) -> None:
         self.min_historical_obs = min_historical_obs
         self.mc_simulations = mc_simulations
+        self.lookback_days = lookback_days
 
     def calculate(
         self,
@@ -305,6 +449,10 @@ class VaRCalculator:
         """
         returns_matrix = np.asarray(returns_matrix, dtype=np.float64)
         weights = np.asarray(weights, dtype=np.float64)
+
+        # Trim to lookback_days if returns_matrix is longer
+        if returns_matrix.shape[0] > self.lookback_days:
+            returns_matrix = returns_matrix[-self.lookback_days:]
         n_obs = returns_matrix.shape[0]
 
         var_95, cvar_95 = compute_monte_carlo_var(
@@ -345,3 +493,71 @@ class VaRCalculator:
             )
 
         return results
+
+    def decompose_var(
+        self,
+        returns_matrix: np.ndarray,
+        weights: np.ndarray,
+        instrument_names: list[str],
+        confidence: float = 0.95,
+    ) -> VaRDecomposition:
+        """Decompose portfolio VaR into per-instrument marginal and component VaR.
+
+        Combines ``compute_marginal_var`` (parametric method) and
+        ``compute_component_var`` to produce a full decomposition that maps
+        position indices to human-readable instrument names.
+
+        Args:
+            returns_matrix: Shape (n_obs, n_assets) array of asset returns.
+            weights: Shape (n_assets,) portfolio weights.
+            instrument_names: List of instrument names matching columns of
+                returns_matrix.
+            confidence: Confidence level (0.95 or 0.99).
+
+        Returns:
+            VaRDecomposition with marginal VaR, component VaR, and percentage
+            contribution per instrument.
+        """
+        returns_matrix = np.asarray(returns_matrix, dtype=np.float64)
+        weights = np.asarray(weights, dtype=np.float64)
+
+        # Trim to lookback window
+        if returns_matrix.shape[0] > self.lookback_days:
+            returns_matrix = returns_matrix[-self.lookback_days:]
+
+        # Compute portfolio returns for total VaR/CVaR
+        portfolio_returns = returns_matrix @ weights
+        total_var, total_cvar = compute_parametric_var(portfolio_returns, confidence)
+
+        # Marginal and component VaR
+        marginal_idx = compute_marginal_var(
+            returns_matrix, weights, confidence, method="parametric"
+        )
+        component_idx = compute_component_var(
+            returns_matrix, weights, confidence
+        )
+
+        # Map indices to instrument names
+        marginal_named = {
+            instrument_names[i]: marginal_idx[i] for i in range(len(instrument_names))
+        }
+        component_named = {
+            instrument_names[i]: component_idx[i] for i in range(len(instrument_names))
+        }
+
+        # Percentage contribution: component_var_i / total_var
+        pct_contribution: dict[str, float] = {}
+        for name in instrument_names:
+            if abs(total_var) > 1e-12:
+                pct_contribution[name] = component_named[name] / total_var
+            else:
+                pct_contribution[name] = 0.0
+
+        return VaRDecomposition(
+            total_var=total_var,
+            total_cvar=total_cvar,
+            confidence=confidence,
+            marginal_var=marginal_named,
+            component_var=component_named,
+            pct_contribution=pct_contribution,
+        )

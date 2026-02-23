@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 16: Cross-Asset Agent v2 & NLP Pipeline (v3.0)
+**Current focus:** Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization (v3.0)
 
 ## Current Position
 
-Phase: 16 of 19 (Cross-Asset Agent v2 & NLP Pipeline)
-Plan: 3 of 3 complete in current phase
-Status: Phase 16 complete -- ready for Phase 17
-Last activity: 2026-02-22 — Completed 16-03 (Sentiment Scoring Pipeline)
+Phase: 17 of 19 (Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization)
+Plan: 4 of 4 complete in current phase
+Status: Phase 17 Complete
+Last activity: 2026-02-23 — Completed 17-04 (Portfolio Optimization)
 
-Progress: [##########################....] 84% (16/19 phases complete)
+Progress: [############################..] 89% (17/19 phases complete)
 
 ## Performance Metrics
 
@@ -45,6 +45,10 @@ Progress: [##########################....] 84% (16/19 phases complete)
 | Phase 16 P01 | 10min | 2 tasks | 9 files |
 | Phase 16 P02 | 8min | 2 tasks | 9 files |
 | Phase 16 P03 | 7min | 2 tasks | 7 files |
+| Phase 17 P01 | 8min | 2 tasks | 4 files |
+| Phase 17 P02 | 6min | 2 tasks | 5 files |
+| Phase 17 P03 | 6min | 2 tasks | 5 files |
+| Phase 17 P04 | 7min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -99,6 +103,23 @@ Recent decisions affecting current work:
 - [16-03]: Change score thresholds: |delta| > 0.3 = major shift, > 0.1 = minor shift, else neutral
 - [16-03]: NLPProcessor batch processing sorts by date ascending for sequential change detection
 - [16-03]: Term weights in [0.0, 1.0] range with higher values for stronger hawk/dove signals
+- [17-01]: Bayesian default method with flat prior when no regime context available
+- [17-01]: Regime tilts shift WHICH strategies to trust, not overall conviction level
+- [17-01]: Crowding penalty is gentle 20% reduction at >80% agreement threshold
+- [17-01]: Staleness linear decay over 5 business days (weekday-only counting)
+- [17-01]: Signal flip = any sign change; conviction surge = absolute >0.3; divergence = >0.5 within asset class
+- [17-02]: Component VaR tolerance 2% vs total parametric VaR (Ledoit-Wolf shrinkage vs sample variance)
+- [17-02]: Default lookback updated 252->756 days (3-year window) for both min_historical_obs and Monte Carlo
+- [17-02]: Historical replay reports worst cumulative drawdown point, not final-day P&L
+- [17-02]: Reverse stress binary search [0.01, 5.0x] with feasibility flag for unexposed scenarios
+- [17-03]: Daily/weekly loss breach uses absolute value comparison against positive limit thresholds
+- [17-03]: Risk budget can_add_risk threshold at 5% headroom (available > 0.05)
+- [17-03]: check_all_v2 overall_status has three levels: OK, WARNING (>80%), BREACHED
+- [17-03]: API endpoints use deterministic sample data (seed=42) for consistent testing
+- [17-04]: size_portfolio uses raw unclamped sizing then applies conviction-based limit (soft override at >0.8)
+- [17-04]: Rebalance dual-threshold: signal_change > 0.15 OR max position drift > 0.05
+- [17-04]: portfolio_state hypertable compressed after 30 days with instrument segmentby
+- [17-04]: Portfolio API endpoints use sample data for demo; live integration deferred
 
 ### Pending Todos
 
@@ -113,7 +134,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-22
-Stopped at: Completed 16-03-PLAN.md (Sentiment Scoring Pipeline) -- Phase 16 complete
-Resume file: .planning/phases/
-Resume action: Begin Phase 17 planning/execution
+Last session: 2026-02-23
+Stopped at: Completed 17-04-PLAN.md (Portfolio Optimization)
+Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-04-SUMMARY.md
+Resume action: Execute Phase 18

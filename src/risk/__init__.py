@@ -14,6 +14,12 @@ from src.risk.risk_limits import (
     RiskLimitChecker,
     RiskLimitsConfig,
 )
+from src.risk.risk_limits_v2 import (
+    LossRecord,
+    RiskBudgetReport,
+    RiskLimitsManager,
+    RiskLimitsManagerConfig,
+)
 from src.risk.risk_monitor import RiskMonitor, RiskReport
 from src.risk.stress_tester import (
     DEFAULT_SCENARIOS,
@@ -21,7 +27,7 @@ from src.risk.stress_tester import (
     StressScenario,
     StressTester,
 )
-from src.risk.var_calculator import VaRCalculator, VaRResult
+from src.risk.var_calculator import VaRCalculator, VaRDecomposition, VaRResult
 
 __all__ = [
     "AlertDispatcher",
@@ -32,8 +38,12 @@ __all__ = [
     "DEFAULT_SCENARIOS",
     "DrawdownManager",
     "LimitCheckResult",
+    "LossRecord",
+    "RiskBudgetReport",
     "RiskLimitChecker",
     "RiskLimitsConfig",
+    "RiskLimitsManager",
+    "RiskLimitsManagerConfig",
     "RiskMonitor",
     "RiskReport",
     "StressResult",
@@ -41,5 +51,6 @@ __all__ = [
     "StressTester",
     "StrategyLossTracker",
     "VaRCalculator",
+    "VaRDecomposition",
     "VaRResult",
 ]
