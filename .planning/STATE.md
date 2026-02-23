@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 18: Dagster Orchestration, Monitoring & Reporting (v3.0)
+**Current focus:** Phase 19: Dashboard v2, API Expansion, Testing & Verification (v3.0)
 
 ## Current Position
 
-Phase: 18 of 19 (Dagster Orchestration, Monitoring & Reporting)
+Phase: 19 of 19 (Dashboard v2, API Expansion, Testing & Verification)
 Plan: 4 of 4 complete in current phase
-Status: Phase 18 COMPLETE — ready for Phase 19
-Last activity: 2026-02-23 — Completed all 4 plans (18-01 through 18-04)
+Status: Phase 19 Complete
+Last activity: 2026-02-23 — Completed 19-04 (Integration tests, CI/CD, verification script)
 
-Progress: [#############################.] 95% (18/19 phases complete)
+Progress: [##############################] 100% (19/19 phases complete)
 
 ## Performance Metrics
 
@@ -53,6 +53,10 @@ Progress: [#############################.] 95% (18/19 phases complete)
 | Phase 18 P03 | 5min | 2 tasks | 7 files |
 | Phase 18 P02 | 5min | 2 tasks | 5 files |
 | Phase 18 P04 | 8min | 2 tasks | 10 files |
+| Phase 19 P01 | 5min | 2 tasks | 6 files |
+| Phase 19 P03 | 5min | 2 tasks | 4 files |
+| Phase 19 P04 | 10min | 2 tasks | 6 files |
+| Phase 19 P02 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -139,6 +143,23 @@ Recent decisions affecting current work:
 - [18-04]: DailyReportGenerator uses sample data when no pipeline context for standalone demos
 - [18-04]: HTML report uses inline CSS for email compatibility
 - [18-04]: Slack gets condensed summary with link to full report, not inline
+- [19-01]: Placeholder page components defined inline in dashboard.html, replaced by .jsx files in 19-02
+- [19-01]: ReactRouterDOM loaded from unpkg CDN, consistent with CDN-only approach
+- [19-01]: StaticFiles mount at /static in main.py after all router includes
+- [19-01]: WebSocket URL built from window.location for protocol-agnostic ws/wss support
+- [19-03]: Backtest endpoints use asyncio.to_thread() for CPU-bound BacktestEngine.run() calls
+- [19-03]: All API endpoints gracefully fallback to sample/placeholder data when DB or engine unavailable
+- [19-03]: ConnectionManager uses module-level singleton pattern for cross-module broadcast access
+- [19-03]: WebSocket routes mounted at root (no /api/v1 prefix) for ws:// protocol compatibility
+- [19-03]: Signal history endpoint uses seeded random for deterministic sample data per strategy_id
+- [19-04]: Noop lifespan pattern with starlette TestClient for DB-independent API integration testing
+- [19-04]: AgentRegistry verified via EXECUTION_ORDER (static), not runtime registry (requires manual registration)
+- [19-04]: CI/CD lint job must pass before test job runs (needs: lint dependency)
+- [19-02]: SVG-based GaugeChart component for VaR/CVaR semi-circular gauges (no external gauge library)
+- [19-02]: CSS grid with inline backgroundColor for heatmap cells (Recharts has no native heatmap)
+- [19-02]: ComposedChart with dual Y-axes for equity curve + drawdown overlay in PortfolioPage
+- [19-02]: Per-agent sequential fetch for latest reports (not parallel) to avoid server overload
+- [19-02]: Seeded PRNG for sample equity curve and monthly returns for deterministic demo data
 
 ### Pending Todos
 
@@ -154,6 +175,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed Phase 18 (all 4 plans)
-Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-04-SUMMARY.md
-Resume action: Plan and execute Phase 19 (Dashboard v2, API Expansion, Testing & Verification)
+Stopped at: Completed 19-04-PLAN.md (Phase 19 complete, all phases complete)
+Resume file: .planning/phases/19-dashboard-v2-api-expansion-testing-verification/19-04-SUMMARY.md
+Resume action: All phases complete. Project v3.0 ready for production.

@@ -126,12 +126,12 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Dashboard v2 (React)
 
-- [ ] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
-- [ ] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
-- [ ] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
-- [ ] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
-- [ ] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
-- [ ] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
+- [x] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
+- [x] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
+- [x] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
+- [x] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
+- [x] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
+- [x] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
 
 ### Daily Reporting
 
@@ -141,17 +141,17 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### API Expansion & WebSocket
 
-- [ ] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
-- [ ] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
-- [ ] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
-- [ ] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
+- [x] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
+- [x] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
+- [x] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
+- [x] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
 
 ### Testing & Verification
 
-- [ ] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
-- [ ] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
-- [ ] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
-- [ ] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
+- [x] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
+- [x] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
+- [x] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
+- [x] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
 
 ## Out of Scope (v3.0)
 
@@ -232,20 +232,20 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | REPT-01 | Phase 18 | Pending |
 | REPT-02 | Phase 18 | Pending |
 | REPT-03 | Phase 18 | Pending |
-| DSHV-01 | Phase 19 | Pending |
-| DSHV-02 | Phase 19 | Pending |
-| DSHV-03 | Phase 19 | Pending |
-| DSHV-04 | Phase 19 | Pending |
-| DSHV-05 | Phase 19 | Pending |
-| DSHV-06 | Phase 19 | Pending |
-| APIV-01 | Phase 19 | Pending |
-| APIV-02 | Phase 19 | Pending |
-| APIV-03 | Phase 19 | Pending |
-| APIV-04 | Phase 19 | Pending |
-| TSTV-01 | Phase 19 | Pending |
-| TSTV-02 | Phase 19 | Pending |
-| TSTV-03 | Phase 19 | Pending |
-| TSTV-04 | Phase 19 | Pending |
+| DSHV-01 | Phase 19 | Complete |
+| DSHV-02 | Phase 19 | Complete |
+| DSHV-03 | Phase 19 | Complete |
+| DSHV-04 | Phase 19 | Complete |
+| DSHV-05 | Phase 19 | Complete |
+| DSHV-06 | Phase 19 | Complete |
+| APIV-01 | Phase 19 | Complete |
+| APIV-02 | Phase 19 | Complete |
+| APIV-03 | Phase 19 | Complete |
+| APIV-04 | Phase 19 | Complete |
+| TSTV-01 | Phase 19 | Complete |
+| TSTV-02 | Phase 19 | Complete |
+| TSTV-03 | Phase 19 | Complete |
+| TSTV-04 | Phase 19 | Complete |
 
 **Coverage:**
 - v3 requirements: 77 total (SFWK:4, BTST:6, FXST:4, RTST:4, INST:2, CPST:1, SVST:3, CAST:2, CRSV:4, NLP:5, SAGG:4, RSKV:8, POPT:5, ORCH:4, MNTR:4, DSHV:6, REPT:3, APIV:4, TSTV:4)
