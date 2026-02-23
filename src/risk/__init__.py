@@ -14,6 +14,12 @@ from src.risk.risk_limits import (
     RiskLimitChecker,
     RiskLimitsConfig,
 )
+from src.risk.risk_limits_v2 import (
+    LossRecord,
+    RiskBudgetReport,
+    RiskLimitsManager,
+    RiskLimitsManagerConfig,
+)
 from src.risk.risk_monitor import RiskMonitor, RiskReport
 from src.risk.stress_tester import (
     DEFAULT_SCENARIOS,
@@ -32,8 +38,12 @@ __all__ = [
     "DEFAULT_SCENARIOS",
     "DrawdownManager",
     "LimitCheckResult",
+    "LossRecord",
+    "RiskBudgetReport",
     "RiskLimitChecker",
     "RiskLimitsConfig",
+    "RiskLimitsManager",
+    "RiskLimitsManagerConfig",
     "RiskMonitor",
     "RiskReport",
     "StressResult",
