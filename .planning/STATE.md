@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 18 of 19 (Dagster Orchestration, Monitoring & Reporting)
-Plan: 3 of 4 complete in current phase
+Plan: 2 of 4 complete in current phase
 Status: Executing phase 18 plans
-Last activity: 2026-02-23 — Completed 18-03-PLAN.md (Grafana monitoring)
+Last activity: 2026-02-23 — Completed 18-01-PLAN.md (Dagster orchestration foundation)
 
 Progress: [############################..] 89% (17/19 phases complete)
 
@@ -49,6 +49,7 @@ Progress: [############################..] 89% (17/19 phases complete)
 | Phase 17 P02 | 6min | 2 tasks | 5 files |
 | Phase 17 P03 | 6min | 2 tasks | 5 files |
 | Phase 17 P04 | 7min | 2 tasks | 9 files |
+| Phase 18 P01 | 7min | 2 tasks | 8 files |
 | Phase 18 P03 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
@@ -121,6 +122,10 @@ Recent decisions affecting current work:
 - [17-04]: Rebalance dual-threshold: signal_change > 0.15 OR max position drift > 0.05
 - [17-04]: portfolio_state hypertable compressed after 30 days with instrument segmentby
 - [17-04]: Portfolio API endpoints use sample data for demo; live integration deferred
+- [18-01]: Removed from __future__ import annotations from Dagster asset modules -- incompatible with Dagster runtime type introspection
+- [18-01]: Silver assets use ImportError fallback for transform modules -- graceful degradation
+- [18-01]: Agent assets use _ensure_agents_registered() lazy pattern to avoid circular imports
+- [18-01]: Docker dagster profile keeps dagster-webserver opt-in, not started by default
 - [18-03]: Grafana under 'monitoring' Docker profile so it does not start with default docker compose up
 - [18-03]: Datasource UID 'timescaledb' referenced directly in all dashboard panels for consistent provisioning
 - [18-03]: All 4 dashboards auto-refresh every 15 minutes per user decision
@@ -132,7 +137,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Dagster requires dagster>=1.6 + dagster-webserver -- new dependency
+- Dagster requires dagster>=1.6 + dagster-webserver -- new dependency (RESOLVED in 18-01)
 - Grafana Docker container added to docker-compose.yml (RESOLVED in 18-03)
 - React dashboard may need Node.js 18+ for build tooling (or continue CDN approach)
 - Anthropic API key needed for LLM narrative generation (fallback templates available)
@@ -140,6 +145,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 18-03-PLAN.md
-Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-03-SUMMARY.md
-Resume action: Execute 18-04-PLAN.md
+Stopped at: Completed 18-01-PLAN.md
+Resume file: .planning/phases/18-dagster-orchestration-monitoring-reporting/18-01-SUMMARY.md
+Resume action: Execute remaining phase 18 plans (18-02, 18-04)

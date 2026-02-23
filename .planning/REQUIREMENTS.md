@@ -112,10 +112,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Production Orchestration (Dagster)
 
-- [ ] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
+- [x] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
 - [ ] **ORCH-02**: Dagster assets for Signals, Aggregated Signals, Portfolio Targets, Risk Metrics, Daily Report with full dependency graph
-- [ ] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
-- [ ] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
+- [x] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
+- [x] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
 
 ### Monitoring & Alerting
 
@@ -221,10 +221,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | POPT-03 | Phase 17 | Complete |
 | POPT-04 | Phase 17 | Complete |
 | POPT-05 | Phase 17 | Complete |
-| ORCH-01 | Phase 18 | Pending |
+| ORCH-01 | Phase 18 | Complete |
 | ORCH-02 | Phase 18 | Pending |
-| ORCH-03 | Phase 18 | Pending |
-| ORCH-04 | Phase 18 | Pending |
+| ORCH-03 | Phase 18 | Complete |
+| ORCH-04 | Phase 18 | Complete |
 | MNTR-01 | Phase 18 | Complete |
 | MNTR-02 | Phase 18 | Complete |
 | MNTR-03 | Phase 18 | Pending |
