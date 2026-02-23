@@ -111,13 +111,13 @@ Plans:
   3. Monte Carlo VaR (10,000 simulations with t-Student marginals and Gaussian copula) and parametric VaR (Ledoit-Wolf shrinkage) produce 95% and 99% confidence VaR estimates, with marginal and component VaR decomposition by position
   4. Stress testing includes 6+ scenarios (existing 4 + BR Fiscal Crisis + Global Risk-Off), reverse stress testing finds scenarios producing a given max loss, and historical replay replays actual returns from crisis periods
   5. Black-Litterman model combines market equilibrium with agent views via confidence-weighted P/Q matrices, PositionSizer offers vol_target/fractional_kelly/risk_budget methods, and portfolio_state table persists positions with strategy attribution
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 17-01: SignalAggregator v2 (3 methods, crowding penalty, staleness discount), SignalMonitor (flips, surges, divergence, daily summary)
-- [ ] 17-02: Monte Carlo VaR (t-Student, Gaussian copula, Cholesky), parametric VaR (Ledoit-Wolf), marginal/component VaR decomposition, expanded stress scenarios, reverse stress, historical replay
-- [ ] 17-03: RiskLimitsManager v2 (daily/weekly loss, risk budget), risk API routes (/var, /stress, /limits, /dashboard)
-- [ ] 17-04: Black-Litterman model, mean-variance optimization, PositionSizer (vol_target, Kelly, risk_budget), portfolio_state table migration, portfolio API routes
+- [ ] 17-01-PLAN.md -- SignalAggregator v2 (3 methods: confidence-weighted, rank-based, Bayesian with regime prior), crowding penalty, staleness discount, SignalMonitor (flips, surges, divergence, daily summary)
+- [ ] 17-02-PLAN.md -- Enhanced VaR (756-day lookback, marginal/component VaR decomposition), expanded stress scenarios (+BR Fiscal Crisis, +Global Risk-Off), reverse stress testing, historical replay
+- [ ] 17-03-PLAN.md -- RiskLimitsManager v2 (daily/weekly loss tracking, risk budget), 4 risk API routes (/var, /stress, /limits, /dashboard)
+- [ ] 17-04-PLAN.md -- Black-Litterman model (regime-adjusted views), mean-variance optimization, PositionSizer (vol_target, half-Kelly, risk_budget), portfolio_state table migration, portfolio API routes (/target, /rebalance-trades, /attribution)
 
 ### Phase 18: Dagster Orchestration, Monitoring & Reporting
 **Goal**: Production-grade orchestration with Dagster replacing the custom pipeline, Grafana monitoring dashboards with alerting, and automated daily report generation -- making the system observable and operationally reliable
