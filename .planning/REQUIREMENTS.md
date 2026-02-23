@@ -104,11 +104,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Portfolio Optimization
 
-- [ ] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
-- [ ] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
-- [ ] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
-- [ ] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
-- [ ] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
+- [x] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
+- [x] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
+- [x] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
+- [x] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
+- [x] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
 
 ### Production Orchestration (Dagster)
 
@@ -216,11 +216,11 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | RSKV-06 | Phase 17 | Complete |
 | RSKV-07 | Phase 17 | Complete |
 | RSKV-08 | Phase 17 | Complete |
-| POPT-01 | Phase 17 | Pending |
-| POPT-02 | Phase 17 | Pending |
-| POPT-03 | Phase 17 | Pending |
-| POPT-04 | Phase 17 | Pending |
-| POPT-05 | Phase 17 | Pending |
+| POPT-01 | Phase 17 | Complete |
+| POPT-02 | Phase 17 | Complete |
+| POPT-03 | Phase 17 | Complete |
+| POPT-04 | Phase 17 | Complete |
+| POPT-05 | Phase 17 | Complete |
 | ORCH-01 | Phase 18 | Pending |
 | ORCH-02 | Phase 18 | Pending |
 | ORCH-03 | Phase 18 | Pending |
