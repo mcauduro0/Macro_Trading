@@ -141,10 +141,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### API Expansion & WebSocket
 
-- [ ] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
-- [ ] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
-- [ ] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
-- [ ] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
+- [x] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
+- [x] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
+- [x] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
+- [x] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
 
 ### Testing & Verification
 
@@ -238,10 +238,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | DSHV-04 | Phase 19 | Pending |
 | DSHV-05 | Phase 19 | Pending |
 | DSHV-06 | Phase 19 | Complete |
-| APIV-01 | Phase 19 | Pending |
-| APIV-02 | Phase 19 | Pending |
-| APIV-03 | Phase 19 | Pending |
-| APIV-04 | Phase 19 | Pending |
+| APIV-01 | Phase 19 | Complete |
+| APIV-02 | Phase 19 | Complete |
+| APIV-03 | Phase 19 | Complete |
+| APIV-04 | Phase 19 | Complete |
 | TSTV-01 | Phase 19 | Pending |
 | TSTV-02 | Phase 19 | Pending |
 | TSTV-03 | Phase 19 | Pending |
