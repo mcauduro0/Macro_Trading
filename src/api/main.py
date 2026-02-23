@@ -17,6 +17,7 @@ from src.api.routes import (
     health, macro, curves, market_data, flows, dashboard,
     agents, signals, strategies_api, portfolio_api, risk_api, reports,
 )
+from src.api.routes.monitoring_api import router as monitoring_router
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,9 @@ app.include_router(strategies_api.router, prefix="/api/v1")
 app.include_router(portfolio_api.router, prefix="/api/v1")
 app.include_router(risk_api.router, prefix="/api/v1")
 app.include_router(reports.router, prefix="/api/v1")
+
+# Monitoring endpoints
+app.include_router(monitoring_router, prefix="/api/v1")
 
 # Dashboard served at root (no prefix) — GET /dashboard
 app.include_router(dashboard.router)
