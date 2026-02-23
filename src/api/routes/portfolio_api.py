@@ -1,8 +1,11 @@
 """Portfolio management endpoints.
 
 Provides:
-- GET /portfolio/current — consolidated portfolio positions
-- GET /portfolio/risk    — risk report (VaR, CVaR, stress tests)
+- GET /portfolio/current           — consolidated portfolio positions
+- GET /portfolio/risk              — risk report (VaR, CVaR, stress tests)
+- GET /portfolio/target            — target portfolio weights from optimization
+- GET /portfolio/rebalance-trades  — required trades to reach target weights
+- GET /portfolio/attribution       — strategy attribution for current portfolio
 """
 
 from __future__ import annotations
@@ -153,4 +156,257 @@ def _build_risk_report() -> dict:
         "risk_level": report.overall_risk_level,
         "drawdown_pct": round(report.drawdown_pct, 6),
         "portfolio_value": portfolio_value,
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/portfolio/target
+# ---------------------------------------------------------------------------
+@router.get("/target")
+async def portfolio_target():
+    """Return target portfolio weights from optimization.
+
+    Instantiates PortfolioOptimizer, runs on sample/placeholder data,
+    and returns target weights with optimization metadata.
+    """
+    try:
+        target_data = await asyncio.to_thread(_build_target_weights)
+        return _envelope(target_data)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+def _build_target_weights() -> dict:
+    """Build target portfolio weights using Black-Litterman + MV optimization."""
+    from src.portfolio.black_litterman import BlackLitterman
+    from src.portfolio.portfolio_optimizer import PortfolioOptimizer
+
+    instruments = ["IBOV", "DI1F25", "USDBRL", "PETR4", "VALE3"]
+    n = len(instruments)
+
+    # Sample covariance (diagonal approximation with realistic Brazilian market vols)
+    vols = np.array([0.25, 0.10, 0.15, 0.30, 0.28])
+    covariance = np.diag(vols ** 2)
+
+    # Market cap weights (approximate)
+    market_weights = np.array([0.30, 0.20, 0.15, 0.20, 0.15])
+
+    # Run Black-Litterman with no views (equilibrium only) as baseline
+    bl = BlackLitterman()
+    bl_result = bl.optimize(
+        views=[],
+        covariance=covariance,
+        market_weights=market_weights,
+        instrument_names=instruments,
+        regime_clarity=0.7,
+    )
+
+    # Run mean-variance optimization on posterior returns
+    optimizer = PortfolioOptimizer()
+    target_weights = optimizer.optimize_with_bl(bl_result, instruments)
+
+    # Build response
+    targets = []
+    for inst in instruments:
+        tw = target_weights.get(inst, 0.0)
+        direction = "LONG" if tw > 0.001 else ("SHORT" if tw < -0.001 else "NEUTRAL")
+        targets.append({
+            "instrument": inst,
+            "direction": direction,
+            "target_weight": round(tw, 6),
+            "current_weight": 0.0,  # Placeholder -- would come from live positions
+            "sizing_method": "mean_variance",
+        })
+
+    return {
+        "targets": targets,
+        "optimization": {
+            "method": "black_litterman",
+            "regime_clarity": bl_result.get("regime_clarity", 0.0),
+            "constraints": {
+                "min_weight": optimizer.constraints.min_weight,
+                "max_weight": optimizer.constraints.max_weight,
+                "max_leverage": optimizer.constraints.max_leverage,
+                "long_only": optimizer.constraints.long_only,
+            },
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/portfolio/rebalance-trades
+# ---------------------------------------------------------------------------
+@router.get("/rebalance-trades")
+async def portfolio_rebalance_trades():
+    """Compute required trades to move from current to target weights.
+
+    Uses PortfolioOptimizer.should_rebalance() to determine if rebalancing
+    is needed based on signal change and drift thresholds.
+    """
+    try:
+        trades_data = await asyncio.to_thread(_build_rebalance_trades)
+        return _envelope(trades_data)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+def _build_rebalance_trades() -> dict:
+    """Compute rebalance trades from current to target."""
+    from src.portfolio.portfolio_optimizer import PortfolioOptimizer
+
+    optimizer = PortfolioOptimizer()
+
+    # Sample current and target weights
+    current_weights: dict[str, float] = {
+        "IBOV": 0.10,
+        "DI1F25": 0.05,
+        "USDBRL": -0.05,
+        "PETR4": 0.08,
+        "VALE3": 0.07,
+    }
+
+    # Build target weights from optimization
+    target_data = _build_target_weights()
+    target_weights = {
+        t["instrument"]: t["target_weight"] for t in target_data["targets"]
+    }
+
+    # Determine if rebalancing is needed
+    signal_change = 0.0  # Placeholder for aggregate signal change
+    should_rebalance = optimizer.should_rebalance(
+        current_weights=current_weights,
+        target_weights=target_weights,
+        signal_change=signal_change,
+    )
+
+    # Compute individual trades
+    all_instruments = set(current_weights) | set(target_weights)
+    trades = []
+    total_notional = 1_000_000.0  # Reference portfolio value
+
+    for inst in sorted(all_instruments):
+        current_w = current_weights.get(inst, 0.0)
+        target_w = target_weights.get(inst, 0.0)
+        trade_w = target_w - current_w
+
+        if abs(trade_w) < 0.001:
+            continue
+
+        direction = "BUY" if trade_w > 0 else "SELL"
+        trades.append({
+            "instrument": inst,
+            "direction": direction,
+            "current_weight": round(current_w, 6),
+            "target_weight": round(target_w, 6),
+            "trade_weight": round(trade_w, 6),
+            "trade_notional": round(trade_w * total_notional, 2),
+        })
+
+    trigger_reason = None
+    if should_rebalance:
+        # Determine reason
+        max_drift = max(
+            abs(target_weights.get(inst, 0.0) - current_weights.get(inst, 0.0))
+            for inst in all_instruments
+        ) if all_instruments else 0.0
+
+        if abs(signal_change) > 0.15:
+            trigger_reason = "signal_change"
+        elif max_drift > 0.05:
+            trigger_reason = "position_drift"
+
+    estimated_cost = sum(abs(t["trade_notional"]) * 0.0005 for t in trades)
+
+    return {
+        "trades": trades,
+        "should_rebalance": should_rebalance,
+        "trigger_reason": trigger_reason,
+        "estimated_cost": round(estimated_cost, 2),
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/portfolio/attribution
+# ---------------------------------------------------------------------------
+@router.get("/attribution")
+async def portfolio_attribution():
+    """Return strategy attribution for current portfolio.
+
+    Reads from strategy_attribution JSON in portfolio_state records
+    or builds from in-memory state as fallback.
+    """
+    try:
+        attribution_data = await asyncio.to_thread(_build_attribution)
+        return _envelope(attribution_data)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+def _build_attribution() -> dict:
+    """Build strategy attribution for portfolio positions."""
+    # Sample attribution data (would come from portfolio_state records)
+    sample_positions = [
+        {
+            "instrument": "IBOV",
+            "strategy_attribution": {
+                "FX_BR_01": 0.40,
+                "RATES_01": 0.30,
+                "CROSS_01": 0.30,
+            },
+            "pnl": 15000.0,
+        },
+        {
+            "instrument": "DI1F25",
+            "strategy_attribution": {
+                "RATES_01": 0.60,
+                "RATES_02": 0.25,
+                "INF_01": 0.15,
+            },
+            "pnl": -5000.0,
+        },
+        {
+            "instrument": "USDBRL",
+            "strategy_attribution": {
+                "FX_BR_01": 0.50,
+                "FX_02": 0.30,
+                "CUPOM_01": 0.20,
+            },
+            "pnl": 8000.0,
+        },
+    ]
+
+    attribution = []
+    by_strategy: dict[str, float] = {}
+    total_pnl = 0.0
+
+    for pos in sample_positions:
+        instrument = pos["instrument"]
+        strat_attr = pos.get("strategy_attribution", {})
+        pos_pnl = pos.get("pnl", 0.0)
+        total_pnl += pos_pnl
+
+        strategies = []
+        for strategy_id, contribution_weight in strat_attr.items():
+            contribution_pnl = round(pos_pnl * contribution_weight, 2)
+            strategies.append({
+                "strategy_id": strategy_id,
+                "contribution_weight": round(contribution_weight, 4),
+                "contribution_pnl": contribution_pnl,
+            })
+            by_strategy[strategy_id] = (
+                by_strategy.get(strategy_id, 0.0) + contribution_pnl
+            )
+
+        attribution.append({
+            "instrument": instrument,
+            "strategies": strategies,
+        })
+
+    # Round by_strategy values
+    by_strategy = {k: round(v, 2) for k, v in by_strategy.items()}
+
+    return {
+        "attribution": attribution,
+        "total_pnl": round(total_pnl, 2),
+        "by_strategy": by_strategy,
     }
