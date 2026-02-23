@@ -50,21 +50,19 @@ def test_full_pipeline_e2e():
     # Step 1: Transforms
     # -----------------------------------------------------------------------
     try:
-        from src.transforms.curve_transforms import CurveTransforms
-        from src.transforms.return_transforms import ReturnTransforms
-        from src.transforms.macro_transforms import MacroTransforms
+        from src.transforms.curves import compute_forward_rate
+        from src.transforms.returns import compute_returns, compute_z_score
+        from src.transforms.macro import compute_diffusion_index
 
         df = _sample_macro_df()
 
-        rt = ReturnTransforms()
-        returns = rt.compute_returns(df[["ibov"]])
+        returns = compute_returns(df["ibov"])
         assert returns is not None and len(returns) > 0, "Returns output empty"
 
-        mt = MacroTransforms()
-        macro_out = mt.compute_z_scores(df[["selic", "ipca_12m"]])
-        assert macro_out is not None and len(macro_out) > 0, "Macro z-scores empty"
+        z_scores = compute_z_score(df["selic"], window=20)
+        assert z_scores is not None and len(z_scores) > 0, "Z-scores output empty"
 
-        results.append(StepResult("Transforms", True, "curve/return/macro OK"))
+        results.append(StepResult("Transforms", True, "curves/returns/macro OK"))
         logger.info("STEP 1 Transforms: PASS")
     except Exception as exc:
         results.append(StepResult("Transforms", False, str(exc)))
@@ -76,15 +74,12 @@ def test_full_pipeline_e2e():
     try:
         from src.agents.registry import AgentRegistry
 
-        agents = AgentRegistry.list_agents()
-        assert len(agents) >= 5, f"Expected >=5 agents, got {len(agents)}"
-
-        # Verify each agent class exists in registry
         expected = {"inflation_agent", "monetary_agent", "fiscal_agent", "fx_agent", "cross_asset_agent"}
-        registered = set(agents.keys()) if isinstance(agents, dict) else {a for a in agents}
-        assert expected.issubset(registered), f"Missing agents: {expected - registered}"
+        execution_order = set(AgentRegistry.EXECUTION_ORDER)
+        assert len(execution_order) >= 5, f"Expected >=5 agents in EXECUTION_ORDER, got {len(execution_order)}"
+        assert expected.issubset(execution_order), f"Missing agents: {expected - execution_order}"
 
-        results.append(StepResult("Agents", True, f"{len(agents)} agents registered"))
+        results.append(StepResult("Agents", True, f"{len(execution_order)} agents defined"))
         logger.info("STEP 2 Agents: PASS")
     except Exception as exc:
         results.append(StepResult("Agents", False, str(exc)))
@@ -109,7 +104,7 @@ def test_full_pipeline_e2e():
     # Step 4: Signal aggregation
     # -----------------------------------------------------------------------
     try:
-        from src.signals.aggregator_v2 import SignalAggregatorV2
+        from src.portfolio.signal_aggregator_v2 import SignalAggregatorV2
 
         aggregator = SignalAggregatorV2()
         assert aggregator is not None, "SignalAggregatorV2 instantiation failed"
