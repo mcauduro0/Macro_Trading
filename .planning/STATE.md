@@ -45,6 +45,7 @@ Progress: [##########################....] 84% (16/19 phases complete)
 | Phase 16 P01 | 10min | 2 tasks | 9 files |
 | Phase 16 P02 | 8min | 2 tasks | 9 files |
 | Phase 16 P03 | 7min | 2 tasks | 7 files |
+| Phase 17 P01 | 8min | 2 tasks | 4 files |
 | Phase 17 P02 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
@@ -100,6 +101,11 @@ Recent decisions affecting current work:
 - [16-03]: Change score thresholds: |delta| > 0.3 = major shift, > 0.1 = minor shift, else neutral
 - [16-03]: NLPProcessor batch processing sorts by date ascending for sequential change detection
 - [16-03]: Term weights in [0.0, 1.0] range with higher values for stronger hawk/dove signals
+- [17-01]: Bayesian default method with flat prior when no regime context available
+- [17-01]: Regime tilts shift WHICH strategies to trust, not overall conviction level
+- [17-01]: Crowding penalty is gentle 20% reduction at >80% agreement threshold
+- [17-01]: Staleness linear decay over 5 business days (weekday-only counting)
+- [17-01]: Signal flip = any sign change; conviction surge = absolute >0.3; divergence = >0.5 within asset class
 - [17-02]: Component VaR tolerance 2% vs total parametric VaR (Ledoit-Wolf shrinkage vs sample variance)
 - [17-02]: Default lookback updated 252->756 days (3-year window) for both min_historical_obs and Monte Carlo
 - [17-02]: Historical replay reports worst cumulative drawdown point, not final-day P&L
@@ -119,6 +125,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 17-02-PLAN.md (Risk Engine v2)
-Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-02-SUMMARY.md
+Stopped at: Completed 17-01-PLAN.md (Signal Aggregation v2 & Signal Monitor)
+Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-01-SUMMARY.md
 Resume action: Execute 17-03-PLAN.md

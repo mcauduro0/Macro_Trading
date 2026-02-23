@@ -111,7 +111,7 @@ Plans:
   3. Monte Carlo VaR (10,000 simulations with t-Student marginals and Gaussian copula) and parametric VaR (Ledoit-Wolf shrinkage) produce 95% and 99% confidence VaR estimates, with marginal and component VaR decomposition by position
   4. Stress testing includes 6+ scenarios (existing 4 + BR Fiscal Crisis + Global Risk-Off), reverse stress testing finds scenarios producing a given max loss, and historical replay replays actual returns from crisis periods
   5. Black-Litterman model combines market equilibrium with agent views via confidence-weighted P/Q matrices, PositionSizer offers vol_target/fractional_kelly/risk_budget methods, and portfolio_state table persists positions with strategy attribution
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 17-01-PLAN.md -- SignalAggregator v2 (3 methods: confidence-weighted, rank-based, Bayesian with regime prior), crowding penalty, staleness discount, SignalMonitor (flips, surges, divergence, daily summary)
@@ -190,6 +190,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 | 14. Backtesting Engine v2 & Strategy Framework | 3/3 | Complete    | 2026-02-22 |
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete    | 2026-02-22 |
-| 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 1/4 | In Progress|  |
+| 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 2/4 | In Progress|  |
 | 18. Dagster Orchestration, Monitoring & Reporting | 0/4 | Not started | - |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |

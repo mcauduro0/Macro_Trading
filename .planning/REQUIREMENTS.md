@@ -86,10 +86,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 
 ### Signal Aggregation v2
 
-- [ ] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
-- [ ] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
-- [ ] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
-- [ ] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
+- [x] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
+- [x] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
+- [x] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
+- [x] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
 
 ### Risk Engine v2
 
@@ -204,10 +204,10 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | NLP-03 | Phase 16 | Complete |
 | NLP-04 | Phase 16 | Complete |
 | NLP-05 | Phase 16 | Complete |
-| SAGG-01 | Phase 17 | Pending |
-| SAGG-02 | Phase 17 | Pending |
-| SAGG-03 | Phase 17 | Pending |
-| SAGG-04 | Phase 17 | Pending |
+| SAGG-01 | Phase 17 | Complete |
+| SAGG-02 | Phase 17 | Complete |
+| SAGG-03 | Phase 17 | Complete |
+| SAGG-04 | Phase 17 | Complete |
 | RSKV-01 | Phase 17 | Complete |
 | RSKV-02 | Phase 17 | Complete |
 | RSKV-03 | Phase 17 | Complete |
