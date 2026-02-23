@@ -99,8 +99,8 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 - [x] **RSKV-04**: Expanded stress scenarios: add BR Fiscal Crisis (teto de gastos) and Global Risk-Off (geopolitical) to existing 4 scenarios
 - [x] **RSKV-05**: Reverse stress testing — find scenarios that produce a given max loss
 - [x] **RSKV-06**: Historical replay stress test — replay actual returns from a crisis period
-- [ ] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
-- [ ] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
+- [x] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
+- [x] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
 
 ### Portfolio Optimization
 
@@ -214,8 +214,8 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | RSKV-04 | Phase 17 | Complete |
 | RSKV-05 | Phase 17 | Complete |
 | RSKV-06 | Phase 17 | Complete |
-| RSKV-07 | Phase 17 | Pending |
-| RSKV-08 | Phase 17 | Pending |
+| RSKV-07 | Phase 17 | Complete |
+| RSKV-08 | Phase 17 | Complete |
 | POPT-01 | Phase 17 | Pending |
 | POPT-02 | Phase 17 | Pending |
 | POPT-03 | Phase 17 | Pending |

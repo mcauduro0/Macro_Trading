@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 17 of 19 (Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization)
-Plan: 2 of 4 complete in current phase
+Plan: 3 of 4 complete in current phase
 Status: Executing Phase 17
-Last activity: 2026-02-23 — Completed 17-02 (Risk Engine v2)
+Last activity: 2026-02-23 — Completed 17-03 (Risk Limits v2 & Risk API)
 
 Progress: [##########################....] 84% (16/19 phases complete)
 
@@ -47,6 +47,7 @@ Progress: [##########################....] 84% (16/19 phases complete)
 | Phase 16 P03 | 7min | 2 tasks | 7 files |
 | Phase 17 P01 | 8min | 2 tasks | 4 files |
 | Phase 17 P02 | 6min | 2 tasks | 5 files |
+| Phase 17 P03 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,10 @@ Recent decisions affecting current work:
 - [17-02]: Default lookback updated 252->756 days (3-year window) for both min_historical_obs and Monte Carlo
 - [17-02]: Historical replay reports worst cumulative drawdown point, not final-day P&L
 - [17-02]: Reverse stress binary search [0.01, 5.0x] with feasibility flag for unexposed scenarios
+- [17-03]: Daily/weekly loss breach uses absolute value comparison against positive limit thresholds
+- [17-03]: Risk budget can_add_risk threshold at 5% headroom (available > 0.05)
+- [17-03]: check_all_v2 overall_status has three levels: OK, WARNING (>80%), BREACHED
+- [17-03]: API endpoints use deterministic sample data (seed=42) for consistent testing
 
 ### Pending Todos
 
@@ -125,6 +130,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 17-01-PLAN.md (Signal Aggregation v2 & Signal Monitor)
-Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-01-SUMMARY.md
-Resume action: Execute 17-03-PLAN.md
+Stopped at: Completed 17-03-PLAN.md (Risk Limits v2 & Risk API)
+Resume file: .planning/phases/17-signal-aggregation-v2-risk-engine-v2-portfolio-optimization/17-03-SUMMARY.md
+Resume action: Execute 17-04-PLAN.md
