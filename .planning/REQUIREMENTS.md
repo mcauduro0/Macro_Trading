@@ -131,7 +131,7 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 - [ ] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
 - [ ] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
 - [ ] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
-- [ ] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
+- [x] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
 
 ### Daily Reporting
 
@@ -237,7 +237,7 @@ Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Ea
 | DSHV-03 | Phase 19 | Pending |
 | DSHV-04 | Phase 19 | Pending |
 | DSHV-05 | Phase 19 | Pending |
-| DSHV-06 | Phase 19 | Pending |
+| DSHV-06 | Phase 19 | Complete |
 | APIV-01 | Phase 19 | Pending |
 | APIV-02 | Phase 19 | Pending |
 | APIV-03 | Phase 19 | Pending |
