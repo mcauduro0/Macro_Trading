@@ -43,7 +43,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 - [x] **Phase 15: New Trading Strategies** - 16 new strategies across FX (4), rates (4), inflation (2), cupom cambial (1), sovereign (3), cross-asset (2) (completed 2026-02-22)
 - [x] **Phase 16: Cross-Asset Agent v2 & NLP Pipeline** - Enhanced CrossAssetView, HMM regime classification, consistency checking, LLM narrative, COPOM/FOMC scrapers, hawk/dove sentiment analysis (completed 2026-02-22)
 - [x] **Phase 17: Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization** - Bayesian aggregation, crowding/staleness, Monte Carlo VaR, reverse stress, component VaR, Black-Litterman, Kelly sizing (completed 2026-02-23)
-- [ ] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator
+- [x] **Phase 18: Dagster Orchestration, Monitoring & Reporting** - Dagster asset definitions, dependency graph, Grafana dashboards, AlertManager, daily report generator (completed 2026-02-23)
 - [ ] **Phase 19: Dashboard v2, API Expansion, Testing & Verification** - React multi-page dashboard (5 pages), backtest/strategy/WebSocket APIs, integration tests, CI/CD, verification script
 
 ## Phase Details
@@ -129,13 +129,13 @@ Plans:
   3. Grafana runs at port 3002 with TimescaleDB datasource and 4 provisioned dashboards (pipeline health, signal overview, risk dashboard, portfolio performance) loading automatically on first start
   4. AlertManager evaluates 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale) and sends notifications via Slack and email
   5. DailyReportGenerator produces reports with 7 sections (Market Snapshot, Regime, Agent Views, Signals, Portfolio, Risk, Actions) in markdown and HTML formats, accessible via GET /api/v1/reports/daily/latest and sendable via POST /reports/daily/send
-**Plans:** 2/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 18-01-PLAN.md -- Dagster asset definitions (Bronze 6, Silver 3, Agents 5), Definitions module, Docker Compose dagster-webserver service, Makefile targets (make dagster, make dagster-run-all)
-- [ ] 18-02-PLAN.md -- Dagster assets for Signals (2), Portfolio (2), Risk (3), Report (1) with full dependency graph, updated Definitions with 22 total assets
-- [ ] 18-03-PLAN.md -- Grafana Docker Compose service (port 3002), TimescaleDB datasource provisioning, 4 dashboard JSONs (pipeline_health, signal_overview, risk_dashboard, portfolio_performance)
-- [ ] 18-04-PLAN.md -- AlertManager (10 rules, 30-min cooldown, Slack + email), 4 monitoring API routes, DailyReportGenerator (7 sections, markdown/HTML/email/Slack), 3 report API routes
+- [x] 18-01-PLAN.md -- Dagster asset definitions (Bronze 6, Silver 3, Agents 5), Definitions module, Docker Compose dagster-webserver service, Makefile targets (make dagster, make dagster-run-all)
+- [x] 18-02-PLAN.md -- Dagster assets for Signals (2), Portfolio (2), Risk (3), Report (1) with full dependency graph, updated Definitions with 22 total assets
+- [x] 18-03-PLAN.md -- Grafana Docker Compose service (port 3002), TimescaleDB datasource provisioning, 4 dashboard JSONs (pipeline_health, signal_overview, risk_dashboard, portfolio_performance)
+- [x] 18-04-PLAN.md -- AlertManager (10 rules, 30-min cooldown, Slack + email), 4 monitoring API routes, DailyReportGenerator (7 sections, markdown/HTML/email/Slack), 3 report API routes
 
 ### Phase 19: Dashboard v2, API Expansion, Testing & Verification
 **Goal**: A React multi-page dashboard replacing the single-page HTML dashboard, expanded API with backtest/strategy/WebSocket endpoints, and comprehensive integration tests validating all v3.0 components end-to-end
@@ -191,5 +191,5 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 13 -> 14 -> 15 -> 16 -> 17 -> 
 | 15. New Trading Strategies | 5/5 | Complete   | 2026-02-22 |
 | 16. Cross-Asset Agent v2 & NLP Pipeline | 3/3 | Complete    | 2026-02-22 |
 | 17. Signal Aggregation v2, Risk Engine v2 & Portfolio Optimization | 4/4 | Complete    | 2026-02-23 |
-| 18. Dagster Orchestration, Monitoring & Reporting | 2/4 | In Progress|  |
+| 18. Dagster Orchestration, Monitoring & Reporting | 4/4 | Complete    | 2026-02-23 |
 | 19. Dashboard v2, API Expansion, Testing & Verification | 0/4 | Not started | - |
