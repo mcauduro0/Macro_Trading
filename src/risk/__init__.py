@@ -21,7 +21,7 @@ from src.risk.stress_tester import (
     StressScenario,
     StressTester,
 )
-from src.risk.var_calculator import VaRCalculator, VaRResult
+from src.risk.var_calculator import VaRCalculator, VaRDecomposition, VaRResult
 
 __all__ = [
     "AlertDispatcher",
@@ -41,5 +41,6 @@ __all__ = [
     "StressTester",
     "StrategyLossTracker",
     "VaRCalculator",
+    "VaRDecomposition",
     "VaRResult",
 ]
