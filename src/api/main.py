@@ -23,6 +23,9 @@ from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.reports_api import router as reports_api_router
 from src.api.routes.backtest_api import router as backtest_router
 from src.api.routes.websocket_api import router as websocket_router
+from src.api.routes.pms_portfolio import router as pms_portfolio_router
+from src.api.routes.pms_trades import router as pms_trades_router
+from src.api.routes.pms_journal import router as pms_journal_router
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +67,9 @@ openapi_tags = [
     {"name": "Reports", "description": "Daily reports and notifications"},
     {"name": "Monitoring", "description": "System monitoring and alerts"},
     {"name": "WebSocket", "description": "Real-time WebSocket channels"},
+    {"name": "PMS - Portfolio", "description": "Portfolio positions, P&L, and book management"},
+    {"name": "PMS - Trade Blotter", "description": "Trade proposals and approval workflow"},
+    {"name": "PMS - Decision Journal", "description": "Immutable decision audit log"},
 ]
 
 app = FastAPI(
@@ -120,6 +126,11 @@ app.include_router(reports_api_router, prefix="/api/v1")
 
 # Backtest endpoints
 app.include_router(backtest_router, prefix="/api/v1")
+
+# PMS v4.0 endpoints
+app.include_router(pms_portfolio_router, prefix="/api/v1")
+app.include_router(pms_trades_router, prefix="/api/v1")
+app.include_router(pms_journal_router, prefix="/api/v1")
 
 # WebSocket endpoints at root (no prefix — ws:// paths)
 app.include_router(websocket_router)
