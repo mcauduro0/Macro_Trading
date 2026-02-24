@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 21: Trade Workflow & PMS API (v4.0)
+**Current focus:** Phase 22: Morning Pack, Risk Monitor & Attribution (v4.0)
 
 ## Current Position
 
-Phase: 21 of 27 (Trade Workflow & PMS API) -- COMPLETE
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 21 complete -- ready for Phase 22
-Last activity: 2026-02-24 — Completed 21-03 PMS Journal Router & API Integration Tests
+Phase: 22 of 27 (Morning Pack, Risk Monitor & Attribution)
+Plan: 2 of 3 in current phase
+Status: Executing Phase 22 -- 22-02 complete
+Last activity: 2026-02-24 — Completed 22-02 RiskMonitorService & PMSRiskLimits
 
-Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 done, v4 Phase 21 complete)
+Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 done, v4 Phase 22 in progress)
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 
 | Phase 21 P01 | 5min | 2 tasks | 3 files |
 | Phase 21 P02 | 3min | 1 tasks | 4 files |
 | Phase 21 P03 | 4min | 2 tasks | 3 files |
+| Phase 22 P02 | 6min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,10 @@ Recent decisions affecting current work:
 - [Phase 21]: Duplicate lazy singleton pattern in pms_trades.py per plan spec (not shared import)
 - [21-03]: Journal stats/decision-analysis endpoint placed before /{entry_id} to avoid FastAPI path conflict
 - [21-03]: Test fixture injects shared TradeWorkflowService across all 3 router module singletons for state coherence
+- [22-02]: Two-tier alerts: WARNING at 80% utilization, BREACH at 100% for all limit types
+- [22-02]: RiskMonitorService graceful degradation: each optional component (VaRCalculator, StressTester, RiskLimitsManager) can be None
+- [22-02]: Parametric VaR from P&L history (>=20 obs); MC VaR requires >=30 obs and VaRCalculator
+- [22-02]: Drawdown computed from cumulative daily P&L via HWM method against AUM
 
 ### Pending Todos
 
@@ -196,6 +201,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 21-03-PLAN.md (Phase 21 complete)
-Resume file: Phase 22
-Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 22
+Stopped at: Completed 22-02-PLAN.md
+Resume file: Phase 22 Plan 03
+Resume action: Run /gsd:execute-phase for Phase 22 Plan 03
