@@ -248,6 +248,11 @@ Plans:
   3. Trade Blotter shows pending proposals with conviction score, risk impact preview, and system rationale -- with approve/reject/modify action buttons
   4. Trade Blotter execution form captures execution price, notional, manager thesis, target price, stop loss, and time horizon
   5. Trade history tab shows all past proposals with final status and outcome
+**Plans:** 2 plans
+
+Plans:
+- [ ] 24-01-PLAN.md -- Position Book page (P&L summary cards, equity curve with CDI benchmark, collapsible asset-class-grouped positions table, expandable detail rows, inline close actions)
+- [ ] 24-02-PLAN.md -- Trade Blotter page (pending proposals with slide-out approval panel, batch actions, expandable risk detail, history tab with status filtering)
 
 ### Phase 25: Frontend Risk Monitor & Performance Attribution
 **Goal**: Risk Monitor page provides visual risk dashboard with gauges and charts, Performance Attribution page shows multi-dimensional P&L decomposition -- both essential for daily risk oversight
@@ -327,7 +332,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | 21. Trade Workflow & PMS API | 3/3 | Complete   | 2026-02-24 |
 | 22. Morning Pack, Risk Monitor & Attribution | 3/3 | Complete    | 2026-02-24 |
 | 23. Frontend Design System & Morning Pack Page | 2/2 | Complete    | 2026-02-24 |
-| 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |
+| 24. Frontend Position Book & Trade Blotter | 0/2 | Planned | - |
 | 25. Frontend Risk Monitor & Performance Attribution | 0/0 | Not Started | - |
 | 26. Frontend Decision Journal, Agent Intel & Compliance | 0/0 | Not Started | - |
 | 27. Redis Cache, Dagster PMS, Go-Live & Verification | 0/0 | Not Started | - |
