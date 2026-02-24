@@ -199,6 +199,12 @@ Plans:
   3. Discretionary trades (manager-initiated, not system-generated) can be opened via API with mandatory thesis field
   4. PMS API serves 20+ endpoints across 3 routers: pms_portfolio (book, positions, P&L, equity curve, attribution), pms_trades (proposals, approve, reject, generate), pms_journal (entries, stats, outcome recording)
   5. All Pydantic request/response schemas defined and Swagger docs show PMS tags
+**Plans:** 3 plans
+
+Plans:
+- [ ] 21-01-PLAN.md -- TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades, close + tests)
+- [ ] 21-02-PLAN.md -- Pydantic schemas (12+ models) + PMS Portfolio router (10 endpoints) + PMS Trades router (6 endpoints)
+- [ ] 21-03-PLAN.md -- PMS Journal router (4 endpoints) + main.py registration (3 routers, 3 tags) + FastAPI integration tests (12+)
 
 ### Phase 22: Morning Pack, Risk Monitor & Attribution
 **Goal**: Three backend services that power the operational frontend -- MorningPackService generates daily briefings consolidating all system intelligence, RiskMonitorService provides real-time risk dashboard data, and PerformanceAttributionEngine decomposes P&L across multiple dimensions
@@ -307,7 +313,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
-| 21. Trade Workflow & PMS API | 0/0 | Not Started | - |
+| 21. Trade Workflow & PMS API | 0/3 | Planned | - |
 | 22. Morning Pack, Risk Monitor & Attribution | 0/0 | Not Started | - |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |
