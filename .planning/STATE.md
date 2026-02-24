@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 20 of 27 (PMS Database & Position Manager)
-Plan: 1 of 2 in current phase
-Status: Phase 20 — Plan 01 complete, executing Plan 02 next
-Last activity: 2026-02-24 — Completed 20-01 PMS database models
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase 20 complete — all 2 plans done
+Last activity: 2026-02-24 — Completed 20-02 PositionManager & MarkToMarketService
 
-Progress: [#######################-------] 70% (19/27 phases complete — v1-v3 done, v4 starting)
+Progress: [########################------] 74% (20/27 phases complete — v1-v3 done, v4 Phase 20 complete)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [#######################-------] 70% (19/27 phases complete — v1-v3 
 | Phase 19 P04 | 10min | 2 tasks | 6 files |
 | Phase 19 P02 | 6min | 2 tasks | 6 files |
 | Phase 20 P01 | 4min | 2 tasks | 4 files |
+| Phase 20 P02 | 11min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,10 @@ Recent decisions affecting current work:
 - [Phase 20]: PositionPnLHistory uses 90-day chunk interval with 60-day compression policy
 - [Phase 20]: DecisionJournal immutability enforced at DB level via PostgreSQL trigger on is_locked=TRUE rows
 - [Phase 20]: No FK from position_pnl_history to portfolio_positions for hypertable compatibility
+- [20-02]: Dict-based positions decoupled from ORM -- caller handles session management and persistence
+- [20-02]: Direct file-level import of TransactionCostModel via importlib.util to avoid backtesting.__init__ chain
+- [20-02]: Simplified VaR contribution via notional-proportional allocation (full Component VaR deferred to Phase 22)
+- [20-02]: CDS spread returned as-is for price (spread-quoted instrument); P&L from spread changes
 
 ### Pending Todos
 
@@ -180,6 +185,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 20-01-PLAN.md
-Resume file: .planning/phases/20-pms-database-position-manager/20-02-PLAN.md
-Resume action: Run /gsd:execute-phase 20 (plan 02)
+Stopped at: Completed 20-02-PLAN.md (Phase 20 complete)
+Resume file: Next phase (Phase 21)
+Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 21
