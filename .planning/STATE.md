@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-22)
+See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 19: Dashboard v2, API Expansion, Testing & Verification (v3.0)
+**Current focus:** Phase 20: PMS Database & Position Manager (v4.0)
 
 ## Current Position
 
-Phase: 19 of 19 (Dashboard v2, API Expansion, Testing & Verification)
-Plan: 4 of 4 complete in current phase
-Status: Phase 19 Complete
-Last activity: 2026-02-23 — Completed 19-04 (Integration tests, CI/CD, verification script)
+Phase: 20 of 27 (PMS Database & Position Manager)
+Plan: 0 of 0 in current phase
+Status: Phase 20 — Context gathering (discuss-phase)
+Last activity: 2026-02-24 — Starting v4.0 PMS milestone
 
-Progress: [##############################] 100% (19/19 phases complete)
+Progress: [#######################-------] 70% (19/27 phases complete — v1-v3 done, v4 starting)
 
 ## Performance Metrics
 
@@ -174,7 +174,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 19-04-PLAN.md (Phase 19 complete, all phases complete)
-Resume file: .planning/phases/19-dashboard-v2-api-expansion-testing-verification/19-04-SUMMARY.md
-Resume action: All phases complete. Project v3.0 ready for production.
+Last session: 2026-02-24
+Stopped at: Starting v4.0 PMS milestone — Phase 20 discuss-phase
+Resume file: .planning/ROADMAP.md
+Resume action: Run /gsd:discuss-phase 20 then /gsd:plan-phase 20

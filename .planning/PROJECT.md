@@ -8,25 +8,25 @@ A comprehensive macro trading system for a global macro hedge fund focused on Br
 
 Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation everything else (agents, strategies, risk) depends on. If the data layer doesn't work, nothing works.
 
-## Current Milestone: v3.0 Strategy Engine, Risk & Portfolio Management
+## Current Milestone: v4.0 Portfolio Management System (PMS)
 
-**Goal:** Expand from 8 to 24+ trading strategies across all asset classes, add NLP pipeline for central bank communications (COPOM + FOMC), enhance risk engine (Monte Carlo VaR, reverse stress, Black-Litterman portfolio optimization), add Dagster production orchestration, Grafana monitoring dashboards, React multi-page dashboard, and comprehensive integration testing.
+**Goal:** Build a complete Portfolio Management System with human-in-the-loop trade workflow. The system maximizes the manager's time on analysis and decision-making, eliminating time spent searching and consolidating information. Design philosophy references Brevan Howard, Bridgewater, and Moore Capital operational workflows.
 
 **Target features:**
-- 16 new trading strategies (FX, rates, inflation, cupom cambial, sovereign, cross-asset)
-- Enhanced backtesting engine (portfolio-level, walk-forward, deflated Sharpe, cost model)
-- NLP pipeline for COPOM/FOMC communications (scrapers, hawk/dove sentiment)
-- Enhanced Cross-Asset Agent with LLM-powered narrative and CrossAssetView
-- Signal aggregation v2 (Bayesian, crowding penalty, staleness discount)
-- Risk engine v2 (Monte Carlo VaR, reverse stress, component VaR)
-- Portfolio optimization (Black-Litterman, mean-variance, Kelly sizing)
-- Dagster production orchestration (16+ assets, dependency graph)
-- Grafana monitoring (4 provisioned dashboards)
-- Alert system (10 rules, Slack + email)
-- React multi-page dashboard (5 pages: Strategies, Signals, Risk, Portfolio, Agents)
-- API expansion (backtest routes, WebSocket channels)
-- Daily report generator (markdown, HTML, email, Slack)
-- Integration testing and CI/CD expansion
+- PMS database (5 new tables: positions, trade proposals, decision journal, daily briefings, P&L history)
+- Position Manager with full lifecycle (open, close, mark-to-market, P&L tracking)
+- Trade workflow engine (signal-to-proposal, approve/reject/modify, discretionary trades)
+- 20+ PMS API endpoints across portfolio, trades, and journal routers
+- Morning Pack daily briefing (market snapshot, agent views, trade proposals, LLM narrative)
+- Risk Monitor service (real-time VaR, stress, limits, concentration)
+- Performance Attribution engine (multi-dimensional P&L decomposition)
+- 7 operational frontend pages (Morning Pack, Position Book, Trade Blotter, Risk Monitor, Attribution, Decision Journal, Agent Intelligence Hub)
+- PMS design system (color palette, component library, layout grid)
+- Compliance & audit module (audit trail, hash integrity verification)
+- Redis caching layer for PMS query performance
+- Dagster PMS daily pipeline (MTM, proposals, briefing, attribution)
+- Go-live checklist and disaster recovery procedures
+- Verification script for all PMS components
 
 ## Requirements
 
@@ -97,7 +97,7 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 - Hamilton (1989) — regime switching / HMM
 - Pan & Singleton (2008) — sovereign CDS term structure
 
-**Guide Reference**: `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase2.md` — 18 etapas with detailed specifications for all v3.0 components.
+**Guide Reference**: `docs/GUIA_COMPLETO_CLAUDE_CODE_Fase3_PMS.md` — 20 etapas with detailed specifications for all v4.0 PMS components.
 
 ## Constraints
 
@@ -131,4 +131,4 @@ Reliable, point-in-time-correct macro and market data flowing into a queryable s
 | Dagster over custom pipeline | Scheduling, retry, monitoring UI — custom pipeline stays as fallback | Pending |
 
 ---
-*Last updated: 2026-02-22 after milestone v3.0 started*
+*Last updated: 2026-02-24 after milestone v4.0 PMS started*
