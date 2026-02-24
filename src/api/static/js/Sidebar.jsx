@@ -2,16 +2,19 @@
  * Sidebar.jsx - Collapsible sidebar navigation for the Macro Trading Dashboard.
  *
  * Features:
- * - 5 navigation items: Strategies, Signals, Risk, Portfolio, Agents
+ * - Mode switch: Dashboard (5 items) vs PMS (7 items)
  * - Collapse/expand toggle (icons only vs icons + labels)
  * - Active item highlighted (bg-blue-600)
  * - Alert badge count on Risk item
+ * - PMS mode uses Bloomberg-dense dark styling
  */
 
 const { useState } = React;
 const { NavLink } = window.ReactRouterDOM;
 
+// ---------------------------------------------------------------------------
 // SVG icon components (inline, lightweight)
+// ---------------------------------------------------------------------------
 function IconChartBar() {
   return React.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
@@ -94,7 +97,68 @@ function IconChevronRight() {
   );
 }
 
-// Navigation items definition
+// ---------------------------------------------------------------------------
+// PMS-specific SVG icon components
+// ---------------------------------------------------------------------------
+function IconSunrise() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("path", { d: "M17 18a5 5 0 00-10 0" }),
+    React.createElement("line", { x1: "12", y1: "9", x2: "12", y2: "2" }),
+    React.createElement("line", { x1: "4.22", y1: "10.22", x2: "5.64", y2: "11.64" }),
+    React.createElement("line", { x1: "1", y1: "18", x2: "3", y2: "18" }),
+    React.createElement("line", { x1: "21", y1: "18", x2: "23", y2: "18" }),
+    React.createElement("line", { x1: "18.36", y1: "11.64", x2: "19.78", y2: "10.22" }),
+    React.createElement("line", { x1: "23", y1: "22", x2: "1", y2: "22" }),
+    React.createElement("polyline", { points: "8 6 12 2 16 6" })
+  );
+}
+
+function IconList() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("line", { x1: "8", y1: "6", x2: "21", y2: "6" }),
+    React.createElement("line", { x1: "8", y1: "12", x2: "21", y2: "12" }),
+    React.createElement("line", { x1: "8", y1: "18", x2: "21", y2: "18" }),
+    React.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }),
+    React.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }),
+    React.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" })
+  );
+}
+
+function IconPieChart() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("path", { d: "M21.21 15.89A10 10 0 118 2.83" }),
+    React.createElement("path", { d: "M22 12A10 10 0 0012 2v10z" })
+  );
+}
+
+function IconSettings() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("circle", { cx: "12", cy: "12", r: "3" }),
+    React.createElement("path", {
+      d: "M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"
+    })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Navigation items definitions
+// ---------------------------------------------------------------------------
 const NAV_ITEMS = [
   { to: "/strategies", label: "Strategies", Icon: IconChartBar },
   { to: "/signals",    label: "Signals",    Icon: IconActivity },
@@ -103,28 +167,65 @@ const NAV_ITEMS = [
   { to: "/agents",     label: "Agents",     Icon: IconCpu },
 ];
 
-function Sidebar({ alertCount = 0 }) {
+const PMS_NAV_ITEMS = [
+  { to: "/pms/morning-pack", label: "Morning Pack", Icon: IconSunrise },
+  { to: "/pms/portfolio",    label: "Portfolio",    Icon: IconBriefcase },
+  { to: "/pms/risk",         label: "Risk",         Icon: IconShield },
+  { to: "/pms/blotter",      label: "Trade Blotter",Icon: IconList },
+  { to: "/pms/attribution",  label: "Attribution",  Icon: IconPieChart },
+  { to: "/pms/strategies",   label: "Strategies",   Icon: IconChartBar },
+  { to: "/pms/settings",     label: "Settings",     Icon: IconSettings },
+];
+
+// ---------------------------------------------------------------------------
+// Sidebar component with Dashboard/PMS mode switch
+// ---------------------------------------------------------------------------
+function Sidebar({ alertCount = 0, pmsMode = false, onModeChange }) {
   const [collapsed, setCollapsed] = useState(false);
+
+  const activeNavItems = pmsMode ? PMS_NAV_ITEMS : NAV_ITEMS;
+  const sidebarBg = pmsMode ? { backgroundColor: '#0d1117' } : {};
 
   return (
     <div
-      className={`bg-gray-900 text-white flex flex-col h-screen fixed left-0 top-0 z-40 border-r border-gray-800 transition-all duration-200 ${
+      className={`text-white flex flex-col h-screen fixed left-0 top-0 z-40 border-r border-gray-800 transition-all duration-200 ${
         collapsed ? "w-16" : "w-56"
-      }`}
+      } ${!pmsMode ? "bg-gray-900" : ""}`}
+      style={sidebarBg}
     >
-      {/* Logo / Brand area */}
-      <div className="flex items-center gap-2 px-4 py-4 border-b border-gray-800">
+      {/* Logo / Brand area with mode switch */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <span className="text-green-500 font-mono text-xl font-bold flex-shrink-0">MT</span>
-        {!collapsed && (
-          <span className="text-gray-300 text-sm font-semibold truncate">
-            Macro Trading
-          </span>
+        {!collapsed && onModeChange && (
+          <div className="flex bg-gray-800 rounded-md p-0.5">
+            <button
+              onClick={() => onModeChange(false)}
+              className={`px-2 py-1 text-xs rounded ${!pmsMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => onModeChange(true)}
+              className={`px-2 py-1 text-xs rounded ${pmsMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              PMS
+            </button>
+          </div>
+        )}
+        {collapsed && onModeChange && (
+          <button
+            onClick={() => onModeChange(!pmsMode)}
+            className="text-xs px-1 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-gray-200"
+            title={pmsMode ? "Switch to Dashboard" : "Switch to PMS"}
+          >
+            {pmsMode ? "P" : "D"}
+          </button>
         )}
       </div>
 
       {/* Navigation items */}
       <nav className="flex-1 py-3 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map(({ to, label, Icon }) => (
+        {activeNavItems.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -140,8 +241,8 @@ function Sidebar({ alertCount = 0 }) {
             {!collapsed && (
               <span className="text-sm truncate">{label}</span>
             )}
-            {/* Badge count on Risk item */}
-            {to === "/risk" && alertCount > 0 && (
+            {/* Badge count on Risk item (both modes) */}
+            {(to === "/risk" || to === "/pms/risk") && alertCount > 0 && (
               <span
                 className={`absolute flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full ${
                   collapsed
