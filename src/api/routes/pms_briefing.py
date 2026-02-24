@@ -62,7 +62,40 @@ async def get_latest_briefing():
 
 
 # ---------------------------------------------------------------------------
-# 2. GET /pms/morning-pack/{briefing_date}
+# 2. POST /pms/morning-pack/generate
+# ---------------------------------------------------------------------------
+@router.post("/generate", response_model=MorningPackResponse)
+async def generate_briefing(body: GenerateMorningPackRequest):
+    """Generate a new daily briefing."""
+    try:
+        svc = _get_service()
+        briefing_date = body.briefing_date or date.today()
+        briefing = svc.generate(briefing_date=briefing_date, force=body.force)
+        return MorningPackResponse(**briefing)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# 3. GET /pms/morning-pack/history (before /{briefing_date} to avoid path conflict)
+# ---------------------------------------------------------------------------
+@router.get("/history", response_model=list[MorningPackSummaryResponse])
+async def get_briefing_history(
+    days: int = Query(30, ge=1, le=365, description="Number of recent briefings"),
+):
+    """Return briefing summaries for the last N briefings."""
+    try:
+        svc = _get_service()
+        summaries = svc.get_history(days=days)
+        return [MorningPackSummaryResponse(**s) for s in summaries]
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# 4. GET /pms/morning-pack/{briefing_date}
 # ---------------------------------------------------------------------------
 @router.get("/{briefing_date}", response_model=MorningPackResponse)
 async def get_briefing_by_date(briefing_date: str):
@@ -83,39 +116,6 @@ async def get_briefing_by_date(briefing_date: str):
         return MorningPackResponse(**briefing)
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-# ---------------------------------------------------------------------------
-# 3. POST /pms/morning-pack/generate
-# ---------------------------------------------------------------------------
-@router.post("/generate", response_model=MorningPackResponse)
-async def generate_briefing(body: GenerateMorningPackRequest):
-    """Generate a new daily briefing."""
-    try:
-        svc = _get_service()
-        briefing_date = body.briefing_date or date.today()
-        briefing = svc.generate(briefing_date=briefing_date, force=body.force)
-        return MorningPackResponse(**briefing)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-# ---------------------------------------------------------------------------
-# 4. GET /pms/morning-pack/history
-# ---------------------------------------------------------------------------
-@router.get("/history", response_model=list[MorningPackSummaryResponse])
-async def get_briefing_history(
-    days: int = Query(30, ge=1, le=365, description="Number of recent briefings"),
-):
-    """Return briefing summaries for the last N briefings."""
-    try:
-        svc = _get_service()
-        summaries = svc.get_history(days=days)
-        return [MorningPackSummaryResponse(**s) for s in summaries]
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
