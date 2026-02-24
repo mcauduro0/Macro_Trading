@@ -1,9 +1,13 @@
 """SQLAlchemy 2.0 ORM models for the Macro Trading system.
 
-Re-exports Base and all 10 model classes for convenient imports:
+Re-exports Base and all 20 model classes for convenient imports:
   - 3 metadata tables: Instrument, SeriesMetadata, DataSource
   - 7 hypertables: MarketData, MacroSeries, CurveData, FlowData,
     FiscalData, VolSurface, Signal
+  - 5 v2/v3 tables: AgentReportRecord, BacktestResultRecord,
+    StrategyStateRecord, NlpDocumentRecord, PortfolioStateRecord
+  - 5 PMS v4 tables: PortfolioPosition, TradeProposal, DecisionJournal,
+    DailyBriefing, PositionPnLHistory
 """
 
 from .base import Base
@@ -22,6 +26,13 @@ from .backtest_results import BacktestResultRecord
 from .strategy_state import StrategyStateRecord
 from .nlp_documents import NlpDocumentRecord
 from .portfolio_state import PortfolioStateRecord
+from .pms_models import (
+    PortfolioPosition,
+    TradeProposal,
+    DecisionJournal,
+    DailyBriefing,
+    PositionPnLHistory,
+)
 
 __all__ = [
     "Base",
@@ -40,4 +51,9 @@ __all__ = [
     "StrategyStateRecord",
     "NlpDocumentRecord",
     "PortfolioStateRecord",
+    "PortfolioPosition",
+    "TradeProposal",
+    "DecisionJournal",
+    "DailyBriefing",
+    "PositionPnLHistory",
 ]
