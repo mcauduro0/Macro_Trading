@@ -144,8 +144,8 @@ function AppContent() {
 
   const alertCount = toasts.length;
 
-  // MorningPackPage reference (built in plan 23-02, placeholder until then)
-  const MorningPackPage = window.MorningPackPage || (() => <PMSPlaceholder title="Morning Pack" />);
+  // MorningPackPage — resolved from window global (loaded from pms/pages/MorningPackPage.jsx)
+  const MorningPackPage = window.MorningPackPage;
 
   return (
     <Layout
