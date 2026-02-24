@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 22 of 27 (Morning Pack, Risk Monitor & Attribution)
-Plan: 2 of 3 in current phase
-Status: Executing Phase 22 -- 22-02 complete
-Last activity: 2026-02-24 — Completed 22-02 RiskMonitorService & PMSRiskLimits
+Plan: 3 of 3 in current phase (COMPLETE)
+Status: Phase 22 complete -- all 3 plans executed
+Last activity: 2026-02-24 — Completed 22-03 PMS API Integration
 
-Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 done, v4 Phase 22 in progress)
+Progress: [##########################----] 81% (22/27 phases complete — v1-v3 done, v4 Phase 22 complete)
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 
 | Phase 21 P02 | 3min | 1 tasks | 4 files |
 | Phase 21 P03 | 4min | 2 tasks | 3 files |
 | Phase 22 P02 | 6min | 1 tasks | 4 files |
+| Phase 22 P03 | 6min | 2 tasks | 7 files |
 | Phase 22 P01 | 9min | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -192,6 +193,9 @@ Recent decisions affecting current work:
 - [22-02]: RiskMonitorService graceful degradation: each optional component (VaRCalculator, StressTester, RiskLimitsManager) can be None
 - [22-02]: Parametric VaR from P&L history (>=20 obs); MC VaR requires >=30 obs and VaRCalculator
 - [22-02]: Drawdown computed from cumulative daily P&L via HWM method against AUM
+- [22-03]: Route ordering: /history before /{briefing_date} to avoid FastAPI path parameter conflict
+- [22-03]: Lazy singleton per router module (same pattern as pms_trades.py and pms_journal.py)
+- [22-03]: Attribution date serialization: convert date objects to ISO strings for JSON response compatibility
 
 ### Pending Todos
 
@@ -207,6 +211,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 22-01-PLAN.md and 22-02-PLAN.md (parallel wave 1)
-Resume file: Phase 22 Plan 03
-Resume action: Run /gsd:execute-phase for Phase 22 Plan 03
+Stopped at: Completed 22-03-PLAN.md (Phase 22 complete)
+Resume file: Phase 23
+Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 23

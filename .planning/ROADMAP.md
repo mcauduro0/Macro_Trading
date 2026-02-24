@@ -53,7 +53,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 
 - [x] **Phase 20: PMS Database & Position Manager** - PMS SQLAlchemy models (PortfolioPosition, TradeProposal, DecisionJournal, DailyBriefing, PositionPnLHistory), Alembic migration with hypertables, PositionManager service, MarkToMarketService (Guide Etapas 1-2) (completed 2026-02-24)
 - [x] **Phase 21: Trade Workflow & PMS API** - TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades), 20+ PMS API endpoints (book, trades, journal), Pydantic schemas (Guide Etapas 3-4) (completed 2026-02-24)
-- [ ] **Phase 22: Morning Pack, Risk Monitor & Attribution** - MorningPackService (daily briefing generation, market snapshot, agent views, trade proposals), RiskMonitorService (real-time risk dashboard data, limit monitoring), PerformanceAttributionEngine (multi-dimensional P&L attribution) (Guide Etapas 5-6-7)
+- [x] **Phase 22: Morning Pack, Risk Monitor & Attribution** - MorningPackService (daily briefing generation, market snapshot, agent views, trade proposals), RiskMonitorService (real-time risk dashboard data, limit monitoring), PerformanceAttributionEngine (multi-dimensional P&L attribution) (Guide Etapas 5-6-7) (completed 2026-02-24)
 - [ ] **Phase 23: Frontend Design System & Morning Pack Page** - PMS design system (color palette, component library, layout grid), Morning Pack page (market overview cards, agent summaries, trade proposal cards, alert banner) (Guide Etapas 8-9)
 - [ ] **Phase 24: Frontend Position Book & Trade Blotter** - Position Book page (live positions table, P&L columns, asset class grouping, equity curve), Trade Blotter page (pending proposals, approval workflow UI, execution form, trade history) (Guide Etapas 10-11)
 - [ ] **Phase 25: Frontend Risk Monitor & Performance Attribution** - Risk Monitor page (VaR gauges, stress test visualization, limit bars, concentration chart), Performance Attribution page (P&L waterfall, strategy attribution, time-series decomposition) (Guide Etapas 12-13)
@@ -216,7 +216,7 @@ Plans:
   3. PerformanceAttributionEngine decomposes P&L by strategy, asset class, instrument, and time period (daily, MTD, YTD, inception)
   4. Morning Pack API endpoint (GET /api/v1/pms/morning-pack/latest) returns the latest briefing and POST generates a new one
   5. All three services integrate with existing v3.0 components (agents, signals, risk engine, portfolio optimizer)
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 22-01-PLAN.md -- MorningPackService (daily briefing with 9 sections, action-first ordering, LLM narrative) + PerformanceAttributionEngine (5-dimension P&L decomposition, factor tags, extended periods)
@@ -320,7 +320,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 |-------|----------------|--------|-----------|
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
 | 21. Trade Workflow & PMS API | 3/3 | Complete   | 2026-02-24 |
-| 22. Morning Pack, Risk Monitor & Attribution | 2/3 | In Progress|  |
+| 22. Morning Pack, Risk Monitor & Attribution | 3/3 | Complete   | 2026-02-24 |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |
 | 25. Frontend Risk Monitor & Performance Attribution | 0/0 | Not Started | - |
