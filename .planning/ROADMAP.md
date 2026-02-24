@@ -199,7 +199,7 @@ Plans:
   3. Discretionary trades (manager-initiated, not system-generated) can be opened via API with mandatory thesis field
   4. PMS API serves 20+ endpoints across 3 routers: pms_portfolio (book, positions, P&L, equity curve, attribution), pms_trades (proposals, approve, reject, generate), pms_journal (entries, stats, outcome recording)
   5. All Pydantic request/response schemas defined and Swagger docs show PMS tags
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 21-01-PLAN.md -- TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades, close + tests)
@@ -313,7 +313,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
-| 21. Trade Workflow & PMS API | 1/3 | In Progress|  |
+| 21. Trade Workflow & PMS API | 2/3 | In Progress|  |
 | 22. Morning Pack, Risk Monitor & Attribution | 0/0 | Not Started | - |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |

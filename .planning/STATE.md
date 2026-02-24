@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 21 of 27 (Trade Workflow & PMS API)
-Plan: 1 of 3 in current phase
-Status: Executing Phase 21 — Plan 01 complete
-Last activity: 2026-02-24 — Completed 21-01 TradeWorkflowService
+Plan: 2 of 3 in current phase
+Status: Executing Phase 21 — Plan 02 complete
+Last activity: 2026-02-24 — Completed 21-02 PMS Schemas and API Routers
 
 Progress: [########################------] 74% (20/27 phases complete — v1-v3 done, v4 Phase 21 in progress)
 
@@ -60,6 +60,7 @@ Progress: [########################------] 74% (20/27 phases complete — v1-v3 
 | Phase 20 P01 | 4min | 2 tasks | 4 files |
 | Phase 20 P02 | 11min | 2 tasks | 6 files |
 | Phase 21 P01 | 5min | 2 tasks | 3 files |
+| Phase 21 P02 | 3min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,7 @@ Recent decisions affecting current work:
 - [21-01]: Flip detection at conviction >= 0.60 against opposite open position on same instrument
 - [21-01]: Conviction min 0.55, max 5 proposals per call, sorted by conviction descending
 - [21-01]: REJECT journal entries created directly with content_hash for immutability
+- [Phase 21]: Duplicate lazy singleton pattern in pms_trades.py per plan spec (not shared import)
 
 ### Pending Todos
 
@@ -191,6 +193,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 21-01-PLAN.md
-Resume file: 21-02-PLAN.md
-Resume action: Run /gsd:execute-phase for Phase 21 Plan 02
+Stopped at: Completed 21-02-PLAN.md
+Resume file: 21-03-PLAN.md
+Resume action: Run /gsd:execute-phase for Phase 21 Plan 03
