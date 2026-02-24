@@ -233,3 +233,151 @@ class PnLPointResponse(BaseModel):
     snapshot_date: date
     daily_pnl_brl: float = 0.0
     cumulative_pnl_brl: float = 0.0
+
+
+# =====================================================================
+# MORNING PACK SCHEMAS
+# =====================================================================
+
+
+class ActionItemResponse(BaseModel):
+    """Single action item from the morning briefing."""
+
+    priority: str  # CRITICAL, HIGH, MEDIUM, LOW
+    category: str
+    description: str
+    urgency: str
+
+
+class MorningPackResponse(BaseModel):
+    """Full morning pack briefing response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Any
+    briefing_date: date
+    created_at: datetime
+    action_items: Any  # list[ActionItemResponse] or unavailable marker
+    trade_proposals: Any
+    market_snapshot: Any
+    agent_views: Any
+    regime: Any
+    top_signals: Any
+    signal_changes: Any
+    portfolio_state: Any
+    macro_narrative: Any
+
+
+class MorningPackSummaryResponse(BaseModel):
+    """Compact morning pack summary for history listing."""
+
+    briefing_date: date
+    action_items_count: int
+    narrative_excerpt: Optional[str] = None
+
+
+class GenerateMorningPackRequest(BaseModel):
+    """Request body for POST /pms/morning-pack/generate."""
+
+    briefing_date: Optional[date] = None
+    force: bool = False
+
+
+# =====================================================================
+# RISK MONITOR SCHEMAS
+# =====================================================================
+
+
+class VaRSnapshotResponse(BaseModel):
+    """VaR snapshot with parametric and Monte Carlo estimates."""
+
+    parametric_95: float = 0.0
+    parametric_99: float = 0.0
+    monte_carlo_95: Optional[float] = None
+    monte_carlo_99: Optional[float] = None
+    limit_95_pct: float = 2.0
+    limit_99_pct: float = 3.0
+    utilization_95_pct: float = 0.0
+    utilization_99_pct: float = 0.0
+
+
+class RiskAlertResponse(BaseModel):
+    """Single risk alert."""
+
+    type: str
+    severity: str  # WARNING or BREACH
+    message: str
+    value: float
+    limit: float
+
+
+class LiveRiskResponse(BaseModel):
+    """Complete live risk snapshot."""
+
+    as_of_date: date
+    var: Any
+    leverage: Any
+    drawdown: Any
+    concentration: Any
+    stress_tests: list[Any] = Field(default_factory=list)
+    limits_summary: Any
+    alerts: list[RiskAlertResponse] = Field(default_factory=list)
+
+
+class RiskTrendPointResponse(BaseModel):
+    """Single point on the risk trend chart."""
+
+    date: date
+    var_95: float = 0.0
+    leverage_gross: float = 0.0
+    drawdown_pct: float = 0.0
+    alert_count: int = 0
+
+
+# =====================================================================
+# ATTRIBUTION SCHEMAS
+# =====================================================================
+
+
+class AttributionByStrategyResponse(BaseModel):
+    """Strategy-level P&L attribution."""
+
+    strategy_id: str
+    pnl_brl: float
+    return_contribution_pct: float
+    trades_count: int = 0
+    win_rate_pct: float = 0.0
+
+
+class AttributionByAssetClassResponse(BaseModel):
+    """Asset-class-level P&L attribution."""
+
+    asset_class: str
+    pnl_brl: float
+    return_contribution_pct: float
+    avg_notional_brl: float = 0.0
+
+
+class AttributionResponse(BaseModel):
+    """Complete multi-dimensional P&L attribution response."""
+
+    period: dict
+    total_pnl_brl: float
+    total_return_pct: float
+    by_strategy: list[Any] = Field(default_factory=list)
+    by_asset_class: list[Any] = Field(default_factory=list)
+    by_instrument: list[Any] = Field(default_factory=list)
+    by_factor: list[Any] = Field(default_factory=list)
+    by_time_period: list[Any] = Field(default_factory=list)
+    by_trade_type: Any = Field(default_factory=dict)
+    performance_stats: Any = Field(default_factory=dict)
+
+
+class EquityCurvePointResponse(BaseModel):
+    """Single point on the equity curve."""
+
+    date: date
+    equity_brl: float
+    return_pct_daily: float = 0.0
+    return_pct_cumulative: float = 0.0
+    drawdown_pct: float = 0.0
