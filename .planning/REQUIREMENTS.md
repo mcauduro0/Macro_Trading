@@ -1,7 +1,7 @@
 # Requirements: Macro Fund System
 
-**Defined:** 2026-02-19 (v1) | 2026-02-20 (v2) | 2026-02-22 (v3)
-**Core Value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation for analytical agents, quantitative strategies, and risk management
+**Defined:** 2026-02-19 (v1) | 2026-02-20 (v2) | 2026-02-22 (v3) | 2026-02-23 (v4)
+**Core Value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system — the foundation for analytical agents, quantitative strategies, risk management, and portfolio operations
 
 ## v1 Requirements (Complete)
 
@@ -15,244 +15,170 @@ All 88 v2 requirements delivered in milestone v2.0 Quantitative Models & Agents.
 
 Summary: AGENT (7/7), INFL (7/7), MONP (6/6), FISC (4/4), FXEQ (5/5), CRSA (3/3), BACK (8/8), STRAT (9/9), PORT (4/4), RISK (8/8), PIPE (3/3), LLM (4/4), DASH (5/5), APIV2 (9/9), TESTV2 (7/7)
 
-## v3 Requirements
+## v3 Requirements (Complete)
 
-Requirements for milestone v3.0 Strategy Engine, Risk & Portfolio Management. Each maps to roadmap phases.
+All 77 v3 requirements delivered in milestone v3.0 Strategy Engine, Risk & Portfolio Management.
 
-### Strategy Framework Enhancement
+Summary: SFWK (4/4), BTST (6/6), FXST (4/4), RTST (4/4), INST (2/2), CPST (1/1), SVST (3/3), CAST (2/2), CRSV (4/4), NLP (5/5), SAGG (4/4), RSKV (8/8), POPT (5/5), ORCH (4/4), MNTR (4/4), DSHV (6/6), REPT (3/3), APIV (4/4), TSTV (4/4)
 
-- [x] **SFWK-01**: Enhanced StrategySignal dataclass with z_score, raw_value, suggested_size, entry_level, stop_loss, take_profit, holding_period_days, metadata dict
-- [x] **SFWK-02**: StrategyRegistry class with register decorator, get, list_all, list_by_asset_class, instantiate, instantiate_all methods
-- [x] **SFWK-03**: strategy_state table (strategy_id, timestamp, direction, strength, confidence, z_score, instruments JSON) with Alembic migration
-- [x] **SFWK-04**: backtest_results v2 table with params_json, daily_returns_json, monthly_returns expanded fields
+## v4 Requirements
 
-### Backtesting Engine v2
+Requirements for milestone v4.0 Portfolio Management System (PMS). Each maps to roadmap phases.
 
-- [x] **BTST-01**: BacktestEngine v2 with portfolio-level backtesting — run_portfolio(strategies, weights) aggregating multiple strategies with risk allocation
-- [x] **BTST-02**: Walk-forward validation — split period into train/test windows, optimize params in-sample, evaluate out-of-sample
-- [x] **BTST-03**: Deflated Sharpe Ratio (Bailey & Lopez de Prado, 2014) adjusting for multiple testing
-- [x] **BTST-04**: TransactionCostModel with per-instrument cost table (12 instruments: DI1, DDI, DOL, NDF, NTN-B, LTN, UST, ZN, ZF, ES, CDS_BR, IBOV_FUT)
-- [x] **BTST-05**: Analytics functions: compute_sortino, compute_information_ratio, compute_tail_ratio, compute_turnover, compute_rolling_sharpe
-- [x] **BTST-06**: generate_tearsheet producing complete dict for dashboard rendering (equity curve, drawdown chart, monthly heatmap, rolling sharpe, trade analysis)
+### PMS Database & Models
 
-### FX Strategies
+- [ ] **PMDB-01**: PMS position table (position_id, instrument, direction, quantity, avg_price, unrealized_pnl, realized_pnl, strategy_attribution, opened_at, updated_at) with Alembic migration
+- [ ] **PMDB-02**: PMS trades table (trade_id, position_id, instrument, side, quantity, price, fees, slippage, executed_at, strategy_id, approval_status) with Alembic migration
+- [ ] **PMDB-03**: PMS orders table (order_id, trade_id, instrument, side, order_type, quantity, limit_price, status, submitted_at, filled_at) with Alembic migration
+- [ ] **PMDB-04**: PMS trade_approvals table (approval_id, trade_id, requested_by, approved_by, status, reason, requested_at, resolved_at) with Alembic migration
+- [ ] **PMDB-05**: PMS attribution_snapshots table (snapshot_date, position_id, gross_pnl, transaction_costs, allocation_effect, selection_effect, interaction_effect) with Alembic migration
 
-- [x] **FXST-01**: FX-02 Carry-Adjusted Momentum — combine Selic-FFR carry z-score with 3M USDBRL momentum z-score, vol-adjusted sizing
-- [x] **FXST-02**: FX-03 Flow-Based Tactical FX — operate USDBRL from BCB FX flow (40%), CFTC positioning (35%), B3 foreign flow (25%) with contrarian logic at |z|>2
-- [x] **FXST-03**: FX-04 FX Vol Surface Relative Value — trade distortions in USDBRL vol surface (risk reversal, butterfly, term structure, implied-realized premium)
-- [x] **FXST-04**: FX-05 Terms of Trade FX — commodity-weighted terms of trade index vs USDBRL for misalignment detection (soybean, iron ore, oil, sugar, coffee)
+### Position Manager
 
-### Rates Strategies
+- [ ] **POSM-01**: PositionManager class with open_position, close_position, update_mark, get_positions, get_position_by_id methods
+- [ ] **POSM-02**: Real-time P&L calculation: unrealized (mark-to-market vs avg_price), realized (closed trades), total
+- [ ] **POSM-03**: Position aggregation by instrument, asset class, strategy, and direction (long/short/net)
+- [ ] **POSM-04**: Position history tracking with daily snapshots for time-series analysis
 
-- [x] **RTST-01**: RATES-03 BR-US Rate Spread — trade DI-UST spread adjusted for CDS, inflation differential, with z-score mean reversion at 2Y and 5Y tenors
-- [x] **RTST-02**: RATES-04 Term Premium Extraction — estimate term premium as DI(n) minus Focus-implied expected short rate, trade when TP z-score extreme
-- [x] **RTST-03**: RATES-05 FOMC Event Strategy — position around FOMC [-5,+2] days based on FFR implied vs Taylor Rule divergence
-- [x] **RTST-04**: RATES-06 COPOM Event Strategy — position around COPOM [-5,+2] days based on DI-implied Selic vs Focus median divergence
+### Trade Workflow (Human-in-the-Loop)
 
-### Inflation Strategies
+- [ ] **TRAD-01**: TradeWorkflowManager with suggest_trade (from signals), submit_for_approval, approve, reject, execute lifecycle
+- [ ] **TRAD-02**: Trade suggestion engine consuming aggregated signals and portfolio optimizer output to generate trade proposals
+- [ ] **TRAD-03**: Approval workflow: suggested -> pending_review -> approved/rejected -> executed/cancelled with audit trail
+- [ ] **TRAD-04**: Trade execution recording with fill price, slippage, fees, and strategy attribution
 
-- [x] **INST-01**: INF-02 IPCA Surprise Trade — trade NTN-Bs and breakevens around IPCA/IPCA-15 releases when model forecast diverges from Focus
-- [x] **INST-02**: INF-03 Inflation Carry — long/short breakeven (DI_PRE minus NTN_B_REAL) based on comparison with target, current IPCA, and Focus expectations
+### PMS API Endpoints
 
-### Cupom Cambial Strategies
+- [ ] **PAPI-01**: Position endpoints: GET /pms/positions, GET /pms/positions/{id}, GET /pms/positions/summary, GET /pms/positions/history
+- [ ] **PAPI-02**: Trade endpoints: GET /pms/trades, POST /pms/trades/suggest, GET /pms/trades/{id}, GET /pms/trades/pending
+- [ ] **PAPI-03**: Approval endpoints: POST /pms/approvals/{trade_id}/approve, POST /pms/approvals/{trade_id}/reject, GET /pms/approvals/pending
+- [ ] **PAPI-04**: Morning Pack endpoint: GET /pms/morning-pack (daily briefing JSON)
+- [ ] **PAPI-05**: Risk Monitor endpoints: GET /pms/risk/realtime, GET /pms/risk/exposures, GET /pms/risk/breaches
+- [ ] **PAPI-06**: Attribution endpoints: GET /pms/attribution/daily, GET /pms/attribution/cumulative, GET /pms/attribution/by-strategy
+- [ ] **PAPI-07**: Decision Journal endpoints: GET /pms/journal, POST /pms/journal/entry, GET /pms/journal/{date}
 
-- [x] **CPST-01**: CUPOM-02 Onshore-Offshore Spread — trade spread between DDI futuro (onshore) and NDF-implied rate (offshore) on z-score mean reversion
+### Morning Pack
 
-### Sovereign Credit Strategies
+- [ ] **MORN-01**: MorningPackGenerator producing daily briefing with market snapshot (overnight moves, key levels, calendar)
+- [ ] **MORN-02**: Morning Pack includes signal summary (new signals, flips, conviction changes since previous close)
+- [ ] **MORN-03**: Morning Pack includes risk status (current VaR, limit utilization, notable exposures)
+- [ ] **MORN-04**: Morning Pack includes suggested trades for the day with rationale from agent views
 
-- [x] **SVST-01**: SOV-01 CDS Curve Trading — trade Brazil CDS 1Y/5Y/10Y slope and level based on fiscal agent output and z-scores
-- [x] **SVST-02**: SOV-02 EM Sovereign Relative Value — cross-section regression of CDS vs fundamentals for 10 EM peers, trade Brazil residual
-- [x] **SVST-03**: SOV-03 Rating Migration Anticipation — logistic model for upgrade/downgrade probability from fiscal, growth, external, political factors
+### Risk Monitor
 
-### Cross-Asset Strategies
+- [ ] **RMON-01**: RealTimeRiskMonitor polling positions and market data for continuous limit checking
+- [ ] **RMON-02**: Exposure breakdown by asset class, geography, direction, and risk factor
+- [ ] **RMON-03**: Breach detection and alerting when limits approach (warning at 80%) or exceed thresholds
+- [ ] **RMON-04**: Risk monitor integrates with existing RiskLimitsManager v2 and AlertManager
 
-- [x] **CAST-01**: CROSS-01 Macro Regime Allocation — HMM-based regime classification (Goldilocks, Reflation, Stagflation, Deflation) with regime-dependent allocation map
-- [x] **CAST-02**: CROSS-02 Global Risk Appetite — proprietary composite index from VIX, HY OAS, DXY, EM FX carry, CFTC S&P, IG-HY spread, S&P momentum, Gold
+### Performance Attribution
 
-### Cross-Asset Agent v2
+- [ ] **PERF-01**: Brinson-Fachler attribution decomposing P&L into allocation effect, selection effect, and interaction effect
+- [ ] **PERF-02**: Factor-based attribution decomposing returns by risk factors (rates, FX, credit, vol, regime)
+- [ ] **PERF-03**: Strategy-level P&L decomposition showing contribution of each strategy to total portfolio P&L
+- [ ] **PERF-04**: Daily and cumulative attribution snapshots persisted to attribution_snapshots table
 
-- [x] **CRSV-01**: CrossAssetView dataclass with regime, regime_probabilities, per-asset-class views, risk_appetite, tail_risk, narrative, key_trades, risk_warnings
-- [x] **CRSV-02**: Enhanced regime classification with HMM fallback to rule-based, 4 regimes with probability output
-- [x] **CRSV-03**: Cross-asset consistency checking (e.g., FX bull + rates higher = inconsistent)
-- [x] **CRSV-04**: LLM-powered narrative generation for CrossAssetView with structured prompt and JSON output
+### Design System
 
-### NLP Pipeline
+- [ ] **DSYS-01**: Shared component library: StatusBadge, DataTable (sortable, filterable), MetricCard, ChartContainer
+- [ ] **DSYS-02**: Shared component library: ApprovalButton, TimelineEvent, ExposureBar, AlertBanner
+- [ ] **DSYS-03**: Consistent color palette, typography, spacing tokens across all PMS screens
+- [ ] **DSYS-04**: Loading states, empty states, and error states for all PMS components
 
-- [x] **NLP-01**: COPOMScraper — scrape COPOM atas and comunicados from bcb.gov.br (2010-present)
-- [x] **NLP-02**: FOMCScraper — scrape FOMC statements and minutes from federalreserve.gov (2010-present)
-- [x] **NLP-03**: CentralBankSentimentAnalyzer — hawk/dove scoring [-1,+1] via term dictionary (PT+EN), optional LLM scoring, change_score vs previous document
-- [x] **NLP-04**: NLPProcessor pipeline: clean → score → extract key phrases → compare vs previous → persist
-- [x] **NLP-05**: nlp_documents table (document_type, institution, date, hawk_dove_score, change_score, key_phrases JSON) with Alembic migration
+### Frontend: Morning Pack Screen
 
-### Signal Aggregation v2
+- [ ] **FMRN-01**: Morning Pack page displaying market snapshot, calendar events, key levels
+- [ ] **FMRN-02**: Signal summary section with new/changed signals highlighted, sortable by conviction
+- [ ] **FMRN-03**: Suggested trades section with approve/reject inline actions
+- [ ] **FMRN-04**: Risk overview section with limit utilization bars and warning indicators
 
-- [x] **SAGG-01**: Enhanced SignalAggregator with 3 methods: confidence-weighted average, rank-based (robust to outliers), Bayesian (regime prior + likelihood)
-- [x] **SAGG-02**: Crowding penalty — reduce signal when >80% of strategies agree (contrarian discount)
-- [x] **SAGG-03**: Staleness discount — reduce weight for signals based on stale data (>N business days old)
-- [x] **SAGG-04**: SignalMonitor with check_signal_flips, check_conviction_surge, check_strategy_divergence, generate_daily_summary
+### Frontend: Position Book Screen
 
-### Risk Engine v2
+- [ ] **FPOS-01**: Position Book page with sortable table of all positions (instrument, direction, quantity, avg price, P&L, weight)
+- [ ] **FPOS-02**: Position grouping/filtering by asset class, strategy, direction
+- [ ] **FPOS-03**: Position detail expandable row with entry history, mark-to-market chart, strategy attribution
 
-- [x] **RSKV-01**: Monte Carlo VaR with t-Student marginals, Gaussian copula, Cholesky decomposition (10,000 simulations)
-- [x] **RSKV-02**: Parametric VaR with Ledoit-Wolf shrinkage covariance estimation
-- [x] **RSKV-03**: Marginal VaR and Component VaR decomposition by position
-- [x] **RSKV-04**: Expanded stress scenarios: add BR Fiscal Crisis (teto de gastos) and Global Risk-Off (geopolitical) to existing 4 scenarios
-- [x] **RSKV-05**: Reverse stress testing — find scenarios that produce a given max loss
-- [x] **RSKV-06**: Historical replay stress test — replay actual returns from a crisis period
-- [x] **RSKV-07**: RiskLimitsManager v2 with daily/weekly loss limits, risk budget tracking, available_risk_budget reporting
-- [x] **RSKV-08**: API routes: GET /api/v1/risk/var, /risk/stress, /risk/limits, /risk/dashboard
+### Frontend: Trade Blotter Screen
 
-### Portfolio Optimization
+- [ ] **FTBL-01**: Trade Blotter page with chronological list of all trades (date, instrument, side, quantity, price, status)
+- [ ] **FTBL-02**: Pending trades section with approve/reject actions and trade rationale display
+- [ ] **FTBL-03**: Trade filtering by status (pending, approved, rejected, executed), date range, instrument
 
-- [x] **POPT-01**: Black-Litterman model — combine market equilibrium with agent views using confidence-weighted P/Q matrices
-- [x] **POPT-02**: Mean-variance optimization with configurable constraints via scipy.minimize
-- [x] **POPT-03**: PositionSizer with vol_target (target_vol/instrument_vol), fractional_kelly (f*=0.25), risk_budget_size methods
-- [x] **POPT-04**: portfolio_state table (timestamp, instrument, direction, notional, weight, entry_price, unrealized_pnl, strategy_attribution JSON) with Alembic migration
-- [x] **POPT-05**: Portfolio API: GET /api/v1/portfolio/current, /portfolio/target, /portfolio/rebalance-trades, /portfolio/attribution
+### Frontend: Risk Monitor Screen
 
-### Production Orchestration (Dagster)
+- [ ] **FRSK-01**: Risk Monitor page with real-time VaR gauges, limit utilization bars, exposure heatmap
+- [ ] **FRSK-02**: Breach alerts panel with severity, timestamp, affected limit, and current value
+- [ ] **FRSK-03**: Exposure breakdown charts (by asset class, geography, risk factor)
 
-- [x] **ORCH-01**: Dagster asset definitions for Bronze layer (6 connectors with cron schedules), Silver transforms, Agents (5 with dependency chain)
-- [ ] **ORCH-02**: Dagster assets for Signals, Aggregated Signals, Portfolio Targets, Risk Metrics, Daily Report with full dependency graph
-- [x] **ORCH-03**: Dagster definitions module with all assets registered and dagster-webserver Docker Compose service (port 3001)
-- [x] **ORCH-04**: Makefile targets: make dagster, make dagster-run-all
+### Frontend: Performance Attribution Screen
 
-### Monitoring & Alerting
+- [ ] **FATT-01**: Attribution page with Brinson-Fachler waterfall chart (allocation, selection, interaction effects)
+- [ ] **FATT-02**: Strategy contribution bar chart showing each strategy's P&L contribution over time
+- [ ] **FATT-03**: Factor exposure chart showing returns decomposed by risk factors
+- [ ] **FATT-04**: Date range selector and benchmark comparison toggle
 
-- [x] **MNTR-01**: Grafana Docker Compose service (port 3002) with TimescaleDB datasource provisioning
-- [x] **MNTR-02**: 4 provisioned Grafana dashboards JSON: pipeline_health, signal_overview, risk_dashboard, portfolio_performance
-- [ ] **MNTR-03**: AlertManager with 10 rules (stale data, VaR breach/critical, drawdown warning/critical, limit breach, signal flip, conviction surge, pipeline failure, agent stale)
-- [ ] **MNTR-04**: Monitoring API: GET /api/v1/monitoring/alerts, /pipeline-status, /system-health, POST /test-alert
+### Frontend: Decision Journal & Agent Intelligence Screen
 
-### Dashboard v2 (React)
+- [ ] **FDJR-01**: Decision Journal page with timeline of PM decisions (trades, overrides, notes) linked to outcomes
+- [ ] **FDJR-02**: Agent Intelligence panel showing all 5 agent views, confidence levels, and key drivers side-by-side
+- [ ] **FDJR-03**: Cross-Asset narrative display with regime assessment and trade recommendations
+- [ ] **FDJR-04**: Decision outcome tracking: what was decided, what happened, P&L impact
 
-- [x] **DSHV-01**: StrategiesPage — table of all strategies (ID, class, direction, confidence, z-score), expandable backtest metrics and equity curve
-- [x] **DSHV-02**: SignalsPage — aggregated signals by instrument (color-coded), heatmap strategies x classes, 30-day flip timeline
-- [x] **DSHV-03**: RiskPage — gauge meters (VaR 95/99, drawdown, leverage), stress test bar chart, limits table, concentration pie
-- [x] **DSHV-04**: PortfolioPage — positions with PnL/risk contribution, equity curve, monthly heatmap, attribution by strategy, suggested trades
-- [x] **DSHV-05**: AgentsPage — agent cards (signal, confidence, drivers, risks), Cross-Asset narrative display
-- [x] **DSHV-06**: App.tsx with React Router sidebar navigation, recharts + Tailwind CSS, API data fetching
+### Compliance, Audit & Security
 
-### Daily Reporting
+- [ ] **COMP-01**: Audit trail for all trade lifecycle events (suggest, approve, reject, execute, cancel) with timestamp and user
+- [ ] **COMP-02**: Trade logging with pre-trade and post-trade snapshots for regulatory compliance
+- [ ] **COMP-03**: Role-based access control for PMS operations (viewer, trader, portfolio_manager, risk_manager)
+- [ ] **COMP-04**: Audit log API: GET /pms/audit/trades, GET /pms/audit/approvals with date range filtering
 
-- [ ] **REPT-01**: DailyReportGenerator with sections: Market Snapshot, Regime Assessment, Agent Views, Signal Summary, Portfolio Status, Risk Metrics, Action Items
-- [ ] **REPT-02**: Output formats: to_markdown, to_html, send_email, send_slack
-- [ ] **REPT-03**: Report API: GET /api/v1/reports/daily, /reports/daily/latest, POST /reports/daily/send
+### Redis Cache Optimization
 
-### API Expansion & WebSocket
+- [ ] **CACH-01**: Cache layer for PMS hot-path queries: current positions, latest risk metrics, morning pack
+- [ ] **CACH-02**: Cache invalidation strategy: position updates invalidate position cache, trade execution invalidates blotter cache
+- [ ] **CACH-03**: Cache warming on startup and after Dagster pipeline completion
 
-- [x] **APIV-01**: Backtest API: POST /api/v1/backtest/run, GET /backtest/results, POST /backtest/portfolio, GET /backtest/comparison
-- [x] **APIV-02**: Strategy detail API: GET /api/v1/strategies/{id}, GET /strategies/{id}/signal/latest, GET /strategies/{id}/signal/history, PUT /strategies/{id}/params
-- [x] **APIV-03**: WebSocket ConnectionManager with 3 channels: ws://signals, ws://portfolio, ws://alerts
-- [x] **APIV-04**: Updated main.py with all routers and Swagger tags (Health, Macro, Curves, Market Data, Flows, Agents, Signals, Risk, Portfolio, Backtest, Strategies, Reports, Monitoring)
+### Dagster PMS Pipeline
 
-### Testing & Verification
+- [ ] **DPMS-01**: Dagster PMS assets: morning_pack, trade_suggestions, risk_snapshot, attribution_snapshot, decision_journal_sync
+- [ ] **DPMS-02**: PMS daily schedule: morning pack (07:00), trade suggestions (08:00), EOD attribution (18:30)
+- [ ] **DPMS-03**: PMS assets integrated into existing Dagster definitions with dependency on existing Bronze/Silver/Agent layers
 
-- [x] **TSTV-01**: Integration test: full pipeline E2E (DB → transforms → agents → strategies → signals → portfolio → risk → report)
-- [x] **TSTV-02**: Integration test: all API endpoints (v1 + v2 + v3) return 200 OK
-- [x] **TSTV-03**: CI/CD: updated .github/workflows/ci.yml with lint, unit tests, integration tests (with service containers)
-- [x] **TSTV-04**: Verification script (scripts/verify_phase2.py) validating all v3.0 components end-to-end with formatted report
+### Go-Live & Disaster Recovery
 
-## Out of Scope (v3.0)
+- [ ] **GOLV-01**: Go-Live checklist document covering PMS-specific pre-launch validation (positions, trades, approvals workflow)
+- [ ] **GOLV-02**: Disaster recovery procedures for PMS data (position backup, trade history export, recovery runbook)
+- [ ] **GOLV-03**: Health check endpoints for PMS subsystem: GET /pms/health (DB, cache, pipeline status)
+
+### Verification & Testing
+
+- [ ] **VRFY-01**: PMS integration test: trade lifecycle E2E (signal -> suggest -> approve -> execute -> position update -> attribution)
+- [ ] **VRFY-02**: PMS API integration test: all /pms/* endpoints return 200 OK with valid payloads
+- [ ] **VRFY-03**: PMS verification script (scripts/verify_pms.py) validating all v4.0 components with formatted report
+- [ ] **VRFY-04**: CI/CD updated with PMS test suite in GitHub Actions workflow
+
+## Out of Scope (v4.0)
 
 | Feature | Reason |
 |---------|--------|
-| Live order execution / FIX protocol | Phase 3 — production deployment |
-| Multi-user authentication | Solo user for now |
-| Bloomberg/Refinitiv integration | Free data sources only |
-| Kubernetes / Helm deployment | Phase 3 — production infrastructure |
-| Real-time streaming execution | Phase 3 — live trading |
-| Paper trading simulation | Phase 3 — requires execution engine |
-| Mobile app / PWA | Web-first, desktop only |
+| Live exchange connectivity (FIX) | PMS records trades, doesn't route to exchanges |
+| Multi-fund / multi-portfolio | Single fund for now |
+| Bloomberg/Refinitiv real-time feeds | Free data sources only |
+| Kubernetes / Helm deployment | Docker Compose sufficient |
+| Options / Greeks | Futures and linear instruments only |
+| Mobile app / PWA | Desktop operational screens |
+| Automated trade execution | Human-in-the-loop is a v4.0 requirement |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SFWK-01 | Phase 14 | Complete |
-| SFWK-02 | Phase 14 | Complete |
-| SFWK-03 | Phase 14 | Complete |
-| SFWK-04 | Phase 14 | Complete |
-| BTST-01 | Phase 14 | Complete |
-| BTST-02 | Phase 14 | Complete |
-| BTST-03 | Phase 14 | Complete |
-| BTST-04 | Phase 14 | Complete |
-| BTST-05 | Phase 14 | Complete |
-| BTST-06 | Phase 14 | Complete |
-| FXST-01 | Phase 15 | Complete |
-| FXST-02 | Phase 15 | Complete |
-| FXST-03 | Phase 15 | Complete |
-| FXST-04 | Phase 15 | Complete |
-| RTST-01 | Phase 15 | Complete |
-| RTST-02 | Phase 15 | Complete |
-| RTST-03 | Phase 15 | Complete |
-| RTST-04 | Phase 15 | Complete |
-| INST-01 | Phase 15 | Complete |
-| INST-02 | Phase 15 | Complete |
-| CPST-01 | Phase 15 | Complete |
-| SVST-01 | Phase 15 | Complete |
-| SVST-02 | Phase 15 | Complete |
-| SVST-03 | Phase 15 | Complete |
-| CAST-01 | Phase 15 | Complete |
-| CAST-02 | Phase 15 | Complete |
-| CRSV-01 | Phase 16 | Complete |
-| CRSV-02 | Phase 16 | Complete |
-| CRSV-03 | Phase 16 | Complete |
-| CRSV-04 | Phase 16 | Complete |
-| NLP-01 | Phase 16 | Complete |
-| NLP-02 | Phase 16 | Complete |
-| NLP-03 | Phase 16 | Complete |
-| NLP-04 | Phase 16 | Complete |
-| NLP-05 | Phase 16 | Complete |
-| SAGG-01 | Phase 17 | Complete |
-| SAGG-02 | Phase 17 | Complete |
-| SAGG-03 | Phase 17 | Complete |
-| SAGG-04 | Phase 17 | Complete |
-| RSKV-01 | Phase 17 | Complete |
-| RSKV-02 | Phase 17 | Complete |
-| RSKV-03 | Phase 17 | Complete |
-| RSKV-04 | Phase 17 | Complete |
-| RSKV-05 | Phase 17 | Complete |
-| RSKV-06 | Phase 17 | Complete |
-| RSKV-07 | Phase 17 | Complete |
-| RSKV-08 | Phase 17 | Complete |
-| POPT-01 | Phase 17 | Complete |
-| POPT-02 | Phase 17 | Complete |
-| POPT-03 | Phase 17 | Complete |
-| POPT-04 | Phase 17 | Complete |
-| POPT-05 | Phase 17 | Complete |
-| ORCH-01 | Phase 18 | Complete |
-| ORCH-02 | Phase 18 | Pending |
-| ORCH-03 | Phase 18 | Complete |
-| ORCH-04 | Phase 18 | Complete |
-| MNTR-01 | Phase 18 | Complete |
-| MNTR-02 | Phase 18 | Complete |
-| MNTR-03 | Phase 18 | Pending |
-| MNTR-04 | Phase 18 | Pending |
-| REPT-01 | Phase 18 | Pending |
-| REPT-02 | Phase 18 | Pending |
-| REPT-03 | Phase 18 | Pending |
-| DSHV-01 | Phase 19 | Complete |
-| DSHV-02 | Phase 19 | Complete |
-| DSHV-03 | Phase 19 | Complete |
-| DSHV-04 | Phase 19 | Complete |
-| DSHV-05 | Phase 19 | Complete |
-| DSHV-06 | Phase 19 | Complete |
-| APIV-01 | Phase 19 | Complete |
-| APIV-02 | Phase 19 | Complete |
-| APIV-03 | Phase 19 | Complete |
-| APIV-04 | Phase 19 | Complete |
-| TSTV-01 | Phase 19 | Complete |
-| TSTV-02 | Phase 19 | Complete |
-| TSTV-03 | Phase 19 | Complete |
-| TSTV-04 | Phase 19 | Complete |
+| (To be filled during roadmap creation) | | |
 
 **Coverage:**
-- v3 requirements: 77 total (SFWK:4, BTST:6, FXST:4, RTST:4, INST:2, CPST:1, SVST:3, CAST:2, CRSV:4, NLP:5, SAGG:4, RSKV:8, POPT:5, ORCH:4, MNTR:4, DSHV:6, REPT:3, APIV:4, TSTV:4)
-- Mapped to phases: 77
-- Unmapped: 0
+- v4 requirements: 65 total (PMDB:5, POSM:4, TRAD:4, PAPI:7, MORN:4, RMON:4, PERF:4, DSYS:4, FMRN:4, FPOS:3, FTBL:3, FRSK:3, FATT:4, FDJR:4, COMP:4, CACH:3, DPMS:3, GOLV:3, VRFY:4)
+- Mapped to phases: 0
+- Unmapped: 65
 
 ---
-*Requirements defined: 2026-02-22*
-*Traceability updated: 2026-02-22 after roadmap creation*
-*Milestone: v3.0 Strategy Engine, Risk & Portfolio Management*
+*Requirements defined: 2026-02-23*
+*Milestone: v4.0 Portfolio Management System (PMS)*
