@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 20 of 27 (PMS Database & Position Manager)
-Plan: 0 of 0 in current phase
-Status: Phase 20 — Context gathering (discuss-phase)
-Last activity: 2026-02-24 — Starting v4.0 PMS milestone
+Plan: 1 of 2 in current phase
+Status: Phase 20 — Plan 01 complete, executing Plan 02 next
+Last activity: 2026-02-24 — Completed 20-01 PMS database models
 
 Progress: [#######################-------] 70% (19/27 phases complete — v1-v3 done, v4 starting)
 
@@ -57,6 +57,7 @@ Progress: [#######################-------] 70% (19/27 phases complete — v1-v3 
 | Phase 19 P03 | 5min | 2 tasks | 4 files |
 | Phase 19 P04 | 10min | 2 tasks | 6 files |
 | Phase 19 P02 | 6min | 2 tasks | 6 files |
+| Phase 20 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -160,6 +161,10 @@ Recent decisions affecting current work:
 - [19-02]: ComposedChart with dual Y-axes for equity curve + drawdown overlay in PortfolioPage
 - [19-02]: Per-agent sequential fetch for latest reports (not parallel) to avoid server overload
 - [19-02]: Seeded PRNG for sample equity curve and monthly returns for deterministic demo data
+- [Phase 20]: Models follow Mapped[] type hints pattern consistent with existing portfolio_state.py
+- [Phase 20]: PositionPnLHistory uses 90-day chunk interval with 60-day compression policy
+- [Phase 20]: DecisionJournal immutability enforced at DB level via PostgreSQL trigger on is_locked=TRUE rows
+- [Phase 20]: No FK from position_pnl_history to portfolio_positions for hypertable compatibility
 
 ### Pending Todos
 
@@ -175,6 +180,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-pms-database-position-manager/20-CONTEXT.md
-Resume action: Run /gsd:plan-phase 20
+Stopped at: Completed 20-01-PLAN.md
+Resume file: .planning/phases/20-pms-database-position-manager/20-02-PLAN.md
+Resume action: Run /gsd:execute-phase 20 (plan 02)

@@ -183,7 +183,7 @@ Plans:
   3. PositionManager.close_position() calculates realized P&L, updates DecisionJournal with outcome, and marks position as closed
   4. PositionManager.mark_to_market() updates all open positions with current prices (from DB or manual override), computes unrealized P&L, and persists daily snapshot to position_pnl_history
   5. PositionManager.get_book() returns structured book with summary (AUM, leverage, P&L today/MTD/YTD), positions list, and by_asset_class breakdown
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 20-01-PLAN.md -- PMS SQLAlchemy models (5 models), Alembic migration 009 (hypertable + immutability trigger), model registration and tests
@@ -306,7 +306,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 20. PMS Database & Position Manager | 0/2 | Planning Complete | - |
+| 20. PMS Database & Position Manager | 1/2 | In Progress|  |
 | 21. Trade Workflow & PMS API | 0/0 | Not Started | - |
 | 22. Morning Pack, Risk Monitor & Attribution | 0/0 | Not Started | - |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
