@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 20: PMS Database & Position Manager (v4.0)
+**Current focus:** Phase 21: Trade Workflow & PMS API (v4.0)
 
 ## Current Position
 
-Phase: 20 of 27 (PMS Database & Position Manager)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase 20 complete — all 2 plans done
-Last activity: 2026-02-24 — Completed 20-02 PositionManager & MarkToMarketService
+Phase: 21 of 27 (Trade Workflow & PMS API)
+Plan: 1 of 3 in current phase
+Status: Executing Phase 21 — Plan 01 complete
+Last activity: 2026-02-24 — Completed 21-01 TradeWorkflowService
 
-Progress: [########################------] 74% (20/27 phases complete — v1-v3 done, v4 Phase 20 complete)
+Progress: [########################------] 74% (20/27 phases complete — v1-v3 done, v4 Phase 21 in progress)
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [########################------] 74% (20/27 phases complete — v1-v3 
 | Phase 19 P02 | 6min | 2 tasks | 6 files |
 | Phase 20 P01 | 4min | 2 tasks | 4 files |
 | Phase 20 P02 | 11min | 2 tasks | 6 files |
+| Phase 21 P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -170,6 +171,11 @@ Recent decisions affecting current work:
 - [20-02]: Direct file-level import of TransactionCostModel via importlib.util to avoid backtesting.__init__ chain
 - [20-02]: Simplified VaR contribution via notional-proportional allocation (full Component VaR deferred to Phase 22)
 - [20-02]: CDS spread returned as-is for price (spread-quoted instrument); P&L from spread changes
+- [21-01]: In-memory _proposals list (same pattern as PositionManager._positions) for decoupled dict-based storage
+- [21-01]: Template-based rationale as primary, LLM (Claude API) as optional enhancement with full fallback
+- [21-01]: Flip detection at conviction >= 0.60 against opposite open position on same instrument
+- [21-01]: Conviction min 0.55, max 5 proposals per call, sorted by conviction descending
+- [21-01]: REJECT journal entries created directly with content_hash for immutability
 
 ### Pending Todos
 
@@ -185,6 +191,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 20-02-PLAN.md (Phase 20 complete)
-Resume file: Next phase (Phase 21)
-Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 21
+Stopped at: Completed 21-01-PLAN.md
+Resume file: 21-02-PLAN.md
+Resume action: Run /gsd:execute-phase for Phase 21 Plan 02
