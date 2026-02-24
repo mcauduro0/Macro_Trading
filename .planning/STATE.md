@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 22: Morning Pack, Risk Monitor & Attribution (v4.0)
+**Current focus:** Phase 22 complete -- ready for Phase 23 (v4.0)
 
 ## Current Position
 
-Phase: 22 of 27 (Morning Pack, Risk Monitor & Attribution)
-Plan: 3 of 3 in current phase (COMPLETE)
-Status: Phase 22 complete -- all 3 plans executed
+Phase: 22 of 27 (Morning Pack, Risk Monitor & Attribution) -- COMPLETE
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 22 complete -- ready for Phase 23
 Last activity: 2026-02-24 — Completed 22-03 PMS API Integration
 
 Progress: [##########################----] 81% (22/27 phases complete — v1-v3 done, v4 Phase 22 complete)
