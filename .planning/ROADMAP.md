@@ -216,6 +216,12 @@ Plans:
   3. PerformanceAttributionEngine decomposes P&L by strategy, asset class, instrument, and time period (daily, MTD, YTD, inception)
   4. Morning Pack API endpoint (GET /api/v1/pms/morning-pack/latest) returns the latest briefing and POST generates a new one
   5. All three services integrate with existing v3.0 components (agents, signals, risk engine, portfolio optimizer)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 22-01-PLAN.md -- MorningPackService (daily briefing with 9 sections, action-first ordering, LLM narrative) + PerformanceAttributionEngine (5-dimension P&L decomposition, factor tags, extended periods)
+- [ ] 22-02-PLAN.md -- RiskMonitorService (VaR, leverage, drawdown, concentration, stress tests, 2-tier alerts, 30-day trend) + PMSRiskLimits config
+- [ ] 22-03-PLAN.md -- 3 API routers (pms_briefing, pms_risk, pms_attribution) + Pydantic schemas + main.py registration + API integration tests
 
 ### Phase 23: Frontend Design System & Morning Pack Page
 **Goal**: PMS frontend foundation -- a cohesive design system (colors, components, layout) and the Morning Pack page as the first operational screen, giving the manager a complete daily overview before markets open
@@ -314,7 +320,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 |-------|----------------|--------|-----------|
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
 | 21. Trade Workflow & PMS API | 3/3 | Complete   | 2026-02-24 |
-| 22. Morning Pack, Risk Monitor & Attribution | 0/0 | Not Started | - |
+| 22. Morning Pack, Risk Monitor & Attribution | 0/3 | Planned | - |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |
 | 25. Frontend Risk Monitor & Performance Attribution | 0/0 | Not Started | - |
