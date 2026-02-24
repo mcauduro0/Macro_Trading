@@ -52,7 +52,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 ### v4.0 Phases (Active)
 
 - [x] **Phase 20: PMS Database & Position Manager** - PMS SQLAlchemy models (PortfolioPosition, TradeProposal, DecisionJournal, DailyBriefing, PositionPnLHistory), Alembic migration with hypertables, PositionManager service, MarkToMarketService (Guide Etapas 1-2) (completed 2026-02-24)
-- [ ] **Phase 21: Trade Workflow & PMS API** - TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades), 20+ PMS API endpoints (book, trades, journal), Pydantic schemas (Guide Etapas 3-4)
+- [x] **Phase 21: Trade Workflow & PMS API** - TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades), 20+ PMS API endpoints (book, trades, journal), Pydantic schemas (Guide Etapas 3-4) (completed 2026-02-24)
 - [ ] **Phase 22: Morning Pack, Risk Monitor & Attribution** - MorningPackService (daily briefing generation, market snapshot, agent views, trade proposals), RiskMonitorService (real-time risk dashboard data, limit monitoring), PerformanceAttributionEngine (multi-dimensional P&L attribution) (Guide Etapas 5-6-7)
 - [ ] **Phase 23: Frontend Design System & Morning Pack Page** - PMS design system (color palette, component library, layout grid), Morning Pack page (market overview cards, agent summaries, trade proposal cards, alert banner) (Guide Etapas 8-9)
 - [ ] **Phase 24: Frontend Position Book & Trade Blotter** - Position Book page (live positions table, P&L columns, asset class grouping, equity curve), Trade Blotter page (pending proposals, approval workflow UI, execution form, trade history) (Guide Etapas 10-11)
@@ -199,7 +199,7 @@ Plans:
   3. Discretionary trades (manager-initiated, not system-generated) can be opened via API with mandatory thesis field
   4. PMS API serves 20+ endpoints across 3 routers: pms_portfolio (book, positions, P&L, equity curve, attribution), pms_trades (proposals, approve, reject, generate), pms_journal (entries, stats, outcome recording)
   5. All Pydantic request/response schemas defined and Swagger docs show PMS tags
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 21-01-PLAN.md -- TradeWorkflowService (signal-to-proposal pipeline, approve/reject/modify, discretionary trades, close + tests)
@@ -313,7 +313,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
-| 21. Trade Workflow & PMS API | 2/3 | In Progress|  |
+| 21. Trade Workflow & PMS API | 3/3 | Complete   | 2026-02-24 |
 | 22. Morning Pack, Risk Monitor & Attribution | 0/0 | Not Started | - |
 | 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |

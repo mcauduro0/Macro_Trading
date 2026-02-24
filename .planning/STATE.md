@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 21 of 27 (Trade Workflow & PMS API)
-Plan: 2 of 3 in current phase
-Status: Executing Phase 21 — Plan 02 complete
-Last activity: 2026-02-24 — Completed 21-02 PMS Schemas and API Routers
+Phase: 21 of 27 (Trade Workflow & PMS API) -- COMPLETE
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 21 complete -- ready for Phase 22
+Last activity: 2026-02-24 — Completed 21-03 PMS Journal Router & API Integration Tests
 
-Progress: [########################------] 74% (20/27 phases complete — v1-v3 done, v4 Phase 21 in progress)
+Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 done, v4 Phase 21 complete)
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [########################------] 74% (20/27 phases complete — v1-v3 
 | Phase 20 P02 | 11min | 2 tasks | 6 files |
 | Phase 21 P01 | 5min | 2 tasks | 3 files |
 | Phase 21 P02 | 3min | 1 tasks | 4 files |
+| Phase 21 P03 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -178,6 +179,8 @@ Recent decisions affecting current work:
 - [21-01]: Conviction min 0.55, max 5 proposals per call, sorted by conviction descending
 - [21-01]: REJECT journal entries created directly with content_hash for immutability
 - [Phase 21]: Duplicate lazy singleton pattern in pms_trades.py per plan spec (not shared import)
+- [21-03]: Journal stats/decision-analysis endpoint placed before /{entry_id} to avoid FastAPI path conflict
+- [21-03]: Test fixture injects shared TradeWorkflowService across all 3 router module singletons for state coherence
 
 ### Pending Todos
 
@@ -193,6 +196,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 21-02-PLAN.md
-Resume file: 21-03-PLAN.md
-Resume action: Run /gsd:execute-phase for Phase 21 Plan 03
+Stopped at: Completed 21-03-PLAN.md (Phase 21 complete)
+Resume file: Phase 22
+Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 22
