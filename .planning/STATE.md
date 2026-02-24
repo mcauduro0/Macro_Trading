@@ -63,6 +63,7 @@ Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 
 | Phase 21 P02 | 3min | 1 tasks | 4 files |
 | Phase 21 P03 | 4min | 2 tasks | 3 files |
 | Phase 22 P02 | 6min | 1 tasks | 4 files |
+| Phase 22 P01 | 9min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -182,6 +183,11 @@ Recent decisions affecting current work:
 - [Phase 21]: Duplicate lazy singleton pattern in pms_trades.py per plan spec (not shared import)
 - [21-03]: Journal stats/decision-analysis endpoint placed before /{entry_id} to avoid FastAPI path conflict
 - [21-03]: Test fixture injects shared TradeWorkflowService across all 3 router module singletons for state coherence
+- [22-01]: Action-first ordering: action_items and trade_proposals appear before context sections in briefing
+- [22-01]: Template-based narrative as primary fallback; LLM (Claude API) as optional enhancement
+- [22-01]: Factor attribution splits P&L equally across factors when a position maps to multiple factors
+- [22-01]: Sub-period buckets: weekly if range <= 90 days, monthly if > 90 days
+- [22-01]: Additive attribution: each dimension independently sums to total_pnl_brl
 - [22-02]: Two-tier alerts: WARNING at 80% utilization, BREACH at 100% for all limit types
 - [22-02]: RiskMonitorService graceful degradation: each optional component (VaRCalculator, StressTester, RiskLimitsManager) can be None
 - [22-02]: Parametric VaR from P&L history (>=20 obs); MC VaR requires >=30 obs and VaRCalculator
@@ -201,6 +207,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 22-02-PLAN.md
+Stopped at: Completed 22-01-PLAN.md and 22-02-PLAN.md (parallel wave 1)
 Resume file: Phase 22 Plan 03
 Resume action: Run /gsd:execute-phase for Phase 22 Plan 03
