@@ -232,6 +232,11 @@ Plans:
   2. Morning Pack page displays: market overview cards (key indicators with daily change), agent view summaries (signal + confidence per agent), trade proposal cards (with approve/reject actions), and active alerts banner
   3. PMS navigation integrates with existing React dashboard sidebar, adding PMS section with 7 sub-pages
   4. All PMS frontend components use CDN-loaded React + Tailwind consistent with v3.0 dashboard approach
+**Plans:** 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md -- PMS design system (color palette, typography, semantic tokens), component library (8 reusable components), mode-switch sidebar navigation (Dashboard/PMS toggle with 7 PMS sub-pages)
+- [ ] 23-02-PLAN.md -- Morning Pack page (alert banner, market overview ticker strip, agent summaries, trade proposals grouped by agent with approve/reject actions)
 
 ### Phase 24: Frontend Position Book & Trade Blotter
 **Goal**: Two core operational pages -- Position Book shows live portfolio with P&L and risk metrics, Trade Blotter provides the approval workflow interface for reviewing and acting on system-generated trade proposals
@@ -321,7 +326,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | 20. PMS Database & Position Manager | 2/2 | Complete    | 2026-02-24 |
 | 21. Trade Workflow & PMS API | 3/3 | Complete   | 2026-02-24 |
 | 22. Morning Pack, Risk Monitor & Attribution | 3/3 | Complete    | 2026-02-24 |
-| 23. Frontend Design System & Morning Pack Page | 0/0 | Not Started | - |
+| 23. Frontend Design System & Morning Pack Page | 0/2 | Planned | - |
 | 24. Frontend Position Book & Trade Blotter | 0/0 | Not Started | - |
 | 25. Frontend Risk Monitor & Performance Attribution | 0/0 | Not Started | - |
 | 26. Frontend Decision Journal, Agent Intel & Compliance | 0/0 | Not Started | - |
