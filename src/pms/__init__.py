@@ -11,7 +11,9 @@ Usage:
 """
 
 from src.pms.mtm_service import MarkToMarketService
+from src.pms.position_manager import PositionManager
 
 __all__ = [
+    "PositionManager",
     "MarkToMarketService",
 ]
