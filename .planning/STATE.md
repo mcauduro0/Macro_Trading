@@ -175,6 +175,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Starting v4.0 PMS milestone — Phase 20 discuss-phase
-Resume file: .planning/ROADMAP.md
-Resume action: Run /gsd:discuss-phase 20 then /gsd:plan-phase 20
+Stopped at: Phase 20 context gathered
+Resume file: .planning/phases/20-pms-database-position-manager/20-CONTEXT.md
+Resume action: Run /gsd:plan-phase 20
