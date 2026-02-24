@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 22 complete -- ready for Phase 23 (v4.0)
+**Current focus:** Phase 23 in progress -- PMS Frontend Design System & Morning Pack Page
 
 ## Current Position
 
-Phase: 22 of 27 (Morning Pack, Risk Monitor & Attribution) -- COMPLETE
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 22 complete -- ready for Phase 23
-Last activity: 2026-02-24 — Completed 22-03 PMS API Integration
+Phase: 23 of 27 (Frontend Design System & Morning Pack Page)
+Plan: 1 of 2 in current phase (plan 01 complete)
+Status: Executing Phase 23 -- plan 01 complete, plan 02 pending
+Last activity: 2026-02-24 — Completed 23-01 PMS Design System Foundation
 
-Progress: [##########################----] 81% (22/27 phases complete — v1-v3 done, v4 Phase 22 complete)
+Progress: [##########################----] 83% (22/27 phases complete + 23 plan 1/2 — v1-v3 done, v4 Phase 23 in progress)
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [##########################----] 81% (22/27 phases complete — v1-v3 
 | Phase 22 P02 | 6min | 1 tasks | 4 files |
 | Phase 22 P03 | 6min | 2 tasks | 7 files |
 | Phase 22 P01 | 9min | 2 tasks | 4 files |
+| Phase 23 P01 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -196,6 +197,11 @@ Recent decisions affecting current work:
 - [22-03]: Route ordering: /history before /{briefing_date} to avoid FastAPI path parameter conflict
 - [22-03]: Lazy singleton per router module (same pattern as pms_trades.py and pms_journal.py)
 - [22-03]: Attribution date serialization: convert date objects to ISO strings for JSON response compatibility
+- [23-01]: PMS components use inline styles referencing PMS_COLORS (not Tailwind color classes) for Bloomberg-dense dark theme consistency
+- [23-01]: AppContent inner component pattern enables useNavigate hook inside HashRouter context
+- [23-01]: MorningPackPage resolved lazily from window.MorningPackPage with fallback to PMSPlaceholder
+- [23-01]: Alert badge shown on Risk nav item in both Dashboard and PMS modes
+- [23-01]: PMS mode auto-detected from URL on initial load via location.pathname.startsWith('/pms/')
 
 ### Pending Todos
 
@@ -211,6 +217,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 22-03-PLAN.md (Phase 22 complete)
-Resume file: Phase 23
-Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 23
+Stopped at: Completed 23-01-PLAN.md
+Resume file: Phase 23 Plan 02
+Resume action: Run /gsd:execute-phase for Phase 23 Plan 02
