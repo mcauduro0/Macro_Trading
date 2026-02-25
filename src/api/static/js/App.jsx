@@ -150,6 +150,10 @@ function AppContent() {
   const PositionBookPage = window.PositionBookPage;
   // TradeBlotterPage — resolved from window global (loaded from pms/pages/TradeBlotterPage.jsx)
   const TradeBlotterPage = window.TradeBlotterPage;
+  // RiskMonitorPage — resolved from window global (loaded from pms/pages/RiskMonitorPage.jsx)
+  const RiskMonitorPage = window.RiskMonitorPage;
+  // PerformanceAttributionPage — resolved from window global (loaded from pms/pages/PerformanceAttributionPage.jsx)
+  const PerformanceAttributionPage = window.PerformanceAttributionPage;
 
   return (
     <Layout
@@ -171,9 +175,9 @@ function AppContent() {
         {/* PMS routes */}
         <Route path="/pms/morning-pack" element={<MorningPackPage />} />
         <Route path="/pms/portfolio" element={<PositionBookPage />} />
-        <Route path="/pms/risk" element={<PMSPlaceholder title="Risk Monitor" />} />
+        <Route path="/pms/risk" element={<RiskMonitorPage />} />
         <Route path="/pms/blotter" element={<TradeBlotterPage />} />
-        <Route path="/pms/attribution" element={<PMSPlaceholder title="Performance Attribution" />} />
+        <Route path="/pms/attribution" element={<PerformanceAttributionPage />} />
         <Route path="/pms/strategies" element={<PMSPlaceholder title="PMS Strategies" />} />
         <Route path="/pms/settings" element={<PMSPlaceholder title="PMS Settings" />} />
       </Routes>
