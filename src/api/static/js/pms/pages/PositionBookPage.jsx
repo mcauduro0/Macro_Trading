@@ -103,18 +103,18 @@ const SAMPLE_BOOK = {
     total_realized_pnl_brl: 5250000,
   },
   positions: [
-    { id: 1, instrument: 'USDBRL NDF 3M', asset_class: 'FX', direction: 'SHORT', notional_brl: 25000000, entry_price: 5.15, current_price: 4.92, unrealized_pnl_brl: 562000, entry_dv01: null, entry_delta: 0.98, entry_var_contribution: 0.018, entry_date: '2025-12-10', strategy_ids: ['FX-02', 'FX-03'], notes: 'target:4.80|stop:5.30', business_days: 52 },
-    { id: 2, instrument: 'USDBRL NDF 6M', asset_class: 'FX', direction: 'SHORT', notional_brl: 15000000, entry_price: 5.22, current_price: 5.01, unrealized_pnl_brl: 315000, entry_dv01: null, entry_delta: 0.95, entry_var_contribution: 0.012, entry_date: '2025-11-20', strategy_ids: ['FX-04'], notes: 'target:4.85|stop:5.40', business_days: 66 },
-    { id: 3, instrument: 'DI1 Jan26', asset_class: 'RATES', direction: 'LONG', notional_brl: 20000000, entry_price: 14.50, current_price: 14.25, unrealized_pnl_brl: 180000, entry_dv01: 4500, entry_delta: null, entry_var_contribution: 0.022, entry_date: '2026-01-08', strategy_ids: ['RATES-03'], notes: 'target:13.80|stop:14.90', business_days: 34 },
-    { id: 4, instrument: 'DI1 Jan27', asset_class: 'RATES', direction: 'LONG', notional_brl: 18000000, entry_price: 13.95, current_price: 13.80, unrealized_pnl_brl: 125000, entry_dv01: 8200, entry_delta: null, entry_var_contribution: 0.028, entry_date: '2026-01-15', strategy_ids: ['RATES-05'], notes: 'target:13.20|stop:14.30', business_days: 29 },
-    { id: 5, instrument: 'NTN-B 2030', asset_class: 'INFLATION', direction: 'LONG', notional_brl: 22000000, entry_price: 6.25, current_price: 6.10, unrealized_pnl_brl: 420000, entry_dv01: 3800, entry_delta: null, entry_var_contribution: 0.015, entry_date: '2025-10-15', strategy_ids: ['INF-02'], notes: 'target:5.80|stop:6.50', business_days: 92 },
-    { id: 6, instrument: 'NTN-B 2035', asset_class: 'INFLATION', direction: 'LONG', notional_brl: 18000000, entry_price: 6.45, current_price: 6.30, unrealized_pnl_brl: 310000, entry_dv01: 5200, entry_delta: null, entry_var_contribution: 0.020, entry_date: '2025-11-05', strategy_ids: ['INF-03'], notes: 'target:6.00|stop:6.70', business_days: 77 },
-    { id: 7, instrument: 'DDI Jan26', asset_class: 'CUPOM_CAMBIAL', direction: 'SHORT', notional_brl: 12000000, entry_price: 11.80, current_price: 11.50, unrealized_pnl_brl: 95000, entry_dv01: 2800, entry_delta: null, entry_var_contribution: 0.009, entry_date: '2026-01-20', strategy_ids: ['CUPOM-02'], notes: 'target:11.00|stop:12.20', business_days: 26 },
-    { id: 8, instrument: 'CDS BR 5Y', asset_class: 'SOVEREIGN', direction: 'SHORT', notional_brl: 10000000, entry_price: 158, current_price: 145, unrealized_pnl_brl: 210000, entry_dv01: null, entry_delta: 0.45, entry_var_contribution: 0.011, entry_date: '2025-12-01', strategy_ids: ['SOV-02'], notes: 'target:130|stop:175', business_days: 59 },
-    { id: 9, instrument: 'LTN 2025', asset_class: 'SOVEREIGN', direction: 'LONG', notional_brl: 8000000, entry_price: 850, current_price: 862, unrealized_pnl_brl: 112000, entry_dv01: 1200, entry_delta: null, entry_var_contribution: 0.006, entry_date: '2026-01-28', strategy_ids: ['RATES-06'], notes: 'target:880|stop:835', business_days: 20 },
-    { id: 10, instrument: 'IBOV FUT', asset_class: 'CROSS_ASSET', direction: 'LONG', notional_brl: 15000000, entry_price: 125800, current_price: 128450, unrealized_pnl_brl: 316000, entry_dv01: null, entry_delta: 1.0, entry_var_contribution: 0.025, entry_date: '2026-01-10', strategy_ids: ['CROSS-01'], notes: 'target:132000|stop:122000', business_days: 32 },
-    { id: 11, instrument: 'DOL WDO', asset_class: 'FX', direction: 'SHORT', notional_brl: 10000000, entry_price: 5.10, current_price: 4.95, unrealized_pnl_brl: 294000, entry_dv01: null, entry_delta: 0.99, entry_var_contribution: 0.014, entry_date: '2025-12-18', strategy_ids: ['FX-05'], notes: 'target:4.75|stop:5.25', business_days: 47 },
-    { id: 12, instrument: 'UST 10Y', asset_class: 'CROSS_ASSET', direction: 'SHORT', notional_brl: 7000000, entry_price: 4.45, current_price: 4.35, unrealized_pnl_brl: -39000, entry_dv01: 6500, entry_delta: null, entry_var_contribution: 0.019, entry_date: '2026-02-05', strategy_ids: ['CROSS-02'], notes: 'target:4.15|stop:4.65', business_days: 14 },
+    { id: 1, instrument: 'USDBRL NDF 3M', asset_class: 'FX', direction: 'SHORT', notional_brl: 25000000, entry_price: 5.15, current_price: 4.92, unrealized_pnl_brl: 562000, daily_pnl_brl: 18500, entry_dv01: null, entry_delta: 0.98, entry_var_contribution: 0.018, entry_date: '2025-12-10', strategy_ids: ['FX-02', 'FX-03'], notes: 'target:4.80|stop:5.30', business_days: 52 },
+    { id: 2, instrument: 'USDBRL NDF 6M', asset_class: 'FX', direction: 'SHORT', notional_brl: 15000000, entry_price: 5.22, current_price: 5.01, unrealized_pnl_brl: 315000, daily_pnl_brl: 7200, entry_dv01: null, entry_delta: 0.95, entry_var_contribution: 0.012, entry_date: '2025-11-20', strategy_ids: ['FX-04'], notes: 'target:4.85|stop:5.40', business_days: 66 },
+    { id: 3, instrument: 'DI1 Jan26', asset_class: 'RATES', direction: 'LONG', notional_brl: 20000000, entry_price: 14.50, current_price: 14.25, unrealized_pnl_brl: 180000, daily_pnl_brl: -12000, entry_dv01: 4500, entry_delta: null, entry_var_contribution: 0.022, entry_date: '2026-01-08', strategy_ids: ['RATES-03'], notes: 'target:13.80|stop:14.90', business_days: 34 },
+    { id: 4, instrument: 'DI1 Jan27', asset_class: 'RATES', direction: 'LONG', notional_brl: 18000000, entry_price: 13.95, current_price: 13.80, unrealized_pnl_brl: 125000, daily_pnl_brl: 8500, entry_dv01: 8200, entry_delta: null, entry_var_contribution: 0.028, entry_date: '2026-01-15', strategy_ids: ['RATES-05'], notes: 'target:13.20|stop:14.30', business_days: 29 },
+    { id: 5, instrument: 'NTN-B 2030', asset_class: 'INFLATION', direction: 'LONG', notional_brl: 22000000, entry_price: 6.25, current_price: 6.10, unrealized_pnl_brl: 420000, daily_pnl_brl: 22000, entry_dv01: 3800, entry_delta: null, entry_var_contribution: 0.015, entry_date: '2025-10-15', strategy_ids: ['INF-02'], notes: 'target:5.80|stop:6.50', business_days: 92 },
+    { id: 6, instrument: 'NTN-B 2035', asset_class: 'INFLATION', direction: 'LONG', notional_brl: 18000000, entry_price: 6.45, current_price: 6.30, unrealized_pnl_brl: 310000, daily_pnl_brl: 15000, entry_dv01: 5200, entry_delta: null, entry_var_contribution: 0.020, entry_date: '2025-11-05', strategy_ids: ['INF-03'], notes: 'target:6.00|stop:6.70', business_days: 77 },
+    { id: 7, instrument: 'DDI Jan26', asset_class: 'CUPOM_CAMBIAL', direction: 'SHORT', notional_brl: 12000000, entry_price: 11.80, current_price: 11.50, unrealized_pnl_brl: 95000, daily_pnl_brl: 3200, entry_dv01: 2800, entry_delta: null, entry_var_contribution: 0.009, entry_date: '2026-01-20', strategy_ids: ['CUPOM-02'], notes: 'target:11.00|stop:12.20', business_days: 26 },
+    { id: 8, instrument: 'CDS BR 5Y', asset_class: 'SOVEREIGN', direction: 'SHORT', notional_brl: 10000000, entry_price: 158, current_price: 145, unrealized_pnl_brl: 210000, daily_pnl_brl: -5500, entry_dv01: null, entry_delta: 0.45, entry_var_contribution: 0.011, entry_date: '2025-12-01', strategy_ids: ['SOV-02'], notes: 'target:130|stop:175', business_days: 59 },
+    { id: 9, instrument: 'LTN 2025', asset_class: 'SOVEREIGN', direction: 'LONG', notional_brl: 8000000, entry_price: 850, current_price: 862, unrealized_pnl_brl: 112000, daily_pnl_brl: 4800, entry_dv01: 1200, entry_delta: null, entry_var_contribution: 0.006, entry_date: '2026-01-28', strategy_ids: ['RATES-06'], notes: 'target:880|stop:835', business_days: 20 },
+    { id: 10, instrument: 'IBOV FUT', asset_class: 'CROSS_ASSET', direction: 'LONG', notional_brl: 15000000, entry_price: 125800, current_price: 128450, unrealized_pnl_brl: 316000, daily_pnl_brl: 42000, entry_dv01: null, entry_delta: 1.0, entry_var_contribution: 0.025, entry_date: '2026-01-10', strategy_ids: ['CROSS-01'], notes: 'target:132000|stop:122000', business_days: 32 },
+    { id: 11, instrument: 'DOL WDO', asset_class: 'FX', direction: 'SHORT', notional_brl: 10000000, entry_price: 5.10, current_price: 4.95, unrealized_pnl_brl: 294000, daily_pnl_brl: 9800, entry_dv01: null, entry_delta: 0.99, entry_var_contribution: 0.014, entry_date: '2025-12-18', strategy_ids: ['FX-05'], notes: 'target:4.75|stop:5.25', business_days: 47 },
+    { id: 12, instrument: 'UST 10Y', asset_class: 'CROSS_ASSET', direction: 'SHORT', notional_brl: 7000000, entry_price: 4.45, current_price: 4.35, unrealized_pnl_brl: -39000, daily_pnl_brl: -8200, entry_dv01: 6500, entry_delta: null, entry_var_contribution: 0.019, entry_date: '2026-02-05', strategy_ids: ['CROSS-02'], notes: 'target:4.15|stop:4.65', business_days: 14 },
   ],
   by_asset_class: {
     FX: { count: 3, total_notional: 50000000, unrealized_pnl: 1171000 },
@@ -501,6 +501,7 @@ function PositionsTable({ positions, onExpandRow, expandedRowId, onCloseClick })
     { key: 'unrealized_pnl', label: 'Unreal P&L', align: 'right' },
     { key: 'dv01_delta', label: 'DV01/Delta', align: 'right' },
     { key: 'var_contrib', label: 'VaR Contrib', align: 'right' },
+    { key: 'daily_pnl', label: 'Daily P&L', align: 'right' },
     { key: 'holding_days', label: 'Days', align: 'right' },
     { key: 'actions', label: '', align: 'center' },
   ];
@@ -551,7 +552,7 @@ function PositionsTable({ positions, onExpandRow, expandedRowId, onCloseClick })
                         ({groupPositions.length})
                       </span>
                     </td>
-                    <td style={{ ...groupHeaderCellStyle, textAlign: 'right' }} colSpan={4}>
+                    <td style={{ ...groupHeaderCellStyle, textAlign: 'right' }} colSpan={5}>
                       <span style={{ color: _pnlColor(subtotal), fontWeight: _T.weights.bold }}>
                         {formatPnLShort(subtotal)}
                       </span>
@@ -586,6 +587,9 @@ function PositionsTable({ positions, onExpandRow, expandedRowId, onCloseClick })
                           <td style={cellStyle('right')}>
                             {pos.entry_var_contribution != null ? (pos.entry_var_contribution * 100).toFixed(1) + '%' : '--'}
                           </td>
+                          <td style={{ ...cellStyle('right'), color: _pnlColor(pos.daily_pnl_brl) }}>
+                            {pos.daily_pnl_brl != null ? formatPnLShort(pos.daily_pnl_brl) : '--'}
+                          </td>
                           <td style={cellStyle('right')}>{pos.business_days != null ? pos.business_days : '--'}</td>
                           <td style={cellStyle('center')}>
                             <button
@@ -600,7 +604,7 @@ function PositionsTable({ positions, onExpandRow, expandedRowId, onCloseClick })
                         {/* Expanded detail row */}
                         {isRowExpanded && (
                           <tr>
-                            <td colSpan={10} style={{ backgroundColor: _C.bg.tertiary, padding: '8px 16px 8px 32px', borderBottom: '1px solid ' + _C.border.default }}>
+                            <td colSpan={11} style={{ backgroundColor: _C.bg.tertiary, padding: '8px 16px 8px 32px', borderBottom: '1px solid ' + _C.border.default }}>
                               <PositionDetailRow position={pos} />
                             </td>
                           </tr>
