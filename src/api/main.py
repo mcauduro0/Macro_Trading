@@ -26,6 +26,9 @@ from src.api.routes.websocket_api import router as websocket_router
 from src.api.routes.pms_portfolio import router as pms_portfolio_router
 from src.api.routes.pms_trades import router as pms_trades_router
 from src.api.routes.pms_journal import router as pms_journal_router
+from src.api.routes.pms_briefing import router as pms_briefing_router
+from src.api.routes.pms_risk import router as pms_risk_router
+from src.api.routes.pms_attribution import router as pms_attribution_router
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +73,9 @@ openapi_tags = [
     {"name": "PMS - Portfolio", "description": "Portfolio positions, P&L, and book management"},
     {"name": "PMS - Trade Blotter", "description": "Trade proposals and approval workflow"},
     {"name": "PMS - Decision Journal", "description": "Immutable decision audit log"},
+    {"name": "PMS - Morning Pack", "description": "Daily briefing generation and retrieval"},
+    {"name": "PMS - Risk Monitor", "description": "Real-time risk metrics, limits, and alerts"},
+    {"name": "PMS - Attribution", "description": "Multi-dimensional P&L attribution and performance analytics"},
 ]
 
 app = FastAPI(
@@ -131,6 +137,9 @@ app.include_router(backtest_router, prefix="/api/v1")
 app.include_router(pms_portfolio_router, prefix="/api/v1")
 app.include_router(pms_trades_router, prefix="/api/v1")
 app.include_router(pms_journal_router, prefix="/api/v1")
+app.include_router(pms_briefing_router, prefix="/api/v1")
+app.include_router(pms_risk_router, prefix="/api/v1")
+app.include_router(pms_attribution_router, prefix="/api/v1")
 
 # WebSocket endpoints at root (no prefix — ws:// paths)
 app.include_router(websocket_router)

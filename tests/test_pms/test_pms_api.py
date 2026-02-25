@@ -1,9 +1,12 @@
 """FastAPI TestClient integration tests for the PMS API.
 
-12 tests verifying the full PMS workflow end-to-end:
+20 tests verifying the full PMS workflow end-to-end:
   - Portfolio book (empty, open, close, MTM, P&L)
   - Trade proposals (generate, approve, reject)
   - Decision journal (listing, statistics)
+  - Morning Pack (generate, latest, history)
+  - Risk Monitor (live, trend, limits)
+  - Attribution (period, equity curve)
 
 All tests use an in-memory TradeWorkflowService with no DB dependency.
 A fresh singleton is injected per test via the ``client`` fixture.
@@ -18,6 +21,9 @@ from fastapi.testclient import TestClient
 from src.api.routes.pms_portfolio import router as pms_portfolio_router
 from src.api.routes.pms_trades import router as pms_trades_router
 from src.api.routes.pms_journal import router as pms_journal_router
+from src.api.routes.pms_briefing import router as pms_briefing_router
+from src.api.routes.pms_risk import router as pms_risk_router
+from src.api.routes.pms_attribution import router as pms_attribution_router
 
 
 # -------------------------------------------------------------------------
@@ -52,6 +58,9 @@ def _create_test_app() -> FastAPI:
     app.include_router(pms_portfolio_router, prefix="/api/v1")
     app.include_router(pms_trades_router, prefix="/api/v1")
     app.include_router(pms_journal_router, prefix="/api/v1")
+    app.include_router(pms_briefing_router, prefix="/api/v1")
+    app.include_router(pms_risk_router, prefix="/api/v1")
+    app.include_router(pms_attribution_router, prefix="/api/v1")
     return app
 
 
@@ -64,15 +73,29 @@ def client():
     import src.api.routes.pms_portfolio as pms_mod
     import src.api.routes.pms_trades as trades_mod
     import src.api.routes.pms_journal as journal_mod
+    import src.api.routes.pms_briefing as briefing_mod
+    import src.api.routes.pms_risk as risk_mod
+    import src.api.routes.pms_attribution as attribution_mod
 
     # Create fresh workflow for test isolation
-    from src.pms import TradeWorkflowService
+    from src.pms import TradeWorkflowService, PositionManager
+    from src.pms.morning_pack import MorningPackService
+    from src.pms.risk_monitor import RiskMonitorService
+    from src.pms.attribution import PerformanceAttributionEngine
 
-    fresh_workflow = TradeWorkflowService()
+    pm = PositionManager()
+    fresh_workflow = TradeWorkflowService(position_manager=pm)
 
     pms_mod._workflow = fresh_workflow
     trades_mod._workflow = fresh_workflow
     journal_mod._workflow = fresh_workflow
+
+    # Inject fresh services sharing the same PositionManager
+    briefing_mod._service = MorningPackService(
+        position_manager=pm, trade_workflow=fresh_workflow
+    )
+    risk_mod._service = RiskMonitorService(position_manager=pm)
+    attribution_mod._service = PerformanceAttributionEngine(position_manager=pm)
 
     app = _create_test_app()
     with TestClient(app) as c:
@@ -82,6 +105,9 @@ def client():
     pms_mod._workflow = None
     trades_mod._workflow = None
     journal_mod._workflow = None
+    briefing_mod._service = None
+    risk_mod._service = None
+    attribution_mod._service = None
 
 
 # =========================================================================
@@ -380,3 +406,125 @@ def test_mtm_endpoint(client: TestClient):
     mtm = mtm_resp.json()
     assert mtm["status"] == "ok"
     assert mtm["updated_count"] >= 1
+
+
+# =========================================================================
+# 13. Morning Pack — generate
+# =========================================================================
+def test_morning_pack_generate(client: TestClient):
+    """POST /api/v1/pms/morning-pack/generate creates and returns a briefing."""
+    resp = client.post(
+        "/api/v1/pms/morning-pack/generate",
+        json={},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "id" in data
+    assert "briefing_date" in data
+    assert "created_at" in data
+    assert "action_items" in data
+    assert "trade_proposals" in data
+    assert "market_snapshot" in data
+    assert "agent_views" in data
+    assert "regime" in data
+    assert "top_signals" in data
+    assert "signal_changes" in data
+    assert "portfolio_state" in data
+    assert "macro_narrative" in data
+
+
+# =========================================================================
+# 14. Morning Pack — latest
+# =========================================================================
+def test_morning_pack_latest(client: TestClient):
+    """Generate a briefing, then GET /api/v1/pms/morning-pack/latest."""
+    # First generate
+    gen_resp = client.post(
+        "/api/v1/pms/morning-pack/generate",
+        json={},
+    )
+    assert gen_resp.status_code == 200
+
+    # Then get latest
+    resp = client.get("/api/v1/pms/morning-pack/latest")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "briefing_date" in data
+    assert "action_items" in data
+
+
+# =========================================================================
+# 15. Morning Pack — history
+# =========================================================================
+def test_morning_pack_history(client: TestClient):
+    """GET /api/v1/pms/morning-pack/history returns a list."""
+    resp = client.get("/api/v1/pms/morning-pack/history?days=30")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+# =========================================================================
+# 16. Risk Monitor — live
+# =========================================================================
+def test_risk_live(client: TestClient):
+    """GET /api/v1/pms/risk/live returns a complete risk snapshot."""
+    resp = client.get("/api/v1/pms/risk/live")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "as_of_date" in data
+    assert "var" in data
+    assert "leverage" in data
+    assert "drawdown" in data
+    assert "concentration" in data
+    assert "alerts" in data
+
+
+# =========================================================================
+# 17. Risk Monitor — trend
+# =========================================================================
+def test_risk_trend(client: TestClient):
+    """GET /api/v1/pms/risk/trend returns a list of trend points."""
+    resp = client.get("/api/v1/pms/risk/trend?days=30")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+
+
+# =========================================================================
+# 18. Risk Monitor — limits
+# =========================================================================
+def test_risk_limits(client: TestClient):
+    """GET /api/v1/pms/risk/limits returns limits configuration."""
+    resp = client.get("/api/v1/pms/risk/limits")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "config" in data
+    assert "limits_summary" in data
+    assert "var_95_limit_pct" in data["config"]
+    assert "gross_leverage_limit" in data["config"]
+
+
+# =========================================================================
+# 19. Attribution — period
+# =========================================================================
+def test_attribution(client: TestClient):
+    """GET /api/v1/pms/attribution?period=MTD returns attribution data."""
+    resp = client.get("/api/v1/pms/attribution?period=MTD")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "period" in data
+    assert "total_pnl_brl" in data
+    assert "by_strategy" in data
+    assert "by_asset_class" in data
+
+
+# =========================================================================
+# 20. Attribution — equity curve
+# =========================================================================
+def test_attribution_equity_curve(client: TestClient):
+    """GET /api/v1/pms/attribution/equity-curve returns a list."""
+    resp = client.get("/api/v1/pms/attribution/equity-curve")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)

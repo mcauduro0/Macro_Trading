@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 21: Trade Workflow & PMS API (v4.0)
+**Current focus:** Phase 25 complete -- Frontend Risk Monitor & Performance Attribution done
 
 ## Current Position
 
-Phase: 21 of 27 (Trade Workflow & PMS API) -- COMPLETE
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 21 complete -- ready for Phase 22
-Last activity: 2026-02-24 — Completed 21-03 PMS Journal Router & API Integration Tests
+Phase: 25 of 27 (Frontend Risk Monitor & Performance Attribution)
+Plan: 2 of 2 in current phase (25-02 Performance Attribution Page complete)
+Status: Phase 25 complete -- all plans done
+Last activity: 2026-02-25 — Completed 25-02 Performance Attribution Page
 
-Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 done, v4 Phase 21 complete)
+Progress: [#############################-] 93% (25/27 phases complete)
 
 ## Performance Metrics
 
@@ -62,6 +62,15 @@ Progress: [#########################-----] 78% (21/27 phases complete — v1-v3 
 | Phase 21 P01 | 5min | 2 tasks | 3 files |
 | Phase 21 P02 | 3min | 1 tasks | 4 files |
 | Phase 21 P03 | 4min | 2 tasks | 3 files |
+| Phase 22 P02 | 6min | 1 tasks | 4 files |
+| Phase 22 P03 | 6min | 2 tasks | 7 files |
+| Phase 22 P01 | 9min | 2 tasks | 4 files |
+| Phase 23 P01 | 4min | 2 tasks | 5 files |
+| Phase 23 P02 | 5min | 2 tasks | 3 files |
+| Phase 24 P01 | 5min | 2 tasks | 3 files |
+| Phase 24 P02 | 5min | 2 tasks | 3 files |
+| Phase 25 P01 | 4min | 1 tasks | 1 files |
+| Phase 25 P02 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -181,6 +190,45 @@ Recent decisions affecting current work:
 - [Phase 21]: Duplicate lazy singleton pattern in pms_trades.py per plan spec (not shared import)
 - [21-03]: Journal stats/decision-analysis endpoint placed before /{entry_id} to avoid FastAPI path conflict
 - [21-03]: Test fixture injects shared TradeWorkflowService across all 3 router module singletons for state coherence
+- [22-01]: Action-first ordering: action_items and trade_proposals appear before context sections in briefing
+- [22-01]: Template-based narrative as primary fallback; LLM (Claude API) as optional enhancement
+- [22-01]: Factor attribution splits P&L equally across factors when a position maps to multiple factors
+- [22-01]: Sub-period buckets: weekly if range <= 90 days, monthly if > 90 days
+- [22-01]: Additive attribution: each dimension independently sums to total_pnl_brl
+- [22-02]: Two-tier alerts: WARNING at 80% utilization, BREACH at 100% for all limit types
+- [22-02]: RiskMonitorService graceful degradation: each optional component (VaRCalculator, StressTester, RiskLimitsManager) can be None
+- [22-02]: Parametric VaR from P&L history (>=20 obs); MC VaR requires >=30 obs and VaRCalculator
+- [22-02]: Drawdown computed from cumulative daily P&L via HWM method against AUM
+- [22-03]: Route ordering: /history before /{briefing_date} to avoid FastAPI path parameter conflict
+- [22-03]: Lazy singleton per router module (same pattern as pms_trades.py and pms_journal.py)
+- [22-03]: Attribution date serialization: convert date objects to ISO strings for JSON response compatibility
+- [23-01]: PMS components use inline styles referencing PMS_COLORS (not Tailwind color classes) for Bloomberg-dense dark theme consistency
+- [23-01]: AppContent inner component pattern enables useNavigate hook inside HashRouter context
+- [23-01]: MorningPackPage resolved lazily from window.MorningPackPage with fallback to PMSPlaceholder
+- [23-01]: Alert badge shown on Risk nav item in both Dashboard and PMS modes
+- [23-01]: PMS mode auto-detected from URL on initial load via location.pathname.startsWith('/pms/')
+- [23-02]: All 4 Morning Pack sections in single MorningPackPage.jsx (709 lines) for code coherence
+- [23-02]: Trade proposal cards use tertiary bg without left accent border (visually distinct from agent cards)
+- [23-02]: Quick-approve button only for conviction >= 0.70; reject uses window.prompt (modal in Phase 24)
+- [23-02]: 60-second polling interval for morning-pack, risk/live, and proposals endpoints
+- [23-02]: Sample data fallback for all 3 API endpoints ensures page always renders without backend
+- [24-01]: Inline P&L summary cards (not PMSMetricCard) for dense horizontal layout control in Position Book
+- [24-01]: SVG polyline spark chart in expanded row detail (no Recharts for inline sparklines)
+- [24-01]: Close dialog uses sample-data fallback -- closes in UI even when API unavailable
+- [24-01]: CDI benchmark as dashed gray line using 13.75% annual rate compounded daily over 252 trading days
+- [Phase 24]: Slide-out right panel (400px fixed) for approval form instead of modal dialog
+- [Phase 24]: Inline reject flow with text input + confirm/cancel instead of window.prompt
+- [Phase 24]: Batch approve uses default execution values for quick bulk approval scenarios
+- [Phase 24]: Client-side pagination with Load More (20 per page) for trade history tab
+- [25-01]: SVG gauge with needle indicator (line + circle center) for precise VaR visualization
+- [25-01]: CSS @keyframes pulse-breach injected via IIFE for breach bar animation
+- [25-01]: Custom div-based limit utilization bars (not PMSGauge) for click-to-expand capability
+- [25-01]: Historical VaR chart uses ReferenceLine for dashed limit thresholds
+- [25-01]: Stress test bar color: green (positive), amber (-5% to 0%), red (< -5%)
+- [25-02]: Waterfall chart uses stacked BarChart with transparent invisible base + colored value bar for floating-bar effect
+- [25-02]: Inline magnitude bars in attribution table use proportional width against maxAbsPnl
+- [25-02]: Period selector builds dynamic fetch URL with useMemo; custom dates trigger re-fetch via URL param change
+- [25-02]: Dimension switcher is state toggle -- all dimensions in same AttributionResponse, no re-fetch needed
 
 ### Pending Todos
 
@@ -195,7 +243,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Completed 21-03-PLAN.md (Phase 21 complete)
-Resume file: Phase 22
-Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 22
+Last session: 2026-02-25
+Stopped at: Completed 25-02-PLAN.md (Performance Attribution Page + routing wiring)
+Resume file: Phase 26
+Resume action: Plan and execute Phase 26

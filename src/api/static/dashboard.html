@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Macro Trading System</title>
 
+  <!-- JetBrains Mono font for PMS Bloomberg-dense styling -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- React 18 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -43,6 +46,15 @@
             red: { 500: '#ef4444' },
             amber: { 500: '#f59e0b' },
             blue: { 500: '#3b82f6', 600: '#2563eb' },
+            pms: {
+              bg: '#0d1117',
+              surface: '#161b22',
+              border: '#30363d',
+              green: '#3fb950',
+              red: '#f85149',
+              yellow: '#d29922',
+              blue: '#58a6ff',
+            },
           },
         },
       },
@@ -72,8 +84,15 @@
 <body>
   <div id="root"></div>
 
-  <!-- Load .jsx files in dependency order: hooks -> Sidebar -> pages -> App -->
+  <!-- Load .jsx files in dependency order: hooks -> pms libs -> Sidebar -> pages -> App -->
   <script type="text/babel" src="/static/js/hooks.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/theme.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/components.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/MorningPackPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/PositionBookPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/TradeBlotterPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/RiskMonitorPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/PerformanceAttributionPage.jsx"></script>
   <script type="text/babel" src="/static/js/Sidebar.jsx"></script>
   <script type="text/babel" src="/static/js/pages/StrategiesPage.jsx"></script>
   <script type="text/babel" src="/static/js/pages/SignalsPage.jsx"></script>
