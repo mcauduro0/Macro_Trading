@@ -56,7 +56,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 - [x] **Phase 22: Morning Pack, Risk Monitor & Attribution** - MorningPackService (daily briefing generation, market snapshot, agent views, trade proposals), RiskMonitorService (real-time risk dashboard data, limit monitoring), PerformanceAttributionEngine (multi-dimensional P&L attribution) (Guide Etapas 5-6-7) (completed 2026-02-24)
 - [x] **Phase 23: Frontend Design System & Morning Pack Page** - PMS design system (color palette, component library, layout grid), Morning Pack page (market overview cards, agent summaries, trade proposal cards, alert banner) (Guide Etapas 8-9) (completed 2026-02-24)
 - [x] **Phase 24: Frontend Position Book & Trade Blotter** - Position Book page (live positions table, P&L columns, asset class grouping, equity curve), Trade Blotter page (pending proposals, approval workflow UI, execution form, trade history) (Guide Etapas 10-11) (completed 2026-02-25)
-- [ ] **Phase 25: Frontend Risk Monitor & Performance Attribution** - Risk Monitor page (VaR gauges, stress test visualization, limit bars, concentration chart), Performance Attribution page (P&L waterfall, strategy attribution, time-series decomposition) (Guide Etapas 12-13)
+- [x] **Phase 25: Frontend Risk Monitor & Performance Attribution** - Risk Monitor page (VaR gauges, stress test visualization, limit bars, concentration chart), Performance Attribution page (P&L waterfall, strategy attribution, time-series decomposition) (Guide Etapas 12-13) (completed 2026-02-25)
 - [ ] **Phase 26: Frontend Decision Journal, Agent Intel & Compliance** - Decision Journal page (timeline view, decision cards, outcome tracking, search/filter), Agent Intelligence Hub page (agent cards with signals, narrative display), Compliance & Audit module (audit trail, hash verification) (Guide Etapas 14-15)
 - [ ] **Phase 27: Redis Cache, Dagster PMS, Go-Live & Verification** - Redis caching layer for PMS queries, Dagster PMS daily pipeline (MTM, proposals, briefing, attribution), go-live checklist, disaster recovery, verification script, final documentation (Guide Etapas 16-17-18-19-20)
 
@@ -263,7 +263,7 @@ Plans:
   2. Risk Monitor includes limit breach alerts, historical VaR chart, and scenario analysis comparison
   3. Performance Attribution page shows P&L waterfall chart (by strategy contribution), asset class attribution table, and time-series decomposition (daily bars, cumulative line)
   4. Attribution supports period selection (daily, MTD, QTD, YTD, custom range)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 25-01-PLAN.md -- Risk Monitor page (4-quadrant Bloomberg PORT-dense layout: VaR gauges, stress test bars, limit utilization bars with 2-tier alerting, concentration pie, historical VaR chart)
@@ -338,6 +338,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | 22. Morning Pack, Risk Monitor & Attribution | 3/3 | Complete    | 2026-02-24 |
 | 23. Frontend Design System & Morning Pack Page | 2/2 | Complete    | 2026-02-24 |
 | 24. Frontend Position Book & Trade Blotter | 2/2 | Complete    | 2026-02-25 |
-| 25. Frontend Risk Monitor & Performance Attribution | 1/2 | In Progress|  |
+| 25. Frontend Risk Monitor & Performance Attribution | 2/2 | Complete   | 2026-02-25 |
 | 26. Frontend Decision Journal, Agent Intel & Compliance | 0/0 | Not Started | - |
 | 27. Redis Cache, Dagster PMS, Go-Live & Verification | 0/0 | Not Started | - |

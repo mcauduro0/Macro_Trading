@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 25 in progress -- Frontend Risk Monitor & Performance Attribution
+**Current focus:** Phase 25 complete -- Frontend Risk Monitor & Performance Attribution done
 
 ## Current Position
 
 Phase: 25 of 27 (Frontend Risk Monitor & Performance Attribution)
-Plan: 1 of 2 in current phase (25-01 Risk Monitor Page complete)
-Status: Plan 25-01 complete -- ready for 25-02
-Last activity: 2026-02-25 — Completed 25-01 Risk Monitor Page
+Plan: 2 of 2 in current phase (25-02 Performance Attribution Page complete)
+Status: Phase 25 complete -- all plans done
+Last activity: 2026-02-25 — Completed 25-02 Performance Attribution Page
 
-Progress: [############################--] 89% (24/27 phases complete)
+Progress: [#############################-] 93% (25/27 phases complete)
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [############################--] 89% (24/27 phases complete)
 | Phase 24 P01 | 5min | 2 tasks | 3 files |
 | Phase 24 P02 | 5min | 2 tasks | 3 files |
 | Phase 25 P01 | 4min | 1 tasks | 1 files |
+| Phase 25 P02 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -224,6 +225,10 @@ Recent decisions affecting current work:
 - [25-01]: Custom div-based limit utilization bars (not PMSGauge) for click-to-expand capability
 - [25-01]: Historical VaR chart uses ReferenceLine for dashed limit thresholds
 - [25-01]: Stress test bar color: green (positive), amber (-5% to 0%), red (< -5%)
+- [25-02]: Waterfall chart uses stacked BarChart with transparent invisible base + colored value bar for floating-bar effect
+- [25-02]: Inline magnitude bars in attribution table use proportional width against maxAbsPnl
+- [25-02]: Period selector builds dynamic fetch URL with useMemo; custom dates trigger re-fetch via URL param change
+- [25-02]: Dimension switcher is state toggle -- all dimensions in same AttributionResponse, no re-fetch needed
 
 ### Pending Todos
 
@@ -239,6 +244,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 25-01-PLAN.md (Risk Monitor Page)
-Resume file: Phase 25
-Resume action: Execute 25-02-PLAN.md (Performance Attribution Page + routing wiring)
+Stopped at: Completed 25-02-PLAN.md (Performance Attribution Page + routing wiring)
+Resume file: Phase 26
+Resume action: Plan and execute Phase 26
