@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 24 complete -- PMS Frontend Position Book & Trade Blotter done
+**Current focus:** Phase 25 in progress -- Frontend Risk Monitor & Performance Attribution
 
 ## Current Position
 
-Phase: 24 of 27 (Frontend Position Book & Trade Blotter)
-Plan: 2 of 2 in current phase (24-02 Trade Blotter Page complete)
-Status: Phase 24 complete -- ready for Phase 25
-Last activity: 2026-02-25 — Completed 24-02 Trade Blotter Page
+Phase: 25 of 27 (Frontend Risk Monitor & Performance Attribution)
+Plan: 1 of 2 in current phase (25-01 Risk Monitor Page complete)
+Status: Plan 25-01 complete -- ready for 25-02
+Last activity: 2026-02-25 — Completed 25-01 Risk Monitor Page
 
 Progress: [############################--] 89% (24/27 phases complete)
 
@@ -69,6 +69,7 @@ Progress: [############################--] 89% (24/27 phases complete)
 | Phase 23 P02 | 5min | 2 tasks | 3 files |
 | Phase 24 P01 | 5min | 2 tasks | 3 files |
 | Phase 24 P02 | 5min | 2 tasks | 3 files |
+| Phase 25 P01 | 4min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -218,6 +219,11 @@ Recent decisions affecting current work:
 - [Phase 24]: Inline reject flow with text input + confirm/cancel instead of window.prompt
 - [Phase 24]: Batch approve uses default execution values for quick bulk approval scenarios
 - [Phase 24]: Client-side pagination with Load More (20 per page) for trade history tab
+- [25-01]: SVG gauge with needle indicator (line + circle center) for precise VaR visualization
+- [25-01]: CSS @keyframes pulse-breach injected via IIFE for breach bar animation
+- [25-01]: Custom div-based limit utilization bars (not PMSGauge) for click-to-expand capability
+- [25-01]: Historical VaR chart uses ReferenceLine for dashed limit thresholds
+- [25-01]: Stress test bar color: green (positive), amber (-5% to 0%), red (< -5%)
 
 ### Pending Todos
 
@@ -233,6 +239,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 24-02-PLAN.md (Trade Blotter Page)
+Stopped at: Completed 25-01-PLAN.md (Risk Monitor Page)
 Resume file: Phase 25
-Resume action: Run /gsd:plan-phase for Phase 25 (Risk Monitor & Attribution frontend)
+Resume action: Execute 25-02-PLAN.md (Performance Attribution Page + routing wiring)
