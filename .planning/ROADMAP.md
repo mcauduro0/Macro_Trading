@@ -295,6 +295,13 @@ Plans:
   3. Go-live checklist covers: database backup/restore, monitoring alerts for PMS tables, runbook for daily operations, disaster recovery procedures
   4. Verification script (scripts/verify_phase3.py) validates all PMS components end-to-end with formatted pass/fail report
   5. All 20 etapas from guide verified, documentation updated
+**Plans:** 4 plans
+
+Plans:
+- [ ] 27-01-PLAN.md -- Redis caching layer (PMSCache with tiered TTLs, write-through + invalidate, wired into all 6 PMS route files)
+- [ ] 27-02-PLAN.md -- Dagster PMS pipeline (4 assets: MTM, proposals, morning pack, attribution; 2 schedules: EOD + pre-open)
+- [ ] 27-03-PLAN.md -- Go-live checklist, operational runbook, DR playbook, backup/restore scripts
+- [ ] 27-04-PLAN.md -- Verification script (verify_phase3.py, 29 checks covering v1-v4) + Makefile PMS targets
 
 ## Progress
 
@@ -346,4 +353,4 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | 24. Frontend Position Book & Trade Blotter | 2/2 | Complete    | 2026-02-25 |
 | 25. Frontend Risk Monitor & Performance Attribution | 2/2 | Complete    | 2026-02-25 |
 | 26. Frontend Decision Journal, Agent Intel & Compliance | 3/3 | Complete | 2026-02-25 |
-| 27. Redis Cache, Dagster PMS, Go-Live & Verification | 0/0 | Not Started | - |
+| 27. Redis Cache, Dagster PMS, Go-Live & Verification | 0/4 | Planned | - |
