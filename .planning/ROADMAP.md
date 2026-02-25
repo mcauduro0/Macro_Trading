@@ -57,7 +57,7 @@ This roadmap covers three milestones of the macro trading system for a global ma
 - [x] **Phase 23: Frontend Design System & Morning Pack Page** - PMS design system (color palette, component library, layout grid), Morning Pack page (market overview cards, agent summaries, trade proposal cards, alert banner) (Guide Etapas 8-9) (completed 2026-02-24)
 - [x] **Phase 24: Frontend Position Book & Trade Blotter** - Position Book page (live positions table, P&L columns, asset class grouping, equity curve), Trade Blotter page (pending proposals, approval workflow UI, execution form, trade history) (Guide Etapas 10-11) (completed 2026-02-25)
 - [x] **Phase 25: Frontend Risk Monitor & Performance Attribution** - Risk Monitor page (VaR gauges, stress test visualization, limit bars, concentration chart), Performance Attribution page (P&L waterfall, strategy attribution, time-series decomposition) (Guide Etapas 12-13) (completed 2026-02-25)
-- [ ] **Phase 26: Frontend Decision Journal, Agent Intel & Compliance** - Decision Journal page (timeline view, decision cards, outcome tracking, search/filter), Agent Intelligence Hub page (agent cards with signals, narrative display), Compliance & Audit module (audit trail, hash verification) (Guide Etapas 14-15)
+- [x] **Phase 26: Frontend Decision Journal, Agent Intel & Compliance** - Decision Journal page (timeline view, decision cards, outcome tracking, search/filter), Agent Intelligence Hub page (agent cards with signals, narrative display), Compliance & Audit module (audit trail, hash verification) (Guide Etapas 14-15) (completed 2026-02-25)
 - [ ] **Phase 27: Redis Cache, Dagster PMS, Go-Live & Verification** - Redis caching layer for PMS queries, Dagster PMS daily pipeline (MTM, proposals, briefing, attribution), go-live checklist, disaster recovery, verification script, final documentation (Guide Etapas 16-17-18-19-20)
 
 ## Phase Details
@@ -278,12 +278,12 @@ Plans:
   2. Journal includes outcome tracking (realized P&L, holding days, lessons learned) and search/filter by date, asset class, decision type
   3. Agent Intelligence Hub shows agent cards with latest signal, confidence, key drivers, and risks -- plus full Cross-Asset narrative display
   4. Compliance module provides audit trail viewer, hash integrity verification for journal entries, and export functionality
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 26-01-PLAN.md -- Decision Journal page (vertical timeline, filter bar, expandable decision cards, infinite scroll, outcome tracking)
-- [ ] 26-02-PLAN.md -- Agent Intelligence Hub page (5 agent cards in responsive grid, SVG sparklines, Cross-Asset narrative display)
-- [ ] 26-03-PLAN.md -- Compliance & Audit page (audit trail log viewer, SHA-256 hash verification, CSV/JSON export) + wire all 3 pages into Sidebar, App routing, dashboard.html
+- [x] 26-01-PLAN.md -- Decision Journal page (vertical timeline, filter bar, expandable decision cards, infinite scroll, outcome tracking)
+- [x] 26-02-PLAN.md -- Agent Intelligence Hub page (5 agent cards in responsive grid, SVG sparklines, Cross-Asset narrative display)
+- [x] 26-03-PLAN.md -- Compliance & Audit page (audit trail log viewer, SHA-256 hash verification, CSV/JSON export) + wire all 3 pages into Sidebar, App routing, dashboard.html
 
 ### Phase 27: Redis Cache, Dagster PMS, Go-Live & Verification
 **Goal**: Production hardening -- Redis caching for PMS query performance, Dagster integration for automated daily PMS pipeline (MTM, proposals, briefings, attribution), go-live checklist, disaster recovery procedures, and comprehensive verification script
@@ -345,5 +345,5 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 19 -> 20 -> 21 -> 22 -> 23 -> 
 | 23. Frontend Design System & Morning Pack Page | 2/2 | Complete    | 2026-02-24 |
 | 24. Frontend Position Book & Trade Blotter | 2/2 | Complete    | 2026-02-25 |
 | 25. Frontend Risk Monitor & Performance Attribution | 2/2 | Complete    | 2026-02-25 |
-| 26. Frontend Decision Journal, Agent Intel & Compliance | 0/3 | Planned | - |
+| 26. Frontend Decision Journal, Agent Intel & Compliance | 3/3 | Complete | 2026-02-25 |
 | 27. Redis Cache, Dagster PMS, Go-Live & Verification | 0/0 | Not Started | - |

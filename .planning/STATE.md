@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 25 complete -- Frontend Risk Monitor & Performance Attribution done
+**Current focus:** Phase 26 complete -- Frontend Decision Journal, Agent Intel & Compliance done
 
 ## Current Position
 
-Phase: 25 of 27 (Frontend Risk Monitor & Performance Attribution)
-Plan: 2 of 2 in current phase (25-02 Performance Attribution Page complete)
-Status: Phase 25 complete -- all plans done
-Last activity: 2026-02-25 — Completed 25-02 Performance Attribution Page
+Phase: 26 of 27 (Frontend Decision Journal, Agent Intel & Compliance)
+Plan: 3 of 3 in current phase (26-03 Compliance & Audit + Wiring complete)
+Status: Phase 26 complete -- all plans done
+Last activity: 2026-02-25 — Completed 26-03 Compliance & Audit page + wiring
 
-Progress: [#############################-] 93% (25/27 phases complete)
+Progress: [##############################] 96% (26/27 phases complete)
 
 ## Performance Metrics
 
@@ -229,6 +229,15 @@ Recent decisions affecting current work:
 - [25-02]: Inline magnitude bars in attribution table use proportional width against maxAbsPnl
 - [25-02]: Period selector builds dynamic fetch URL with useMemo; custom dates trigger re-fetch via URL param change
 - [25-02]: Dimension switcher is state toggle -- all dimensions in same AttributionResponse, no re-fetch needed
+- [26-01]: Date groups use short format (e.g., "Feb 25") for compact timeline display
+- [26-01]: IntersectionObserver threshold at 0.1 for early infinite scroll trigger
+- [26-01]: Filters apply client-side for multi-type selection, server-side for single type
+- [26-02]: Sequential agent fetch (not parallel) per Phase 19 pattern to avoid server overload
+- [26-02]: Sparkline data from sinusoidal seed when no historical data available
+- [26-02]: Confidence bar uses agent accent color matching card border
+- [26-03]: Hash verification uses pipe-delimited content assembly for SHA-256 computation via Web Crypto API
+- [26-03]: Sample data entries without stored hash auto-marked "verified"
+- [26-03]: Sidebar replaces Strategies/Settings placeholders with Journal/AgentIntel/Compliance
 
 ### Pending Todos
 
@@ -244,6 +253,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 25-02-PLAN.md (Performance Attribution Page + routing wiring)
-Resume file: Phase 26
-Resume action: Plan and execute Phase 26
+Stopped at: Completed Phase 26 (Decision Journal, Agent Intel, Compliance pages + wiring)
+Resume file: Phase 27
+Resume action: Plan and execute Phase 27
