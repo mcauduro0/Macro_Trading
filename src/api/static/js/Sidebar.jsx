@@ -156,6 +156,29 @@ function IconSettings() {
   );
 }
 
+function IconBook() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("path", { d: "M4 19.5A2.5 2.5 0 016.5 17H20" }),
+    React.createElement("path", { d: "M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" })
+  );
+}
+
+function IconClipboardCheck() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    className: "w-5 h-5 flex-shrink-0"
+  },
+    React.createElement("path", { d: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" }),
+    React.createElement("rect", { x: "8", y: "2", width: "8", height: "4", rx: "1" }),
+    React.createElement("path", { d: "M9 14l2 2 4-4" })
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Navigation items definitions
 // ---------------------------------------------------------------------------
@@ -168,13 +191,14 @@ const NAV_ITEMS = [
 ];
 
 const PMS_NAV_ITEMS = [
-  { to: "/pms/morning-pack", label: "Morning Pack", Icon: IconSunrise },
-  { to: "/pms/portfolio",    label: "Portfolio",    Icon: IconBriefcase },
-  { to: "/pms/risk",         label: "Risk",         Icon: IconShield },
-  { to: "/pms/blotter",      label: "Trade Blotter",Icon: IconList },
-  { to: "/pms/attribution",  label: "Attribution",  Icon: IconPieChart },
-  { to: "/pms/strategies",   label: "Strategies",   Icon: IconChartBar },
-  { to: "/pms/settings",     label: "Settings",     Icon: IconSettings },
+  { to: "/pms/morning-pack", label: "Morning Pack",      Icon: IconSunrise },
+  { to: "/pms/portfolio",    label: "Portfolio",          Icon: IconBriefcase },
+  { to: "/pms/risk",         label: "Risk",              Icon: IconShield },
+  { to: "/pms/blotter",      label: "Trade Blotter",     Icon: IconList },
+  { to: "/pms/attribution",  label: "Attribution",       Icon: IconPieChart },
+  { to: "/pms/journal",      label: "Decision Journal",  Icon: IconBook },
+  { to: "/pms/agents",       label: "Agent Intel",       Icon: IconCpu },
+  { to: "/pms/compliance",   label: "Compliance",        Icon: IconClipboardCheck },
 ];
 
 // ---------------------------------------------------------------------------
