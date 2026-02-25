@@ -263,6 +263,11 @@ Plans:
   2. Risk Monitor includes limit breach alerts, historical VaR chart, and scenario analysis comparison
   3. Performance Attribution page shows P&L waterfall chart (by strategy contribution), asset class attribution table, and time-series decomposition (daily bars, cumulative line)
   4. Attribution supports period selection (daily, MTD, QTD, YTD, custom range)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 25-01-PLAN.md -- Risk Monitor page (4-quadrant Bloomberg PORT-dense layout: VaR gauges, stress test bars, limit utilization bars with 2-tier alerting, concentration pie, historical VaR chart)
+- [ ] 25-02-PLAN.md -- Performance Attribution page (P&L waterfall, dimension tabs, attribution table, time-series decomposition) + wire both pages into App routing and dashboard.html
 
 ### Phase 26: Frontend Decision Journal, Agent Intel & Compliance
 **Goal**: Decision Journal page for reviewing all trading decisions with outcome tracking, Agent Intelligence Hub for viewing agent signals and narratives, and Compliance module for audit trail and integrity verification
