@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 23 complete -- PMS Frontend Design System & Morning Pack Page done
+**Current focus:** Phase 24 in progress -- PMS Frontend Position Book & Trade Blotter
 
 ## Current Position
 
-Phase: 23 of 27 (Frontend Design System & Morning Pack Page) -- COMPLETE
-Plan: 2 of 2 in current phase (all plans complete)
-Status: Phase 23 complete -- ready for Phase 24
-Last activity: 2026-02-24 — Completed 23-02 Morning Pack Page
+Phase: 24 of 27 (Frontend Position Book & Trade Blotter)
+Plan: 1 of 2 in current phase (24-01 Position Book Page complete)
+Status: Phase 24 plan 01 complete -- ready for plan 02 (Trade Blotter)
+Last activity: 2026-02-25 — Completed 24-01 Position Book Page
 
-Progress: [###########################---] 85% (23/27 phases complete — v1-v3 done, v4 Phase 23 complete)
+Progress: [###########################---] 85% (23/27 phases complete — v4 Phase 24 plan 1/2 done)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [###########################---] 85% (23/27 phases complete — v1-v3 
 | Phase 22 P01 | 9min | 2 tasks | 4 files |
 | Phase 23 P01 | 4min | 2 tasks | 5 files |
 | Phase 23 P02 | 5min | 2 tasks | 3 files |
+| Phase 24 P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -208,6 +209,10 @@ Recent decisions affecting current work:
 - [23-02]: Quick-approve button only for conviction >= 0.70; reject uses window.prompt (modal in Phase 24)
 - [23-02]: 60-second polling interval for morning-pack, risk/live, and proposals endpoints
 - [23-02]: Sample data fallback for all 3 API endpoints ensures page always renders without backend
+- [24-01]: Inline P&L summary cards (not PMSMetricCard) for dense horizontal layout control in Position Book
+- [24-01]: SVG polyline spark chart in expanded row detail (no Recharts for inline sparklines)
+- [24-01]: Close dialog uses sample-data fallback -- closes in UI even when API unavailable
+- [24-01]: CDI benchmark as dashed gray line using 13.75% annual rate compounded daily over 252 trading days
 
 ### Pending Todos
 
@@ -222,7 +227,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Completed 23-02-PLAN.md (Phase 23 fully complete)
-Resume file: Phase 24
-Resume action: Run /gsd:plan-phase or /gsd:execute-phase for Phase 24
+Last session: 2026-02-25
+Stopped at: Completed 24-01-PLAN.md (Position Book Page)
+Resume file: Phase 24 Plan 02
+Resume action: Run /gsd:execute-phase for Phase 24 Plan 02 (Trade Blotter)
