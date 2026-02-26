@@ -8,14 +8,12 @@ Tests cover:
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 
-import numpy as np
-import pandas as pd
 import pytest
 
 from src.backtesting.engine import BacktestConfig
-from src.backtesting.metrics import BacktestResult, compute_metrics
+from src.backtesting.metrics import compute_metrics
 from src.backtesting.portfolio import Portfolio
 
 AS_OF = date(2024, 1, 31)

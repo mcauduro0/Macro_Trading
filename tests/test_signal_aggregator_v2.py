@@ -11,13 +11,12 @@ Covers:
 - single signal passes through unchanged (no crowding)
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 
 from src.core.enums import AssetClass, SignalDirection, SignalStrength
 from src.portfolio.signal_aggregator_v2 import (
-    AggregatedSignalV2,
     SignalAggregatorV2,
     _count_business_days,
 )
@@ -169,11 +168,11 @@ class TestBayesian:
         """Under Stagflation, INF_ strategies should be weighted more than RATES_."""
         now = datetime.utcnow()
         # INF strategy with moderate positive signal
-        inf_signal = _make_signal(
+        _make_signal(
             "INF_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
         )
         # RATES strategy with same signal
-        rates_signal = _make_signal(
+        _make_signal(
             "RATES_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
         )
 

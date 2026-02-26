@@ -49,41 +49,41 @@ from src.strategies.base import (
     StrategyPosition,
     StrategySignal,
 )
+from src.strategies.cross_01_regime_allocation import Cross01RegimeAllocationStrategy
+from src.strategies.cross_02_risk_appetite import Cross02RiskAppetiteStrategy
 
 # Original 8 strategies (v2.0)
 from src.strategies.cupom_01_cip_basis import Cupom01CipBasisStrategy
-from src.strategies.fx_br_01_carry_fundamental import FxBR01CarryFundamentalStrategy
-from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
-from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
-from src.strategies.rates_br_02_taylor import RatesBR02TaylorStrategy
-from src.strategies.rates_br_03_slope import RatesBR03SlopeStrategy
-from src.strategies.rates_br_04_spillover import RatesBR04SpilloverStrategy
-from src.strategies.registry import StrategyRegistry
-from src.strategies.sov_br_01_fiscal_risk import SovBR01FiscalRiskStrategy
+from src.strategies.cupom_02_onshore_offshore import Cupom02OnshoreOffshoreStrategy
 
 # Plan 01: FX strategies (v3.0)
 from src.strategies.fx_02_carry_momentum import Fx02CarryMomentumStrategy
 from src.strategies.fx_03_flow_tactical import Fx03FlowTacticalStrategy
 from src.strategies.fx_04_vol_surface_rv import Fx04VolSurfaceRvStrategy
 from src.strategies.fx_05_terms_of_trade import Fx05TermsOfTradeStrategy
+from src.strategies.fx_br_01_carry_fundamental import FxBR01CarryFundamentalStrategy
+
+# Plan 03: Inflation / Cupom strategies (v3.0)
+from src.strategies.inf_02_ipca_surprise import Inf02IpcaSurpriseStrategy
+from src.strategies.inf_03_inflation_carry import Inf03InflationCarryStrategy
+from src.strategies.inf_br_01_breakeven import InfBR01BreakevenStrategy
 
 # Plan 02: Rates strategies (v3.0)
 from src.strategies.rates_03_br_us_spread import Rates03BrUsSpreadStrategy
 from src.strategies.rates_04_term_premium import Rates04TermPremiumStrategy
 from src.strategies.rates_05_fomc_event import Rates05FomcEventStrategy
 from src.strategies.rates_06_copom_event import Rates06CopomEventStrategy
-
-# Plan 03: Inflation / Cupom strategies (v3.0)
-from src.strategies.inf_02_ipca_surprise import Inf02IpcaSurpriseStrategy
-from src.strategies.inf_03_inflation_carry import Inf03InflationCarryStrategy
-from src.strategies.cupom_02_onshore_offshore import Cupom02OnshoreOffshoreStrategy
+from src.strategies.rates_br_01_carry import RatesBR01CarryStrategy
+from src.strategies.rates_br_02_taylor import RatesBR02TaylorStrategy
+from src.strategies.rates_br_03_slope import RatesBR03SlopeStrategy
+from src.strategies.rates_br_04_spillover import RatesBR04SpilloverStrategy
+from src.strategies.registry import StrategyRegistry
 
 # Plan 04: Sovereign / Cross-asset strategies (v3.0)
 from src.strategies.sov_01_cds_curve import Sov01CdsCurveStrategy
 from src.strategies.sov_02_em_relative_value import Sov02EmRelativeValueStrategy
 from src.strategies.sov_03_rating_migration import Sov03RatingMigrationStrategy
-from src.strategies.cross_01_regime_allocation import Cross01RegimeAllocationStrategy
-from src.strategies.cross_02_risk_appetite import Cross02RiskAppetiteStrategy
+from src.strategies.sov_br_01_fiscal_risk import SovBR01FiscalRiskStrategy
 
 # ---------------------------------------------------------------------------
 # ALL_STRATEGIES registry: strategy_id -> strategy class

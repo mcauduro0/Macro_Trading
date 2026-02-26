@@ -23,7 +23,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import respx
-from httpx import Response
 
 from src.connectors.cftc_cot import CftcCotConnector
 
@@ -316,8 +315,8 @@ async def test_fetch_date_filtering(sample_zip_bytes: bytes):
 # Registry and Constants
 # ---------------------------------------------------------------------------
 def test_contract_codes_has_12_entries():
-    """Verify CONTRACT_CODES has exactly 12 contracts."""
-    assert len(CftcCotConnector.CONTRACT_CODES) == 12
+    """Verify CONTRACT_CODES has exactly 13 contracts."""
+    assert len(CftcCotConnector.CONTRACT_CODES) == 13
 
 
 def test_categories_has_4_entries():
@@ -341,6 +340,6 @@ def test_connector_constants():
 
 
 def test_max_possible_series():
-    """Verify 12 contracts x 4 categories = 48 possible series."""
+    """Verify 13 contracts x 4 categories = 52 possible series."""
     total = len(CftcCotConnector.CONTRACT_CODES) * len(CftcCotConnector.CATEGORIES)
-    assert total == 48
+    assert total == 52

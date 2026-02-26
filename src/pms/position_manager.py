@@ -11,7 +11,11 @@ is responsible for session management and persistence.
 from __future__ import annotations
 
 import hashlib
+
+# Import TransactionCostModel directly to avoid heavy backtesting.__init__ chain
+import importlib.util
 import json
+import os
 from datetime import date, datetime
 from typing import Any
 
@@ -25,10 +29,6 @@ from .pricing import (
     compute_pnl_usd,
     rate_to_pu,
 )
-
-# Import TransactionCostModel directly to avoid heavy backtesting.__init__ chain
-import importlib.util
-import os
 
 _costs_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -179,7 +179,10 @@ class PositionManager:
             "notional_brl": notional_brl,
             "entry_price": entry_price,
             "manager_notes": notes,
-            "system_notes": f"Position #{pos_id} opened. DV01={entry_dv01:.2f}, delta={entry_delta:.2f}, cost={transaction_cost_brl:.2f}",
+            "system_notes": (
+                f"Position #{pos_id} opened. DV01={entry_dv01:.2f},"
+                f" delta={entry_delta:.2f}, cost={transaction_cost_brl:.2f}"
+            ),
         }
         content_hash = self._compute_content_hash(**journal_content)
 
@@ -285,7 +288,10 @@ class PositionManager:
             "notional_brl": position["notional_brl"],
             "entry_price": close_price,
             "manager_notes": notes,
-            "system_notes": f"Position #{position_id} closed. Realized P&L: {realized_pnl_brl:.2f} BRL / {realized_pnl_usd:.2f} USD",
+            "system_notes": (
+                f"Position #{position_id} closed."
+                f" Realized P&L: {realized_pnl_brl:.2f} BRL / {realized_pnl_usd:.2f} USD"
+            ),
         }
         content_hash = self._compute_content_hash(**journal_content)
 

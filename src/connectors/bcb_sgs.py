@@ -12,7 +12,7 @@ inflation, activity, monetary/credit, external, and fiscal.
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -20,9 +20,8 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.connectors.base import BaseConnector, ConnectorError, DataParsingError
+from src.connectors.base import BaseConnector
 from src.core.database import async_session_factory
-from src.core.models.data_sources import DataSource
 from src.core.models.macro_series import MacroSeries
 from src.core.models.series_metadata import SeriesMetadata
 from src.core.utils.parsing import parse_numeric_value
@@ -49,6 +48,8 @@ class BcbSgsConnector(BaseConnector):
     BASE_URL: str = "https://api.bcb.gov.br"
     RATE_LIMIT_PER_SECOND: float = 3.0
     MAX_DATE_RANGE_YEARS: int = 10
+    DEFAULT_LOCALE: str = "pt-BR"
+    SOURCE_NOTES: str = "BCB SGS - Sistema Gerenciador de Series Temporais"
 
     # -----------------------------------------------------------------------
     # Series registry: internal key -> BCB SGS numeric code
@@ -111,41 +112,6 @@ class BcbSgsConnector(BaseConnector):
         "BR_NET_DEBT_GDP": 4513,
         "BR_GROSS_DEBT_GDP": 13762,
     }
-
-    # -----------------------------------------------------------------------
-    # Date chunking (BCB rejects queries > 10 years since March 2025)
-    # -----------------------------------------------------------------------
-    def _chunk_date_range(
-        self, start_date: date, end_date: date
-    ) -> list[tuple[date, date]]:
-        """Split a date range into chunks of MAX_DATE_RANGE_YEARS.
-
-        Args:
-            start_date: Inclusive start date.
-            end_date: Inclusive end date.
-
-        Returns:
-            List of (chunk_start, chunk_end) tuples covering the full range.
-        """
-        chunks: list[tuple[date, date]] = []
-        chunk_start = start_date
-
-        while chunk_start <= end_date:
-            # End of this chunk: start + N years, capped at end_date
-            chunk_end_year = chunk_start.year + self.MAX_DATE_RANGE_YEARS
-            try:
-                chunk_end = date(chunk_end_year, chunk_start.month, chunk_start.day) - timedelta(days=1)
-            except ValueError:
-                # Handle leap year edge case (Feb 29)
-                chunk_end = date(chunk_end_year, chunk_start.month, 28)
-
-            if chunk_end >= end_date:
-                chunk_end = end_date
-
-            chunks.append((chunk_start, chunk_end))
-            chunk_start = chunk_end + timedelta(days=1)
-
-        return chunks
 
     # -----------------------------------------------------------------------
     # Fetch a single series
@@ -279,31 +245,6 @@ class BcbSgsConnector(BaseConnector):
                 await asyncio.sleep(1.0 / self.RATE_LIMIT_PER_SECOND)
 
         return all_records
-
-    # -----------------------------------------------------------------------
-    # Metadata helpers (ensure data_source & series_metadata rows exist)
-    # -----------------------------------------------------------------------
-    async def _ensure_data_source(self) -> int:
-        """Ensure a data_sources row exists for BCB_SGS. Returns its id."""
-        async with async_session_factory() as session:
-            async with session.begin():
-                stmt = pg_insert(DataSource).values(
-                    name=self.SOURCE_NAME,
-                    base_url=self.BASE_URL,
-                    auth_type="none",
-                    rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
-                    default_locale="pt-BR",
-                    notes="BCB SGS - Sistema Gerenciador de Series Temporais",
-                    is_active=True,
-                ).on_conflict_do_nothing(index_elements=["name"])
-                await session.execute(stmt)
-
-            # Fetch the id (separate query after potential insert)
-            result = await session.execute(
-                select(DataSource.id).where(DataSource.name == self.SOURCE_NAME)
-            )
-            row = result.scalar_one()
-            return row
 
     async def _ensure_series_metadata(
         self,

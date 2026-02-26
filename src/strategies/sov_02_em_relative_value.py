@@ -22,14 +22,13 @@ Holding period: 28 days.
 
 from __future__ import annotations
 
-import math
 from datetime import date, datetime
 from typing import Optional
 
 import structlog
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategySignal
 from src.strategies.registry import StrategyRegistry
 
@@ -198,8 +197,16 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
 
         # Stop/take-profit
         entry_level = br_cds
-        stop_loss = entry_level * (1 + self.config.stop_loss_pct) if direction == SignalDirection.LONG else entry_level * (1 + self.config.stop_loss_pct)
-        take_profit = entry_level * (1 - self.config.take_profit_pct) if direction == SignalDirection.SHORT else entry_level * (1 + self.config.take_profit_pct)
+        stop_loss = (
+            entry_level * (1 + self.config.stop_loss_pct)
+            if direction == SignalDirection.LONG
+            else entry_level * (1 + self.config.stop_loss_pct)
+        )
+        take_profit = (
+            entry_level * (1 - self.config.take_profit_pct)
+            if direction == SignalDirection.SHORT
+            else entry_level * (1 + self.config.take_profit_pct)
+        )
         if direction == SignalDirection.SHORT:
             stop_loss = entry_level * (1 + self.config.stop_loss_pct)
             take_profit = entry_level * (1 - self.config.take_profit_pct)

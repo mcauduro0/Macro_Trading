@@ -11,13 +11,13 @@ confirmation.  CDS and inflation differentials provide adjustments.
 
 from __future__ import annotations
 
-import math
 from datetime import date, datetime
 
 import structlog
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
+from src.core.utils.tenors import find_closest_tenor
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategySignal
 from src.strategies.registry import StrategyRegistry
 
@@ -42,19 +42,8 @@ _5Y_TENOR = 1260
 _SPREAD_LOOKBACK = 504  # ~2 years of business days for z-score
 
 
-def _find_closest_tenor(curve: dict[int, float], target: int) -> int | None:
-    """Find the tenor in *curve* closest to *target*.
-
-    Args:
-        curve: ``{tenor_days: rate}`` dict.
-        target: Desired tenor in days.
-
-    Returns:
-        Closest available tenor, or ``None`` if curve is empty.
-    """
-    if not curve:
-        return None
-    return min(curve.keys(), key=lambda t: abs(t - target))
+# Tolerance for tenor matching (large to replicate "find closest" behavior)
+_TENOR_TOLERANCE = 10000
 
 
 @StrategyRegistry.register(
@@ -111,10 +100,10 @@ class Rates03BrUsSpreadStrategy(BaseStrategy):
             return []
 
         # Find closest tenors
-        di_2y_tenor = _find_closest_tenor(di_curve, _2Y_TENOR)
-        ust_2y_tenor = _find_closest_tenor(ust_curve, _2Y_TENOR)
-        di_5y_tenor = _find_closest_tenor(di_curve, _5Y_TENOR)
-        ust_5y_tenor = _find_closest_tenor(ust_curve, _5Y_TENOR)
+        di_2y_tenor = find_closest_tenor(di_curve, _2Y_TENOR, _TENOR_TOLERANCE)
+        ust_2y_tenor = find_closest_tenor(ust_curve, _2Y_TENOR, _TENOR_TOLERANCE)
+        di_5y_tenor = find_closest_tenor(di_curve, _5Y_TENOR, _TENOR_TOLERANCE)
+        ust_5y_tenor = find_closest_tenor(ust_curve, _5Y_TENOR, _TENOR_TOLERANCE)
 
         if any(t is None for t in [di_2y_tenor, ust_2y_tenor, di_5y_tenor, ust_5y_tenor]):
             self.log.warning("tenor_not_found", as_of_date=str(as_of_date))
@@ -140,10 +129,10 @@ class Rates03BrUsSpreadStrategy(BaseStrategy):
         us_cpi = self.data_loader.get_latest_macro_value("US_CPI_YOY", as_of_date)
         if br_ipca is not None and us_cpi is not None:
             real_spread_2y = adjusted_spread_2y - (br_ipca - us_cpi)
-            real_spread_5y = adjusted_spread_5y - (br_ipca - us_cpi)
+            _ = adjusted_spread_5y - (br_ipca - us_cpi)  # 5Y reserved for future use
         else:
             real_spread_2y = adjusted_spread_2y
-            real_spread_5y = adjusted_spread_5y
+            _ = adjusted_spread_5y  # 5Y real spread reserved for future use
 
         # 3. Build spread history for 2Y (primary) using curve_history
         di_2y_hist = self.data_loader.get_curve_history(

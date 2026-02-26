@@ -3,13 +3,15 @@ services:
     image: timescale/timescaledb:2.18.0-pg16
     container_name: macro_timescaledb
     environment:
-      POSTGRES_DB: macro_trading
-      POSTGRES_USER: macro_user
-      POSTGRES_PASSWORD: macro_pass
+      POSTGRES_DB: ${POSTGRES_DB:-macro_trading}
+      POSTGRES_USER: ${POSTGRES_USER:-macro_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U macro_user -d macro_trading"]
       interval: 10s
@@ -22,10 +24,12 @@ services:
     image: redis:7-alpine
     container_name: macro_redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-changeme}
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -37,10 +41,10 @@ services:
     image: mongo:8.0
     container_name: macro_mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: macro_user
-      MONGO_INITDB_ROOT_PASSWORD: macro_pass
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-macro_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD required}
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -49,13 +53,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks:
+      - backend
     restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.8.0
     container_name: macro_kafka
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     environment:
       # KRaft mode (no Zookeeper)
       KAFKA_NODE_ID: 1
@@ -83,17 +89,19 @@ services:
       start_period: 30s
     profiles:
       - full
+    networks:
+      - backend
     restart: unless-stopped
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
     container_name: macro_minio
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     environment:
-      MINIO_ROOT_USER: minio_user
-      MINIO_ROOT_PASSWORD: minio_pass
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minio_user}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY required}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -102,16 +110,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
     restart: unless-stopped
 
   grafana:
     image: grafana/grafana-oss:11.4.0
     container_name: macro_grafana
     ports:
-      - "3002:3000"
+      - "127.0.0.1:3002:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: macro_grafana
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-macro_grafana}
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/pipeline_health.json
     volumes:
       - grafana_data:/var/lib/grafana
@@ -122,6 +132,8 @@ services:
         condition: service_healthy
     profiles:
       - monitoring
+    networks:
+      - backend
     restart: unless-stopped
 
   dagster-webserver:
@@ -131,11 +143,11 @@ services:
     volumes:
       - .:/app
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     environment:
       DAGSTER_HOME: /app/.dagster
-      DATABASE_URL: postgresql://macro_user:macro_pass@timescaledb:5432/macro_trading
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-macro_user}:${POSTGRES_PASSWORD:?required}@timescaledb:5432/${POSTGRES_DB:-macro_trading}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
     command: >
       bash -c "pip install -q dagster dagster-webserver dagster-postgres &&
                pip install -q -e /app &&
@@ -148,7 +160,13 @@ services:
         condition: service_healthy
     profiles:
       - dagster
+    networks:
+      - backend
     restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
 
 volumes:
   timescaledb_data:

@@ -252,7 +252,11 @@ class MorningPackService:
                         "conviction": getattr(report, "conviction", 0.0) if report else 0.0,
                         "key_drivers": getattr(report, "key_drivers", []) if report else [],
                         "risks": getattr(report, "risks", []) if report else [],
-                        "narrative_excerpt": getattr(report, "narrative", "")[:200] if report and hasattr(report, "narrative") else "",
+                        "narrative_excerpt": (
+                            getattr(report, "narrative", "")[:200]
+                            if report and hasattr(report, "narrative")
+                            else ""
+                        ),
                     })
                 except (KeyError, Exception):
                     views.append({
@@ -441,7 +445,11 @@ class MorningPackService:
                         "priority": priority,
                         "category": "risk_breach",
                         "description": f"Risk limits {overall.lower()}: review portfolio exposure",
-                        "urgency": "Immediate attention required" if overall == "BREACHED" else "Review within morning session",
+                        "urgency": (
+                            "Immediate attention required"
+                            if overall == "BREACHED"
+                            else "Review within morning session"
+                        ),
                     })
             except Exception:
                 pass
@@ -655,7 +663,7 @@ class MorningPackService:
                 f"{long_count} bullish, {short_count} bearish, and {neutral_count} neutral "
                 f"with average conviction at {avg_conviction:.2f}. "
                 f"{'Strong consensus ' if long_count >= 4 or short_count >= 4 else 'Divergent views '}"
-                f"{'warrants attention to crowding risk.' if long_count >= 4 or short_count >= 4 else 'suggest a differentiated approach across asset classes.'}"
+                f"{'warrants attention to crowding risk.' if long_count >= 4 or short_count >= 4 else 'suggest a differentiated approach.'}"  # noqa: E501
             )
         else:
             paragraphs.append(
@@ -704,7 +712,8 @@ class MorningPackService:
         paragraphs.append(
             f"Looking ahead, portfolio managers should monitor regime transition signals "
             f"and any divergence between agent views and realized market moves. "
-            f"Key risks include {'macro regime shift' if regime.get('transition_risk', 0) > 0.2 else 'idiosyncratic position risk'}, "
+            f"Key risks include "
+            f"{'macro regime shift' if regime.get('transition_risk', 0) > 0.2 else 'idiosyncratic position risk'}, "
             f"and the focus for today should be on reviewing pending action items "
             f"and aligning position sizing with current conviction levels."
         )

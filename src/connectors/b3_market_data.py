@@ -18,12 +18,12 @@ Both curve families are stored in the ``curves`` hypertable via
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any
 
 import structlog
 
-from src.connectors.base import BaseConnector, DataParsingError
+from src.connectors.base import BaseConnector
 from src.core.models.curves import CurveData
 from src.core.utils.parsing import parse_numeric_value
 
@@ -66,41 +66,6 @@ class B3MarketDataConnector(BaseConnector):
         "DI_SWAP_330D": (7815, "11M", 330),
         "DI_SWAP_360D": (7816, "12M", 360),
     }
-
-    # -----------------------------------------------------------------------
-    # Date chunking (BCB rejects queries > 10 years)
-    # -----------------------------------------------------------------------
-    def _chunk_date_range(
-        self, start_date: date, end_date: date
-    ) -> list[tuple[date, date]]:
-        """Split a date range into chunks of MAX_DATE_RANGE_YEARS.
-
-        Args:
-            start_date: Inclusive start date.
-            end_date: Inclusive end date.
-
-        Returns:
-            List of (chunk_start, chunk_end) tuples.
-        """
-        chunks: list[tuple[date, date]] = []
-        chunk_start = start_date
-
-        while chunk_start <= end_date:
-            chunk_end_year = chunk_start.year + self.MAX_DATE_RANGE_YEARS
-            try:
-                chunk_end = date(
-                    chunk_end_year, chunk_start.month, chunk_start.day
-                ) - timedelta(days=1)
-            except ValueError:
-                chunk_end = date(chunk_end_year, chunk_start.month, 28)
-
-            if chunk_end >= end_date:
-                chunk_end = end_date
-
-            chunks.append((chunk_start, chunk_end))
-            chunk_start = chunk_end + timedelta(days=1)
-
-        return chunks
 
     # -----------------------------------------------------------------------
     # Fetch DI swap curve from BCB SGS

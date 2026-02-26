@@ -14,7 +14,6 @@ from contextlib import asynccontextmanager
 from unittest.mock import patch
 
 import pytest
-import httpx
 from fastapi import FastAPI
 
 
@@ -36,6 +35,7 @@ def test_app():
 
     with patch("src.api.main.lifespan", _noop_lifespan):
         import importlib
+
         import src.api.main
 
         importlib.reload(src.api.main)

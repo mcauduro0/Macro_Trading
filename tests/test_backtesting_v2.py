@@ -10,8 +10,8 @@ Uses mock strategies and loaders to keep tests fast and self-contained.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from datetime import date
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd

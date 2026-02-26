@@ -5,7 +5,6 @@ without requiring a database connection. Uses sqlalchemy.inspect() to
 introspect mapper metadata.
 """
 
-import pytest
 from sqlalchemy import inspect as sa_inspect
 
 from src.core.models.pms_models import (
@@ -15,7 +14,6 @@ from src.core.models.pms_models import (
     PositionPnLHistory,
     TradeProposal,
 )
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -203,9 +201,17 @@ class TestAllModelsInInit:
         """All 5 PMS models are importable from src.core.models."""
         from src.core.models import (
             DailyBriefing as DB_,
+        )
+        from src.core.models import (
             DecisionJournal as DJ_,
+        )
+        from src.core.models import (
             PortfolioPosition as PP_,
+        )
+        from src.core.models import (
             PositionPnLHistory as PnL_,
+        )
+        from src.core.models import (
             TradeProposal as TP_,
         )
         assert PP_ is PortfolioPosition

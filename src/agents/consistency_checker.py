@@ -10,7 +10,7 @@ Rules are defined as extensible dicts with callable check functions.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from src.agents.cross_asset_view import ConsistencyIssue
 

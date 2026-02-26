@@ -5,18 +5,22 @@ Single table design with unique constraint on (source, doc_type, doc_date)
 to prevent duplicate scrapes.
 """
 
+from datetime import date as date_type
+from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import (
-    Column,
+    BigInteger,
     Date,
     DateTime,
     Float,
-    Integer,
     String,
     Text,
     UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -38,20 +42,20 @@ class NlpDocumentRecord(Base):
 
     __tablename__ = "nlp_documents"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    source = Column(String(20), nullable=False)
-    doc_type = Column(String(30), nullable=False)
-    doc_date = Column(Date, nullable=False)
-    raw_text = Column(Text, nullable=True)
-    hawk_score = Column(Float, nullable=True)
-    dove_score = Column(Float, nullable=True)
-    change_score = Column(String(30), nullable=True)
-    key_phrases = Column(JSONB, nullable=True)
-    url = Column(String(500), nullable=True)
-    created_at = Column(
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    source: Mapped[str] = mapped_column(String(20), nullable=False)
+    doc_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    doc_date: Mapped[date_type] = mapped_column(Date, nullable=False)
+    raw_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    hawk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    dove_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    change_score: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    key_phrases: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    updated_at = Column(
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),

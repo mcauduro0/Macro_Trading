@@ -4,10 +4,10 @@ datasources:
     type: postgres
     access: proxy
     url: timescaledb:5432
-    database: macro_trading
-    user: macro_user
+    database: $__env{POSTGRES_DB}
+    user: $__env{POSTGRES_USER}
     secureJsonData:
-      password: macro_pass
+      password: $__env{POSTGRES_PASSWORD}
     jsonData:
       sslmode: disable
       maxOpenConns: 5

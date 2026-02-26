@@ -12,7 +12,7 @@ Uses respx to mock BCB OData API responses and verify:
 from __future__ import annotations
 
 import json
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -20,7 +20,6 @@ import pytest
 import respx
 
 from src.connectors.bcb_focus import BcbFocusConnector, _normalize_indicator_name
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

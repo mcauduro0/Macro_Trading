@@ -21,7 +21,6 @@ import respx
 
 from src.connectors.ibge_sidra import IbgeSidraConnector
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -237,8 +236,6 @@ async def test_fetch_calls_both_variables():
         {"NC": "header", "V": "V", "D3C": "202401", "D4C": "7169"},
         {"NC": "1", "V": "21.00", "D3C": "202401", "D4C": "7169"},
     ]
-
-    call_count = 0
 
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
         # Two sequential requests for different variables

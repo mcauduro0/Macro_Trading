@@ -60,6 +60,7 @@ def client():
 
     with patch("src.api.main.lifespan", _noop_lifespan):
         import importlib
+
         import src.api.main
 
         importlib.reload(src.api.main)

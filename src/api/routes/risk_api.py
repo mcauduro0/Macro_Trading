@@ -11,12 +11,14 @@ Provides:
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
 
 import numpy as np
 from fastapi import APIRouter, HTTPException, Query
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/risk", tags=["Risk"])
 
 
@@ -166,7 +168,8 @@ async def risk_var(
         return _envelope(data)
 
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("risk_api error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +221,8 @@ async def risk_stress(
         return _envelope(data)
 
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("risk_api error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -295,7 +299,8 @@ async def risk_limits():
         return _envelope(data)
 
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("risk_api error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +367,8 @@ async def risk_dashboard():
         return _envelope(data)
 
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("risk_api error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -384,4 +390,5 @@ async def risk_report(
         risk_data = await asyncio.to_thread(_build_risk_report)
         return _envelope(risk_data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("risk_api error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")

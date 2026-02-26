@@ -4,10 +4,10 @@ Serves the shell HTML at GET /dashboard, which loads .jsx files from
 the /static/js/ directory via Babel standalone transpilation.
 """
 
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 router = APIRouter(tags=["dashboard"])
 

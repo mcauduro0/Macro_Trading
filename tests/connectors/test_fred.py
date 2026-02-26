@@ -13,12 +13,10 @@ from __future__ import annotations
 from datetime import date
 from unittest.mock import patch
 
-import httpx
 import pytest
 import respx
 
 from src.connectors.fred import FredConnector
-
 
 # ---------------------------------------------------------------------------
 # Sample FRED API response data
@@ -184,7 +182,7 @@ async def test_fetch_requires_api_key():
             mock_settings.fred_api_key = "my_secret_key_456"
 
             async with FredConnector() as conn:
-                records = await conn.fetch_series(
+                await conn.fetch_series(
                     series_code="DFF",
                     start_date=date(2025, 1, 1),
                     end_date=date(2025, 1, 31),

@@ -6,14 +6,14 @@ matplotlib.use("Agg") MUST be called before importing pyplot.
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
 import matplotlib
+
 matplotlib.use("Agg")  # Non-interactive backend; MUST be before pyplot import
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 
 from src.backtesting.metrics import BacktestResult
 
@@ -114,7 +114,10 @@ def generate_equity_chart(
 
     # Equity curve
     ax1.plot(equity_series.index, equity_series.values, color="#2196F3", linewidth=1.5, label="Portfolio Equity")
-    ax1.axhline(y=result.initial_capital, color="#9E9E9E", linestyle="--", linewidth=0.8, alpha=0.7, label="Initial Capital")
+    ax1.axhline(
+        y=result.initial_capital, color="#9E9E9E", linestyle="--",
+        linewidth=0.8, alpha=0.7, label="Initial Capital",
+    )
     ax1.set_title(
         f"{result.strategy_id} -- Equity Curve\n"
         f"Return: {result.total_return:.1f}% | Sharpe: {result.sharpe_ratio:.2f} | "

@@ -9,13 +9,13 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_db
+from src.core.models.instruments import Instrument
 from src.core.models.macro_series import MacroSeries
 from src.core.models.market_data import MarketData
-from src.core.models.instruments import Instrument
 from src.core.models.series_metadata import SeriesMetadata
 
 router = APIRouter(prefix="/macro", tags=["Macro"])

@@ -19,7 +19,6 @@ Holding period: 28 days.
 
 from __future__ import annotations
 
-import math
 from datetime import date, datetime
 from typing import Optional
 
@@ -27,7 +26,7 @@ import numpy as np
 import structlog
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
 from src.strategies.base import (
     BaseStrategy,
     StrategyConfig,

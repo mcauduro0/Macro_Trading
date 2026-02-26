@@ -11,13 +11,13 @@ model for the expected short-rate path.
 
 from __future__ import annotations
 
-import math
 from datetime import date, datetime
 
 import structlog
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
+from src.core.utils.tenors import find_closest_tenor
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategySignal
 from src.strategies.registry import StrategyRegistry
 
@@ -38,6 +38,7 @@ RATES_04_CONFIG = StrategyConfig(
 
 _2Y_TENOR = 504
 _5Y_TENOR = 1260
+_TENOR_TOLERANCE = 10000  # large to replicate "find closest" behavior
 _TP_LOOKBACK = 252  # 1 year for z-score
 
 
@@ -93,8 +94,8 @@ class Rates04TermPremiumStrategy(BaseStrategy):
             return []
 
         # Find closest tenors
-        di_2y_tenor = self._find_closest_tenor(di_curve, _2Y_TENOR)
-        di_5y_tenor = self._find_closest_tenor(di_curve, _5Y_TENOR)
+        di_2y_tenor = find_closest_tenor(di_curve, _2Y_TENOR, _TENOR_TOLERANCE)
+        di_5y_tenor = find_closest_tenor(di_curve, _5Y_TENOR, _TENOR_TOLERANCE)
 
         if di_2y_tenor is None or di_5y_tenor is None:
             self.log.warning("tenor_not_found", as_of_date=str(as_of_date))
@@ -188,21 +189,6 @@ class Rates04TermPremiumStrategy(BaseStrategy):
         )
 
         return [signal]
-
-    @staticmethod
-    def _find_closest_tenor(curve: dict[int, float], target: int) -> int | None:
-        """Find the tenor in *curve* closest to *target*.
-
-        Args:
-            curve: ``{tenor_days: rate}`` dict.
-            target: Desired tenor in days.
-
-        Returns:
-            Closest available tenor, or ``None`` if curve is empty.
-        """
-        if not curve:
-            return None
-        return min(curve.keys(), key=lambda t: abs(t - target))
 
     @staticmethod
     def _build_tp_history(

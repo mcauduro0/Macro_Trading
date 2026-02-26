@@ -8,8 +8,6 @@ from __future__ import annotations
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.agents.base import AgentReport, AgentSignal
 from src.core.enums import SignalDirection, SignalStrength
 from src.narrative.generator import NarrativeBrief, NarrativeGenerator

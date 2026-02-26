@@ -17,7 +17,6 @@ import pytest
 from src.portfolio.black_litterman import (
     AgentView,
     BlackLitterman,
-    BlackLittermanConfig,
 )
 
 

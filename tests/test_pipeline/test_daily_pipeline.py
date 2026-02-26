@@ -4,10 +4,9 @@ All external dependencies (DB, agents, strategies, risk) are mocked so that
 tests run without a database or live services.
 """
 
-import io
 import uuid
 from datetime import date
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

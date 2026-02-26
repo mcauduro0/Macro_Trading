@@ -15,11 +15,9 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from src.risk.risk_limits import (
-    LimitCheckResult,
     RiskLimitChecker,
     RiskLimitsConfig,
 )
-
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -147,9 +145,9 @@ class RiskLimitsManager:
         window = recent_pnls[-4:] + [daily_pnl]
         cumulative_weekly_pnl = sum(window)
 
-        # Check breaches (compare absolute values against positive limits)
-        breach_daily = abs(daily_pnl) > self.config.daily_loss_limit_pct
-        breach_weekly = abs(cumulative_weekly_pnl) > self.config.weekly_loss_limit_pct
+        # Check breaches — only losses trigger limits (negative P&L)
+        breach_daily = daily_pnl < -self.config.daily_loss_limit_pct
+        breach_weekly = cumulative_weekly_pnl < -self.config.weekly_loss_limit_pct
 
         record = LossRecord(
             date=obs_date,

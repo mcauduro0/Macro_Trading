@@ -10,6 +10,7 @@ v3.0 additions (SFWK-04):
 - avg_holding_days: Average trade holding period in days
 """
 from __future__ import annotations
+
 from datetime import date, datetime
 from typing import Optional
 

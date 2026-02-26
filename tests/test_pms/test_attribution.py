@@ -9,13 +9,12 @@ Verifies:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import pytest
 
 from src.pms.attribution import PerformanceAttributionEngine
 from src.pms.position_manager import PositionManager
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

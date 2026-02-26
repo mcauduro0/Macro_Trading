@@ -160,3 +160,31 @@ def tenor_to_business_days(
     """
     target = tenor_to_date(tenor, reference_date, calendar=calendar)
     return calendar.bizdays(reference_date, target)
+
+
+def find_closest_tenor(
+    curve: dict[int, float],
+    target: int,
+    tolerance: int,
+) -> int | None:
+    """Find the closest available tenor to the target within tolerance.
+
+    Common utility used by multiple strategies that operate on curve data
+    (DI, NTN-B, Cupom Cambial, etc.).
+
+    Args:
+        curve: Tenor-to-rate mapping (tenor in days -> rate).
+        target: Target tenor in days.
+        tolerance: Maximum allowed distance from target in days.
+
+    Returns:
+        Closest tenor key, or None if nothing within tolerance.
+    """
+    best_tenor = None
+    best_dist = float("inf")
+    for tenor in curve:
+        dist = abs(tenor - target)
+        if dist < best_dist and dist <= tolerance:
+            best_dist = dist
+            best_tenor = tenor
+    return best_tenor

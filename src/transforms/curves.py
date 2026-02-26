@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.optimize import minimize
 from scipy.interpolate import CubicSpline
+from scipy.optimize import minimize
 
 STANDARD_TENORS_DAYS = [30, 60, 90, 180, 365, 730, 1095, 1825, 2555, 3650]
 

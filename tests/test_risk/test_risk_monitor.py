@@ -61,7 +61,11 @@ class TestRiskMonitor:
         assert isinstance(report.overall_risk_level, str)
 
     def test_report_has_var_results(self) -> None:
-        """Report should contain historical and parametric VaR results."""
+        """Report should contain historical and parametric VaR result keys.
+
+        With only 500 observations (< default min_historical_obs=756),
+        the historical method falls back to parametric internally.
+        """
         monitor = RiskMonitor()
         returns = _synthetic_returns()
         report = monitor.generate_report(
@@ -72,11 +76,12 @@ class TestRiskMonitor:
         )
         assert "historical" in report.var_results
         assert "parametric" in report.var_results
-        assert report.var_results["historical"].method == "historical"
+        # With 500 obs < 756 min, historical falls back to parametric
+        assert report.var_results["historical"].method == "parametric"
         assert report.var_results["parametric"].method == "parametric"
 
     def test_report_has_stress_results(self) -> None:
-        """Report should have 4 scenario results (from default scenarios)."""
+        """Report should have 6 scenario results (from default scenarios)."""
         monitor = RiskMonitor()
         returns = _synthetic_returns()
         report = monitor.generate_report(
@@ -85,12 +90,14 @@ class TestRiskMonitor:
             portfolio_value=1_000_000.0,
             weights=_sample_weights(),
         )
-        assert len(report.stress_results) == 4
+        assert len(report.stress_results) == 6
         scenario_names = {s.scenario_name for s in report.stress_results}
         assert "Taper Tantrum 2013" in scenario_names
         assert "BR Crisis 2015" in scenario_names
         assert "COVID 2020" in scenario_names
         assert "Rate Shock 2022" in scenario_names
+        assert "BR Fiscal Crisis (Teto de Gastos)" in scenario_names
+        assert "Global Risk-Off (Geopolitical)" in scenario_names
 
     def test_report_has_limit_results(self) -> None:
         """Report should have non-empty limit results."""

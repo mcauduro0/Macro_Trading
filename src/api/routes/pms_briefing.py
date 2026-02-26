@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -36,8 +35,8 @@ def _get_service():
     """Return (or create) the module-level MorningPackService singleton."""
     global _service
     if _service is None:
+        from src.pms import PositionManager, TradeWorkflowService
         from src.pms.morning_pack import MorningPackService
-        from src.pms import TradeWorkflowService, PositionManager
 
         pm = PositionManager()
         tw = TradeWorkflowService(position_manager=pm)
@@ -83,7 +82,8 @@ async def get_latest_briefing(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +112,8 @@ async def generate_briefing(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +129,8 @@ async def get_briefing_history(
         summaries = svc.get_history(days=days)
         return [MorningPackSummaryResponse(**s) for s in summaries]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +179,8 @@ async def get_briefing_by_date(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------

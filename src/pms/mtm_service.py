@@ -9,12 +9,19 @@ against live TimescaleDB. For now, uses entry_price or override as price source.
 
 from __future__ import annotations
 
+import importlib.util
+import os
 from datetime import date
 
 import structlog
 
-import importlib.util
-import os
+from .pricing import (
+    compute_dv01_from_pu,
+    compute_fx_delta,
+    compute_pnl_brl,
+    compute_pnl_usd,
+    rate_to_pu,
+)
 
 # Import costs module directly to avoid heavy backtesting.__init__ import chain
 # (which pulls in agents, database, asyncpg, etc.)
@@ -27,13 +34,6 @@ _spec = importlib.util.spec_from_file_location("src.backtesting.costs", _costs_p
 _costs_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_costs_mod)
 TransactionCostModel = _costs_mod.TransactionCostModel
-from .pricing import (
-    compute_dv01_from_pu,
-    compute_fx_delta,
-    compute_pnl_brl,
-    compute_pnl_usd,
-    rate_to_pu,
-)
 
 logger = structlog.get_logger(__name__)
 

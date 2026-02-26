@@ -34,8 +34,8 @@ def _get_service():
     """Return (or create) the module-level PerformanceAttributionEngine singleton."""
     global _service
     if _service is None:
-        from src.pms.attribution import PerformanceAttributionEngine
         from src.pms import PositionManager
+        from src.pms.attribution import PerformanceAttributionEngine
 
         _service = PerformanceAttributionEngine(position_manager=PositionManager())
     return _service
@@ -109,7 +109,8 @@ async def get_attribution(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -137,7 +138,8 @@ async def get_equity_curve(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +172,8 @@ async def get_best_worst(
             "total_positions": len(by_instrument),
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------

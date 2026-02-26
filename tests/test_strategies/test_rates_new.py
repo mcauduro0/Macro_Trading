@@ -5,10 +5,9 @@ adaptive exit, and missing-data handling across all strategies.
 """
 
 from datetime import date
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
-import pytest
 
 from src.core.enums import AssetClass, SignalDirection
 from src.strategies.base import StrategySignal

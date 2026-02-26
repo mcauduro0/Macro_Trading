@@ -5,30 +5,44 @@ Run with:  uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 """
 
 import logging
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 
-from src.core.database import async_engine
 from src.api.routes import (
-    health, macro, curves, market_data, flows, dashboard,
-    agents, signals, strategies_api, portfolio_api, risk_api, reports,
+    agents,
+    curves,
+    dashboard,
+    flows,
+    health,
+    macro,
+    market_data,
+    portfolio_api,
+    reports,
+    risk_api,
+    signals,
+    strategies_api,
 )
-from src.api.routes.monitoring_api import router as monitoring_router
-from src.api.routes.reports_api import router as reports_api_router
 from src.api.routes.backtest_api import router as backtest_router
-from src.api.routes.websocket_api import router as websocket_router
-from src.api.routes.pms_portfolio import router as pms_portfolio_router
-from src.api.routes.pms_trades import router as pms_trades_router
-from src.api.routes.pms_journal import router as pms_journal_router
-from src.api.routes.pms_briefing import router as pms_briefing_router
-from src.api.routes.pms_risk import router as pms_risk_router
+from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.pms_attribution import router as pms_attribution_router
+from src.api.routes.pms_briefing import router as pms_briefing_router
+from src.api.routes.pms_journal import router as pms_journal_router
+from src.api.routes.pms_portfolio import router as pms_portfolio_router
+from src.api.routes.pms_risk import router as pms_risk_router
+from src.api.routes.pms_trades import router as pms_trades_router
+from src.api.routes.reports_api import router as reports_api_router
+from src.api.routes.websocket_api import router as websocket_router
+from src.core.config import settings
+from src.core.database import async_engine
 
 logger = logging.getLogger(__name__)
 
@@ -91,16 +105,24 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 # ---------------------------------------------------------------------------
 # Middleware
 # ---------------------------------------------------------------------------
+_allowed_origins = ["http://localhost:3000", "http://localhost:8000"]
+if settings.debug:
+    _allowed_origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 

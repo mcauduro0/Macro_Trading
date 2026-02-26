@@ -13,16 +13,11 @@ Covers:
 
 from datetime import date, datetime, timedelta
 
-import pytest
-
 from src.core.enums import AssetClass, SignalDirection, SignalStrength
 from src.portfolio.signal_aggregator_v2 import AggregatedSignalV2
 from src.portfolio.signal_monitor import (
-    ConvictionSurge,
-    DailySignalSummary,
     SignalFlip,
     SignalMonitor,
-    StrategyDivergence,
 )
 from src.strategies.base import StrategySignal
 

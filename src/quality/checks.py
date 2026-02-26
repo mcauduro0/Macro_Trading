@@ -7,7 +7,7 @@ The ``run_all_checks`` method runs every check and produces a composite score.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 from sqlalchemy import text

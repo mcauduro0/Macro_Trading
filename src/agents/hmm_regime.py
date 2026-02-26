@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -245,7 +244,6 @@ class HMMRegimeClassifier:
         used_states: set[int] = set()
 
         # Goldilocks: highest growth, lowest inflation
-        scores = growth_means - inflation_means
         for _ in range(min(n_states, 4)):
             candidates = [i for i in range(n_states) if i not in used_states]
             if not candidates:

@@ -11,17 +11,16 @@ Uses mock strategies and loaders to keep tests fast and self-contained.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.backtesting.engine import BacktestConfig, BacktestEngine
 from src.backtesting.metrics import BacktestResult
-from src.strategies.base import StrategyPosition, StrategySignal
 from src.core.enums import AssetClass, SignalDirection, SignalStrength
+from src.strategies.base import StrategyPosition, StrategySignal
 
 
 # ---------------------------------------------------------------------------

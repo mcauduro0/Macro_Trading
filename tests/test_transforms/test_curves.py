@@ -9,15 +9,14 @@ import numpy as np
 import pytest
 
 from src.transforms.curves import (
-    nelson_siegel,
+    compute_breakeven_inflation,
+    compute_carry_rolldown,
+    compute_dv01,
+    compute_forward_rate,
     fit_nelson_siegel,
     interpolate_curve,
-    compute_breakeven_inflation,
-    compute_forward_rate,
-    compute_dv01,
-    compute_carry_rolldown,
+    nelson_siegel,
 )
-
 
 # ---------------------------------------------------------------------------
 # nelson_siegel

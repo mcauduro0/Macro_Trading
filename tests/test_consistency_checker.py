@@ -9,8 +9,6 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
-
 from src.agents.consistency_checker import CrossAssetConsistencyChecker
 from src.agents.cross_asset_view import ConsistencyIssue
 

@@ -25,7 +25,6 @@ from src.backtesting.analytics import (
 )
 from src.backtesting.metrics import BacktestResult
 
-
 # ---------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------

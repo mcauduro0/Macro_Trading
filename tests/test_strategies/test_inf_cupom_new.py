@@ -11,9 +11,9 @@ from unittest.mock import MagicMock
 import pandas as pd
 
 from src.core.enums import AssetClass, SignalDirection
+from src.strategies.cupom_02_onshore_offshore import Cupom02OnshoreOffshoreStrategy
 from src.strategies.inf_02_ipca_surprise import Inf02IpcaSurpriseStrategy
 from src.strategies.inf_03_inflation_carry import Inf03InflationCarryStrategy
-from src.strategies.cupom_02_onshore_offshore import Cupom02OnshoreOffshoreStrategy
 from src.strategies.registry import StrategyRegistry
 
 

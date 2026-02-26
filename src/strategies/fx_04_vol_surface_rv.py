@@ -26,11 +26,12 @@ from datetime import date, datetime
 from typing import Optional
 
 import numpy as np
+import pandas as pd  # noqa: F401 — used in type annotations
 import structlog
 from scipy import stats as scipy_stats
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
 from src.strategies.base import (
     BaseStrategy,
     StrategyConfig,

@@ -7,12 +7,14 @@ Provides:
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections import defaultdict
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/signals", tags=["Signals"])
 
 
@@ -56,12 +58,13 @@ async def signals_latest(
             "as_of_date": str(as_of),
         })
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("signals error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 async def _collect_all_signals(as_of: date) -> list[dict]:
     """Run all agents and collect their signals as dicts."""
-    from src.api.routes.agents import _get_agent_instance, AGENT_DEFINITIONS
+    from src.api.routes.agents import AGENT_DEFINITIONS, _get_agent_instance
 
     all_signals: list[dict] = []
     for defn in AGENT_DEFINITIONS:

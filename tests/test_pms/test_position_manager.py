@@ -8,8 +8,8 @@ from datetime import date, datetime
 
 import pytest
 
-from src.pms.position_manager import PositionManager
 from src.pms.mtm_service import MarkToMarketService
+from src.pms.position_manager import PositionManager
 from src.pms.pricing import (
     compute_dv01_from_pu,
     compute_fx_delta,
@@ -19,7 +19,6 @@ from src.pms.pricing import (
     pu_to_rate,
     rate_to_pu,
 )
-
 
 # =============================================================================
 # Fixtures

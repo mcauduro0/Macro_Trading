@@ -19,11 +19,9 @@ from __future__ import annotations
 
 from datetime import date
 
+import exchange_calendars as xcals
 import pandas as pd
 from bizdays import Calendar
-
-import exchange_calendars as xcals
-
 
 # ---------------------------------------------------------------------------
 # Lazy calendar singletons

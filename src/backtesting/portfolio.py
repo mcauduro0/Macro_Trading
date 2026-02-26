@@ -6,6 +6,7 @@ Portfolio never accesses the database directly; BacktestEngine passes
 prices from PointInTimeDataLoader.
 """
 from __future__ import annotations
+
 from datetime import date
 from typing import Any
 

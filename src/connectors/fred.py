@@ -22,10 +22,9 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.connectors.base import BaseConnector, ConnectorError, DataParsingError
+from src.connectors.base import BaseConnector, ConnectorError
 from src.core.config import settings
 from src.core.database import async_session_factory
-from src.core.models.data_sources import DataSource
 from src.core.models.macro_series import MacroSeries
 from src.core.models.series_metadata import SeriesMetadata
 
@@ -54,6 +53,8 @@ class FredConnector(BaseConnector):
     BASE_URL: str = "https://api.stlouisfed.org"
     RATE_LIMIT_PER_SECOND: float = 2.0
     TIMEOUT_SECONDS: float = 60.0
+    AUTH_TYPE: str = "api_key"
+    SOURCE_NOTES: str = "Federal Reserve Economic Data (St. Louis Fed)"
 
     # -----------------------------------------------------------------------
     # Series registry: internal key -> FRED series code
@@ -360,30 +361,6 @@ class FredConnector(BaseConnector):
             })
 
         return records
-
-    # -----------------------------------------------------------------------
-    # Metadata helpers (ensure data_source & series_metadata rows exist)
-    # -----------------------------------------------------------------------
-    async def _ensure_data_source(self) -> int:
-        """Ensure a data_sources row exists for FRED. Returns its id."""
-        async with async_session_factory() as session:
-            async with session.begin():
-                stmt = pg_insert(DataSource).values(
-                    name=self.SOURCE_NAME,
-                    base_url=self.BASE_URL,
-                    auth_type="api_key",
-                    rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
-                    default_locale="en-US",
-                    notes="Federal Reserve Economic Data (St. Louis Fed)",
-                    is_active=True,
-                ).on_conflict_do_nothing(index_elements=["name"])
-                await session.execute(stmt)
-
-            result = await session.execute(
-                select(DataSource.id).where(DataSource.name == self.SOURCE_NAME)
-            )
-            row = result.scalar_one()
-            return row
 
     async def _ensure_series_metadata(
         self,

@@ -17,7 +17,6 @@ from pydantic import BaseModel
 
 from src.monitoring.alert_manager import AlertManager
 
-
 router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 # Shared AlertManager instance (singleton for the API lifetime)

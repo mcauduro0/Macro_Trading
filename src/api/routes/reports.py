@@ -7,11 +7,13 @@ Provides:
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
@@ -53,12 +55,13 @@ async def daily_brief(
             "as_of_date": str(brief.as_of_date),
         })
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("reports error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _generate_brief(as_of: date):
     """Run agents and generate narrative brief."""
-    from src.api.routes.agents import _get_agent_instance, AGENT_DEFINITIONS
+    from src.api.routes.agents import AGENT_DEFINITIONS, _get_agent_instance
     from src.narrative.generator import NarrativeGenerator
 
     # Collect agent reports

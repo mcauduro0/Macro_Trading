@@ -10,14 +10,13 @@ Verifies:
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
 from src.pms.morning_pack import MorningPackService
 from src.pms.position_manager import PositionManager
 from src.pms.trade_workflow import TradeWorkflowService
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -203,7 +202,7 @@ class TestMorningPackGeneration:
             trade_workflow=trade_workflow,
         )
 
-        b1 = service.generate(briefing_date=date(2026, 2, 23))
+        service.generate(briefing_date=date(2026, 2, 23))
         b2 = service.generate(briefing_date=date(2026, 2, 24))
 
         assert len(service._briefings) == 2

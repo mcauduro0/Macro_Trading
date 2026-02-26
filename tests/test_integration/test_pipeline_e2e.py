@@ -11,11 +11,8 @@ Marked with @pytest.mark.integration for selective execution.
 
 from __future__ import annotations
 
-import os
 import logging
 from collections import namedtuple
-from datetime import date
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -50,9 +47,7 @@ def test_full_pipeline_e2e():
     # Step 1: Transforms
     # -----------------------------------------------------------------------
     try:
-        from src.transforms.curves import compute_forward_rate
         from src.transforms.returns import compute_returns, compute_z_score
-        from src.transforms.macro import compute_diffusion_index
 
         df = _sample_macro_df()
 

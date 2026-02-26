@@ -7,15 +7,13 @@ the chain: agents -> aggregation -> strategies -> portfolio -> risk -> report.
 from __future__ import annotations
 
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import numpy as np
-import pandas as pd
 import pytest
 
 from src.agents.base import AgentReport, AgentSignal
 from src.core.enums import SignalDirection, SignalStrength
-from src.pipeline.daily_pipeline import DailyPipeline, PipelineResult
+from src.pipeline.daily_pipeline import DailyPipeline
 
 
 # ---------------------------------------------------------------------------
