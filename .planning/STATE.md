@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 27 in progress -- Go-Live Documentation complete, 1 plan remaining
+**Current focus:** Phase 27 COMPLETE -- All 27 phases done. System go-live ready.
 
 ## Current Position
 
 Phase: 27 of 27 (Redis Cache, Dagster PMS, Go-Live Verification)
-Plan: 3 of 4 in current phase (27-03 Go-Live Documentation complete)
-Status: Phase 27 in progress
-Last activity: 2026-02-26 — Completed 27-03 Go-Live Documentation
+Plan: 4 of 4 in current phase (27-04 Go-Live Verification complete)
+Status: Phase 27 COMPLETE -- ALL PHASES COMPLETE
+Last activity: 2026-02-26 — Completed 27-04 Go-Live Verification
 
-Progress: [##############################] 98% (27/27 phases, plan 3/4)
+Progress: [##############################] 100% (27/27 phases, plan 4/4)
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [##############################] 98% (27/27 phases, plan 3/4)
 | Phase 27 P02 | 3min | 2 tasks | 2 files |
 | Phase 27 P01 | 5min | 2 tasks | 7 files |
 | Phase 27 P03 | 7min | 2 tasks | 5 files |
+| Phase 27 P04 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -250,6 +251,8 @@ Recent decisions affecting current work:
 - [27-03]: Immutable position correction: close at entry price + reopen correct position (never delete)
 - [27-03]: CSV exports alongside pg_dump for quick human-readable PMS table inspection
 - [27-03]: DR playbook covers 5 scenarios with recovery time objectives documented
+- [27-04]: PMSCache class-level method checks (not instance) to avoid needing live Redis for verification
+- [27-04]: Dagster asset threshold 26+ (22 core + 4 PMS) in verify_phase3.py
 
 ### Pending Todos
 
@@ -265,6 +268,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 27-03-PLAN.md (Go-Live Documentation)
-Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-03-SUMMARY.md
-Resume action: /gsd:execute-phase 27 (continue with 27-04)
+Stopped at: Completed 27-04-PLAN.md (Go-Live Verification) -- ALL PHASES COMPLETE
+Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-04-SUMMARY.md
+Resume action: Project complete. Run `make verify-all` with services up for final validation.
