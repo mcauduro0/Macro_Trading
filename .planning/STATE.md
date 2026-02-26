@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 27 in progress -- Redis Cache, Dagster PMS, Go-Live Verification
+**Current focus:** Phase 27 in progress -- Go-Live Documentation complete, 1 plan remaining
 
 ## Current Position
 
 Phase: 27 of 27 (Redis Cache, Dagster PMS, Go-Live Verification)
-Plan: 2 of 4 in current phase (27-02 Dagster PMS Pipeline complete)
+Plan: 3 of 4 in current phase (27-03 Go-Live Documentation complete)
 Status: Phase 27 in progress
-Last activity: 2026-02-26 — Completed 27-02 Dagster PMS Pipeline
+Last activity: 2026-02-26 — Completed 27-03 Go-Live Documentation
 
-Progress: [##############################] 97% (27/27 phases, plan 2/4)
+Progress: [##############################] 98% (27/27 phases, plan 3/4)
 
 ## Performance Metrics
 
@@ -72,6 +72,8 @@ Progress: [##############################] 97% (27/27 phases, plan 2/4)
 | Phase 25 P01 | 4min | 1 tasks | 1 files |
 | Phase 25 P02 | 5min | 2 tasks | 3 files |
 | Phase 27 P02 | 3min | 2 tasks | 2 files |
+| Phase 27 P01 | 5min | 2 tasks | 7 files |
+| Phase 27 P03 | 7min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -242,6 +244,12 @@ Recent decisions affecting current work:
 - [27-02]: PMS assets use sync wrappers with asyncio.run() for Redis cache warming (matching assets_bronze pattern)
 - [27-02]: Pre-open schedule offset 30 min from daily_pipeline (09:30 vs 09:00 UTC) to avoid contention
 - [27-02]: Attribution is EOD-only; pre-open job includes MTM + proposals + morning pack (3 assets)
+- [Phase 27]: Cache-first reads only for default/current date; historical queries bypass cache for point-in-time correctness
+- [Phase 27]: Write-through pattern: proactive refresh_book after invalidation for instant post-write reads
+- [Phase 27]: All Redis calls in routes wrapped in try/except -- Redis failure never breaks API endpoints
+- [27-03]: Immutable position correction: close at entry price + reopen correct position (never delete)
+- [27-03]: CSV exports alongside pg_dump for quick human-readable PMS table inspection
+- [27-03]: DR playbook covers 5 scenarios with recovery time objectives documented
 
 ### Pending Todos
 
@@ -257,6 +265,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 27-02-PLAN.md (Dagster PMS Pipeline)
-Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-02-SUMMARY.md
-Resume action: /gsd:execute-phase 27 (continue with 27-03)
+Stopped at: Completed 27-03-PLAN.md (Go-Live Documentation)
+Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-03-SUMMARY.md
+Resume action: /gsd:execute-phase 27 (continue with 27-04)
