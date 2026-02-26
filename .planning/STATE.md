@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Reliable, point-in-time-correct macro and market data flowing into a queryable system
-**Current focus:** Phase 26 complete -- Frontend Decision Journal, Agent Intel & Compliance done
+**Current focus:** Phase 27 in progress -- Redis Cache, Dagster PMS, Go-Live Verification
 
 ## Current Position
 
-Phase: 26 of 27 (Frontend Decision Journal, Agent Intel & Compliance)
-Plan: 3 of 3 in current phase (26-03 Compliance & Audit + Wiring complete)
-Status: Phase 26 complete -- all plans done
-Last activity: 2026-02-25 — Completed 26-03 Compliance & Audit page + wiring
+Phase: 27 of 27 (Redis Cache, Dagster PMS, Go-Live Verification)
+Plan: 2 of 4 in current phase (27-02 Dagster PMS Pipeline complete)
+Status: Phase 27 in progress
+Last activity: 2026-02-26 — Completed 27-02 Dagster PMS Pipeline
 
-Progress: [##############################] 96% (26/27 phases complete)
+Progress: [##############################] 97% (27/27 phases, plan 2/4)
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [##############################] 96% (26/27 phases complete)
 | Phase 24 P02 | 5min | 2 tasks | 3 files |
 | Phase 25 P01 | 4min | 1 tasks | 1 files |
 | Phase 25 P02 | 5min | 2 tasks | 3 files |
+| Phase 27 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -238,6 +239,9 @@ Recent decisions affecting current work:
 - [26-03]: Hash verification uses pipe-delimited content assembly for SHA-256 computation via Web Crypto API
 - [26-03]: Sample data entries without stored hash auto-marked "verified"
 - [26-03]: Sidebar replaces Strategies/Settings placeholders with Journal/AgentIntel/Compliance
+- [27-02]: PMS assets use sync wrappers with asyncio.run() for Redis cache warming (matching assets_bronze pattern)
+- [27-02]: Pre-open schedule offset 30 min from daily_pipeline (09:30 vs 09:00 UTC) to avoid contention
+- [27-02]: Attribution is EOD-only; pre-open job includes MTM + proposals + morning pack (3 assets)
 
 ### Pending Todos
 
@@ -252,7 +256,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Phase 27 context gathered
-Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-CONTEXT.md
-Resume action: /gsd:plan-phase 27
+Last session: 2026-02-26
+Stopped at: Completed 27-02-PLAN.md (Dagster PMS Pipeline)
+Resume file: .planning/phases/27-redis-cache-dagster-pms-go-live-verification/27-02-SUMMARY.md
+Resume action: /gsd:execute-phase 27 (continue with 27-03)
