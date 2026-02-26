@@ -15,11 +15,12 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from datetime import date, datetime
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.schemas.pms_schemas import (
     BookResponse,
@@ -31,6 +32,9 @@ from src.api.schemas.pms_schemas import (
     PositionResponse,
     UpdatePriceRequest,
 )
+from src.cache import PMSCache, get_pms_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms", tags=["PMS - Portfolio"])
 
@@ -56,19 +60,41 @@ def _get_workflow():
 @router.get("/book", response_model=BookResponse)
 async def get_book(
     as_of_date: Optional[str] = Query(None, description="Date YYYY-MM-DD"),
+    cache: PMSCache = Depends(get_pms_cache),
 ):
     """Return full portfolio book with summary, positions, and breakdowns."""
     try:
+        # Cache-first read (only for default date -- no cache for historical)
+        if as_of_date is None:
+            try:
+                cached = await cache.get_book()
+                if cached is not None:
+                    logger.debug("GET /book: cache HIT")
+                    cached["cached"] = True
+                    return cached
+            except Exception:
+                logger.warning("GET /book: cache read failed, computing fresh")
+
         wf = _get_workflow()
         ref_date = _parse_date(as_of_date)
         book = wf.position_manager.get_book(as_of_date=ref_date)
 
-        return BookResponse(
+        result = BookResponse(
             summary=BookSummaryResponse(**book["summary"]),
             positions=[PositionResponse(**p) for p in book["positions"]],
             by_asset_class=book.get("by_asset_class", {}),
             closed_today=[PositionResponse(**p) for p in book.get("closed_today", [])],
         )
+
+        # Cache the result for default (current) date
+        if as_of_date is None:
+            try:
+                await cache.set_book(result.model_dump(mode="json"))
+                logger.debug("GET /book: cache SET")
+            except Exception:
+                logger.warning("GET /book: cache write failed")
+
+        return result
     except HTTPException:
         raise
     except Exception as exc:
@@ -104,7 +130,10 @@ async def get_positions(
 # 3. POST /pms/book/positions/open
 # ---------------------------------------------------------------------------
 @router.post("/book/positions/open", response_model=PositionResponse, status_code=201)
-async def open_position(body: OpenPositionRequest):
+async def open_position(
+    body: OpenPositionRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Open a new discretionary position via TradeWorkflowService."""
     try:
         wf = _get_workflow()
@@ -122,6 +151,16 @@ async def open_position(body: OpenPositionRequest):
             strategy_ids=body.strategy_ids or None,
         )
         position = result["position"]
+
+        # Write-through: invalidate + refresh book cache
+        try:
+            await cache.invalidate_portfolio_data()
+            new_book = wf.position_manager.get_book()
+            await cache.refresh_book(new_book)
+            logger.debug("POST /open: cache invalidated and refreshed")
+        except Exception:
+            logger.warning("POST /open: cache refresh failed")
+
         return PositionResponse(**position)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -135,7 +174,11 @@ async def open_position(body: OpenPositionRequest):
 @router.post(
     "/book/positions/{position_id}/close", response_model=PositionResponse
 )
-async def close_position(position_id: int, body: ClosePositionRequest):
+async def close_position(
+    position_id: int,
+    body: ClosePositionRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Close an open position."""
     try:
         wf = _get_workflow()
@@ -146,6 +189,16 @@ async def close_position(position_id: int, body: ClosePositionRequest):
             manager_notes=body.manager_notes,
             outcome_notes=body.outcome_notes,
         )
+
+        # Write-through: invalidate + refresh book cache
+        try:
+            await cache.invalidate_portfolio_data()
+            new_book = wf.position_manager.get_book()
+            await cache.refresh_book(new_book)
+            logger.debug("POST /close: cache invalidated and refreshed")
+        except Exception:
+            logger.warning("POST /close: cache refresh failed")
+
         return PositionResponse(**closed)
     except ValueError as exc:
         msg = str(exc)
@@ -162,7 +215,11 @@ async def close_position(position_id: int, body: ClosePositionRequest):
 @router.post(
     "/book/positions/{position_id}/update-price", response_model=PositionResponse
 )
-async def update_price(position_id: int, body: UpdatePriceRequest):
+async def update_price(
+    position_id: int,
+    body: UpdatePriceRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Manually update the current price of a position."""
     try:
         wf = _get_workflow()
@@ -172,6 +229,16 @@ async def update_price(position_id: int, body: UpdatePriceRequest):
 
         position["current_price"] = body.price
         position["updated_at"] = datetime.utcnow()
+
+        # Write-through: invalidate + refresh book cache
+        try:
+            await cache.invalidate_portfolio_data()
+            new_book = wf.position_manager.get_book()
+            await cache.refresh_book(new_book)
+            logger.debug("POST /update-price: cache invalidated and refreshed")
+        except Exception:
+            logger.warning("POST /update-price: cache refresh failed")
+
         return PositionResponse(**position)
     except HTTPException:
         raise
@@ -183,7 +250,10 @@ async def update_price(position_id: int, body: UpdatePriceRequest):
 # 6. POST /pms/mtm
 # ---------------------------------------------------------------------------
 @router.post("/mtm")
-async def run_mark_to_market(body: MTMRequest):
+async def run_mark_to_market(
+    body: MTMRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Mark all open positions to market."""
     try:
         wf = _get_workflow()
@@ -191,6 +261,16 @@ async def run_mark_to_market(body: MTMRequest):
             price_overrides=body.price_overrides or None,
             current_fx_rate=body.fx_rate,
         )
+
+        # Write-through: invalidate + refresh book cache after MTM
+        try:
+            await cache.invalidate_portfolio_data()
+            new_book = wf.position_manager.get_book()
+            await cache.refresh_book(new_book)
+            logger.debug("POST /mtm: cache invalidated and refreshed")
+        except Exception:
+            logger.warning("POST /mtm: cache refresh failed")
+
         return {
             "status": "ok",
             "updated_count": len(updated),

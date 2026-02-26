@@ -2,7 +2,7 @@
  * App.jsx - Main application component for the Macro Trading Dashboard.
  *
  * Features:
- * - HashRouter with Dashboard (5 routes) + PMS (7 routes) + default redirect
+ * - HashRouter with Dashboard (5 routes) + PMS (8 routes) + default redirect
  * - Mode switch: Dashboard vs PMS mode with separate navigation
  * - Sidebar + content area layout with mode-aware styling
  * - WebSocket alert connection with toast notifications
@@ -154,6 +154,12 @@ function AppContent() {
   const RiskMonitorPage = window.RiskMonitorPage;
   // PerformanceAttributionPage — resolved from window global (loaded from pms/pages/PerformanceAttributionPage.jsx)
   const PerformanceAttributionPage = window.PerformanceAttributionPage;
+  // DecisionJournalPage — resolved from window global (loaded from pms/pages/DecisionJournalPage.jsx)
+  const DecisionJournalPage = window.DecisionJournalPage;
+  // AgentIntelPage — resolved from window global (loaded from pms/pages/AgentIntelPage.jsx)
+  const AgentIntelPage = window.AgentIntelPage;
+  // ComplianceAuditPage — resolved from window global (loaded from pms/pages/ComplianceAuditPage.jsx)
+  const ComplianceAuditPage = window.ComplianceAuditPage;
 
   return (
     <Layout
@@ -178,8 +184,9 @@ function AppContent() {
         <Route path="/pms/risk" element={<RiskMonitorPage />} />
         <Route path="/pms/blotter" element={<TradeBlotterPage />} />
         <Route path="/pms/attribution" element={<PerformanceAttributionPage />} />
-        <Route path="/pms/strategies" element={<PMSPlaceholder title="PMS Strategies" />} />
-        <Route path="/pms/settings" element={<PMSPlaceholder title="PMS Settings" />} />
+        <Route path="/pms/journal" element={<DecisionJournalPage />} />
+        <Route path="/pms/agents" element={<AgentIntelPage />} />
+        <Route path="/pms/compliance" element={<ComplianceAuditPage />} />
       </Routes>
     </Layout>
   );

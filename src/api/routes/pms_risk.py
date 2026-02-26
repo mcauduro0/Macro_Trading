@@ -8,15 +8,19 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.schemas.pms_schemas import (
     LiveRiskResponse,
     RiskTrendPointResponse,
 )
+from src.cache import PMSCache, get_pms_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms/risk", tags=["PMS - Risk Monitor"])
 
@@ -45,12 +49,33 @@ async def get_live_risk(
     as_of_date: Optional[str] = Query(
         None, description="Reference date YYYY-MM-DD (defaults to today)"
     ),
+    cache: PMSCache = Depends(get_pms_cache),
 ):
     """Return a complete live risk snapshot."""
     try:
+        # Cache-first read (only for default date)
+        if as_of_date is None:
+            try:
+                cached = await cache.get_risk_metrics()
+                if cached is not None:
+                    logger.debug("GET /risk/live: cache HIT")
+                    cached["cached"] = True
+                    return cached
+            except Exception:
+                logger.warning("GET /risk/live: cache read failed")
+
         svc = _get_service()
         ref_date = _parse_date(as_of_date)
         risk_data = svc.compute_live_risk(as_of_date=ref_date)
+
+        # Cache the result for default (current) date
+        if as_of_date is None:
+            try:
+                await cache.set_risk_metrics(risk_data)
+                logger.debug("GET /risk/live: cache SET")
+            except Exception:
+                logger.warning("GET /risk/live: cache write failed")
+
         return LiveRiskResponse(**risk_data)
     except HTTPException:
         raise

@@ -11,10 +11,11 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.schemas.pms_schemas import (
     ApproveProposalRequest,
@@ -23,6 +24,9 @@ from src.api.schemas.pms_schemas import (
     RejectProposalRequest,
     TradeProposalResponse,
 )
+from src.cache import PMSCache, get_pms_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms/trades", tags=["PMS - Trade Blotter"])
 
@@ -107,7 +111,11 @@ async def get_proposal(proposal_id: int):
 @router.post(
     "/proposals/{proposal_id}/approve", response_model=TradeProposalResponse
 )
-async def approve_proposal(proposal_id: int, body: ApproveProposalRequest):
+async def approve_proposal(
+    proposal_id: int,
+    body: ApproveProposalRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Approve a pending trade proposal and open a position."""
     try:
         wf = _get_workflow()
@@ -121,6 +129,14 @@ async def approve_proposal(proposal_id: int, body: ApproveProposalRequest):
             stop_loss=body.stop_loss,
             time_horizon=body.time_horizon,
         )
+
+        # Approving a trade changes the book -- invalidate portfolio cache
+        try:
+            await cache.invalidate_portfolio_data()
+            logger.debug("POST /approve: cache invalidated")
+        except Exception:
+            logger.warning("POST /approve: cache invalidation failed")
+
         return TradeProposalResponse(**updated)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -134,7 +150,11 @@ async def approve_proposal(proposal_id: int, body: ApproveProposalRequest):
 @router.post(
     "/proposals/{proposal_id}/reject", response_model=TradeProposalResponse
 )
-async def reject_proposal(proposal_id: int, body: RejectProposalRequest):
+async def reject_proposal(
+    proposal_id: int,
+    body: RejectProposalRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Reject a pending trade proposal with mandatory notes."""
     try:
         wf = _get_workflow()
@@ -142,6 +162,14 @@ async def reject_proposal(proposal_id: int, body: RejectProposalRequest):
             proposal_id=proposal_id,
             manager_notes=body.manager_notes,
         )
+
+        # Rejecting a trade may affect pending book views -- invalidate
+        try:
+            await cache.invalidate_portfolio_data()
+            logger.debug("POST /reject: cache invalidated")
+        except Exception:
+            logger.warning("POST /reject: cache invalidation failed")
+
         return TradeProposalResponse(**updated)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -156,7 +184,11 @@ async def reject_proposal(proposal_id: int, body: RejectProposalRequest):
     "/proposals/{proposal_id}/modify-approve",
     response_model=TradeProposalResponse,
 )
-async def modify_approve_proposal(proposal_id: int, body: ModifyApproveRequest):
+async def modify_approve_proposal(
+    proposal_id: int,
+    body: ModifyApproveRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Modify a pending proposal and approve it, opening a position."""
     try:
         wf = _get_workflow()
@@ -167,6 +199,14 @@ async def modify_approve_proposal(proposal_id: int, body: ModifyApproveRequest):
             execution_price=body.execution_price,
             manager_notes=body.manager_notes,
         )
+
+        # Modify-approve changes the book -- invalidate portfolio cache
+        try:
+            await cache.invalidate_portfolio_data()
+            logger.debug("POST /modify-approve: cache invalidated")
+        except Exception:
+            logger.warning("POST /modify-approve: cache invalidation failed")
+
         return TradeProposalResponse(**updated)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))

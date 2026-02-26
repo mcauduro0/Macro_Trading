@@ -1,4 +1,4 @@
-.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all dagster dagster-run-all
+.PHONY: setup up up-full down down-clean ps logs migrate migration install lint test verify seed backfill backfill-fast api quality psql daily daily-dry daily-date test-integration test-all dagster dagster-run-all verify-pms verify-all backup restore morning-pack pms-dev
 
 # ── Setup ────────────────────────────────────────────────────────────
 # Full first-time setup
@@ -123,3 +123,29 @@ dagster:
 # Run full pipeline (materialize all assets in dependency order)
 dagster-run-all:
 	docker compose --profile dagster exec dagster-webserver dagster asset materialize --select '*' -m src.orchestration.definitions
+
+# ── PMS Operations ──────────────────────────────────────────────
+# Verify all PMS components (v4.0)
+verify-pms:
+	python scripts/verify_phase3.py
+
+# Full system verification (v1-v4)
+verify-all:
+	python scripts/verify_phase2.py && python scripts/verify_phase3.py
+
+# Database backup
+backup:
+	bash scripts/backup.sh
+
+# Database restore (usage: make restore FILE=backups/2026-02-25_1800/macro_trading_2026-02-25_1800.pgdump)
+restore:
+	bash scripts/restore.sh $(FILE)
+
+# Generate morning pack manually
+morning-pack:
+	python -c "from src.pms.morning_pack import MorningPackService; from datetime import date; import asyncio; ms = MorningPackService(); print(asyncio.run(ms.generate(briefing_date=date.today())))"
+
+# Start PMS development (API + Docker)
+pms-dev:
+	docker compose up -d
+	uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000

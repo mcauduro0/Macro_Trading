@@ -8,15 +8,19 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.schemas.pms_schemas import (
     AttributionResponse,
     EquityCurvePointResponse,
 )
+from src.cache import PMSCache, get_pms_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms/attribution", tags=["PMS - Attribution"])
 
@@ -45,9 +49,27 @@ async def get_attribution(
     period: str = Query("MTD", description="Period: daily, WTD, MTD, QTD, YTD, inception, custom"),
     start_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD (for custom period)"),
     end_date: Optional[str] = Query(None, description="End date YYYY-MM-DD (for custom period)"),
+    cache: PMSCache = Depends(get_pms_cache),
 ):
     """Return multi-dimensional P&L attribution for the specified period."""
     try:
+        # Derive period_key for cache lookup
+        if period == "custom" and start_date and end_date:
+            period_key = f"custom_{start_date}_{end_date}"
+        else:
+            today_str = date.today().isoformat()
+            period_key = f"{period.lower()}_{today_str}"
+
+        # Cache-first read
+        try:
+            cached = await cache.get_attribution(period_key)
+            if cached is not None:
+                logger.debug("GET /attribution: cache HIT (%s)", period_key)
+                cached["cached"] = True
+                return cached
+        except Exception:
+            logger.warning("GET /attribution: cache read failed")
+
         svc = _get_service()
 
         if period == "custom":
@@ -75,6 +97,13 @@ async def get_attribution(
                 entry["period_start"] = entry["period_start"].isoformat()
             if "period_end" in entry and isinstance(entry["period_end"], date):
                 entry["period_end"] = entry["period_end"].isoformat()
+
+        # Cache the result
+        try:
+            await cache.set_attribution(period_key, result)
+            logger.debug("GET /attribution: cache SET (%s)", period_key)
+        except Exception:
+            logger.warning("GET /attribution: cache write failed")
 
         return AttributionResponse(**result)
     except HTTPException:
