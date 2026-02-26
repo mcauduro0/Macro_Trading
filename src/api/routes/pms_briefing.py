@@ -9,16 +9,20 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.api.schemas.pms_schemas import (
     GenerateMorningPackRequest,
     MorningPackResponse,
     MorningPackSummaryResponse,
 )
+from src.cache import PMSCache, get_pms_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms/morning-pack", tags=["PMS - Morning Pack"])
 
@@ -45,15 +49,36 @@ def _get_service():
 # 1. GET /pms/morning-pack/latest
 # ---------------------------------------------------------------------------
 @router.get("/latest", response_model=MorningPackResponse)
-async def get_latest_briefing():
+async def get_latest_briefing(
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Return the most recent daily briefing."""
     try:
+        # Cache-first read using today's date as key
+        date_key = date.today().isoformat()
+        try:
+            cached = await cache.get_morning_pack(date_key)
+            if cached is not None:
+                logger.debug("GET /morning-pack/latest: cache HIT (%s)", date_key)
+                cached["cached"] = True
+                return cached
+        except Exception:
+            logger.warning("GET /morning-pack/latest: cache read failed")
+
         svc = _get_service()
         briefing = svc.get_latest()
         if briefing is None:
             raise HTTPException(
                 status_code=404, detail="No briefing available"
             )
+
+        # Cache the result
+        try:
+            await cache.set_morning_pack(date_key, briefing)
+            logger.debug("GET /morning-pack/latest: cache SET (%s)", date_key)
+        except Exception:
+            logger.warning("GET /morning-pack/latest: cache write failed")
+
         return MorningPackResponse(**briefing)
     except HTTPException:
         raise
@@ -65,12 +90,24 @@ async def get_latest_briefing():
 # 2. POST /pms/morning-pack/generate
 # ---------------------------------------------------------------------------
 @router.post("/generate", response_model=MorningPackResponse)
-async def generate_briefing(body: GenerateMorningPackRequest):
+async def generate_briefing(
+    body: GenerateMorningPackRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Generate a new daily briefing."""
     try:
         svc = _get_service()
         briefing_date = body.briefing_date or date.today()
         briefing = svc.generate(briefing_date=briefing_date, force=body.force)
+
+        # Write-through: cache the freshly generated briefing
+        try:
+            date_key = briefing_date.isoformat()
+            await cache.set_morning_pack(date_key, briefing)
+            logger.debug("POST /generate: cache SET (%s)", date_key)
+        except Exception:
+            logger.warning("POST /generate: cache write failed")
+
         return MorningPackResponse(**briefing)
     except HTTPException:
         raise
@@ -98,7 +135,10 @@ async def get_briefing_history(
 # 4. GET /pms/morning-pack/{briefing_date}
 # ---------------------------------------------------------------------------
 @router.get("/{briefing_date}", response_model=MorningPackResponse)
-async def get_briefing_by_date(briefing_date: str):
+async def get_briefing_by_date(
+    briefing_date: str,
+    cache: PMSCache = Depends(get_pms_cache),
+):
     """Return the briefing for a specific date."""
     try:
         parsed_date = _parse_date(briefing_date)
@@ -106,6 +146,18 @@ async def get_briefing_by_date(briefing_date: str):
             raise HTTPException(
                 status_code=400, detail=f"Invalid date format: {briefing_date}"
             )
+
+        # Cache-first read
+        date_key = briefing_date
+        try:
+            cached = await cache.get_morning_pack(date_key)
+            if cached is not None:
+                logger.debug("GET /morning-pack/%s: cache HIT", date_key)
+                cached["cached"] = True
+                return cached
+        except Exception:
+            logger.warning("GET /morning-pack/%s: cache read failed", date_key)
+
         svc = _get_service()
         briefing = svc.get_by_date(parsed_date)
         if briefing is None:
@@ -113,6 +165,14 @@ async def get_briefing_by_date(briefing_date: str):
                 status_code=404,
                 detail=f"No briefing found for {briefing_date}",
             )
+
+        # Cache the result
+        try:
+            await cache.set_morning_pack(date_key, briefing)
+            logger.debug("GET /morning-pack/%s: cache SET", date_key)
+        except Exception:
+            logger.warning("GET /morning-pack/%s: cache write failed", date_key)
+
         return MorningPackResponse(**briefing)
     except HTTPException:
         raise
