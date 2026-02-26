@@ -1,6 +1,6 @@
 # Macro Trading System — Plano de Go-Live
 
-**Versão:** 1.0
+**Versão:** 2.0
 **Data:** 2026-02-26
 **Sistema:** Macro Trading Platform v4.0 (PMS)
 
@@ -10,17 +10,35 @@
 
 Este documento detalha o plano passo a passo para o deployment e a ativação do Macro Trading System em um ambiente de produção. O plano cobre desde a preparação da infraestrutura até a ativação do trading ao vivo, garantindo um processo seguro, verificável e robusto.
 
-O plano está dividido em **5 fases principais**:
+O plano está dividido em **6 fases principais**:
 
 1.  **Fase 1: Preparação do Ambiente de Produção**
 2.  **Fase 2: Deployment da Infraestrutura Core**
-3.  **Fase 3: Deployment da Aplicação e Orquestração**
-4.  **Fase 4: Verificação Pré-Go-Live e Backfill de Dados**
-5.  **Fase 5: Ativação e Monitoramento Contínuo**
+3.  **Fase 3: Deployment da Aplicação (API & Frontend)**
+4.  **Fase 4: Deployment da Orquestração e Monitoramento**
+5.  **Fase 5: Verificação Pré-Go-Live e Backfill de Dados**
+6.  **Fase 6: Ativação e Monitoramento Contínuo**
 
 ---
 
-## 2. Requisitos de Produção
+## 2. Arquitetura do Frontend (UI/UX)
+
+O Macro Trading System possui uma interface de usuário completa construída como uma **Single Page Application (SPA) em React 18**, servida diretamente pelo FastAPI. A aplicação utiliza transpilação JSX via Babel Standalone no navegador, sem necessidade de um build step separado (sem Node.js, npm ou Vite no servidor). Todas as dependências de frontend são carregadas via CDN.
+
+A interface opera em **dois modos distintos**, acessíveis por um switch no menu lateral:
+
+| Modo | Páginas | Descrição |
+| :--- | :--- | :--- |
+| **Dashboard (v3)** | Strategies, Signals, Risk, Portfolio, Agents | Visão analítica das estratégias, sinais, risco e agentes de IA |
+| **PMS (v4)** | Morning Pack, Position Book, Trade Blotter, Risk Monitor, Performance Attribution, Decision Journal, Agent Intel, Compliance Audit | Interface operacional estilo Bloomberg para gestão de portfólio |
+
+O frontend totaliza **9.329 linhas de código** distribuídas em 19 arquivos JSX, com design system próprio (tema escuro Bloomberg-dense, fonte JetBrains Mono), gráficos interativos via Recharts, e comunicação em tempo real via 3 canais WebSocket (signals, portfolio, alerts).
+
+A URL de acesso ao frontend em produção é: **`http://<ip_do_servidor>:8000/dashboard`**
+
+---
+
+## 3. Requisitos de Produção
 
 | Componente | Requisito Mínimo | Recomendado |
 | :--- | :--- | :--- |
@@ -32,7 +50,7 @@ O plano está dividido em **5 fases principais**:
 
 ---
 
-## 3. Plano de Go-Live Detalhado
+## 4. Plano de Go-Live Detalhado
 
 ### Fase 1: Preparação do Ambiente de Produção
 
@@ -59,49 +77,62 @@ O plano está dividido em **5 fases principais**:
 | **2.4** | **Executar Migrações do Banco de Dados:** Aplicar todas as migrações do Alembic para criar o schema completo no TimescaleDB. | `cd /opt/macro_trading && make migrate` |
 | **2.5** | **Verificar Schema:** Conectar no banco e verificar se as tabelas (ex: `market_data`, `portfolio_positions`) foram criadas. | `make psql` e depois `\dt` |
 
-### Fase 3: Deployment da Aplicação e Orquestração
+### Fase 3: Deployment da Aplicação (API & Frontend)
+
+**Objetivo:** Iniciar a API FastAPI e garantir que o frontend React (v3 Dashboard e v4 PMS) esteja acessível e funcional.
+
+| Passo | Ação | Comando/Verificação |
+| :--- | :--- | :--- |
+| **3.1** | **Iniciar Contêiner da API:** O contêiner da API (FastAPI/Uvicorn) é o responsável por servir tanto os endpoints de backend quanto a interface do usuário. | `cd /opt/macro_trading && docker compose up -d api` |
+| **3.2** | **Verificar Saúde da API:** Acessar o endpoint de saúde para confirmar que o backend está rodando. | `curl http://localhost:8000/health` (deve retornar `{"status":"ok"}`) |
+| **3.3** | **Verificar Acesso ao Frontend:** Acessar a URL do dashboard no navegador. A aplicação React (SPA) será carregada. | `http://<ip_do_servidor>:8000/dashboard` |
+| **3.4** | **Testar Navegação no Frontend:** Clicar nos itens do menu lateral para alternar entre o modo Dashboard (v3) e o modo PMS (v4) e verificar se as páginas carregam. | - Clicar em "Strategies", "Signals", "Risk"
+- Clicar em "Switch to PMS Mode"
+- Clicar em "Position Book", "Trade Blotter" |
+| **3.5** | **Verificar Conexão WebSocket:** Abrir o console do navegador e verificar se a conexão WebSocket foi estabelecida com sucesso para receber alertas. | `Conexão WebSocket estabelecida` no console. |
+
+### Fase 4: Deployment da Orquestração e Monitoramento
 
 **Objetivo:** Iniciar os serviços da aplicação (API, Dagster) e o stack de monitoramento.
 
 | Passo | Ação | Comando/Verificação |
 | :--- | :--- | :--- |
-| **3.1** | **Iniciar API e Serviços de Mensageria:** Iniciar os contêineres da API, Kafka e MinIO. | `cd /opt/macro_trading && docker compose --profile full up -d api kafka minio` |
-| **3.2** | **Verificar Saúde da API:** Acessar o endpoint de saúde da API. | `curl http://localhost:8000/health` (deve retornar `{"status":"ok"}`) |
-| **3.3** | **Iniciar Stack de Orquestração e Monitoramento:** Iniciar Dagster e Grafana. | `cd /opt/macro_trading && docker compose --profile dagster --profile monitoring up -d` |
-| **3.4** | **Verificar Acesso às UIs:** | - **Dagster UI:** `http://<ip_do_servidor>:3001`
+| **4.1** | **Iniciar Serviços de Mensageria:** Iniciar os contêineres Kafka e MinIO. | `cd /opt/macro_trading && docker compose --profile full up -d kafka minio` |
+| **4.2** | **Iniciar Stack de Orquestração e Monitoramento:** Iniciar Dagster e Grafana. | `cd /opt/macro_trading && docker compose --profile dagster --profile monitoring up -d` |
+| **4.3** | **Verificar Acesso às UIs:** | - **Dagster UI:** `http://<ip_do_servidor>:3001`
 - **Grafana UI:** `http://<ip_do_servidor>:3002`
 - **MinIO UI:** `http://<ip_do_servidor>:9001` |
-| **3.5** | **Configurar Nginx (Opcional, Recomendado):** Configurar Nginx como proxy reverso para a API e UIs, com terminação SSL. | Criar arquivo de configuração em `/etc/nginx/sites-available/` |
+| **4.4** | **Configurar Nginx (Opcional, Recomendado):** Configurar Nginx como proxy reverso para a API e UIs, com terminação SSL. | Criar arquivo de configuração em `/etc/nginx/sites-available/` |
 
-### Fase 4: Verificação Pré-Go-Live e Backfill de Dados
+### Fase 5: Verificação Pré-Go-Live e Backfill de Dados
 
 **Objetivo:** Popular o banco de dados com dados históricos e executar uma bateria final de testes no ambiente de produção.
 
 | Passo | Ação | Comando/Verificação |
 | :--- | :--- | :--- |
-| **4.1** | **Executar Seeding de Dados:** Popular as tabelas de referência (instrumentos, metadados de séries). | `cd /opt/macro_trading && make seed` |
-| **4.2** | **Executar Backfill Histórico:** Carregar dados históricos de mercado. Use `backfill-fast` para um setup mais rápido. | `cd /opt/macro_trading && make backfill` (completo) ou `make backfill-fast` (rápido) |
-| **4.3** | **Executar Pipeline Diário Manualmente:** Rodar o pipeline completo para o dia atual para gerar sinais, portfólios e análises. | `cd /opt/macro_trading && python3 scripts/daily_run.py` |
-| **4.4** | **Executar Verificação de Infraestrutura:** Rodar o script completo de verificação. | `cd /opt/macro_trading && python3 scripts/verify_infrastructure.py --strict` |
-| **4.5** | **Executar Verificação das Fases:** Rodar os scripts de verificação para as fases de desenvolvimento. | `python3 scripts/verify_phase2.py && python3 scripts/verify_phase3.py` |
-| **4.6** | **Executar Teste de Fumaça do PMS:** Seguir os passos da seção 4 do `GOLIVE_CHECKLIST.md` para simular um ciclo de vida de trade. | `docs/GOLIVE_CHECKLIST.md` |
-| **4.7** | **Criar Backup Inicial:** Realizar o primeiro backup completo do sistema. | `cd /opt/macro_trading && bash scripts/backup.sh` |
+| **5.1** | **Executar Seeding de Dados:** Popular as tabelas de referência (instrumentos, metadados de séries). | `cd /opt/macro_trading && make seed` |
+| **5.2** | **Executar Backfill Histórico:** Carregar dados históricos de mercado. Use `backfill-fast` para um setup mais rápido. | `cd /opt/macro_trading && make backfill` (completo) ou `make backfill-fast` (rápido) |
+| **5.3** | **Executar Pipeline Diário Manualmente:** Rodar o pipeline completo para o dia atual para gerar sinais, portfólios e análises. | `cd /opt/macro_trading && python3 scripts/daily_run.py` |
+| **5.4** | **Executar Verificação de Infraestrutura:** Rodar o script completo de verificação. | `cd /opt/macro_trading && python3 scripts/verify_infrastructure.py --strict` |
+| **5.5** | **Executar Verificação das Fases:** Rodar os scripts de verificação para as fases de desenvolvimento. | `python3 scripts/verify_phase2.py && python3 scripts/verify_phase3.py` |
+| **5.6** | **Executar Teste de Fumaça do PMS:** Seguir os passos da seção 4 do `GOLIVE_CHECKLIST.md` para simular um ciclo de vida de trade. | `docs/GOLIVE_CHECKLIST.md` |
+| **5.7** | **Criar Backup Inicial:** Realizar o primeiro backup completo do sistema. | `cd /opt/macro_trading && bash scripts/backup.sh` |
 
-### Fase 5: Ativação e Monitoramento Contínuo
+### Fase 6: Ativação e Monitoramento Contínuo
 
 **Objetivo:** Ativar a execução automática do sistema e estabelecer rotinas de monitoramento.
 
 | Passo | Ação | Comando/Verificação |
 | :--- | :--- | :--- |
-| **5.1** | **Ativar Schedules do Dagster:** No Dagster UI (`http://<ip_do_servidor>:3001`), ir para a aba "Schedules" e ativar os 3 schedules: `daily_pipeline_schedule`, `pms_eod_schedule`, `pms_preopen_schedule`. | Verificar o status "Running" nos schedules. |
-| **5.2** | **Configurar Cron Job de Backup (Recomendado):** Adicionar o script de backup ao crontab do sistema para rodar diariamente. | `crontab -e` e adicionar `0 3 * * * /bin/bash /opt/macro_trading/scripts/backup.sh` |
-| **5.3** | **Revisar Runbook Operacional:** Ler o `OPERATIONAL_RUNBOOK.md` para entender os procedimentos diários, semanais e de emergência. | `docs/OPERATIONAL_RUNBOOK.md` |
-| **5.4** | **Monitorar Primeira Execução Agendada:** Acompanhar a primeira execução do `daily_pipeline_schedule` no Dagster UI para garantir que todos os assets foram materializados com sucesso. | Verificar os logs de execução no Dagster UI. |
-| **5.5** | **Go-Live:** O sistema está oficialmente em produção. O trading pode começar seguindo o workflow diário descrito no `OPERATIONAL_RUNBOOK.md`. | Parabéns! |
+| **6.1** | **Ativar Schedules do Dagster:** No Dagster UI (`http://<ip_do_servidor>:3001`), ir para a aba "Schedules" e ativar os 3 schedules: `daily_pipeline_schedule`, `pms_eod_schedule`, `pms_preopen_schedule`. | Verificar o status "Running" nos schedules. |
+| **6.2** | **Configurar Cron Job de Backup (Recomendado):** Adicionar o script de backup ao crontab do sistema para rodar diariamente. | `crontab -e` e adicionar `0 3 * * * /bin/bash /opt/macro_trading/scripts/backup.sh` |
+| **6.3** | **Revisar Runbook Operacional:** Ler o `OPERATIONAL_RUNBOOK.md` para entender os procedimentos diários, semanais e de emergência. | `docs/OPERATIONAL_RUNBOOK.md` |
+| **6.4** | **Monitorar Primeira Execução Agendada:** Acompanhar a primeira execução do `daily_pipeline_schedule` no Dagster UI para garantir que todos os assets foram materializados com sucesso. | Verificar os logs de execução no Dagster UI. |
+| **6.5** | **Go-Live:** O sistema está oficialmente em produção. O trading pode começar seguindo o workflow diário descrito no `OPERATIONAL_RUNBOOK.md`. | Parabéns! |
 
 ---
 
-## 4. Plano de Rollback
+## 6. Plano de Rollback
 
 Em caso de falha crítica em qualquer fase, o plano de rollback é o seguinte:
 
@@ -109,4 +140,4 @@ Em caso de falha crítica em qualquer fase, o plano de rollback é o seguinte:
 2.  **Remover o diretório do projeto:** `rm -rf /opt/macro_trading`
 3.  **Desprovisionar o servidor.**
 
-Para falhas de dados durante a Fase 4, utilize o script `scripts/restore.sh` para restaurar o banco de dados a partir do último backup válido.
+Para falhas de dados durante a Fase 5, utilize o script `scripts/restore.sh` para restaurar o banco de dados a partir do último backup válido.
