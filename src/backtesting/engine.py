@@ -11,19 +11,19 @@ v2 additions (BTST-01, BTST-02):
 - BacktestConfig: New optional fields for walk-forward and cost model
 """
 from __future__ import annotations
+
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from typing import Any, Optional, Protocol
 
 import numpy as np
 import pandas as pd
 
-from src.backtesting.portfolio import Portfolio
-from src.backtesting.metrics import BacktestResult, compute_metrics
-from src.backtesting.costs import TransactionCostModel
 from src.agents.data_loader import PointInTimeDataLoader
-from src.strategies.base import StrategySignal, StrategyPosition
+from src.backtesting.costs import TransactionCostModel
+from src.backtesting.metrics import BacktestResult, compute_metrics
+from src.backtesting.portfolio import Portfolio
 from src.core.enums import SignalDirection
 
 logger = logging.getLogger(__name__)
@@ -311,9 +311,6 @@ class BacktestEngine:
             combined_portfolio.equity_curve = combined_curve
 
             # Aggregate trade statistics
-            total_trades = sum(
-                r.total_trades for r in individual_results.values()
-            )
             combined_portfolio.trade_log = []
             for r in individual_results.values():
                 # Add synthetic trade log entries for aggregate stats

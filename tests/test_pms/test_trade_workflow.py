@@ -5,13 +5,12 @@ All tests use pure in-memory TradeWorkflowService (no DB dependency).
 discretionary trades, position closing, and flip signal detection.
 """
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
 from src.pms.position_manager import PositionManager
 from src.pms.trade_workflow import TradeWorkflowService
-
 
 # =============================================================================
 # Fixtures

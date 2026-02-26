@@ -27,6 +27,7 @@ import structlog
 from src.agents.base import AgentSignal, classify_strength
 from src.agents.data_loader import PointInTimeDataLoader
 from src.core.enums import AssetClass, Frequency, SignalDirection
+from src.core.utils.tenors import find_closest_tenor
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategyPosition
 
 # ---------------------------------------------------------------------------
@@ -98,8 +99,8 @@ class RatesBR03SlopeStrategy(BaseStrategy):
             return []
 
         # Identify 2Y and 5Y tenors
-        tenor_2y = self._find_closest_tenor(curve, _2Y_TARGET, _TENOR_TOLERANCE)
-        tenor_5y = self._find_closest_tenor(curve, _5Y_TARGET, _TENOR_TOLERANCE)
+        tenor_2y = find_closest_tenor(curve, _2Y_TARGET, _TENOR_TOLERANCE)
+        tenor_5y = find_closest_tenor(curve, _5Y_TARGET, _TENOR_TOLERANCE)
 
         if tenor_2y is None or tenor_5y is None:
             self.log.warning(
@@ -146,31 +147,6 @@ class RatesBR03SlopeStrategy(BaseStrategy):
         return self._generate_slope_position(
             z_score, current_slope, cycle_direction, tenor_2y, tenor_5y, as_of_date
         )
-
-    def _find_closest_tenor(
-        self,
-        curve: dict[int, float],
-        target: int,
-        tolerance: int,
-    ) -> int | None:
-        """Find the closest available tenor to the target within tolerance.
-
-        Args:
-            curve: Tenor-to-rate mapping.
-            target: Target tenor in days.
-            tolerance: Maximum allowed distance from target.
-
-        Returns:
-            Closest tenor, or None if nothing within tolerance.
-        """
-        best_tenor = None
-        best_dist = float("inf")
-        for tenor in curve:
-            dist = abs(tenor - target)
-            if dist < best_dist and dist <= tolerance:
-                best_dist = dist
-                best_tenor = tenor
-        return best_tenor
 
     def _compute_slope_series(
         self,

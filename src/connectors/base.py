@@ -17,11 +17,12 @@ Exception hierarchy:
 import abc
 import asyncio
 import inspect
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 import httpx
 import structlog
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from tenacity import (
     AsyncRetrying,
@@ -31,6 +32,7 @@ from tenacity import (
 )
 
 from src.core.database import async_session_factory
+from src.core.models.data_sources import DataSource
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +83,14 @@ class BaseConnector(abc.ABC):
     RATE_LIMIT_PER_SECOND: float = 5.0
     MAX_RETRIES: int = 3
     TIMEOUT_SECONDS: float = 30.0
+
+    # Metadata for _ensure_data_source (subclasses MAY override)
+    AUTH_TYPE: str = "none"
+    DEFAULT_LOCALE: str = "en-US"
+    SOURCE_NOTES: str = ""
+
+    # Date chunking (subclasses MAY override; used by _chunk_date_range)
+    MAX_DATE_RANGE_YEARS: int = 10
 
     def __init__(self) -> None:
         self._client: httpx.AsyncClient | None = None
@@ -247,6 +257,66 @@ class BaseConnector(abc.ABC):
             end_date=str(end_date),
         )
         return inserted
+
+    def _chunk_date_range(
+        self, start_date: date, end_date: date
+    ) -> list[tuple[date, date]]:
+        """Split a date range into chunks of MAX_DATE_RANGE_YEARS.
+
+        Useful for APIs that reject queries spanning too many years.
+
+        Args:
+            start_date: Inclusive start date.
+            end_date: Inclusive end date.
+
+        Returns:
+            List of (chunk_start, chunk_end) tuples covering the full range.
+        """
+        chunks: list[tuple[date, date]] = []
+        chunk_start = start_date
+
+        while chunk_start <= end_date:
+            chunk_end_year = chunk_start.year + self.MAX_DATE_RANGE_YEARS
+            try:
+                chunk_end = date(
+                    chunk_end_year, chunk_start.month, chunk_start.day
+                ) - timedelta(days=1)
+            except ValueError:
+                # Handle leap year edge case (Feb 29)
+                chunk_end = date(chunk_end_year, chunk_start.month, 28)
+
+            if chunk_end >= end_date:
+                chunk_end = end_date
+
+            chunks.append((chunk_start, chunk_end))
+            chunk_start = chunk_end + timedelta(days=1)
+
+        return chunks
+
+    async def _ensure_data_source(self) -> int:
+        """Ensure a data_sources row exists for this connector. Returns its id.
+
+        Uses SOURCE_NAME, BASE_URL, AUTH_TYPE, RATE_LIMIT_PER_SECOND,
+        DEFAULT_LOCALE, and SOURCE_NOTES class attributes to populate the row.
+        """
+        async with async_session_factory() as session:
+            async with session.begin():
+                stmt = pg_insert(DataSource).values(
+                    name=self.SOURCE_NAME,
+                    base_url=self.BASE_URL,
+                    auth_type=self.AUTH_TYPE,
+                    rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
+                    default_locale=self.DEFAULT_LOCALE,
+                    notes=self.SOURCE_NOTES or self.SOURCE_NAME,
+                    is_active=True,
+                ).on_conflict_do_nothing(index_elements=["name"])
+                await session.execute(stmt)
+
+            result = await session.execute(
+                select(DataSource.id).where(DataSource.name == self.SOURCE_NAME)
+            )
+            row = result.scalar_one()
+            return row
 
     async def _bulk_insert(
         self,

@@ -7,8 +7,8 @@ Uses the same TestClient pattern as test_dashboard.py.
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import pytest
 from fastapi import FastAPI

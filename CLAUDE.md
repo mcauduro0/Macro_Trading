@@ -63,15 +63,15 @@ This project follows a structured 4-phase development plan (Phase 0 through Phas
 
 ### Phase Dependencies
 
-- **Phase 0** requires: Docker, Python 3.11+, Node.js 18+, Git, 16GB+ RAM, FRED API key
+- **Phase 0** requires: Docker, Python 3.11+, Git, 16GB+ RAM, FRED API key
 - **Phase 1** requires: Phase 0 complete (data infrastructure with TimescaleDB, 11 connectors, 200+ macro series, FastAPI)
-- **Phase 2** requires: Phase 1 complete (5 agents, backtesting engine, 8 strategies, React dashboard)
-- **Phase 3** requires: Phase 2 complete (25 strategies, risk engine, portfolio optimization, Dagster orchestration)
+- **Phase 2** requires: Phase 1 complete (5 agents, backtesting engine, 8 initial strategies)
+- **Phase 3** requires: Phase 2 complete (24 strategies, risk engine, portfolio optimization, PMS)
 
 ## Key Constraints
 
 - **Language**: English (default working language)
-- **Investment Focus**: Stocks only (no ETFs, mutual funds)
+- **Investment Focus**: Macro-directional (FX, rates, inflation, sovereign credit, cross-asset)
 - **LLM Preference**: Claude Opus 4.5, GPT-5.2 Pro, Gemini 3 Pro
 - **Data**: Real data only in production (no mocks)
 - **Stack**: Python-based with open-source libraries

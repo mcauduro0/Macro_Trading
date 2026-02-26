@@ -25,9 +25,8 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.connectors.base import BaseConnector, DataParsingError
+from src.connectors.base import BaseConnector
 from src.core.database import async_session_factory
-from src.core.models.data_sources import DataSource
 from src.core.models.flow_data import FlowData
 from src.core.models.series_metadata import SeriesMetadata
 
@@ -49,6 +48,7 @@ class CftcCotConnector(BaseConnector):
     BASE_URL: str = "https://www.cftc.gov"
     RATE_LIMIT_PER_SECOND: float = 1.0
     TIMEOUT_SECONDS: float = 120.0
+    SOURCE_NOTES: str = "CFTC COT - Disaggregated Futures Positioning"
     SOCRATA_BASE_URL: str = "https://publicreporting.cftc.gov"
 
     # ------------------------------------------------------------------
@@ -360,30 +360,6 @@ class CftcCotConnector(BaseConnector):
             filtered_records=len(filtered),
         )
         return filtered
-
-    # ------------------------------------------------------------------
-    # Metadata helpers
-    # ------------------------------------------------------------------
-    async def _ensure_data_source(self) -> int:
-        """Ensure a data_sources row exists for CFTC_COT. Returns its id."""
-        async with async_session_factory() as session:
-            async with session.begin():
-                stmt = pg_insert(DataSource).values(
-                    name=self.SOURCE_NAME,
-                    base_url=self.BASE_URL,
-                    auth_type="none",
-                    rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
-                    default_locale="en-US",
-                    notes="CFTC COT - Disaggregated Futures Positioning",
-                    is_active=True,
-                ).on_conflict_do_nothing(index_elements=["name"])
-                await session.execute(stmt)
-
-            result = await session.execute(
-                select(DataSource.id).where(DataSource.name == self.SOURCE_NAME)
-            )
-            row = result.scalar_one()
-            return row
 
     async def _ensure_series_metadata(
         self,

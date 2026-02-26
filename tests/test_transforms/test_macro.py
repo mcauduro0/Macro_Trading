@@ -6,17 +6,15 @@ Covers: yoy_from_mom, compute_diffusion_index, compute_trimmed_mean,
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.transforms.macro import (
-    yoy_from_mom,
-    compute_diffusion_index,
-    compute_trimmed_mean,
-    compute_surprise_index,
-    compute_momentum,
     annualize_monthly_rate,
+    compute_diffusion_index,
+    compute_momentum,
+    compute_surprise_index,
+    compute_trimmed_mean,
+    yoy_from_mom,
 )
-
 
 # ---------------------------------------------------------------------------
 # yoy_from_mom

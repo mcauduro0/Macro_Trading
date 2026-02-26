@@ -9,12 +9,15 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.schemas.pms_schemas import JournalEntryResponse, OutcomeRequest
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pms/journal", tags=["PMS - Decision Journal"])
 
@@ -109,7 +112,8 @@ async def list_journal_entries(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -172,7 +176,8 @@ async def decision_analysis():
             "total_rejections": total_rejections,
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -190,7 +195,8 @@ async def get_journal_entry(entry_id: int):
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +266,8 @@ async def record_outcome(entry_id: int, body: OutcomeRequest):
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------

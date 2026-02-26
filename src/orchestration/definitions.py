@@ -12,6 +12,15 @@ discovers it automatically when pointed at this module via
 
 from dagster import Definitions, ScheduleDefinition, define_asset_job
 
+# Import all assets -- Agents
+from src.orchestration.assets_agents import (
+    agent_cross_asset,
+    agent_fiscal,
+    agent_fx_equilibrium,
+    agent_inflation,
+    agent_monetary_policy,
+)
+
 # Import all assets -- Bronze
 from src.orchestration.assets_bronze import (
     bronze_b3_market_data,
@@ -22,26 +31,12 @@ from src.orchestration.assets_bronze import (
     bronze_yahoo,
 )
 
-# Import all assets -- Silver
-from src.orchestration.assets_silver import (
-    silver_curves,
-    silver_macro,
-    silver_returns,
-)
-
-# Import all assets -- Agents
-from src.orchestration.assets_agents import (
-    agent_cross_asset,
-    agent_fiscal,
-    agent_fx_equilibrium,
-    agent_inflation,
-    agent_monetary_policy,
-)
-
-# Import all assets -- Signals
-from src.orchestration.assets_signals import (
-    signal_aggregation,
-    signal_monitor,
+# Import all assets -- PMS
+from src.orchestration.assets_pms import (
+    pms_mark_to_market,
+    pms_morning_pack,
+    pms_performance_attribution,
+    pms_trade_proposals,
 )
 
 # Import all assets -- Portfolio
@@ -50,6 +45,9 @@ from src.orchestration.assets_portfolio import (
     portfolio_sizing,
 )
 
+# Import all assets -- Report
+from src.orchestration.assets_report import daily_report
+
 # Import all assets -- Risk
 from src.orchestration.assets_risk import (
     risk_limits,
@@ -57,15 +55,17 @@ from src.orchestration.assets_risk import (
     risk_var,
 )
 
-# Import all assets -- Report
-from src.orchestration.assets_report import daily_report
+# Import all assets -- Signals
+from src.orchestration.assets_signals import (
+    signal_aggregation,
+    signal_monitor,
+)
 
-# Import all assets -- PMS
-from src.orchestration.assets_pms import (
-    pms_mark_to_market,
-    pms_trade_proposals,
-    pms_morning_pack,
-    pms_performance_attribution,
+# Import all assets -- Silver
+from src.orchestration.assets_silver import (
+    silver_curves,
+    silver_macro,
+    silver_returns,
 )
 
 # ---------------------------------------------------------------------------

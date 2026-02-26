@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Float, Index, Integer, String, func
+from sqlalchemy import DateTime, Float, Index, Integer, String, desc, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -56,7 +56,7 @@ class StrategyStateRecord(Base):
         Index(
             "ix_strategy_state_strat_ts",
             "strategy_id",
-            timestamp.desc(),
+            desc("timestamp"),
         ),
     )
 

@@ -8,7 +8,7 @@ from datetime import date
 
 import pytest
 
-from src.core.enums import AssetClass, Frequency, SignalDirection
+from src.core.enums import AssetClass, Frequency
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategyPosition
 from src.strategies.registry import StrategyRegistry
 

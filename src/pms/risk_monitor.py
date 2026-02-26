@@ -17,7 +17,6 @@ empty/default values for unavailable sections.
 
 from __future__ import annotations
 
-import math
 from collections import deque
 from datetime import date
 from typing import Any
@@ -239,7 +238,10 @@ class RiskMonitorService:
                 alerts.append({
                     "type": "CONCENTRATION_BREACH",
                     "severity": "BREACH",
-                    "message": f"{ac_name} concentration {ac_info['notional_pct']:.1f}% breached limit {ac_info['limit_pct']:.1f}%",
+                    "message": (
+                        f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
+                        f" breached limit {ac_info['limit_pct']:.1f}%"
+                    ),
                     "value": ac_info["notional_pct"],
                     "limit": ac_info["limit_pct"],
                 })
@@ -247,7 +249,10 @@ class RiskMonitorService:
                 alerts.append({
                     "type": "CONCENTRATION_WARNING",
                     "severity": "WARNING",
-                    "message": f"{ac_name} concentration {ac_info['notional_pct']:.1f}% approaching limit {ac_info['limit_pct']:.1f}%",
+                    "message": (
+                        f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
+                        f" approaching limit {ac_info['limit_pct']:.1f}%"
+                    ),
                     "value": ac_info["notional_pct"],
                     "limit": ac_info["limit_pct"],
                 })
@@ -527,12 +532,38 @@ class RiskMonitorService:
         checks: list[dict] = []
 
         # Build checks from PMSRiskLimits thresholds
+        dd_util = (
+            (drawdown_section.get("current_drawdown_pct", 0.0)
+             / limits.drawdown_limit_pct * 100.0)
+            if limits.drawdown_limit_pct > 0
+            else 0.0
+        )
         pms_checks = [
-            ("VaR 95%", var_section.get("parametric_95", 0.0), limits.var_95_limit_pct, var_section.get("utilization_95_pct", 0.0)),
-            ("VaR 99%", var_section.get("parametric_99", 0.0), limits.var_99_limit_pct, var_section.get("utilization_99_pct", 0.0)),
-            ("Gross Leverage", leverage_section.get("gross", 0.0), limits.gross_leverage_limit, leverage_section.get("utilization_gross_pct", 0.0)),
-            ("Net Leverage", abs(leverage_section.get("net", 0.0)), limits.net_leverage_limit, leverage_section.get("utilization_net_pct", 0.0)),
-            ("Drawdown", drawdown_section.get("current_drawdown_pct", 0.0), limits.drawdown_limit_pct, (drawdown_section.get("current_drawdown_pct", 0.0) / limits.drawdown_limit_pct * 100.0) if limits.drawdown_limit_pct > 0 else 0.0),
+            (
+                "VaR 95%", var_section.get("parametric_95", 0.0),
+                limits.var_95_limit_pct,
+                var_section.get("utilization_95_pct", 0.0),
+            ),
+            (
+                "VaR 99%", var_section.get("parametric_99", 0.0),
+                limits.var_99_limit_pct,
+                var_section.get("utilization_99_pct", 0.0),
+            ),
+            (
+                "Gross Leverage", leverage_section.get("gross", 0.0),
+                limits.gross_leverage_limit,
+                leverage_section.get("utilization_gross_pct", 0.0),
+            ),
+            (
+                "Net Leverage", abs(leverage_section.get("net", 0.0)),
+                limits.net_leverage_limit,
+                leverage_section.get("utilization_net_pct", 0.0),
+            ),
+            (
+                "Drawdown",
+                drawdown_section.get("current_drawdown_pct", 0.0),
+                limits.drawdown_limit_pct, dd_util,
+            ),
         ]
 
         for name, current, limit_val, util in pms_checks:

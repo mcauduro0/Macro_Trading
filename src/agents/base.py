@@ -23,6 +23,9 @@ from src.core.database import async_session_factory, sync_session_factory
 from src.core.enums import SignalDirection, SignalStrength
 from src.core.models.signals import Signal
 
+# Shared thread pool for async-to-sync bridging (avoids per-call instantiation)
+_SHARED_THREAD_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -327,10 +330,9 @@ class BaseAgent(abc.ABC):
         """
         try:
             asyncio.get_running_loop()
-            # Already in async context -- run in a thread pool
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                future = pool.submit(asyncio.run, self._persist_signals_async(signals))
-                inserted = future.result()
+            # Already in async context -- run in shared thread pool
+            future = _SHARED_THREAD_POOL.submit(asyncio.run, self._persist_signals_async(signals))
+            inserted = future.result()
         except RuntimeError:
             # No running loop -- safe to use asyncio.run
             inserted = asyncio.run(self._persist_signals_async(signals))

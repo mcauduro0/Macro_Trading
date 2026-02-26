@@ -59,6 +59,7 @@ def client():
 
     with patch("src.api.main.lifespan", _noop_lifespan):
         import importlib
+
         import src.api.main
 
         importlib.reload(src.api.main)
@@ -135,11 +136,11 @@ def test_signals_latest_has_consensus(mock_get, client):
 # 5. Strategies list returns 8
 # ---------------------------------------------------------------------------
 def test_strategies_list_returns_8(client):
-    """GET /api/v1/strategies returns 8 strategies."""
+    """GET /api/v1/strategies returns 24 strategies."""
     resp = client.get("/api/v1/strategies")
     assert resp.status_code == 200
     data = resp.json()["data"]
-    assert len(data) == 8
+    assert len(data) == 24
 
 
 # ---------------------------------------------------------------------------

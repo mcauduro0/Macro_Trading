@@ -28,7 +28,7 @@ from datetime import date, datetime, timedelta
 import structlog
 
 from src.agents.data_loader import PointInTimeDataLoader
-from src.core.enums import AssetClass, Frequency, SignalDirection, SignalStrength
+from src.core.enums import AssetClass, Frequency, SignalDirection
 from src.strategies.base import BaseStrategy, StrategyConfig, StrategySignal
 from src.strategies.registry import StrategyRegistry
 

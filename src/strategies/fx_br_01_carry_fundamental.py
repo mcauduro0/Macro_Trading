@@ -91,7 +91,7 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         Args:
             as_of_date: Point-in-time reference date.
             regime_score: Optional cross-asset regime score from Phase 12.
-                If provided and < -0.3 the final weight is scaled by
+                If provided and > 0.3 (risk-off) the final weight is scaled by
                 ``regime_scale``.
 
         Returns:
@@ -144,8 +144,9 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         strength = classify_strength(confidence)
 
         # --- Regime adjustment ---
+        # Scale down in risk-off environments (regime_score > 0.3 = RISK_OFF)
         weight_scale = 1.0
-        if regime_score is not None and regime_score < -0.3:
+        if regime_score is not None and regime_score > 0.3:
             weight_scale = self.regime_scale
 
         signal = AgentSignal(

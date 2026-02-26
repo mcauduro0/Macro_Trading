@@ -16,7 +16,6 @@ import pytest
 
 from src.connectors.yahoo_finance import YahooFinanceConnector
 
-
 # ---------------------------------------------------------------------------
 # Ticker registry tests
 # ---------------------------------------------------------------------------

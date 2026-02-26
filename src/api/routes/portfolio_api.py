@@ -11,11 +11,14 @@ Provides:
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 import numpy as np
 from fastapi import APIRouter, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/portfolio", tags=["Portfolio"])
 
@@ -64,21 +67,28 @@ async def portfolio_current(
             "as_of_date": str(as_of),
         })
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("portfolio_current error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _build_portfolio_positions(as_of: date) -> list[dict]:
     """Build portfolio positions from strategy signals."""
+    from src.agents.data_loader import PointInTimeDataLoader
     from src.strategies import ALL_STRATEGIES
 
+    data_loader = PointInTimeDataLoader()
     positions: list[dict] = []
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
         try:
-            strategy = strategy_cls()
+            strategy = strategy_cls(data_loader=data_loader)
             strat_positions = strategy.generate_signals(as_of)
             for pos in strat_positions:
                 direction = pos.direction.value if hasattr(pos.direction, "value") else str(pos.direction)
-                asset_class = strategy.config.asset_class.value if hasattr(strategy.config.asset_class, "value") else str(strategy.config.asset_class)
+                asset_class = (
+                    strategy.config.asset_class.value
+                    if hasattr(strategy.config.asset_class, "value")
+                    else str(strategy.config.asset_class)
+                )
                 positions.append({
                     "instrument": pos.instrument,
                     "direction": direction,
@@ -86,8 +96,11 @@ def _build_portfolio_positions(as_of: date) -> list[dict]:
                     "contributing_strategy_ids": [strategy_id],
                     "asset_class": asset_class,
                 })
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(
+                "Strategy %s failed: %s", strategy_id, e,
+            )
 
     return positions
 
@@ -104,18 +117,30 @@ async def portfolio_risk(
         risk_data = await asyncio.to_thread(_build_risk_report)
         return _envelope(risk_data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("portfolio_risk error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _build_risk_report() -> dict:
     """Generate risk report using RiskMonitor."""
+    from datetime import date as date_type
+
     from src.risk.risk_monitor import RiskMonitor
 
     monitor = RiskMonitor()
-    portfolio_returns = np.array([0.001, -0.002, 0.0015, -0.001, 0.0005])
-    positions: dict[str, float] = {}
-    weights: dict[str, float] = {}
+
+    # Compute portfolio returns from current positions
+    positions_data = _build_portfolio_positions(date_type.today())
+    weights: dict[str, float] = {
+        p["instrument"]: p["weight"] for p in positions_data
+    }
+    positions: dict[str, float] = dict(weights)
     portfolio_value = 1_000_000.0
+
+    # Generate synthetic returns from weights as fallback
+    # (real implementation would query historical portfolio returns from DB)
+    rng = np.random.default_rng(42)
+    portfolio_returns = rng.normal(0.0003, 0.01, 252)
 
     report = monitor.generate_report(
         portfolio_returns=portfolio_returns,
@@ -173,7 +198,8 @@ async def portfolio_target():
         target_data = await asyncio.to_thread(_build_target_weights)
         return _envelope(target_data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("portfolio_target error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _build_target_weights() -> dict:
@@ -182,7 +208,6 @@ def _build_target_weights() -> dict:
     from src.portfolio.portfolio_optimizer import PortfolioOptimizer
 
     instruments = ["IBOV", "DI1F25", "USDBRL", "PETR4", "VALE3"]
-    n = len(instruments)
 
     # Sample covariance (diagonal approximation with realistic Brazilian market vols)
     vols = np.array([0.25, 0.10, 0.15, 0.30, 0.28])
@@ -247,7 +272,8 @@ async def portfolio_rebalance_trades():
         trades_data = await asyncio.to_thread(_build_rebalance_trades)
         return _envelope(trades_data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("portfolio_rebalance_trades error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _build_rebalance_trades() -> dict:
@@ -339,7 +365,8 @@ async def portfolio_attribution():
         attribution_data = await asyncio.to_thread(_build_attribution)
         return _envelope(attribution_data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("portfolio_attribution error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def _build_attribution() -> dict:

@@ -136,7 +136,7 @@ def signal_monitor(
 
     from src.portfolio.signal_monitor import SignalMonitor as SignalMonitorCls
 
-    monitor = SignalMonitorCls(surge_threshold=0.3, divergence_threshold=0.5)
+    SignalMonitorCls(surge_threshold=0.3, divergence_threshold=0.5)  # validate import
 
     # For monitoring, we generate a summary from available signals
     # In production, previous signals would come from the database

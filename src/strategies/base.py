@@ -160,8 +160,11 @@ class BaseStrategy(abc.ABC):
     # Abstract interface (subclasses MUST implement)
     # ------------------------------------------------------------------
     @abc.abstractmethod
-    def generate_signals(self, as_of_date: date) -> list[StrategyPosition]:
-        """Produce target positions for the given date.
+    def generate_signals(self, as_of_date: date) -> list[StrategyPosition] | list[StrategySignal]:
+        """Produce target positions or signals for the given date.
+
+        v2.0 strategies return list[StrategyPosition]; v3.0 strategies return
+        list[StrategySignal].  Callers must handle both types.
 
         Timing convention: signals generated for date D use data available
         at D's bar close and are executed at next open (D+1).  The
@@ -172,7 +175,7 @@ class BaseStrategy(abc.ABC):
             as_of_date: Point-in-time reference date.
 
         Returns:
-            List of StrategyPosition objects.
+            List of StrategyPosition or StrategySignal objects.
         """
         ...
 
@@ -294,8 +297,9 @@ class BaseStrategy(abc.ABC):
         if len(history) < 2:
             return 0.0
         window_data = history[-window:]
-        mean = sum(window_data) / len(window_data)
-        variance = sum((x - mean) ** 2 for x in window_data) / len(window_data)
+        n = len(window_data)
+        mean = sum(window_data) / n
+        variance = sum((x - mean) ** 2 for x in window_data) / (n - 1)
         std = math.sqrt(variance)
         if std == 0.0:
             return 0.0

@@ -10,7 +10,6 @@ Uses respx to mock Treasury.gov CSV responses and verify:
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from pathlib import Path
 

@@ -13,16 +13,14 @@ import json
 import os
 import smtplib
 import urllib.request
-from dataclasses import asdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any
 
 import structlog
 
-from src.monitoring.alert_rules import AlertRule, DEFAULT_RULES
-
+from src.monitoring.alert_rules import DEFAULT_RULES, AlertRule
 
 logger = structlog.get_logger("alert_manager")
 
@@ -227,10 +225,14 @@ class AlertManager:
             </div>
             <div style="padding: 16px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px;">
                 <table style="width: 100%; border-collapse: collapse;">
-                    <tr><td style="padding: 8px; font-weight: bold;">Severity</td><td style="padding: 8px;">{alert['severity'].upper()}</td></tr>
-                    <tr><td style="padding: 8px; font-weight: bold;">Rule</td><td style="padding: 8px;">{alert['rule_id']}</td></tr>
-                    <tr><td style="padding: 8px; font-weight: bold;">Threshold</td><td style="padding: 8px;">{alert['threshold']}</td></tr>
-                    <tr><td style="padding: 8px; font-weight: bold;">Time</td><td style="padding: 8px;">{alert['timestamp']}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Severity</td>
+                    <td style="padding: 8px;">{alert['severity'].upper()}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Rule</td>
+                    <td style="padding: 8px;">{alert['rule_id']}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Threshold</td>
+                    <td style="padding: 8px;">{alert['threshold']}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Time</td>
+                    <td style="padding: 8px;">{alert['timestamp']}</td></tr>
                 </table>
                 <p style="margin-top: 16px; color: #666;">{alert['description']}</p>
             </div>

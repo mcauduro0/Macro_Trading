@@ -113,8 +113,8 @@ async def run_backtest(request: BacktestRunRequest):
         end = date.fromisoformat(request.end_date) if request.end_date else date(2024, 12, 31)
 
         # Try to run actual backtest
-        from src.backtesting.engine import BacktestEngine, BacktestConfig
         from src.agents.data_loader import PointInTimeDataLoader
+        from src.backtesting.engine import BacktestConfig, BacktestEngine
 
         config = BacktestConfig(
             start_date=start,
@@ -127,9 +127,9 @@ async def run_backtest(request: BacktestRunRequest):
             request.strategy_id,
             StrategyRegistry._strategies.get(request.strategy_id),
         )
-        strategy = strategy_cls()
-
         loader = PointInTimeDataLoader()
+        strategy = strategy_cls(data_loader=loader)
+
         engine = BacktestEngine(config, loader)
         result = await asyncio.to_thread(engine.run, strategy)
 
@@ -154,7 +154,7 @@ async def run_backtest(request: BacktestRunRequest):
     except Exception as exc:
         logger.warning("backtest_run_fallback strategy_id=%s error=%s", request.strategy_id, exc)
         result = _sample_backtest_result(request.strategy_id)
-        result["note"] = f"Backtest engine error: {exc!s}. Returning sample data."
+        result["note"] = "Backtest engine unavailable. Returning sample data."
         return _envelope(result)
 
 
@@ -169,12 +169,13 @@ async def get_backtest_results(
     # Try to fetch from database
     try:
         from sqlalchemy import text
+
         from src.core.database import async_session_factory
 
         async with async_session_factory() as session:
             result = await session.execute(
                 text(
-                    "SELECT strategy_id, sharpe_ratio, annual_return, "
+                    "SELECT strategy_id, sharpe_ratio, annualized_return, "
                     "max_drawdown, win_rate, profit_factor "
                     "FROM backtest_results "
                     "WHERE strategy_id = :sid "
@@ -187,13 +188,13 @@ async def get_backtest_results(
                 return _envelope({
                     "strategy_id": row.strategy_id,
                     "sharpe_ratio": row.sharpe_ratio,
-                    "annual_return": row.annual_return,
+                    "annual_return": row.annualized_return,
                     "max_drawdown": row.max_drawdown,
                     "win_rate": row.win_rate,
                     "profit_factor": row.profit_factor,
                     "metrics": {
                         "sharpe_ratio": row.sharpe_ratio,
-                        "annual_return": row.annual_return,
+                        "annual_return": row.annualized_return,
                         "max_drawdown": row.max_drawdown,
                     },
                 })
@@ -224,10 +225,10 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
         weights = {sid: 1.0 / n for sid in request.strategy_ids}
 
     try:
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.backtesting.engine import BacktestConfig, BacktestEngine
         from src.strategies import ALL_STRATEGIES
         from src.strategies.registry import StrategyRegistry
-        from src.backtesting.engine import BacktestEngine, BacktestConfig
-        from src.agents.data_loader import PointInTimeDataLoader
 
         # Validate all strategy IDs exist
         for sid in request.strategy_ids:
@@ -244,12 +245,12 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
         )
 
         # Instantiate strategies
+        loader = PointInTimeDataLoader()
         strategies = []
         for sid in request.strategy_ids:
             strategy_cls = ALL_STRATEGIES.get(sid, StrategyRegistry._strategies.get(sid))
-            strategies.append(strategy_cls())
+            strategies.append(strategy_cls(data_loader=loader))
 
-        loader = PointInTimeDataLoader()
         engine = BacktestEngine(config, loader)
         result = await asyncio.to_thread(engine.run_portfolio, strategies, weights)
 
@@ -304,6 +305,7 @@ async def compare_backtests(
         # Try to fetch from DB first
         try:
             from sqlalchemy import text
+
             from src.core.database import async_session_factory
 
             async with async_session_factory() as session:
@@ -321,7 +323,7 @@ async def compare_backtests(
                 if row:
                     comparison[sid] = {
                         "sharpe_ratio": row.sharpe_ratio,
-                        "annual_return": row.annual_return,
+                        "annual_return": row.annualized_return,
                         "max_drawdown": row.max_drawdown,
                         "win_rate": row.win_rate,
                         "profit_factor": row.profit_factor,

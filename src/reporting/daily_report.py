@@ -16,7 +16,7 @@ import os
 import smtplib
 import urllib.request
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any
@@ -171,11 +171,17 @@ class DailyReportGenerator:
             content={
                 "Current Regime": regime.get("classification", "Goldilocks"),
                 "Confidence": regime.get("confidence", "72%"),
-                "Probabilities": regime.get("probabilities", "Goldilocks 45% | Reflation 30% | Stagflation 15% | Deflation 10%"),
+                "Probabilities": regime.get(
+                    "probabilities",
+                    "Goldilocks 45% | Reflation 30% | Stagflation 15% | Deflation 10%",
+                ),
                 "Key Drivers": regime.get("drivers", "Declining inflation, stable growth, dovish BCB guidance"),
                 "Transition Risk": regime.get("transition_risk", "Moderate — watch for IPCA acceleration"),
             },
-            commentary=regime.get("commentary", "Goldilocks conditions persist with moderate transition risk to Reflation."),
+            commentary=regime.get(
+                "commentary",
+                "Goldilocks conditions persist with moderate transition risk to Reflation.",
+            ),
         )
 
     def _build_agent_views(self, ctx: dict) -> ReportSection:
@@ -196,7 +202,10 @@ class DailyReportGenerator:
         return ReportSection(
             title="Agent Views",
             content=agents.get("table", default_agents),
-            commentary=agents.get("commentary", "4 of 5 agents lean bullish; Fiscal agent neutral on framework concerns."),
+            commentary=agents.get(
+                "commentary",
+                "4 of 5 agents lean bullish; Fiscal agent neutral on framework concerns.",
+            ),
         )
 
     def _build_signals(self, ctx: dict) -> ReportSection:
@@ -267,7 +276,10 @@ class DailyReportGenerator:
         return ReportSection(
             title="Action Items",
             content=actions.get("table", default_actions),
-            commentary=actions.get("commentary", "5 action items: 2 high priority trades requiring immediate attention."),
+            commentary=actions.get(
+                "commentary",
+                "5 action items: 2 high priority trades requiring immediate attention.",
+            ),
         )
 
     # ------------------------------------------------------------------
@@ -297,7 +309,9 @@ class DailyReportGenerator:
         top_signals_list = []
         if signals:
             top_signals_list.append(f"Top: {signals.content.get('Top Signal', 'N/A')}")
-            top_signals_list.append(f"Bullish: {signals.content.get('Bullish', 0)} | Bearish: {signals.content.get('Bearish', 0)}")
+            bullish = signals.content.get('Bullish', 0)
+            bearish = signals.content.get('Bearish', 0)
+            top_signals_list.append(f"Bullish: {bullish} | Bearish: {bearish}")
 
         action_count = 0
         if actions and "Priority" in actions.content:

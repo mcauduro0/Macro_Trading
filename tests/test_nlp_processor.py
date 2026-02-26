@@ -6,7 +6,6 @@ All tests are self-contained with no real HTTP or database calls.
 """
 
 from datetime import date
-from unittest.mock import MagicMock, patch
 
 import pytest
 

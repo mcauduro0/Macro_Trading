@@ -8,11 +8,14 @@ Provides:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
@@ -43,19 +46,28 @@ AGENT_DEFINITIONS = [
     {
         "agent_id": "inflation_agent",
         "agent_name": "Inflation Agent",
-        "description": "Analyzes Brazilian and US inflation dynamics via Phillips Curve, bottom-up IPCA, surprise, and persistence models.",
+        "description": (
+            "Analyzes Brazilian and US inflation dynamics via Phillips Curve,"
+            " bottom-up IPCA, surprise, and persistence models."
+        ),
         "execution_order_index": 0,
     },
     {
         "agent_id": "monetary_agent",
         "agent_name": "Monetary Policy Agent",
-        "description": "Models monetary policy via Taylor Rule, Selic path, term premium, and Kalman r-star estimation.",
+        "description": (
+            "Models monetary policy via Taylor Rule, Selic path,"
+            " term premium, and Kalman r-star estimation."
+        ),
         "execution_order_index": 1,
     },
     {
         "agent_id": "fiscal_agent",
         "agent_name": "Fiscal Agent",
-        "description": "Assesses fiscal outlook via debt sustainability analysis, fiscal impulse, and fiscal dominance risk.",
+        "description": (
+            "Assesses fiscal outlook via debt sustainability analysis,"
+            " fiscal impulse, and fiscal dominance risk."
+        ),
         "execution_order_index": 2,
     },
     {
@@ -191,7 +203,8 @@ async def agent_latest(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -225,4 +238,5 @@ async def agent_run(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")

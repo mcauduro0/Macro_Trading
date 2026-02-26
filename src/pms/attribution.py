@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import math
 from datetime import date, datetime, timedelta
-from typing import Any
 
 import structlog
 
@@ -752,7 +751,10 @@ class PerformanceAttributionEngine:
             "by_instrument": [],
             "by_factor": [],
             "by_time_period": [],
-            "by_trade_type": {"systematic": {"pnl_brl": 0.0, "count": 0}, "discretionary": {"pnl_brl": 0.0, "count": 0}},
+            "by_trade_type": {
+                "systematic": {"pnl_brl": 0.0, "count": 0},
+                "discretionary": {"pnl_brl": 0.0, "count": 0},
+            },
             "performance_stats": {
                 "annualized_return_pct": 0.0,
                 "annualized_vol_pct": 0.0,

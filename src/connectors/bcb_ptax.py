@@ -14,7 +14,6 @@ Key design decisions:
 
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -23,7 +22,7 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.connectors.base import BaseConnector, ConnectorError, DataParsingError
+from src.connectors.base import BaseConnector, ConnectorError
 from src.core.database import async_session_factory
 from src.core.models.instruments import Instrument
 from src.core.models.market_data import MarketData

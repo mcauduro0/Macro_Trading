@@ -287,14 +287,20 @@ class TestVaRCalculator:
             )
 
     def test_var_result_fields(self, large_returns: np.ndarray) -> None:
-        """VaRResult should have all expected fields populated."""
+        """VaRResult should have all expected fields populated.
+
+        With 500 observations < default min_historical_obs=756,
+        historical method falls back to parametric with a warning.
+        """
         calc = VaRCalculator()
         result = calc.calculate(large_returns, method="historical")
 
         assert isinstance(result, VaRResult)
-        assert result.method == "historical"
+        # Falls back to parametric because 500 < 756 min_historical_obs
+        assert result.method == "parametric"
         assert result.n_observations == len(large_returns)
-        assert result.confidence_warning is None
+        assert result.confidence_warning is not None
+        assert "Insufficient" in result.confidence_warning
         assert isinstance(result.timestamp, datetime)
         assert result.var_95 < 0
         assert result.var_99 < 0

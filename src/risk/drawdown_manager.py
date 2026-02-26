@@ -346,9 +346,10 @@ class DrawdownManager:
         ):
             return 0.0
         if self.state == CircuitBreakerState.RECOVERING:
-            # Gradual ramp: day 1 -> 1/3, day 2 -> 2/3, day 3 -> 3/3
-            if self.config.recovery_days > 0:
-                return self.recovery_day / self.config.recovery_days
+            # Gradual ramp: recovery_day 1->0%, 2->50%, 3->100% (for 3-day recovery)
+            # Uses (recovery_day - 1) so first day in recovery starts at 0% exposure
+            if self.config.recovery_days > 1:
+                return max(0.0, (self.recovery_day - 1) / (self.config.recovery_days - 1))
             return 1.0
         return 1.0
 

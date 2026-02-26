@@ -64,7 +64,7 @@ def risk_var(
 
     from src.risk.var_calculator import VaRCalculator
 
-    calculator = VaRCalculator(min_historical_obs=756, mc_simulations=10_000, lookback_days=756)
+    VaRCalculator(min_historical_obs=756, mc_simulations=10_000, lookback_days=756)  # validate import
 
     sized_positions = portfolio_sizing.get("sized_positions", {})
     n_positions = len(sized_positions)

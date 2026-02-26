@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -98,7 +98,8 @@ async def get_book(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +124,8 @@ async def get_positions(
 
         return [PositionResponse(**p) for p in filtered]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +167,8 @@ async def open_position(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +209,8 @@ async def close_position(
             raise HTTPException(status_code=404, detail=msg)
         raise HTTPException(status_code=400, detail=msg)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +232,7 @@ async def update_price(
             raise HTTPException(status_code=404, detail=f"Position {position_id} not found")
 
         position["current_price"] = body.price
-        position["updated_at"] = datetime.utcnow()
+        position["updated_at"] = datetime.now(tz=timezone.utc)
 
         # Write-through: invalidate + refresh book cache
         try:
@@ -243,7 +247,8 @@ async def update_price(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -277,7 +282,8 @@ async def run_mark_to_market(
             "positions": [PositionResponse(**p) for p in updated],
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -294,7 +300,8 @@ async def pnl_summary(
         book = wf.position_manager.get_book(as_of_date=ref_date)
         return {"status": "ok", "data": book["summary"]}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -315,7 +322,8 @@ async def pnl_equity_curve(
         )
         return [PnLPointResponse(**point) for point in timeseries]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -360,7 +368,8 @@ async def pnl_attribution():
             },
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -391,7 +400,8 @@ async def pnl_monthly_heatmap():
 
         return {"status": "ok", "data": {"months": months}}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------

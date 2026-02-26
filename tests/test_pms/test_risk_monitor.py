@@ -8,14 +8,13 @@ Covers:
 - test_graceful_degradation: Valid output with only position_manager (all others None)
 """
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
 from src.pms.position_manager import PositionManager
 from src.pms.risk_limits_config import PMSRiskLimits
 from src.pms.risk_monitor import RiskMonitorService
-
 
 # =============================================================================
 # Fixtures

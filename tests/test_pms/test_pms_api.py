@@ -18,13 +18,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from src.api.routes.pms_portfolio import router as pms_portfolio_router
-from src.api.routes.pms_trades import router as pms_trades_router
-from src.api.routes.pms_journal import router as pms_journal_router
-from src.api.routes.pms_briefing import router as pms_briefing_router
-from src.api.routes.pms_risk import router as pms_risk_router
 from src.api.routes.pms_attribution import router as pms_attribution_router
-
+from src.api.routes.pms_briefing import router as pms_briefing_router
+from src.api.routes.pms_journal import router as pms_journal_router
+from src.api.routes.pms_portfolio import router as pms_portfolio_router
+from src.api.routes.pms_risk import router as pms_risk_router
+from src.api.routes.pms_trades import router as pms_trades_router
 
 # -------------------------------------------------------------------------
 # Sample data
@@ -70,18 +69,18 @@ def _create_test_app() -> FastAPI:
 @pytest.fixture
 def client():
     """Fresh TestClient with reset PMS state for each test."""
-    import src.api.routes.pms_portfolio as pms_mod
-    import src.api.routes.pms_trades as trades_mod
-    import src.api.routes.pms_journal as journal_mod
-    import src.api.routes.pms_briefing as briefing_mod
-    import src.api.routes.pms_risk as risk_mod
     import src.api.routes.pms_attribution as attribution_mod
+    import src.api.routes.pms_briefing as briefing_mod
+    import src.api.routes.pms_journal as journal_mod
+    import src.api.routes.pms_portfolio as pms_mod
+    import src.api.routes.pms_risk as risk_mod
+    import src.api.routes.pms_trades as trades_mod
 
     # Create fresh workflow for test isolation
-    from src.pms import TradeWorkflowService, PositionManager
+    from src.pms import PositionManager, TradeWorkflowService
+    from src.pms.attribution import PerformanceAttributionEngine
     from src.pms.morning_pack import MorningPackService
     from src.pms.risk_monitor import RiskMonitorService
-    from src.pms.attribution import PerformanceAttributionEngine
 
     pm = PositionManager()
     fresh_workflow = TradeWorkflowService(position_manager=pm)

@@ -32,8 +32,7 @@ from typing import Any
 
 import structlog
 
-from .base import BaseConnector, ConnectorError
-
+from .base import BaseConnector
 
 log = structlog.get_logger()
 

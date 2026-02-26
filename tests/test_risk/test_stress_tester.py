@@ -25,7 +25,7 @@ from src.risk.stress_tester import (
 
 @pytest.fixture
 def tester() -> StressTester:
-    """Default StressTester with the 4 built-in scenarios."""
+    """Default StressTester with the 6 built-in scenarios."""
     return StressTester()
 
 
@@ -125,15 +125,15 @@ class TestPrefixMatching:
 
 class TestRunAll:
     def test_run_all_returns_4_results(self, tester: StressTester) -> None:
-        """Default scenarios -> 4 StressResult objects."""
+        """Default scenarios -> 6 StressResult objects."""
         positions = {"USDBRL": 100_000.0, "IBOVESPA": -50_000.0}
         results = tester.run_all(positions)
 
-        assert len(results) == 4
+        assert len(results) == 6
         assert all(isinstance(r, StressResult) for r in results)
 
     def test_run_all_scenario_names(self, tester: StressTester) -> None:
-        """All 4 default scenario names should appear in results."""
+        """All 6 default scenario names should appear in results."""
         positions = {"USDBRL": 100_000.0}
         results = tester.run_all(positions)
 
@@ -142,6 +142,8 @@ class TestRunAll:
         assert "BR Crisis 2015" in names
         assert "COVID 2020" in names
         assert "Rate Shock 2022" in names
+        assert "BR Fiscal Crisis (Teto de Gastos)" in names
+        assert "Global Risk-Off (Geopolitical)" in names
 
 
 # ---------------------------------------------------------------------------
@@ -278,8 +280,8 @@ class TestEdgeCases:
         assert results[0].portfolio_pnl == pytest.approx(50_000.0)
 
     def test_default_scenarios_count(self) -> None:
-        """4 default scenarios are defined."""
-        assert len(DEFAULT_SCENARIOS) == 4
+        """6 default scenarios are defined."""
+        assert len(DEFAULT_SCENARIOS) == 6
 
 
 # Run with: python -m pytest tests/test_risk/test_stress_tester.py -v

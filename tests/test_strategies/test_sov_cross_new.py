@@ -12,7 +12,6 @@ import pandas as pd
 from src.core.enums import AssetClass, SignalDirection
 from src.strategies.cross_01_regime_allocation import (
     Cross01RegimeAllocationStrategy,
-    MacroRegime,
 )
 from src.strategies.cross_02_risk_appetite import Cross02RiskAppetiteStrategy
 from src.strategies.registry import StrategyRegistry

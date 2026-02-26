@@ -19,7 +19,7 @@ The original signal_aggregator.py is preserved for backward compatibility.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog

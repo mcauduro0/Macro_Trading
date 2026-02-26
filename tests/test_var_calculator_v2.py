@@ -17,7 +17,6 @@ from src.risk.var_calculator import (
     compute_parametric_var,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -240,7 +239,6 @@ class TestLookbackDays:
         Verify by passing 1000 rows where the first 244 rows are extreme outliers.
         If lookback works, VaR should be based on the last 756 normal rows only.
         """
-        n_total = 1000
         n_assets = 2
 
         # First 244 rows: extreme negative returns (-50% daily)
@@ -262,7 +260,6 @@ class TestLookbackDays:
 
     def test_decompose_var_trims_to_lookback(self, rng: np.random.Generator) -> None:
         """decompose_var should also trim returns_matrix to lookback_days."""
-        n_total = 1000
         n_assets = 2
 
         extreme = np.full((244, n_assets), -0.50)

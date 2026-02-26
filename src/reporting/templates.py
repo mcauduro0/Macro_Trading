@@ -20,7 +20,8 @@ HTML_REPORT_TEMPLATE = """\
   .header h1 {{ margin: 0; font-size: 22px; }}
   .header .date {{ color: #aaa; font-size: 14px; margin-top: 4px; }}
   .section {{ background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 2px; }}
-  .section h2 {{ font-size: 16px; color: #1a1a2e; margin: 0 0 12px 0; border-bottom: 2px solid #e8e8e8; padding-bottom: 8px; }}
+  .section h2 {{ font-size: 16px; color: #1a1a2e; margin: 0 0 12px 0;
+    border-bottom: 2px solid #e8e8e8; padding-bottom: 8px; }}
   .section:last-child {{ border-radius: 0 0 8px 8px; margin-bottom: 20px; }}
   table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
   th {{ background: #f0f0f0; text-align: left; padding: 8px 10px; font-weight: 600; }}
@@ -38,7 +39,8 @@ HTML_REPORT_TEMPLATE = """\
   .chart-container {{ text-align: center; margin: 12px 0; }}
   .chart-container img {{ max-width: 100%; border-radius: 4px; }}
   .footer {{ text-align: center; color: #999; font-size: 12px; padding: 16px; }}
-  .action-item {{ background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; margin: 8px 0; border-radius: 0 4px 4px 0; }}
+  .action-item {{ background: #f8fafc; border-left: 3px solid #2563eb;
+    padding: 10px 14px; margin: 8px 0; border-radius: 0 4px 4px 0; }}
   .action-item.high {{ border-left-color: #dc2626; }}
   .action-item.medium {{ border-left-color: #d97706; }}
 </style>
@@ -88,7 +90,11 @@ SLACK_SUMMARY_TEMPLATE = {
         {
             "type": "context",
             "elements": [
-                {"type": "mrkdwn", "text": ":chart_with_upwards_trend: {action_count} action items | <{report_url}|View Full Report>"},
+                {
+                    "type": "mrkdwn",
+                    "text": ":chart_with_upwards_trend: {action_count} action items"
+                    " | <{report_url}|View Full Report>",
+                },
             ],
         },
     ],
@@ -122,7 +128,11 @@ def render_html(sections: dict, charts: dict[str, str] | None = None) -> str:
 
         # Embed chart if available
         if section_key in charts:
-            part += f'<div class="chart-container"><img src="data:image/png;base64,{charts[section_key]}" alt="{title} chart"/></div>\n'
+            part += (
+                f'<div class="chart-container">'
+                f'<img src="data:image/png;base64,{charts[section_key]}"'
+                f' alt="{title} chart"/></div>\n'
+            )
 
         if commentary:
             part += f'<div class="commentary">{commentary}</div>\n'

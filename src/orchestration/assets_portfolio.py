@@ -64,7 +64,7 @@ def portfolio_optimization(
 
     from src.portfolio.portfolio_optimizer import PortfolioOptimizer
 
-    optimizer = PortfolioOptimizer()
+    PortfolioOptimizer()  # validate import availability
 
     # Extract instruments from signal aggregation
     instruments = signal_aggregation.get("instruments", [])
@@ -121,7 +121,6 @@ def portfolio_sizing(
 
     sizer = PositionSizer(target_vol=0.10, kelly_fraction=0.5, max_position=0.25)
 
-    target_weights = portfolio_optimization.get("target_weights", {})
     instruments = portfolio_optimization.get("instruments", [])
     n_instruments = len(instruments)
 

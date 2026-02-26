@@ -12,7 +12,7 @@ import logging
 import re
 import time
 from dataclasses import asdict, dataclass
-from datetime import date, datetime
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any

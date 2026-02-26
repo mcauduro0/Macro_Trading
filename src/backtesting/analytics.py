@@ -16,11 +16,12 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import date
 from typing import Any
 
 import numpy as np
-from scipy.stats import norm, skew as scipy_skew, kurtosis as scipy_kurtosis
+from scipy.stats import kurtosis as scipy_kurtosis
+from scipy.stats import norm
+from scipy.stats import skew as scipy_skew
 
 from src.backtesting.metrics import BacktestResult
 

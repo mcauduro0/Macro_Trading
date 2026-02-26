@@ -14,14 +14,12 @@ Tests cover:
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from src.agents.base import AgentSignal
 from src.agents.cross_asset_agent import (
     CorrelationAnalysis,
     CrossAssetAgent,

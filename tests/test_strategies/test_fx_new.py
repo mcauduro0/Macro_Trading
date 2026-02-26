@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.core.enums import AssetClass, SignalDirection
 from src.strategies.base import StrategySignal
@@ -19,7 +18,6 @@ from src.strategies.fx_03_flow_tactical import Fx03FlowTacticalStrategy
 from src.strategies.fx_04_vol_surface_rv import Fx04VolSurfaceRvStrategy
 from src.strategies.fx_05_terms_of_trade import Fx05TermsOfTradeStrategy
 from src.strategies.registry import StrategyRegistry
-
 
 # ---------------------------------------------------------------------------
 # Shared helpers

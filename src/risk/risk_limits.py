@@ -80,7 +80,7 @@ class RiskLimitChecker:
             utilization_pct = 0.0
         else:
             utilization_pct = abs(current_value) / abs(limit_value) * 100.0
-        breached = abs(current_value) > abs(limit_value)
+        breached = abs(current_value) >= abs(limit_value)
         return LimitCheckResult(
             limit_name=limit_name,
             limit_value=limit_value,

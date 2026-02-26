@@ -5,6 +5,10 @@ fx, cross_asset) into per-asset-class directional consensus using a domain-tuned
 weighted vote. Conflict detection flags disagreements, and the CrossAsset
 bilateral veto reduces exposure under extreme regime conditions.
 
+This module is the canonical import location for ALL signal aggregation classes:
+- SignalAggregator / AggregatedSignal -- agent-level aggregation (v1)
+- SignalAggregatorV2 / AggregatedSignalV2 -- strategy-level aggregation (v2)
+
 This module is pure computation -- no database or I/O access.
 """
 
@@ -32,31 +36,31 @@ DEFAULT_AGENT_WEIGHTS: dict[str, dict[AssetClass, float]] = {
         AssetClass.FIXED_INCOME: 0.25,
         AssetClass.FX: 0.10,
         AssetClass.EQUITY_INDEX: 0.10,
-        AssetClass.COMMODITY: 0.15,
+        AssetClass.COMMODITY: 0.20,
     },
     "monetary_agent": {
         AssetClass.FIXED_INCOME: 0.35,
         AssetClass.FX: 0.20,
         AssetClass.EQUITY_INDEX: 0.15,
-        AssetClass.COMMODITY: 0.05,
+        AssetClass.COMMODITY: 0.10,
     },
     "fiscal_agent": {
         AssetClass.FIXED_INCOME: 0.20,
         AssetClass.FX: 0.15,
         AssetClass.EQUITY_INDEX: 0.20,
-        AssetClass.COMMODITY: 0.05,
+        AssetClass.COMMODITY: 0.10,
     },
     "fx_agent": {
         AssetClass.FIXED_INCOME: 0.05,
         AssetClass.FX: 0.40,
         AssetClass.EQUITY_INDEX: 0.10,
-        AssetClass.COMMODITY: 0.20,
+        AssetClass.COMMODITY: 0.30,
     },
     "cross_asset_agent": {
         AssetClass.FIXED_INCOME: 0.15,
         AssetClass.FX: 0.15,
         AssetClass.EQUITY_INDEX: 0.45,
-        AssetClass.COMMODITY: 0.55,
+        AssetClass.COMMODITY: 0.30,
     },
 }
 
@@ -406,3 +410,12 @@ def _infer_strategy_asset_class_map(
         elif upper.startswith(("COMM_", "COMMODITY_")):
             mapping[strategy_id] = AssetClass.COMMODITY
     return mapping
+
+
+# ---------------------------------------------------------------------------
+# Re-export v2 classes for unified import access
+# ---------------------------------------------------------------------------
+from src.portfolio.signal_aggregator_v2 import (  # noqa: E402, F401
+    AggregatedSignalV2,
+    SignalAggregatorV2,
+)

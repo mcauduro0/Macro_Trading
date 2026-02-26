@@ -12,14 +12,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import httpx
-import pytest
 
 from src.nlp.scrapers.copom_scraper import (
     COPOMScraper,
     ScrapedDocument,
     _extract_text_from_html,
 )
-
 
 # ---------------------------------------------------------------------------
 # Sample HTML fixtures

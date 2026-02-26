@@ -39,9 +39,11 @@ def _envelope(data: Any) -> dict:
 # ---------------------------------------------------------------------------
 @router.get("")
 async def list_strategies():
-    """Return list of all 8 strategies with metadata."""
+    """Return list of all strategies with metadata."""
+    from src.agents.data_loader import PointInTimeDataLoader
     from src.strategies import ALL_STRATEGIES
 
+    data_loader = PointInTimeDataLoader()
     strategies = []
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
         config = None
@@ -53,7 +55,7 @@ async def list_strategies():
         instruments: list[str] = []
         try:
             # Instantiate to read config
-            instance = strategy_cls()
+            instance = strategy_cls(data_loader=data_loader)
             config = instance.config
             asset_class = config.asset_class.value if hasattr(config.asset_class, "value") else str(config.asset_class)
             instruments = list(config.instruments)
@@ -109,12 +111,13 @@ async def _fetch_backtest_result(strategy_id: str) -> dict | None:
     """Query backtest_results table for latest result, if available."""
     try:
         from sqlalchemy import text
+
         from src.core.database import async_session_factory
 
         async with async_session_factory() as session:
             result = await session.execute(
                 text(
-                    "SELECT strategy_id, sharpe_ratio, annual_return, "
+                    "SELECT strategy_id, sharpe_ratio, annualized_return, "
                     "max_drawdown, win_rate, profit_factor "
                     "FROM backtest_results "
                     "WHERE strategy_id = :sid "
@@ -127,7 +130,7 @@ async def _fetch_backtest_result(strategy_id: str) -> dict | None:
                 return {
                     "strategy_id": row.strategy_id,
                     "sharpe_ratio": row.sharpe_ratio,
-                    "annual_return": row.annual_return,
+                    "annual_return": row.annualized_return,
                     "max_drawdown": row.max_drawdown,
                     "win_rate": row.win_rate,
                     "profit_factor": row.profit_factor,
@@ -173,11 +176,12 @@ async def get_strategy_detail(strategy_id: str):
     description = description.strip().split("\n")[0]
 
     # Try to extract config by instantiation
+    from src.agents.data_loader import PointInTimeDataLoader
     asset_class = "UNKNOWN"
     instruments: list[str] = []
     parameters: dict[str, Any] = {}
     try:
-        instance = strategy_cls()
+        instance = strategy_cls(data_loader=PointInTimeDataLoader())
         if hasattr(instance, "config") and instance.config is not None:
             config = instance.config
             asset_class = config.asset_class.value if hasattr(config.asset_class, "value") else str(config.asset_class)
@@ -186,7 +190,11 @@ async def get_strategy_detail(strategy_id: str):
             parameters = {
                 "strategy_id": config.strategy_id,
                 "strategy_name": config.strategy_name,
-                "rebalance_frequency": config.rebalance_frequency.value if hasattr(config.rebalance_frequency, "value") else str(config.rebalance_frequency),
+                "rebalance_frequency": (
+                    config.rebalance_frequency.value
+                    if hasattr(config.rebalance_frequency, "value")
+                    else str(config.rebalance_frequency)
+                ),
                 "max_position_size": config.max_position_size,
                 "max_leverage": config.max_leverage,
                 "stop_loss_pct": config.stop_loss_pct,
@@ -224,7 +232,8 @@ async def get_latest_signal(strategy_id: str):
     strategy_cls, _ = _get_strategy_info(strategy_id)
 
     try:
-        instance = strategy_cls()
+        from src.agents.data_loader import PointInTimeDataLoader
+        instance = strategy_cls(data_loader=PointInTimeDataLoader())
         today = date.today()
         raw_signals = await asyncio.to_thread(instance.generate_signals, today)
 
@@ -298,6 +307,7 @@ async def get_signal_history(
     # Try to query strategy_signals table
     try:
         from sqlalchemy import text
+
         from src.core.database import async_session_factory
 
         async with async_session_factory() as session:
@@ -326,8 +336,8 @@ async def get_signal_history(
         logger.debug("signal_history_db_unavailable strategy_id=%s error=%s", strategy_id, exc)
 
     # Fallback: generate sample history
-    from datetime import timedelta
     import random
+    from datetime import timedelta
 
     random.seed(hash(strategy_id) % 2**32)
     history = []
@@ -366,11 +376,19 @@ async def update_strategy_params(
         raise HTTPException(status_code=400, detail="params must not be empty")
 
     # Attempt to apply params to strategy instance for validation
+    from src.agents.data_loader import PointInTimeDataLoader
+    ALLOWED_STRATEGY_PARAMS = {
+        "carry_weight", "beer_weight", "flow_weight", "regime_scale",
+        "carry_threshold", "momentum_weight", "vol_target",
+        "max_position_size", "max_leverage", "stop_loss_pct", "take_profit_pct",
+    }
     updated_params: dict[str, Any] = {}
     try:
-        instance = strategy_cls()
+        instance = strategy_cls(data_loader=PointInTimeDataLoader())
         for key, value in params.items():
-            if hasattr(instance, key):
+            if key not in ALLOWED_STRATEGY_PARAMS:
+                updated_params[key] = {"value": value, "note": "parameter not in allowed list"}
+            elif hasattr(instance, key):
                 setattr(instance, key, value)
                 updated_params[key] = value
             else:

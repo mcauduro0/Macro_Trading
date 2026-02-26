@@ -34,8 +34,8 @@ def _get_service():
     """Return (or create) the module-level RiskMonitorService singleton."""
     global _service
     if _service is None:
-        from src.pms.risk_monitor import RiskMonitorService
         from src.pms import PositionManager
+        from src.pms.risk_monitor import RiskMonitorService
 
         _service = RiskMonitorService(position_manager=PositionManager())
     return _service
@@ -80,7 +80,8 @@ async def get_live_risk(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -96,7 +97,8 @@ async def get_risk_trend(
         trend = svc.get_risk_trend(days=days)
         return [RiskTrendPointResponse(**point) for point in trend]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +124,8 @@ async def get_risk_limits():
             "limits_summary": limits_summary,
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("%s error: %s", __name__, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # ---------------------------------------------------------------------------

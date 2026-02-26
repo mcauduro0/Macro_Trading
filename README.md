@@ -1,25 +1,39 @@
 # Macro Trading System
 
-A data infrastructure platform for macro trading, tracking volatility signals and market sentiment across Brazil and US markets. Built on TimescaleDB with 11 data connectors, 250+ macro series, silver-layer transforms, and a FastAPI REST API.
+A macro-directional trading platform covering FX, rates, inflation, sovereign credit, and cross-asset strategies across Brazil and US markets. Built on TimescaleDB with 11 data connectors, 250+ macro series, 24 trading strategies, 5 analytical agents, a risk engine (VaR, CVaR, stress testing), portfolio management system, and a FastAPI REST API.
 
 ## Architecture
 
 ```
-                  ┌─────────────────────────────────────────────┐
-                  │              FastAPI REST API                │
-                  │  /health  /macro  /curves  /market  /flows  │
-                  └──────────────────┬──────────────────────────┘
-                                     │
-          ┌──────────────────────────┼──────────────────────────┐
-          │                          │                          │
-  ┌───────▼───────┐        ┌─────────▼────────┐       ┌────────▼────────┐
-  │   Transforms  │        │  Quality Checks  │       │  Data Quality   │
-  │  (Silver)     │        │  (Completeness,  │       │  Alerts         │
-  │  curves.py    │        │   Accuracy, PIT) │       │                 │
-  │  returns.py   │        └──────────────────┘       └─────────────────┘
-  │  macro.py     │
-  │  vol_surface  │
-  └───────▲───────┘
+  ┌───────────────────────────────────────────────────────────────────┐
+  │                        FastAPI REST API                           │
+  │  v1: /health /macro /curves /market /flows                       │
+  │  v2: /signals /strategies /agents /backtest /risk /portfolio      │
+  │  v3: /reports /monitoring /websocket                              │
+  │  PMS: /trades /portfolio /risk /attribution /briefing /journal    │
+  └──────────────────────────────┬────────────────────────────────────┘
+                                 │
+  ┌──────────────────────────────┼────────────────────────────────────┐
+  │              │               │               │                    │
+  ▼              ▼               ▼               ▼                    ▼
+┌──────┐  ┌──────────┐  ┌────────────┐  ┌────────────┐  ┌───────────────┐
+│ PMS  │  │ Portfolio │  │    Risk    │  │ Strategies │  │    Agents     │
+│Trade │  │Constructor│  │VaR, CVaR  │  │ 24 macro   │  │5 analytical + │
+│Mgmt  │  │Black-Lit. │  │Stress Test│  │ strategies │  │HMM regime     │
+│Attrib│  │Cap Alloc  │  │Drawdown   │  │FX/Rates/Inf│  │detection      │
+└──────┘  └──────────┘  └────────────┘  │Sov/Cross   │  └───────────────┘
+                                        └────────────┘
+                                              │
+  ┌───────────────────────────────────────────┼───────────────────────┐
+  │              │               │            │            │          │
+  ▼              ▼               ▼            ▼            ▼          ▼
+┌──────┐  ┌──────────┐  ┌────────────┐  ┌────────┐  ┌────────┐  ┌──────┐
+│NLP   │  │Backtesting│  │ Transforms │  │Quality │  │Pipeline│  │Narr- │
+│Senti-│  │Engine v2  │  │ (Silver)   │  │Checks  │  │Daily   │  │ative │
+│ment  │  │Analytics  │  │curves/ret/ │  │PIT     │  │Orch.   │  │Gen.  │
+│COPOM │  │Signals    │  │macro/vol   │  │        │  │        │  │      │
+│FOMC  │  └──────────┘  └────────────┘  └────────┘  └────────┘  └──────┘
+└──────┘
           │
   ┌───────┴──────────────────────────────────────────────────────┐
   │                     11 Data Connectors                       │
@@ -104,23 +118,50 @@ make verify           # full infrastructure check
 - `GET /health` -- liveness check with DB connectivity
 - `GET /health/data-status` -- record counts per table
 
-### Macro Data (`/api/v1/macro`)
+### v1: Data Layer (`/api/v1/`)
+
+**Macro Data** (`/macro`)
 - `GET /macro/dashboard` -- latest key indicators (BR + US + Market)
 - `GET /macro/search?q=ipca&country=BRA` -- search series metadata
 - `GET /macro/{series_code}?start=2020-01-01&pit=true` -- time series with point-in-time filtering
 
-### Curves (`/api/v1/curves`)
+**Curves** (`/curves`)
 - `GET /curves/available` -- list of available curve IDs
 - `GET /curves/{curve_id}?date=2025-01-15` -- curve snapshot (all tenors)
 - `GET /curves/{curve_id}/history?tenor=5Y&start=2020-01-01` -- single tenor history
 
-### Market Data (`/api/v1/market-data`)
+**Market Data** (`/market-data`)
 - `GET /market-data/latest?tickers=USDBRL,VIX,IBOVESPA` -- latest prices
 - `GET /market-data/{ticker}?start=2024-01-01` -- OHLCV history
 
-### Flows (`/api/v1/flows`)
+**Flows** (`/flows`)
 - `GET /flows/positioning-summary` -- CFTC positioning with z-scores
 - `GET /flows/{series_code}?start=2024-01-01` -- flow data history
+
+### v2: Analytics & Strategy Layer (`/api/v2/`)
+
+**Signals** (`/signals`) -- aggregated trading signals with confidence scores
+**Strategies** (`/strategies`) -- 24 strategy configurations, performance, and live signals
+**Agents** (`/agents`) -- analytical agent views (inflation, monetary, fiscal, FX, cross-asset)
+**Backtest** (`/backtest`) -- backtesting engine with analytics and signal adapters
+**Risk** (`/risk`) -- VaR, CVaR, stress testing, risk limits, drawdown monitoring
+**Portfolio** (`/portfolio`) -- portfolio construction, Black-Litterman, capital allocation
+**Dashboard** (`/dashboard`) -- consolidated dashboard with agent views and market overview
+
+### v3: Reporting & Monitoring (`/api/v3/`)
+
+**Reports** (`/reports`) -- generated strategy and portfolio reports
+**Monitoring** (`/monitoring`) -- system health, pipeline status, signal monitoring
+**WebSocket** (`/ws`) -- real-time signal and portfolio updates
+
+### PMS: Portfolio Management System (`/api/pms/`)
+
+**Trades** (`/trades`) -- trade entry, lifecycle management, blotter
+**Portfolio** (`/portfolio`) -- position management, P&L, exposure
+**Risk** (`/risk`) -- real-time risk monitoring, limit enforcement
+**Attribution** (`/attribution`) -- performance attribution by strategy, factor, asset
+**Briefing** (`/briefing`) -- morning pack generation, market overview
+**Journal** (`/journal`) -- trade journal entries, strategy notes
 
 Full Swagger docs at `http://localhost:8000/docs`.
 
@@ -148,7 +189,47 @@ Macro_Trading/
 │   ├── api/                  # FastAPI application
 │   │   ├── main.py           # App entry point, CORS, lifespan
 │   │   ├── deps.py           # Dependency injection (DB sessions)
-│   │   └── routes/           # health, macro, curves, market_data, flows
+│   │   └── routes/           # v1 (data), v2 (analytics), v3 (reports), PMS
+│   ├── agents/               # 5 analytical agents + HMM regime detection
+│   │   ├── base.py           # Agent framework base class
+│   │   ├── inflation_agent.py
+│   │   ├── monetary_agent.py
+│   │   ├── fiscal_agent.py
+│   │   ├── fx_agent.py
+│   │   ├── cross_asset_agent.py
+│   │   ├── hmm_regime.py     # Hidden Markov Model regime detection
+│   │   └── registry.py       # Agent registry and orchestration
+│   ├── strategies/           # 24 macro-directional strategies
+│   │   ├── base.py           # Strategy base class
+│   │   ├── registry.py       # Strategy registry
+│   │   ├── fx_*.py           # 5 FX strategies (carry, momentum, flow, vol, ToT)
+│   │   ├── rates_*.py        # 6 rates strategies (carry, Taylor, slope, spillover, term premium, events)
+│   │   ├── inf_*.py          # 3 inflation strategies (breakeven, surprise, carry)
+│   │   ├── sov_*.py          # 4 sovereign strategies (fiscal, CDS, EM RV, rating)
+│   │   ├── cupom_*.py        # 2 cupom strategies (CIP basis, onshore-offshore)
+│   │   └── cross_*.py        # 2 cross-asset strategies (regime, risk appetite)
+│   ├── risk/                 # Risk management engine
+│   │   ├── var_calculator.py # VaR and CVaR (parametric, historical, Monte Carlo)
+│   │   ├── stress_tester.py  # Scenario-based stress testing
+│   │   ├── drawdown_manager.py # Drawdown monitoring and circuit breakers
+│   │   └── risk_limits.py    # Position and portfolio risk limits
+│   ├── portfolio/            # Portfolio construction and optimization
+│   │   ├── portfolio_constructor.py  # Portfolio assembly from signals
+│   │   ├── black_litterman.py        # Black-Litterman model
+│   │   ├── capital_allocator.py      # Capital allocation across strategies
+│   │   ├── position_sizer.py         # Position sizing (Kelly, vol-target)
+│   │   └── signal_aggregator.py      # Multi-agent signal aggregation
+│   ├── pms/                  # Portfolio Management System
+│   │   ├── trade_workflow.py # Trade lifecycle management
+│   │   ├── position_manager.py # Position tracking and P&L
+│   │   ├── attribution.py    # Performance attribution
+│   │   ├── morning_pack.py   # Daily briefing generation
+│   │   └── risk_monitor.py   # Real-time risk monitoring
+│   ├── backtesting/          # Backtesting engine with PIT correctness
+│   ├── nlp/                  # NLP pipeline (sentiment, COPOM/FOMC scraping)
+│   ├── narrative/            # Report and narrative generation
+│   ├── pipeline/             # Daily data pipeline orchestration
+│   ├── monitoring/           # System monitoring
 │   ├── connectors/           # 11 data source connectors
 │   │   ├── base.py           # Abstract BaseConnector
 │   │   ├── bcb_sgs.py        # BCB SGS (50 BR macro series)
@@ -166,7 +247,7 @@ Macro_Trading/
 │   │   ├── config.py         # Pydantic-settings configuration
 │   │   ├── database.py       # SQLAlchemy async/sync engines
 │   │   ├── redis_client.py   # Redis client singleton
-│   │   ├── models/           # SQLAlchemy ORM models (10 tables)
+│   │   ├── models/           # SQLAlchemy ORM models
 │   │   ├── schemas/          # Pydantic shared schemas
 │   │   └── utils/            # date_utils, logging, retry
 │   ├── transforms/           # Silver layer computations
@@ -177,9 +258,16 @@ Macro_Trading/
 │   └── quality/              # Data quality framework
 │       ├── checks.py         # Completeness, accuracy, PIT checks
 │       └── alerts.py         # Log-based quality alerts
-├── tests/                    # 319 tests
+├── tests/                    # 1,383+ tests
 │   ├── connectors/           # 162 connector tests (mocked HTTP)
-│   └── test_transforms/      # 96 transform tests
+│   ├── test_transforms/      # 96 transform tests
+│   ├── test_agents/          # Agent framework tests
+│   ├── test_strategies/      # 24 strategy tests
+│   ├── test_risk/            # VaR, stress testing, drawdown, limits
+│   ├── test_portfolio/       # Portfolio construction, allocation, signals
+│   ├── test_pms/             # Trade workflow, attribution, morning pack
+│   ├── test_integration/     # API v1/v2/v3, pipeline E2E
+│   └── test_narrative/       # Report generation tests
 ├── docker-compose.yml        # 6 services
 ├── pyproject.toml            # Python 3.11+, SQLAlchemy 2.0, FastAPI
 ├── Makefile                  # Common operations
@@ -197,7 +285,7 @@ make seed           # Seed instruments + series metadata
 make backfill       # Full historical backfill (all sources, 2010+)
 make backfill-fast  # Quick backfill (BCB, FRED, Yahoo, 2020+)
 make api            # Start FastAPI server (port 8000)
-make test           # Run all 319 tests
+make test           # Run all 1,383+ tests
 make lint           # Run ruff linter
 make verify         # Full infrastructure verification
 make quality        # Run data quality checks
@@ -225,6 +313,16 @@ Copy `.env.example` to `.env` and configure:
 | `REDIS_HOST`       | `localhost`     | Redis host                     |
 | `FRED_API_KEY`     | *(required)*    | FRED API key for US macro data |
 
-## Next Phase
+## System Components by Phase
 
-**Phase 1: Quantitative Models & Agents** -- 5 analytical agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset), backtesting engine with point-in-time correctness, 8 initial trading strategies, signal aggregation, risk management, and web dashboard.
+### Phase 0: Data Infrastructure (Complete)
+11 data connectors, 250+ macro series (BR + US), TimescaleDB with 7 hypertables, silver-layer transforms (curves, returns, macro, vol surface), data quality framework with point-in-time checks, and FastAPI v1 endpoints for data access.
+
+### Phase 1: Quantitative Models, Agents & Backtesting (Complete)
+5 analytical agents (Inflation, Monetary Policy, Fiscal, FX Equilibrium, Cross-Asset) with HMM regime detection. Backtesting engine with point-in-time correctness. 8 initial trading strategies across FX, rates, inflation, and sovereign credit. Signal aggregation and multi-agent consensus framework.
+
+### Phase 2: Strategy Engine, Risk & Portfolio Management (Complete)
+Expanded to 24 macro-directional strategies. NLP pipeline for central bank communication (COPOM/FOMC scraping, sentiment analysis). Risk engine with VaR/CVaR (parametric, historical, Monte Carlo), stress testing, and drawdown management. Portfolio construction via Black-Litterman, capital allocation, and position sizing. Portfolio Management System (PMS) with trade lifecycle, attribution, and morning briefing pack. Narrative report generation.
+
+### Phase 3: Production Infrastructure & Live Trading
+Execution management system, FIX protocol connectivity, emergency stop mechanisms, authentication and security hardening, monitoring dashboards, and go-live checklist.

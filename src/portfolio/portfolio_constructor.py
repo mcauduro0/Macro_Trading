@@ -396,23 +396,26 @@ class PortfolioConstructor:
             return target_scale
 
         if current_regime != self._previous_regime:
-            # Regime changed -- start transition
-            if self._regime_transition_day == 0:
+            # Regime changed — check if this is a NEW transition or continuation
+            if not hasattr(self, '_target_regime') or self._target_regime != current_regime:
+                # New regime target — reset transition from current interpolated scale
+                self._target_regime = current_regime
+                self._transition_start_scale = self._previous_scale or REGIME_SCALE[self._previous_regime]
                 self._regime_transition_day = 1
             else:
                 self._regime_transition_day += 1
 
-            prev_scale = self._previous_scale or REGIME_SCALE[self._previous_regime]
             progress = min(
                 self._regime_transition_day / self.transition_days, 1.0,
             )
-            scale = prev_scale + (target_scale - prev_scale) * progress
+            scale = self._transition_start_scale + (target_scale - self._transition_start_scale) * progress
 
             if progress >= 1.0:
                 # Transition complete
                 self._previous_regime = current_regime
                 self._previous_scale = target_scale
                 self._regime_transition_day = 0
+                self._target_regime = None
             return scale
         else:
             # Same regime -- no transition

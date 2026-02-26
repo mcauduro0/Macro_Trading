@@ -6,8 +6,8 @@ all expected content: React, Tailwind, Recharts, 4 tabs, dark theme.
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from unittest.mock import patch
 
 import pytest
@@ -66,17 +66,18 @@ def test_dashboard_contains_react(client: TestClient):
 
 
 def test_dashboard_contains_all_tabs(client: TestClient):
-    """Response body contains all 4 tab labels."""
+    """Response body contains all 5 navigation tab labels."""
     response = client.get("/dashboard")
     body = response.text
-    assert "Macro Dashboard" in body
-    assert "Agent Signals" in body
+    assert "Strategies" in body
+    assert "Signals" in body
+    assert "Risk" in body
     assert "Portfolio" in body
-    assert "Backtests" in body
+    assert "Agents" in body
 
 
 def test_dashboard_dark_theme(client: TestClient):
     """Response body contains dark theme indicators."""
     response = client.get("/dashboard")
     body = response.text
-    assert "bg-gray-950" in body
+    assert "darkMode" in body

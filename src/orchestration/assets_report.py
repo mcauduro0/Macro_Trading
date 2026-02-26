@@ -6,8 +6,6 @@ pipeline stages and feeds them to DailyReportGenerator (Plan 18-04).
 
 from datetime import date
 
-from src.reporting.daily_report import DailyReportGenerator
-
 from dagster import (
     AssetExecutionContext,
     AssetIn,
@@ -16,6 +14,8 @@ from dagster import (
     RetryPolicy,
     asset,
 )
+
+from src.reporting.daily_report import DailyReportGenerator
 
 # Shared configuration
 _daily_partitions = DailyPartitionsDefinition(start_date="2010-01-01")

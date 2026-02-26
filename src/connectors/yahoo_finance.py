@@ -26,7 +26,7 @@ import yfinance as yf
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from src.connectors.base import BaseConnector, ConnectorError, DataParsingError
+from src.connectors.base import BaseConnector, ConnectorError
 from src.core.database import async_session_factory
 from src.core.models.instruments import Instrument
 from src.core.models.market_data import MarketData
