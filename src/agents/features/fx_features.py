@@ -128,15 +128,19 @@ class FxFeatureEngine:
 
             di_5y_series: pd.Series | None = None
             if di_curve_hist is not None and not di_curve_hist.empty and "rate" in di_curve_hist.columns:
-                di_5y_series = di_curve_hist["rate"].resample("ME").last()
-
+                _s = di_curve_hist["rate"].copy()
+                _s.index = self._tz_naive(_s.index)
+                di_5y_series = _s.resample("ME").last()
             ust_5y_series: pd.Series | None = None
             if ust_5y_hist is not None and not ust_5y_hist.empty and "rate" in ust_5y_hist.columns:
-                ust_5y_series = ust_5y_hist["rate"].resample("ME").last()
-
+                _s = ust_5y_hist["rate"].copy()
+                _s.index = self._tz_naive(_s.index)
+                ust_5y_series = _s.resample("ME").last()
             focus_ipca_series: pd.Series | None = None
             if focus_ipca_df is not None and not focus_ipca_df.empty and "value" in focus_ipca_df.columns:
-                focus_ipca_series = focus_ipca_df["value"].resample("ME").last()
+                _s = focus_ipca_df["value"].copy()
+                _s.index = self._tz_naive(_s.index)
+                focus_ipca_series = _s.resample("ME").last()
 
             if di_5y_series is not None and ust_5y_series is not None and focus_ipca_series is not None:
                 real_br = di_5y_series - focus_ipca_series
@@ -276,8 +280,10 @@ class FxFeatureEngine:
         if ptax_df is None or ptax_df.empty or "close" not in ptax_df.columns:
             return pd.DataFrame()
 
-        # Monthly USDBRL close
-        monthly_usdbrl = ptax_df["close"].resample("ME").last().dropna()
+        # Monthly USDBRL close (normalize tz)
+        ptax_close = ptax_df["close"].copy()
+        ptax_close.index = self._tz_naive(ptax_close.index)
+        monthly_usdbrl = ptax_close.resample("ME").last().dropna()
         if monthly_usdbrl.empty:
             return pd.DataFrame()
 
@@ -286,7 +292,9 @@ class FxFeatureEngine:
         # tot_proxy: monthly TB values (already computed above, rebuild as series)
         tb_df = data.get("trade_balance")
         if tb_df is not None and not tb_df.empty and "value" in tb_df.columns:
-            tb_monthly = tb_df["value"].resample("ME").last()
+            tb_val = tb_df["value"].copy()
+            tb_val.index = self._tz_naive(tb_val.index)
+            tb_monthly = tb_val.resample("ME").last()
             tb_pct = tb_monthly.pct_change(12) * 100
             df = df.join(tb_pct.rename("tot_proxy"), how="left")
 
@@ -299,16 +307,24 @@ class FxFeatureEngine:
             and ust_hist is not None and not ust_hist.empty and "rate" in ust_hist.columns
             and focus_ipca_df is not None and not focus_ipca_df.empty and "value" in focus_ipca_df.columns
         ):
-            di_m = di_hist["rate"].resample("ME").last()
-            ust_m = ust_hist["rate"].resample("ME").last()
-            ipca_m = focus_ipca_df["value"].resample("ME").last()
+            di_s = di_hist["rate"].copy()
+            di_s.index = self._tz_naive(di_s.index)
+            di_m = di_s.resample("ME").last()
+            ust_s = ust_hist["rate"].copy()
+            ust_s.index = self._tz_naive(ust_s.index)
+            ust_m = ust_s.resample("ME").last()
+            ipca_s = focus_ipca_df["value"].copy()
+            ipca_s.index = self._tz_naive(ipca_s.index)
+            ipca_m = ipca_s.resample("ME").last()
             rrd = (di_m - ipca_m) - (ust_m - ipca_m * 0.4)
             df = df.join(rrd.rename("real_rate_diff"), how="left")
 
         # nfa_proxy: log(fx_reserves)
         fx_res_df = data.get("fx_reserves")
         if fx_res_df is not None and not fx_res_df.empty and "value" in fx_res_df.columns:
-            res_m = fx_res_df["value"].resample("ME").last()
+            res_val = fx_res_df["value"].copy()
+            res_val.index = self._tz_naive(res_val.index)
+            res_m = res_val.resample("ME").last()
             nfa = res_m[res_m > 0].apply(np.log)
             df = df.join(nfa.rename("nfa_proxy"), how="left")
 
@@ -318,6 +334,11 @@ class FxFeatureEngine:
         df = df[df["log_usdbrl"].notna()]
 
         return df
+
+    @staticmethod
+    def _tz_naive(idx: pd.DatetimeIndex) -> pd.DatetimeIndex:
+        """Strip timezone info so all indices align."""
+        return idx.tz_localize(None) if idx.tz is not None else idx
 
     def _build_carry_ratio_history(self, data: dict) -> pd.Series:
         """Build monthly carry-to-risk ratio series for CarryToRiskModel."""
@@ -329,6 +350,7 @@ class FxFeatureEngine:
             return pd.Series(dtype=float)
 
         ptax_close = ptax_df["close"].dropna()
+        ptax_close.index = self._tz_naive(ptax_close.index)
         if len(ptax_close) < 31:
             return pd.Series(dtype=float)
 
@@ -337,14 +359,18 @@ class FxFeatureEngine:
         rolling_vol = daily_returns.rolling(30).std() * np.sqrt(252) * 100
         monthly_vol = rolling_vol.resample("ME").last().dropna()
 
-        # Monthly selic and fed_funds
+        # Monthly selic and fed_funds (normalize tz)
         selic_m: pd.Series | None = None
         if selic_df is not None and not selic_df.empty and "value" in selic_df.columns:
-            selic_m = selic_df["value"].resample("ME").last()
+            s = selic_df["value"].copy()
+            s.index = self._tz_naive(s.index)
+            selic_m = s.resample("ME").last()
 
         ff_m: pd.Series | None = None
         if ff_df is not None and not ff_df.empty and "value" in ff_df.columns:
-            ff_m = ff_df["value"].resample("ME").last()
+            f = ff_df["value"].copy()
+            f.index = self._tz_naive(f.index)
+            ff_m = f.resample("ME").last()
 
         if selic_m is None or ff_m is None:
             return pd.Series(dtype=float)
@@ -358,11 +384,12 @@ class FxFeatureEngine:
         """Build combined FX flow DataFrame for FlowModel."""
         bcb_df = data.get("bcb_flow")
         cftc_df = data.get("cftc_brl")
-
         # BCB flow z-score (24M)
         bcb_z: pd.Series
         if bcb_df is not None and not bcb_df.empty and "value" in bcb_df.columns:
-            bcb_val = bcb_df["value"].resample("ME").sum()
+            _v = bcb_df["value"].copy()
+            _v.index = self._tz_naive(_v.index)
+            bcb_val = _v.resample("ME").sum()
             roll_mean = bcb_val.rolling(24).mean()
             roll_std = bcb_val.rolling(24).std()
             std_safe = roll_std.replace(0, np.nan)
@@ -371,11 +398,12 @@ class FxFeatureEngine:
             # No data — use 0.0 placeholder with single row
             idx = pd.DatetimeIndex([pd.Timestamp.now().normalize()])
             bcb_z = pd.Series([np.nan], index=idx)
-
         # CFTC z-score (24M)
         cftc_z: pd.Series
         if cftc_df is not None and not cftc_df.empty and "value" in cftc_df.columns:
-            cftc_val = cftc_df["value"].resample("ME").last()
+            _v = cftc_df["value"].copy()
+            _v.index = self._tz_naive(_v.index)
+            cftc_val = _v.resample("ME").last()
             roll_mean_c = cftc_val.rolling(24).mean()
             roll_std_c = cftc_val.rolling(24).std()
             std_safe_c = roll_std_c.replace(0, np.nan)
@@ -383,7 +411,6 @@ class FxFeatureEngine:
         else:
             idx = pd.DatetimeIndex([pd.Timestamp.now().normalize()])
             cftc_z = pd.Series([np.nan], index=idx)
-
         combined = pd.DataFrame(
             {"bcb_flow_zscore": bcb_z, "cftc_zscore": cftc_z}
         )
