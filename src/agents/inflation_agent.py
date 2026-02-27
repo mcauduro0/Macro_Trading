@@ -68,8 +68,8 @@ class InflationAgent(BaseAgent):
         "communication": "BCB-1643",
     }
 
-    _FOCUS_12M = "FOCUS-IPCA-12M"
-    _FOCUS_EOY = "FOCUS-IPCA-EOY"
+    # Focus IPCA: year-specific codes resolved dynamically in load_data()
+    _FOCUS_IPCA_PATTERN = "BR_FOCUS_IPCA_{year}_MEDIAN"
 
     # FRED series codes
     _US_CPI_CORE = "FRED-CPILFESL"
@@ -147,19 +147,21 @@ class InflationAgent(BaseAgent):
         ipca_industrial = _safe_macro(self._IPCA_INDUSTRIAL)
         ipca_diffusion = _safe_macro(self._IPCA_DIFFUSION)
 
-        # Focus expectations
-        focus_12m = _safe_macro(self._FOCUS_12M)
-        focus_eoy = _safe_macro(self._FOCUS_EOY)
+        # Focus expectations — use year-specific codes matching connector output
+        cy = as_of_date.year
+        ny = as_of_date.year + 1
+        focus_cy = _safe_macro(self._FOCUS_IPCA_PATTERN.format(year=cy))
+        focus_ny = _safe_macro(self._FOCUS_IPCA_PATTERN.format(year=ny))
 
         # Combine focus into a single DataFrame with two columns when available
         focus: pd.DataFrame | None = None
-        if focus_12m is not None and not focus_12m.empty:
-            focus = focus_12m[["value"]].rename(columns={"value": "ipca_12m"})
-            if focus_eoy is not None and not focus_eoy.empty:
-                eoy = focus_eoy[["value"]].rename(columns={"value": "ipca_eoy"})
+        if focus_cy is not None and not focus_cy.empty:
+            focus = focus_cy[["value"]].rename(columns={"value": "ipca_12m"})
+            if focus_ny is not None and not focus_ny.empty:
+                eoy = focus_ny[["value"]].rename(columns={"value": "ipca_eoy"})
                 focus = focus.join(eoy, how="outer")
-        elif focus_eoy is not None and not focus_eoy.empty:
-            focus = focus_eoy[["value"]].rename(columns={"value": "ipca_eoy"})
+        elif focus_ny is not None and not focus_ny.empty:
+            focus = focus_ny[["value"]].rename(columns={"value": "ipca_eoy"})
 
         # IBC-Br (10Y lookback for HP filter and OLS)
         ibc_br = _safe_macro(self._IBC_BR, lookback=lookback_10y)

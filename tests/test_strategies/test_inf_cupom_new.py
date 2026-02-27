@@ -99,7 +99,7 @@ def _make_inf02_loader(
     def macro_series_side_effect(series_code, as_of_date, lookback_days=3650):
         if series_code == "BR_IPCA_MOM":
             return ipca_df
-        if series_code == "BR_FOCUS_IPCA_CY_MEDIAN":
+        if series_code.startswith("BR_FOCUS_IPCA_") and series_code.endswith("_MEDIAN"):
             return _make_macro_df(focus_ipca_values)
         return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
 

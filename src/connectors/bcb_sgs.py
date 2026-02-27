@@ -55,7 +55,7 @@ class BcbSgsConnector(BaseConnector):
     # Series registry: internal key -> BCB SGS numeric code
     # -----------------------------------------------------------------------
     SERIES_REGISTRY: dict[str, int] = {
-        # INFLATION
+        # INFLATION — headline & cores
         "BR_IPCA_MOM": 433,
         "BR_IPCA_YOY": 13522,
         "BR_IPCA_CORE_EX0": 11426,
@@ -63,6 +63,7 @@ class BcbSgsConnector(BaseConnector):
         "BR_IPCA_CORE_MA": 11427,
         "BR_IPCA_CORE_DP": 27839,
         "BR_IPCA_CORE_P55": 4466,
+        "BR_IPCA_CORE_EX_FE": 16122,   # Core ex-food & energy (InflationPersistenceModel)
         "BR_IPCA_DIFFUSION": 21379,
         "BR_IPCA15_MOM": 7478,
         "BR_INPC_MOM": 188,
@@ -71,6 +72,19 @@ class BcbSgsConnector(BaseConnector):
         "BR_IPA_M_MOM": 225,
         "BR_IPC_S_WEEKLY": 7446,
         "BR_IPC_FIPE_WEEKLY": 10764,
+        # INFLATION — sub-indices (InflationPersistenceModel)
+        "BR_IPCA_SERVICES": 10841,     # Servicos
+        "BR_IPCA_INDUSTRIAL": 10844,   # Bens Industriais
+        # INFLATION — 9 IPCA components (IpcaBottomUpModel)
+        "BR_IPCA_COMP_FOOD_HOME": 1637,
+        "BR_IPCA_COMP_FOOD_AWAY": 7170,
+        "BR_IPCA_COMP_HOUSING": 1638,
+        "BR_IPCA_COMP_CLOTHING": 1639,
+        "BR_IPCA_COMP_HEALTH": 7485,
+        "BR_IPCA_COMP_PERSONAL": 1640,
+        "BR_IPCA_COMP_EDUCATION": 1641,
+        "BR_IPCA_COMP_TRANSPORT": 1642,
+        "BR_IPCA_COMP_COMMUNICATION": 1643,
         # ACTIVITY
         "BR_GDP_QOQ": 22099,
         "BR_IBC_BR": 24364,

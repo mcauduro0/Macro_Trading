@@ -98,7 +98,7 @@ class RatesBR02TaylorStrategy(BaseStrategy):
             return []
 
         focus_ipca = self.data_loader.get_latest_macro_value(
-            "BR_FOCUS_IPCA_CY_MEDIAN", as_of_date
+            f"BR_FOCUS_IPCA_{as_of_date.year}_MEDIAN", as_of_date
         )
         if focus_ipca is None:
             self.log.warning("missing_focus_ipca", as_of_date=str(as_of_date))

@@ -63,12 +63,13 @@ TICKERS: dict[str, str] = {
     "HYG_ETF": "HYG",
     "EMB_ETF": "EMB",
     "LQD_ETF": "LQD",
-    # Additional tickers to reach 27
+    # Additional tickers
     "USDMXN": "MXN=X",       # Mexico peso (EM peer)
     "USDCNY": "CNY=X",       # China yuan
     "USDCLP": "CLP=X",       # Chile peso (EM peer)
     "NASDAQ": "^IXIC",       # Nasdaq Composite
     "RUSSELL2000": "^RUT",   # Russell 2000 small cap
+    "CRB": "GSG",            # iShares S&P GSCI Commodity ETF (CRB proxy for PhillipsCurveModel)
 }
 
 # Mapping from ticker prefix to reasonable instrument metadata defaults
@@ -101,6 +102,7 @@ _ASSET_CLASS_MAP: dict[str, tuple[str, str, str]] = {
     "HYG_ETF": ("ETF", "US", "USD"),
     "EMB_ETF": ("ETF", "US", "USD"),
     "LQD_ETF": ("ETF", "US", "USD"),
+    "CRB": ("COMMODITY", "US", "USD"),
 }
 
 

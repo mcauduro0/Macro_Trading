@@ -33,7 +33,7 @@ def _make_mock_loader(
     def get_latest_side_effect(series_code, as_of_date):
         if series_code == "BR_SELIC_TARGET":
             return selic
-        if series_code == "BR_FOCUS_IPCA_CY_MEDIAN":
+        if series_code.startswith("BR_FOCUS_IPCA_") and series_code.endswith("_MEDIAN"):
             return focus_ipca
         if series_code == "BR_OUTPUT_GAP":
             return output_gap

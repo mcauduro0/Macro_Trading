@@ -56,20 +56,25 @@ _SERIES_ALIASES: dict[str, str] = {
     "BR_IBC_BR_YOY": "24364",       # IBC-Br proxy PIB mensal
     "BR_SELIC_TARGET": "432",       # Meta Selic
 
-    # ── Focus survey (agent format → seed format) ──
-    "FOCUS-IPCA-12M": "BR_FOCUS_IPCA_CY",
-    "FOCUS-IPCA-EOY": "BR_FOCUS_IPCA_CY",
+    # ── US series: agent codes → actual FRED codes ──
+    "PCESV": "IA001260M",          # PCE Supercore (agent alias → real FRED code)
+    "MICH5YR": "EXPINF5YR",        # Michigan 5Y proxy (agent alias → Cleveland Fed 5Y)
 
     # ── FX Flow aliases → BCB FX Flow numeric codes ──
     "BR_FX_FLOW_COMMERCIAL": "22704",
     "BR_FX_FLOW_FINANCIAL": "22705",
     "BR_FX_FLOW_TOTAL": "22706",
+}
 
-    # ── CFTC: 6L = BRL futures, map to DX contract in seed ──
-    "CFTC_6L_LEVERAGED_NET": "CFTC_DX_LEVERAGED_NET",
-
-    # ── Focus câmbio ──
-    "BR_FOCUS_CAMBIO_12M_MEDIAN": "BR_FOCUS_CAMBIO_CY",
+# ---------------------------------------------------------------------------
+# Curve ID normalization
+# ---------------------------------------------------------------------------
+# Agents reference curves with short aliases (e.g. "DI", "UST") while the
+# database stores canonical IDs (e.g. "DI_PRE", "UST_NOM").
+# ---------------------------------------------------------------------------
+_CURVE_ALIASES: dict[str, str] = {
+    "DI": "DI_PRE",
+    "UST": "UST_NOM",
 }
 
 
@@ -89,6 +94,15 @@ def _normalize_series_code(raw_code: str) -> str:
             return raw_code[len(prefix):]
 
     return raw_code
+
+
+def _normalize_curve_id(raw_id: str) -> str:
+    """Normalize agent curve IDs to match curve_data.curve_id.
+
+    Agents use short aliases (``"DI"``, ``"UST"``) while the database
+    stores canonical IDs (``"DI_PRE"``, ``"UST_NOM"``).
+    """
+    return _CURVE_ALIASES.get(raw_id, raw_id)
 
 
 class PointInTimeDataLoader:
@@ -237,11 +251,14 @@ class PointInTimeDataLoader:
 
         Args:
             curve_id: Curve identifier (e.g. ``"DI_PRE"``, ``"UST_NOM"``).
+                Short aliases ``"DI"`` and ``"UST"`` are also accepted.
             as_of_date: PIT reference date.
 
         Returns:
             ``{tenor_days: rate}`` dict.  Empty dict if no data.
         """
+        curve_id = _normalize_curve_id(curve_id)
+
         # Step 1: Find the most recent curve_date for this curve
         max_date_stmt = (
             select(func.max(CurveData.curve_date))
@@ -311,6 +328,7 @@ class PointInTimeDataLoader:
         Returns:
             DataFrame with columns ``["date", "rate"]`` indexed on ``date``.
         """
+        curve_id = _normalize_curve_id(curve_id)
         start = as_of_date - timedelta(days=lookback_days)
 
         stmt = (
@@ -488,7 +506,7 @@ class PointInTimeDataLoader:
         """Load Focus survey expectations for a given indicator.
 
         Convenience wrapper that calls ``get_macro_series`` with the
-        standard Focus series code pattern.
+        year-specific Focus series code pattern matching connector output.
 
         Args:
             indicator: Indicator name (e.g. ``"IPCA"``, ``"SELIC"``).
@@ -498,5 +516,5 @@ class PointInTimeDataLoader:
         Returns:
             DataFrame from ``get_macro_series``.
         """
-        series_code = f"BR_FOCUS_{indicator}_CY_MEDIAN"
+        series_code = f"BR_FOCUS_{indicator}_{as_of_date.year}_MEDIAN"
         return self.get_macro_series(series_code, as_of_date, lookback_days)

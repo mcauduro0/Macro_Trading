@@ -79,6 +79,7 @@ INSTRUMENTS = [
     {"ticker": "HYG_ETF", "name": "iShares iBoxx HY Corporate Bond ETF", "asset_class": "SOVEREIGN_CREDIT", "instrument_type": "ETF", "country": "US", "currency": "USD", "exchange": "NYSE"},
     {"ticker": "EMB_ETF", "name": "iShares JP Morgan EM Bond ETF", "asset_class": "SOVEREIGN_CREDIT", "instrument_type": "ETF", "country": "US", "currency": "USD", "exchange": "NYSE"},
     {"ticker": "LQD_ETF", "name": "iShares iBoxx IG Corporate Bond ETF", "asset_class": "SOVEREIGN_CREDIT", "instrument_type": "ETF", "country": "US", "currency": "USD", "exchange": "NYSE"},
+    {"ticker": "CRB", "name": "iShares S&P GSCI Commodity ETF (CRB Proxy)", "asset_class": "COMMODITIES", "instrument_type": "ETF", "country": "US", "currency": "USD", "exchange": "NYSE"},
 ]
 
 
