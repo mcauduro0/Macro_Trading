@@ -323,17 +323,19 @@ class BaseConnector(abc.ABC):
         model_class: type,
         records: list[dict[str, Any]],
         constraint_name: str,
+        batch_size: int = 2000,
     ) -> int:
         """Bulk insert records using INSERT ... ON CONFLICT DO NOTHING.
 
-        This is the reusable idempotent insert pattern. Duplicate rows
-        (matching the named constraint) are silently skipped.
+        Records are inserted in batches to avoid exceeding the asyncpg
+        limit of 32767 query parameters.
 
         Args:
             model_class: SQLAlchemy ORM model class (the table).
             records: List of dicts whose keys match model columns.
             constraint_name: Name of the unique/primary key constraint
                 for ON CONFLICT DO NOTHING.
+            batch_size: Maximum number of records per INSERT statement.
 
         Returns:
             Number of rows actually inserted (excludes conflicts).
@@ -341,9 +343,13 @@ class BaseConnector(abc.ABC):
         if not records:
             return 0
 
-        async with async_session_factory() as session:
-            async with session.begin():
-                stmt = pg_insert(model_class).values(records)
-                stmt = stmt.on_conflict_do_nothing(constraint=constraint_name)
-                result = await session.execute(stmt)
-                return result.rowcount
+        total_inserted = 0
+        for i in range(0, len(records), batch_size):
+            batch = records[i : i + batch_size]
+            async with async_session_factory() as session:
+                async with session.begin():
+                    stmt = pg_insert(model_class).values(batch)
+                    stmt = stmt.on_conflict_do_nothing(constraint=constraint_name)
+                    result = await session.execute(stmt)
+                    total_inserted += result.rowcount
+        return total_inserted
