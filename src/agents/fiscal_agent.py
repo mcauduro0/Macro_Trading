@@ -612,17 +612,18 @@ class FiscalAgent(BaseAgent):
             as_of_date,
             lookback_days=5475,
         )
-        _safe_load(
-            "focus",
-            self.loader.get_macro_series,
-            "FOCUS-IPCA-12M",
-            as_of_date,
-            lookback_days=5475,
-        )
-
         # Focus PIB: current year and next year
         cy = as_of_date.year
         ny = cy + 1
+
+        # Focus IPCA — year-specific code
+        _safe_load(
+            "focus",
+            self.loader.get_macro_series,
+            f"BR_FOCUS_IPCA_{cy}_MEDIAN",
+            as_of_date,
+            lookback_days=5475,
+        )
         _safe_load(
             "focus_pib_cy",
             self.loader.get_macro_series,

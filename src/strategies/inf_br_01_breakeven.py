@@ -124,7 +124,7 @@ class InfBR01BreakevenStrategy(BaseStrategy):
 
         # 5. Load agent inflation forecast
         agent_forecast = self.data_loader.get_latest_macro_value(
-            "BR_FOCUS_IPCA_CY_MEDIAN", as_of_date,
+            f"BR_FOCUS_IPCA_{as_of_date.year}_MEDIAN", as_of_date,
         )
         if agent_forecast is None:
             self.log.warning("missing_focus_forecast", as_of_date=str(as_of_date))

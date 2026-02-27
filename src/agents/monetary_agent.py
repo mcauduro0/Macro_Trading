@@ -566,10 +566,12 @@ class MonetaryPolicyAgent(BaseAgent):
             as_of_date,
             lookback_days=3650,
         )
+        # Focus IPCA — year-specific code matching connector output
+        cy = as_of_date.year
         _safe_load(
             "focus",
             self.loader.get_macro_series,
-            "FOCUS-IPCA-12M",
+            f"BR_FOCUS_IPCA_{cy}_MEDIAN",
             as_of_date,
             lookback_days=3650,
         )

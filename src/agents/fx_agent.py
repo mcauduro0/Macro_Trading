@@ -549,19 +549,20 @@ class FxEquilibriumAgent(BaseAgent):
             as_of_date,
             lookback_days=5475,
         )
-        # Focus Câmbio 12M (expected depreciation)
+        # Focus Câmbio (expected depreciation) — year-specific code
+        cy = as_of_date.year
         _safe_load(
             "focus_cambio",
             self.loader.get_macro_series,
-            "BR_FOCUS_CAMBIO_12M_MEDIAN",
+            f"BR_FOCUS_CAMBIO_{cy}_MEDIAN",
             as_of_date,
             lookback_days=1825,
         )
-        # Focus IPCA 12M (inflation expectations)
+        # Focus IPCA (inflation expectations) — year-specific code
         _safe_load(
             "focus_ipca",
             self.loader.get_macro_series,
-            "FOCUS-IPCA-12M",
+            f"BR_FOCUS_IPCA_{cy}_MEDIAN",
             as_of_date,
             lookback_days=5475,
         )

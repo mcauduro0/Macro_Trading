@@ -50,8 +50,21 @@ def _bcb_sgs_series() -> list[dict]:
         {"series_code": "11427", "name": "IPCA Nucleo Medias Aparadas", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "27839", "name": "IPCA Nucleo Dupla Ponderacao", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "4466", "name": "IPCA Nucleo P55", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "16122", "name": "IPCA Nucleo Ex-Alimentos e Energia", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "21379", "name": "Indice Difusao IPCA", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "10841", "name": "IPCA Servicos", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "10844", "name": "IPCA Bens Industriais", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "7478", "name": "IPCA-15 Variacao Mensal", "frequency": "M", "country": "BR", "unit": "percent"},
+        # IPCA 9 components (IpcaBottomUpModel)
+        {"series_code": "1637", "name": "IPCA Alimentacao Domicilio", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "7170", "name": "IPCA Alimentacao Fora Domicilio", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1638", "name": "IPCA Habitacao", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1639", "name": "IPCA Vestuario", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "7485", "name": "IPCA Saude", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1640", "name": "IPCA Cuidados Pessoais", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1641", "name": "IPCA Educacao", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1642", "name": "IPCA Transportes", "frequency": "M", "country": "BR", "unit": "percent"},
+        {"series_code": "1643", "name": "IPCA Comunicacao", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "188", "name": "INPC Mensal", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "189", "name": "IGP-M Mensal", "frequency": "M", "country": "BR", "unit": "percent"},
         {"series_code": "190", "name": "IGP-DI Mensal", "frequency": "M", "country": "BR", "unit": "percent"},
@@ -116,6 +129,8 @@ def _fred_series() -> list[dict]:
         {"series_code": "PCEPILFE", "name": "PCE Core Price Index", "frequency": "M", "country": "US", "unit": "index", "is_revisable": True},
         {"series_code": "PPIACO", "name": "PPI All Commodities", "frequency": "M", "country": "US", "unit": "index"},
         {"series_code": "MICH", "name": "Michigan Inflation Expectations 1Y", "frequency": "M", "country": "US", "unit": "percent"},
+        {"series_code": "EXPINF5YR", "name": "Cleveland Fed 5Y Expected Inflation", "frequency": "M", "country": "US", "unit": "percent"},
+        {"series_code": "IA001260M", "name": "PCE Services ex-Energy and Housing Price Index (Supercore)", "frequency": "M", "country": "US", "unit": "index", "is_revisable": True},
         {"series_code": "T5YIE", "name": "5Y Breakeven Inflation", "frequency": "D", "country": "US", "unit": "percent"},
         {"series_code": "T10YIE", "name": "10Y Breakeven Inflation", "frequency": "D", "country": "US", "unit": "percent"},
         {"series_code": "T5YIFR", "name": "5Y5Y Forward Inflation", "frequency": "D", "country": "US", "unit": "percent"},
@@ -197,8 +212,8 @@ def _ibge_sidra_series() -> list[dict]:
 
 
 def _cftc_series() -> list[dict]:
-    """CFTC COT positioning series: 12 contracts x 4 categories = 48."""
-    contracts = ["ES", "NQ", "YM", "TY", "US", "FV", "TU", "ED", "CL", "GC", "SI", "DX"]
+    """CFTC COT positioning series: 13 contracts x 4 categories = 52."""
+    contracts = ["ES", "NQ", "YM", "TY", "US", "FV", "TU", "ED", "CL", "GC", "SI", "DX", "6L"]
     categories = ["DEALER", "ASSETMGR", "LEVERAGED", "OTHER"]
     rows = []
     for c in contracts:

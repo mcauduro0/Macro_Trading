@@ -72,6 +72,8 @@ class FredConnector(BaseConnector):
         "US_PCE_CORE": "PCEPILFE",
         "US_PPI_ALL": "PPIACO",
         "US_MICHIGAN_INF_1Y": "MICH",
+        "US_MICHIGAN_INF_5Y": "EXPINF5YR",     # Cleveland Fed 5Y expected inflation (proxy for Michigan 5Y)
+        "US_PCE_SUPERCORE": "IA001260M",        # PCE Services ex-Energy & Housing (chain-type price index)
         "US_BEI_5Y": "T5YIE",
         "US_BEI_10Y": "T10YIE",
         "US_FWD_INF_5Y5Y": "T5YIFR",
