@@ -55,6 +55,7 @@ class TradingEconDiCurveConnector(BaseConnector):
     # Symbol mapping: TE symbol -> (tenor_label, tenor_days)
     # tenor_days aligned with MonetaryFeatureEngine expectations
     SYMBOL_MAP: dict[str, tuple[str, int]] = {
+        "GEBR1Y:IND":  ("1Y",  252),    # ~1 year in trading days
         "GEBR2Y:IND":  ("2Y",  504),    # ~2 years in trading days
         "GEBR5Y:IND":  ("5Y",  1260),   # ~5 years in trading days
         "GEBR10Y:IND": ("10Y", 2520),   # ~10 years in trading days
