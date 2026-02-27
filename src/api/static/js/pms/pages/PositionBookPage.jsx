@@ -29,62 +29,11 @@ const {
   formatPnL: _formatPnL,
   formatPercent: _formatPercent,
   formatNumber: _formatNumber,
+  seededRng,
+  formatSize,
+  formatPnLShort,
+  dirBadgeVariant,
 } = window.PMS_THEME;
-
-// ---------------------------------------------------------------------------
-// Seeded PRNG (same approach as PortfolioPage / MorningPackPage)
-// ---------------------------------------------------------------------------
-function seededRng(seed) {
-  let s = seed;
-  return function () {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Formatting Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Format notional value with abbreviated notation.
- * e.g., 15000000 -> "15.0M", 500000 -> "500K"
- */
-function formatSize(value) {
-  if (value == null || isNaN(value)) return '--';
-  const abs = Math.abs(value);
-  if (abs >= 1e9) return (value / 1e9).toFixed(1) + 'B';
-  if (abs >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-  if (abs >= 1e3) return (value / 1e3).toFixed(0) + 'K';
-  return value.toFixed(0);
-}
-
-/**
- * Format P&L in BRL with abbreviated notation and sign.
- * e.g., 245000 -> "+245K", -1820000 -> "-1.8M"
- */
-function formatPnLShort(value) {
-  if (value == null || isNaN(value)) return '--';
-  const sign = value >= 0 ? '+' : '-';
-  const abs = Math.abs(value);
-  let formatted;
-  if (abs >= 1e9) formatted = (abs / 1e9).toFixed(1) + 'B';
-  else if (abs >= 1e6) formatted = (abs / 1e6).toFixed(1) + 'M';
-  else if (abs >= 1e3) formatted = (abs / 1e3).toFixed(0) + 'K';
-  else formatted = abs.toFixed(0);
-  return sign + 'R$ ' + formatted;
-}
-
-/**
- * Get badge variant for direction.
- */
-function dirBadgeVariant(dir) {
-  if (!dir) return 'neutral';
-  const d = dir.toUpperCase();
-  if (d === 'LONG') return 'positive';
-  if (d === 'SHORT') return 'negative';
-  return 'neutral';
-}
 
 // ---------------------------------------------------------------------------
 // Sample Data Constants
@@ -949,8 +898,15 @@ function PositionBookPage() {
 
   // Resolve data with sample fallback
   const bookData = (book.data && book.data.summary) ? book.data : SAMPLE_BOOK;
-  const equityData = (equityCurve.data && Array.isArray(equityCurve.data) && equityCurve.data.length > 0) ? equityCurve.data : SAMPLE_EQUITY_CURVE;
-  const usingSampleData = bookData === SAMPLE_BOOK;
+  const equityData = useMemo(() => {
+    const d = equityCurve.data;
+    if (d) {
+      const raw = Array.isArray(d) ? d : (d.data && Array.isArray(d.data) ? d.data : null);
+      if (raw && raw.length > 0) return raw;
+    }
+    return SAMPLE_EQUITY_CURVE;
+  }, [equityCurve.data]);
+  const usingSample = !(book.data && book.data.summary);
 
   // Filter out locally closed positions
   const openPositions = (bookData.positions || []).filter(p => !closedIds.has(p.id));
@@ -998,8 +954,7 @@ function PositionBookPage() {
 
   return (
     <div style={pageStyle}>
-      {/* Sample data banner */}
-      {usingSampleData && <window.SampleDataBanner />}
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Position Book</div>

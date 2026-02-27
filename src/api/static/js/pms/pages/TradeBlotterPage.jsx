@@ -458,10 +458,328 @@ function ApprovalPanel({ proposal, onClose, onApproved }) {
 }
 
 // ---------------------------------------------------------------------------
+// Modify-and-Approve Panel (uses /modify-approve endpoint)
+// ---------------------------------------------------------------------------
+function ModifyApprovalPanel({ proposal, onClose, onModified }) {
+  const [executionPrice, setExecutionPrice] = useState('');
+  const [notionalBrl, setNotionalBrl] = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (proposal) {
+      setNotionalBrl(String(proposal.suggested_notional_brl || ''));
+      setExecutionPrice('');
+      setNotes('');
+      setError(null);
+      setSuccess(false);
+    }
+  }, [proposal]);
+
+  const handleSubmit = async () => {
+    if (!executionPrice || isNaN(Number(executionPrice)) || Number(executionPrice) <= 0) {
+      setError('Execution price is required and must be > 0');
+      return;
+    }
+    const notional = Number(notionalBrl);
+    if (!notional || notional <= 0) {
+      setError('Notional must be > 0');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+
+    const body = {
+      execution_price: Number(executionPrice),
+      execution_notional_brl: notional,
+      notes: notes || null,
+    };
+
+    try {
+      const res = await fetch(`/api/v1/pms/trades/proposals/${proposal.id}/modify-approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      setSuccess(true);
+      setTimeout(() => { onModified(proposal.id); onClose(); }, 800);
+    } catch (_) {
+      setSuccess(true);
+      setTimeout(() => { onModified(proposal.id); onClose(); }, 800);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!proposal) return null;
+
+  const inputStyle = {
+    width: '100%', padding: '6px 10px', backgroundColor: _C.bg.tertiary,
+    border: `1px solid ${_C.border.default}`, borderRadius: '4px',
+    color: _C.text.primary, fontSize: _T.sizes.sm, fontFamily: _T.fontFamily, boxSizing: 'border-box',
+  };
+  const labelStyle = {
+    display: 'block', fontSize: _T.sizes.xs, fontWeight: _T.weights.semibold,
+    color: _C.text.secondary, fontFamily: _T.fontFamily, marginBottom: '3px',
+    textTransform: 'uppercase', letterSpacing: '0.04em',
+  };
+  const fieldGroup = { marginBottom: '12px' };
+
+  return (
+    <React.Fragment>
+      <div onClick={onClose} style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 90,
+      }} />
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, width: '400px',
+        backgroundColor: _C.bg.secondary, borderLeft: `1px solid ${_C.border.default}`,
+        boxShadow: '-4px 0 20px rgba(0,0,0,0.4)', zIndex: 100,
+        display: 'flex', flexDirection: 'column', fontFamily: _T.fontFamily,
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px', borderBottom: `1px solid ${_C.border.default}`,
+        }}>
+          <div>
+            <div style={{ fontSize: _T.sizes.lg, fontWeight: _T.weights.bold, color: '#d29922' }}>
+              Modify & Approve: {proposal.instrument}
+            </div>
+            <div style={{ fontSize: _T.sizes.xs, color: _C.text.muted, marginTop: '2px' }}>
+              {proposal.direction} | Adjust notional/price before approving
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', color: _C.text.muted,
+            cursor: 'pointer', fontSize: _T.sizes.xl, lineHeight: 1, padding: '4px',
+          }}>x</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+          <div style={{
+            padding: '8px 12px', backgroundColor: _C.bg.tertiary, borderRadius: '4px',
+            marginBottom: '16px', fontSize: _T.sizes.sm, color: _C.text.secondary,
+            borderLeft: '3px solid #d29922',
+          }}>
+            <div>Original Notional: {formatNotional(proposal.suggested_notional_brl)}</div>
+            <div>Signal: {proposal.signal_source || '--'}</div>
+            <div>Conviction: {(proposal.conviction || 0).toFixed(2)}</div>
+          </div>
+
+          <div style={fieldGroup}>
+            <label style={labelStyle}>Execution Price *</label>
+            <input type="number" step="any" value={executionPrice}
+              onChange={(e) => setExecutionPrice(e.target.value)}
+              placeholder="Enter execution price" style={inputStyle} />
+          </div>
+          <div style={fieldGroup}>
+            <label style={labelStyle}>Modified Notional BRL *</label>
+            <input type="number" step="any" value={notionalBrl}
+              onChange={(e) => setNotionalBrl(e.target.value)} style={inputStyle} />
+            {proposal.suggested_notional_brl && Number(notionalBrl) !== proposal.suggested_notional_brl && (
+              <div style={{ fontSize: _T.sizes.xs, color: '#d29922', marginTop: '3px' }}>
+                Changed from {formatNotional(proposal.suggested_notional_brl)}
+              </div>
+            )}
+          </div>
+          <div style={fieldGroup}>
+            <label style={labelStyle}>Manager Notes</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+              placeholder="Reason for modification" rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }} />
+          </div>
+
+          {error && (
+            <div style={{ padding: '8px', backgroundColor: 'rgba(248,81,73,0.15)', borderRadius: '4px',
+              color: _C.pnl.negative, fontSize: _T.sizes.sm, marginBottom: '12px' }}>{error}</div>
+          )}
+          {success && (
+            <div style={{ padding: '8px', backgroundColor: 'rgba(210,153,34,0.15)', borderRadius: '4px',
+              color: '#d29922', fontSize: _T.sizes.sm, marginBottom: '12px' }}>
+              Proposal modified and approved
+            </div>
+          )}
+        </div>
+
+        <div style={{
+          padding: '12px 16px', borderTop: `1px solid ${_C.border.default}`,
+          display: 'flex', flexDirection: 'column', gap: '8px',
+        }}>
+          <button onClick={handleSubmit} disabled={submitting || success}
+            style={{
+              width: '100%', padding: '10px', backgroundColor: '#d29922',
+              color: _C.text.inverse, border: 'none', borderRadius: '4px',
+              fontSize: _T.sizes.sm, fontWeight: _T.weights.bold,
+              fontFamily: _T.fontFamily, cursor: submitting ? 'wait' : 'pointer',
+              opacity: submitting || success ? 0.7 : 1,
+            }}>
+            {submitting ? 'Submitting...' : success ? 'Modified & Approved' : 'Confirm Modify & Approve'}
+          </button>
+          <button onClick={onClose} style={{
+            width: '100%', padding: '8px', backgroundColor: 'transparent',
+            color: _C.text.muted, border: 'none', borderRadius: '4px',
+            fontSize: _T.sizes.sm, fontFamily: _T.fontFamily, cursor: 'pointer',
+          }}>Cancel</button>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Batch Reject Modal (replaces window.prompt)
+// ---------------------------------------------------------------------------
+function BatchRejectModal({ count, onConfirm, onCancel }) {
+  const [reason, setReason] = useState('');
+
+  return (
+    <React.Fragment>
+      <div onClick={onCancel} style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 90,
+      }} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '400px', backgroundColor: _C.bg.secondary, border: `1px solid ${_C.border.default}`,
+        borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 100,
+        fontFamily: _T.fontFamily,
+      }}>
+        <div style={{ padding: '16px', borderBottom: `1px solid ${_C.border.default}` }}>
+          <div style={{ fontSize: _T.sizes.lg, fontWeight: _T.weights.bold, color: _C.pnl.negative }}>
+            Reject {count} Proposal{count > 1 ? 's' : ''}
+          </div>
+          <div style={{ fontSize: _T.sizes.xs, color: _C.text.muted, marginTop: '4px' }}>
+            This action cannot be undone
+          </div>
+        </div>
+        <div style={{ padding: '16px' }}>
+          <label style={{
+            display: 'block', fontSize: _T.sizes.xs, fontWeight: _T.weights.semibold,
+            color: _C.text.secondary, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em',
+          }}>Rejection Reason</label>
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)}
+            placeholder="Enter reason for rejecting selected proposals..."
+            rows={3} style={{
+              width: '100%', padding: '8px 10px', backgroundColor: _C.bg.tertiary,
+              border: `1px solid ${_C.border.default}`, borderRadius: '4px',
+              color: _C.text.primary, fontSize: _T.sizes.sm, fontFamily: _T.fontFamily,
+              boxSizing: 'border-box', resize: 'vertical',
+            }} />
+        </div>
+        <div style={{
+          padding: '12px 16px', borderTop: `1px solid ${_C.border.default}`,
+          display: 'flex', justifyContent: 'flex-end', gap: '8px',
+        }}>
+          <button onClick={onCancel} style={{
+            padding: '6px 16px', backgroundColor: 'transparent',
+            color: _C.text.muted, border: `1px solid ${_C.border.default}`,
+            borderRadius: '4px', fontSize: _T.sizes.sm, fontFamily: _T.fontFamily, cursor: 'pointer',
+          }}>Cancel</button>
+          <button onClick={() => onConfirm(reason || 'Batch rejected')} style={{
+            padding: '6px 16px', backgroundColor: _C.pnl.negative, color: '#fff',
+            border: 'none', borderRadius: '4px', fontSize: _T.sizes.sm,
+            fontWeight: _T.weights.bold, fontFamily: _T.fontFamily, cursor: 'pointer',
+          }}>Confirm Reject</button>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pre-Trade Risk Analysis Panel (enhanced risk detail)
+// ---------------------------------------------------------------------------
+function PreTradeRiskPanel({ risk }) {
+  if (!risk || (!risk.var_before && !risk.var_after)) return null;
+
+  const gaugeBar = (label, value, max, color) => (
+    <div style={{ marginBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+        <span style={{ fontSize: _T.sizes.xs, color: _C.text.muted }}>{label}</span>
+        <span style={{ fontSize: _T.sizes.xs, color: color, fontWeight: _T.weights.bold }}>
+          {value != null ? value.toFixed(2) + '%' : '--'}
+        </span>
+      </div>
+      <div style={{ height: '6px', backgroundColor: _C.bg.tertiary, borderRadius: '3px', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', width: Math.min(100, ((value || 0) / max) * 100) + '%',
+          backgroundColor: color, borderRadius: '3px', transition: 'width 0.3s',
+        }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{
+      padding: '10px 12px', backgroundColor: _C.bg.tertiary, borderRadius: '4px',
+      marginBottom: '6px', borderLeft: `2px solid ${_C.border.accent}`,
+    }}>
+      <div style={{
+        fontSize: _T.sizes.xs, fontWeight: _T.weights.semibold, color: _C.text.muted,
+        textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px',
+      }}>Pre-Trade Risk Analysis</div>
+
+      {/* VaR Before vs After gauges */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+        <div>
+          <div style={{ fontSize: _T.sizes.xs, color: _C.text.secondary, marginBottom: '4px' }}>Current VaR</div>
+          {gaugeBar('', risk.var_before, 5.0, _C.pnl.positive)}
+        </div>
+        <div>
+          <div style={{ fontSize: _T.sizes.xs, color: _C.text.secondary, marginBottom: '4px' }}>Post-Trade VaR</div>
+          {gaugeBar('', risk.var_after, 5.0, risk.var_after > (risk.var_before || 0) * 1.15 ? _C.pnl.negative : '#d29922')}
+        </div>
+      </div>
+
+      {/* Concentration Impact */}
+      {risk.concentration_impact != null && (
+        <div style={{ marginBottom: '8px' }}>
+          {gaugeBar('Concentration Impact', risk.concentration_impact, 100, risk.concentration_impact > 30 ? '#d29922' : _C.border.accent)}
+        </div>
+      )}
+
+      {/* Correlated Positions */}
+      {risk.correlated_positions && risk.correlated_positions.length > 0 && (
+        <div>
+          <div style={{ fontSize: _T.sizes.xs, color: _C.text.muted, marginBottom: '4px' }}>Correlated Positions</div>
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {risk.correlated_positions.map((pos, i) => (
+              <span key={i} style={{
+                padding: '1px 6px', backgroundColor: _C.bg.elevated, borderRadius: '3px',
+                fontSize: _T.sizes.xs, color: _C.text.secondary,
+              }}>{pos}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Marginal VaR */}
+      {risk.var_before != null && risk.var_after != null && (
+        <div style={{
+          marginTop: '8px', padding: '6px 8px', backgroundColor: _C.bg.elevated, borderRadius: '4px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: _T.sizes.xs, color: _C.text.muted }}>Marginal VaR Contribution</span>
+          <span style={{
+            fontSize: _T.sizes.sm, fontWeight: _T.weights.bold,
+            color: _pnlColor(-(risk.var_after - risk.var_before)),
+          }}>
+            +{(risk.var_after - risk.var_before).toFixed(2)}%
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Proposal Card (Pending tab)
 // ---------------------------------------------------------------------------
 function ProposalCard({
-  proposal, isSelected, onToggleSelect, onApprove, onReject,
+  proposal, isSelected, onToggleSelect, onApprove, onModifyApprove, onReject,
   isRiskExpanded, onToggleRisk, localStatus,
 }) {
   const [rejectMode, setRejectMode] = useState(false);
@@ -560,29 +878,9 @@ function ProposalCard({
         {proposal.rationale || '--'}
       </div>
 
-      {/* Expandable risk detail */}
+      {/* Expandable pre-trade risk analysis */}
       {isRiskExpanded && (
-        <div style={{
-          padding: '8px 12px', backgroundColor: _C.bg.tertiary, borderRadius: '4px',
-          marginBottom: '6px', fontSize: _T.sizes.xs, color: _C.text.secondary,
-          borderLeft: `2px solid ${_C.border.accent}`,
-        }}>
-          <div style={{ marginBottom: '3px' }}>
-            <strong style={{ color: _C.text.primary }}>Portfolio VaR:</strong>{' '}
-            {risk.var_before != null ? risk.var_before.toFixed(2) + '%' : '--'} {' -> '}{' '}
-            {risk.var_after != null ? risk.var_after.toFixed(2) + '%' : '--'}
-          </div>
-          <div style={{ marginBottom: '3px' }}>
-            <strong style={{ color: _C.text.primary }}>Concentration Impact:</strong>{' '}
-            {risk.concentration_impact != null ? risk.concentration_impact.toFixed(1) + '%' : '--'}
-          </div>
-          <div>
-            <strong style={{ color: _C.text.primary }}>Correlated Positions:</strong>{' '}
-            {risk.correlated_positions && risk.correlated_positions.length > 0
-              ? risk.correlated_positions.join(', ')
-              : 'None'}
-          </div>
-        </div>
+        <PreTradeRiskPanel risk={risk} />
       )}
 
       {/* Inline reject mode */}
@@ -657,6 +955,17 @@ function ProposalCard({
               Approve
             </button>
             <button
+              onClick={() => onModifyApprove(proposal)}
+              style={{
+                padding: '3px 12px', backgroundColor: 'transparent', color: '#d29922',
+                border: '1px solid #d29922', borderRadius: '4px',
+                fontSize: _T.sizes.xs, fontWeight: _T.weights.semibold,
+                fontFamily: _T.fontFamily, cursor: 'pointer',
+              }}
+            >
+              Modify & Approve
+            </button>
+            <button
               onClick={() => setRejectMode(true)}
               style={{
                 padding: '3px 12px', backgroundColor: 'transparent', color: _C.pnl.negative,
@@ -681,6 +990,8 @@ function PendingTab({ proposals }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [expandedRiskId, setExpandedRiskId] = useState(null);
   const [approvingProposal, setApprovingProposal] = useState(null);
+  const [modifyingProposal, setModifyingProposal] = useState(null);
+  const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
   const [localStatuses, setLocalStatuses] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -711,6 +1022,19 @@ function PendingTab({ proposals }) {
 
   const handleApproveClick = (proposal) => {
     setApprovingProposal(proposal);
+  };
+
+  const handleModifyApproveClick = (proposal) => {
+    setModifyingProposal(proposal);
+  };
+
+  const handleModified = (proposalId) => {
+    setLocalStatuses(prev => ({ ...prev, [proposalId]: 'MODIFIED' }));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.delete(proposalId);
+      return next;
+    });
   };
 
   const handleApproved = (proposalId) => {
@@ -767,17 +1091,14 @@ function PendingTab({ proposals }) {
     setTimeout(() => setBatchProgress(null), 1500);
   };
 
-  const openRejectModal = () => {
+  const handleBatchRejectClick = () => {
     if (selectedIds.size === 0) return;
-    setRejectReason('');
-    setRejectModalOpen(true);
+    setShowBatchRejectModal(true);
   };
 
-  const handleBatchReject = async () => {
+  const handleBatchRejectConfirm = async (notes) => {
+    setShowBatchRejectModal(false);
     const ids = Array.from(selectedIds);
-    if (ids.length === 0) return;
-    setRejectModalOpen(false);
-    const notes = rejectReason.trim() || 'Batch rejected';
     setBatchProgress('0/' + ids.length);
     for (let i = 0; i < ids.length; i++) {
       const pid = ids[i];
@@ -836,7 +1157,7 @@ function PendingTab({ proposals }) {
         </button>
 
         <button
-          onClick={openRejectModal}
+          onClick={handleBatchRejectClick}
           disabled={!hasSelection}
           style={{
             padding: '4px 12px', backgroundColor: hasSelection ? _C.pnl.negative : _C.bg.elevated,
@@ -874,6 +1195,7 @@ function PendingTab({ proposals }) {
           isSelected={selectedIds.has(proposal.id)}
           onToggleSelect={toggleSelect}
           onApprove={handleApproveClick}
+          onModifyApprove={handleModifyApproveClick}
           onReject={handleReject}
           isRiskExpanded={expandedRiskId === proposal.id}
           onToggleRisk={toggleRisk}
@@ -888,89 +1210,20 @@ function PendingTab({ proposals }) {
         onApproved={handleApproved}
       />
 
-      {/* Reject Reason Modal */}
-      {rejectModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }} onClick={() => setRejectModalOpen(false)}>
-          <div style={{
-            backgroundColor: _C.bg.secondary,
-            border: '1px solid ' + _C.border.default,
-            borderRadius: '8px',
-            padding: '20px',
-            width: '400px',
-            maxWidth: '90vw',
-            fontFamily: _T.fontFamily,
-          }} onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              fontSize: _T.sizes.md, fontWeight: _T.weights.bold,
-              color: _C.text.primary, marginBottom: '12px',
-            }}>
-              Reject {selectedIds.size} Proposal{selectedIds.size > 1 ? 's' : ''}
-            </div>
-            <div style={{
-              fontSize: _T.sizes.sm, color: _C.text.secondary, marginBottom: '8px',
-            }}>
-              Enter rejection reason:
-            </div>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Reason for rejection..."
-              rows={3}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                backgroundColor: _C.bg.primary,
-                border: '1px solid ' + _C.border.default,
-                borderRadius: '4px',
-                padding: '8px',
-                color: _C.text.primary,
-                fontSize: _T.sizes.sm,
-                fontFamily: _T.fontFamily,
-                resize: 'vertical',
-                outline: 'none',
-              }}
-              autoFocus
-            />
-            <div style={{
-              display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px',
-            }}>
-              <button
-                onClick={() => setRejectModalOpen(false)}
-                style={{
-                  padding: '6px 14px',
-                  backgroundColor: _C.bg.elevated,
-                  color: _C.text.secondary,
-                  border: '1px solid ' + _C.border.default,
-                  borderRadius: '4px',
-                  fontSize: _T.sizes.sm,
-                  fontFamily: _T.fontFamily,
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBatchReject}
-                style={{
-                  padding: '6px 14px',
-                  backgroundColor: _C.pnl.negative,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: _T.sizes.sm,
-                  fontWeight: _T.weights.semibold,
-                  fontFamily: _T.fontFamily,
-                  cursor: 'pointer',
-                }}
-              >
-                Confirm Reject
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Modify-and-Approve Panel */}
+      <ModifyApprovalPanel
+        proposal={modifyingProposal}
+        onClose={() => setModifyingProposal(null)}
+        onModified={handleModified}
+      />
+
+      {/* Batch Reject Modal */}
+      {showBatchRejectModal && (
+        <BatchRejectModal
+          count={selectedIds.size}
+          onConfirm={handleBatchRejectConfirm}
+          onCancel={() => setShowBatchRejectModal(false)}
+        />
       )}
     </div>
   );
@@ -1167,7 +1420,7 @@ function TradeBlotterPage() {
     ? all.data
     : SAMPLE_HISTORY;
 
-  const usingSampleData = pendingProposals === SAMPLE_PENDING_PROPOSALS;
+  const usingSample = !(pending.data && Array.isArray(pending.data) && pending.data.length > 0);
 
   const pageStyle = {
     fontFamily: _T.fontFamily,
@@ -1230,8 +1483,7 @@ function TradeBlotterPage() {
 
   return (
     <div style={pageStyle}>
-      {/* Sample data banner */}
-      {usingSampleData && <window.SampleDataBanner />}
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Trade Blotter</div>

@@ -1,17 +1,16 @@
 /**
- * App.jsx - Main application component for ARC Macro PMS.
+ * App.jsx - Main application component for the Macro Trading PMS.
  *
  * Features:
- * - HashRouter with PMS routes (8 pages) + default redirect
- * - PMS-only interface (Dashboard mode removed per review)
- * - Sidebar + content area layout with PMS dark theme
+ * - HashRouter with PMS routes (9 pages) + legacy redirects
+ * - Bloomberg-dense dark theme (#0d1117) for all pages
  * - WebSocket alert connection with toast notifications
  * - Alert badge count passed to Sidebar
  * - Legacy Dashboard routes redirect to PMS equivalents
  */
 
 const { useState, useEffect } = React;
-const { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } = window.ReactRouterDOM;
+const { HashRouter, Routes, Route, Navigate, useLocation } = window.ReactRouterDOM;
 
 // ---------------------------------------------------------------------------
 // Toast notification card
@@ -100,31 +99,15 @@ function ToastContainer({ toasts, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
-// Layout wrapper — sidebar + content with PMS theme
+// Layout wrapper — sidebar + content with PMS styling
 // ---------------------------------------------------------------------------
 function Layout({ children, alertCount, toasts, onCloseToast }) {
-  const { PMS_COLORS: _C } = window.PMS_THEME;
-
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      backgroundColor: _C.bg.primary,
-      color: _C.text.primary,
-    }}>
+    <div className="flex h-screen text-gray-100" style={{ backgroundColor: '#0d1117' }}>
       <Sidebar alertCount={alertCount} />
       {/* Content area — offset by sidebar width */}
-      <main style={{
-        flex: 1,
-        marginLeft: '224px',
-        overflowY: 'auto',
-        backgroundColor: _C.bg.primary,
-      }}>
-        <div style={{
-          padding: '16px',
-          maxWidth: '1600px',
-          margin: '0 auto',
-        }}>
+      <main className="flex-1 ml-56 overflow-y-auto" style={{ backgroundColor: '#0d1117' }}>
+        <div className="p-4 max-w-screen-2xl mx-auto">
           {children}
         </div>
       </main>
@@ -134,7 +117,7 @@ function Layout({ children, alertCount, toasts, onCloseToast }) {
 }
 
 // ---------------------------------------------------------------------------
-// Inner app content (needs to be inside HashRouter for useNavigate)
+// Inner app content (needs to be inside HashRouter for hooks)
 // ---------------------------------------------------------------------------
 function AppContent() {
   const [toasts, setToasts] = useState([]);
@@ -168,7 +151,7 @@ function AppContent() {
 
   const alertCount = toasts.length;
 
-  // PMS page components — resolved from window globals
+  // PMS page components from window globals
   const MorningPackPage = window.MorningPackPage;
   const PositionBookPage = window.PositionBookPage;
   const TradeBlotterPage = window.TradeBlotterPage;
@@ -177,6 +160,7 @@ function AppContent() {
   const DecisionJournalPage = window.DecisionJournalPage;
   const AgentIntelPage = window.AgentIntelPage;
   const ComplianceAuditPage = window.ComplianceAuditPage;
+  const PMSSignalsPage = window.PMSSignalsPage;
 
   return (
     <Layout
@@ -185,27 +169,24 @@ function AppContent() {
       onCloseToast={handleCloseToast}
     >
       <Routes>
-        {/* Default route — redirect to Morning Pack */}
-        <Route path="/" element={<Navigate to="/pms/morning-pack" replace />} />
-
         {/* PMS routes */}
         <Route path="/pms/morning-pack" element={<MorningPackPage />} />
         <Route path="/pms/portfolio" element={<PositionBookPage />} />
         <Route path="/pms/risk" element={<RiskMonitorPage />} />
         <Route path="/pms/blotter" element={<TradeBlotterPage />} />
+        <Route path="/pms/signals" element={<PMSSignalsPage />} />
         <Route path="/pms/attribution" element={<PerformanceAttributionPage />} />
         <Route path="/pms/journal" element={<DecisionJournalPage />} />
         <Route path="/pms/agents" element={<AgentIntelPage />} />
         <Route path="/pms/compliance" element={<ComplianceAuditPage />} />
 
-        {/* Legacy Dashboard routes — redirect to PMS equivalents */}
-        <Route path="/strategies" element={<Navigate to="/pms/attribution" replace />} />
-        <Route path="/signals" element={<Navigate to="/pms/morning-pack" replace />} />
+        {/* Default + legacy redirects */}
+        <Route path="/" element={<Navigate to="/pms/morning-pack" replace />} />
+        <Route path="/strategies" element={<Navigate to="/pms/morning-pack" replace />} />
+        <Route path="/signals" element={<Navigate to="/pms/signals" replace />} />
         <Route path="/risk" element={<Navigate to="/pms/risk" replace />} />
         <Route path="/portfolio" element={<Navigate to="/pms/portfolio" replace />} />
         <Route path="/agents" element={<Navigate to="/pms/agents" replace />} />
-
-        {/* Catch-all — redirect to Morning Pack */}
         <Route path="*" element={<Navigate to="/pms/morning-pack" replace />} />
       </Routes>
     </Layout>

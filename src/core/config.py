@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     fred_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # CORS
+    allowed_origins: str = ""  # Comma-separated extra CORS origins
+
     # JWT Authentication
     jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"

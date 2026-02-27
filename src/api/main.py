@@ -118,8 +118,11 @@ _allowed_origins = [
     "http://localhost:3000",
     "http://localhost:8000",
     "http://157.230.187.3:8000",
-    "http://157.230.187.3",
 ]
+if settings.allowed_origins:
+    _allowed_origins.extend(
+        o.strip() for o in settings.allowed_origins.split(",") if o.strip()
+    )
 if settings.debug:
     _allowed_origins = ["*"]
 app.add_middleware(
