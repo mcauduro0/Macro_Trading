@@ -205,7 +205,12 @@ function EquityCurveSection({ equityCurve }) {
     if (!equityCurve || equityCurve.length === 0) return [];
     if (range === 'All') return equityCurve;
 
-    const lastDate = new Date(equityCurve[equityCurve.length - 1].snapshot_date);
+    const lastEntry = equityCurve[equityCurve.length - 1];
+    if (!lastEntry || !lastEntry.snapshot_date) return equityCurve;
+
+    const lastDate = new Date(lastEntry.snapshot_date + 'T00:00:00');
+    if (isNaN(lastDate.getTime())) return equityCurve;
+
     let startDate;
 
     if (range === '1M') {
@@ -222,7 +227,11 @@ function EquityCurveSection({ equityCurve }) {
     } else if (range === '1Y') {
       startDate = new Date(lastDate);
       startDate.setFullYear(startDate.getFullYear() - 1);
+    } else {
+      return equityCurve;
     }
+
+    if (isNaN(startDate.getTime())) return equityCurve;
 
     const startStr = startDate.toISOString().slice(0, 10);
     return equityCurve.filter(d => d.snapshot_date >= startStr);

@@ -994,6 +994,8 @@ function PendingTab({ proposals }) {
   const [showBatchRejectModal, setShowBatchRejectModal] = useState(false);
   const [localStatuses, setLocalStatuses] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
   const activeProposals = proposals.filter(p => !localStatuses[p.id]);
 

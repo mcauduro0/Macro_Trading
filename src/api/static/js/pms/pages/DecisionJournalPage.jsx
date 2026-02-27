@@ -547,6 +547,7 @@ function DecisionJournalPage() {
         setEntries(sample);
       }
       setHasMore(false);
+      setUsingSampleData(true);
     }
 
     setLoading(false);

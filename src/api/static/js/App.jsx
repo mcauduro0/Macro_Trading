@@ -6,6 +6,7 @@
  * - Bloomberg-dense dark theme (#0d1117) for all pages
  * - WebSocket alert connection with toast notifications
  * - Alert badge count passed to Sidebar
+ * - Legacy Dashboard routes redirect to PMS equivalents
  */
 
 const { useState, useEffect } = React;
@@ -15,20 +16,61 @@ const { HashRouter, Routes, Route, Navigate, useLocation } = window.ReactRouterD
 // Toast notification card
 // ---------------------------------------------------------------------------
 function ToastCard({ toast, onClose }) {
+  const { PMS_COLORS: _C, PMS_TYPOGRAPHY: _T } = window.PMS_THEME;
+
+  const cardStyle = {
+    backgroundColor: _C.bg.elevated,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+    padding: '10px 12px',
+    marginBottom: '6px',
+    maxWidth: '320px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px',
+    fontFamily: _T.fontFamily,
+    animation: 'slideIn 0.3s ease-out',
+  };
+
+  const msgStyle = {
+    flex: 1,
+    fontSize: _T.sizes.sm,
+    color: _C.text.primary,
+    lineHeight: 1.4,
+  };
+
+  const timeStyle = {
+    fontSize: _T.sizes.xs,
+    color: _C.text.muted,
+    marginTop: '2px',
+  };
+
+  const closeBtnStyle = {
+    background: 'none',
+    border: 'none',
+    color: _C.text.muted,
+    fontSize: '14px',
+    cursor: 'pointer',
+    padding: 0,
+    lineHeight: 1,
+    flexShrink: 0,
+  };
+
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-3 mb-2 max-w-sm animate-slide-in flex items-start gap-2">
-      <div className="flex-1">
-        <div className="text-gray-200 text-sm">{toast.message}</div>
-        <div className="text-gray-500 text-xs mt-1">
+    <div style={cardStyle}>
+      <div style={{ flex: 1 }}>
+        <div style={msgStyle}>{toast.message}</div>
+        <div style={timeStyle}>
           {new Date(toast.timestamp).toLocaleTimeString()}
         </div>
       </div>
       <button
         onClick={() => onClose(toast.id)}
-        className="text-gray-500 hover:text-gray-300 text-lg leading-none flex-shrink-0"
+        style={closeBtnStyle}
         title="Dismiss"
       >
-        x
+        &#x2715;
       </button>
     </div>
   );
@@ -41,7 +83,14 @@ function ToastContainer({ toasts, onClose }) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse">
+    <div style={{
+      position: 'fixed',
+      bottom: '16px',
+      right: '16px',
+      zIndex: 50,
+      display: 'flex',
+      flexDirection: 'column-reverse',
+    }}>
       {toasts.map((toast) => (
         <ToastCard key={toast.id} toast={toast} onClose={onClose} />
       ))}

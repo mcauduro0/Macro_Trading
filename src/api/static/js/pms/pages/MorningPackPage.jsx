@@ -636,6 +636,157 @@ function MorningPackSkeleton() {
 // ---------------------------------------------------------------------------
 // Main MorningPackPage Component
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Section 5: Signal Heatmap (migrated from Dashboard SignalsPage)
+// ---------------------------------------------------------------------------
+function heatmapCellColor(direction, conviction) {
+  if (!direction) return 'rgba(107, 114, 128, 0.15)';
+  const d = direction.toUpperCase();
+  const c = Math.max(0.15, Math.min(1.0, conviction || 0.5));
+  if (d === 'LONG') return 'rgba(34, 197, 94, ' + (c * 0.8 + 0.1).toFixed(2) + ')';
+  if (d === 'SHORT') return 'rgba(239, 68, 68, ' + (c * 0.8 + 0.1).toFixed(2) + ')';
+  return 'rgba(107, 114, 128, 0.15)';
+}
+
+function getLastNDates(n) {
+  const dates = [];
+  const now = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function SignalHeatmapSection() {
+  const { useMemo: _useMemo } = React;
+  const signals = window.useFetch('/api/v1/signals/latest', 60000);
+  const [hoveredCell, setHoveredCell] = useState(null);
+
+  const dates = _useMemo(() => getLastNDates(30), []);
+
+  const { strategySignals, strategyIds } = _useMemo(() => {
+    const sigs = signals.data && signals.data.data && signals.data.data.signals ? signals.data.data.signals : [];
+    const byStrategy = {};
+    for (const sig of sigs) {
+      const sid = sig.agent_id || sig.strategy_id || 'unknown';
+      if (!byStrategy[sid]) byStrategy[sid] = [];
+      byStrategy[sid].push(sig);
+    }
+    return { strategySignals: byStrategy, strategyIds: Object.keys(byStrategy).sort() };
+  }, [signals.data]);
+
+  const heatmapData = _useMemo(() => {
+    const map = {};
+    for (const [sid, sigs] of Object.entries(strategySignals)) {
+      map[sid] = {};
+      for (const sig of sigs) {
+        const d = sig.date || sig.as_of_date || '';
+        if (d) map[sid][d] = { direction: sig.direction, conviction: sig.confidence || sig.conviction || 0.5 };
+      }
+    }
+    return map;
+  }, [strategySignals]);
+
+  const cardStyle = {
+    backgroundColor: _COLORS.bg.secondary,
+    border: '1px solid ' + _COLORS.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+    marginTop: _SP.md,
+    overflowX: 'auto',
+  };
+
+  const sectionTitle = {
+    fontSize: _TYPO.sizes.xs,
+    fontWeight: _TYPO.weights.semibold,
+    color: _COLORS.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _TYPO.fontFamily,
+    marginBottom: '8px',
+  };
+
+  if (signals.loading && strategyIds.length === 0) {
+    return (
+      <div style={cardStyle}>
+        <div style={sectionTitle}>Signal Heatmap (30 Days)</div>
+        <div style={{ height: '80px', backgroundColor: _COLORS.bg.tertiary, borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+      </div>
+    );
+  }
+
+  if (strategyIds.length === 0) return null;
+
+  return (
+    <div style={cardStyle}>
+      <div style={sectionTitle}>Signal Heatmap (30 Days)</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '120px repeat(' + dates.length + ', 1fr)', gap: '1px', fontSize: '10px' }}>
+        {/* Header row */}
+        <div style={{ fontSize: _TYPO.sizes.xs, color: _COLORS.text.muted, fontWeight: _TYPO.weights.semibold, padding: '2px 4px', fontFamily: _TYPO.fontFamily }}>Strategy</div>
+        {dates.map((d) => (
+          <div key={d} style={{ color: _COLORS.text.muted, textAlign: 'center', writingMode: 'vertical-rl', height: '40px', fontSize: '7px', fontFamily: _TYPO.fontFamily }}>
+            {d.slice(5)}
+          </div>
+        ))}
+
+        {/* Strategy rows */}
+        {strategyIds.map((sid) => (
+          <React.Fragment key={sid}>
+            <div style={{ color: _COLORS.text.secondary, fontSize: _TYPO.sizes.xs, padding: '2px 4px', fontFamily: _TYPO.fontFamily, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={sid}>
+              {sid}
+            </div>
+            {dates.map((d) => {
+              const cell = heatmapData[sid] && heatmapData[sid][d];
+              const direction = cell ? cell.direction : null;
+              const conviction = cell ? cell.conviction : 0;
+              const isHovered = hoveredCell && hoveredCell.sid === sid && hoveredCell.date === d;
+              return (
+                <div
+                  key={d}
+                  style={{
+                    backgroundColor: heatmapCellColor(direction, conviction),
+                    minHeight: '16px',
+                    borderRadius: '2px',
+                    border: isHovered ? '1px solid ' + _COLORS.border.accent : '1px solid transparent',
+                    transform: isHovered ? 'scale(1.3)' : 'scale(1)',
+                    transition: 'transform 0.1s',
+                    cursor: 'pointer',
+                  }}
+                  title={sid + ' | ' + d + ' | ' + (direction || 'N/A') + ' (' + (conviction * 100).toFixed(0) + '%)'}
+                  onMouseEnter={() => setHoveredCell({ sid, date: d })}
+                  onMouseLeave={() => setHoveredCell(null)}
+                />
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px', fontSize: _TYPO.sizes.xs, color: _COLORS.text.muted, fontFamily: _TYPO.fontFamily }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'rgba(34, 197, 94, 0.7)' }} />
+          LONG
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'rgba(239, 68, 68, 0.7)' }} />
+          SHORT
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', backgroundColor: 'rgba(107, 114, 128, 0.15)' }} />
+          NEUTRAL
+        </span>
+        <span style={{ color: _COLORS.text.muted }}>| Intensidade = nível de convicção</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Page Component
+// ---------------------------------------------------------------------------
 function MorningPackPage() {
   // Fetch main briefing data
   const briefing = window.useFetch('/api/v1/pms/morning-pack/latest', 60000);
@@ -645,6 +796,7 @@ function MorningPackPage() {
   const proposals = window.useFetch('/api/v1/pms/trades/proposals?status=pending', 60000);
 
   const isLoading = briefing.loading && risk.loading && proposals.loading;
+  const usingSampleData = !briefing.data || !briefing.data.briefing_date;
 
   const pageStyle = {
     fontFamily: _TYPO.fontFamily,
@@ -700,6 +852,9 @@ function MorningPackPage() {
             proposalsData={proposals.data}
             briefingData={briefing.data}
           />
+
+          {/* Section 5: Signal Heatmap (migrated from Dashboard) */}
+          <SignalHeatmapSection />
         </React.Fragment>
       )}
     </div>

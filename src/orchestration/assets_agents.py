@@ -48,13 +48,15 @@ def _ensure_agents_registered() -> None:
     if len(registered) >= 5:
         return
 
+    from src.agents.data_loader import PointInTimeDataLoader
+    loader = PointInTimeDataLoader()
     AgentRegistry.clear()
 
     from src.agents.cross_asset_agent import CrossAssetAgent
     from src.agents.fiscal_agent import FiscalAgent
-    from src.agents.fx_equilibrium_agent import FxEquilibriumAgent
+    from src.agents.fx_agent import FxEquilibriumAgent
     from src.agents.inflation_agent import InflationAgent
-    from src.agents.monetary_policy_agent import MonetaryPolicyAgent
+    from src.agents.monetary_agent import MonetaryPolicyAgent
 
     for agent_cls in [
         InflationAgent,
@@ -63,7 +65,7 @@ def _ensure_agents_registered() -> None:
         FxEquilibriumAgent,
         CrossAssetAgent,
     ]:
-        AgentRegistry.register(agent_cls())
+        AgentRegistry.register(agent_cls(loader=loader))
 
 
 def _run_agent(agent_id: str, as_of: date) -> dict:

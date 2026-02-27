@@ -118,8 +118,69 @@ class PointInTimeDataLoader:
         df = loader.get_macro_series("BR_SELIC_TARGET", date(2024, 6, 15))
     """
 
+    # Alias table: maps agent-facing codes to DB series_code values.
+    # Agents use prefixed codes (BCB-433, FRED-CPILFESL, FOCUS-IPCA-12M)
+    # while the DB stores raw codes (433, CPILFESL, BR_FOCUS_IPCA_CY).
+    _SERIES_ALIASES: dict[str, str] = {
+        # Focus expectations
+        "FOCUS-IPCA-12M": "BR_FOCUS_IPCA_NY",
+        "FOCUS-IPCA-EOY": "BR_FOCUS_IPCA_CY",
+        "FOCUS-SELIC-12M": "BR_FOCUS_SELIC_NY",
+        "FOCUS-SELIC-EOY": "BR_FOCUS_SELIC_CY",
+        "FOCUS-CAMBIO-12M": "BR_FOCUS_CAMBIO_NY",
+        "FOCUS-CAMBIO-EOY": "BR_FOCUS_CAMBIO_CY",
+        "FOCUS-IGPM-12M": "BR_FOCUS_IGPM_NY",
+        "FOCUS-IGPM-EOY": "BR_FOCUS_IGPM_CY",
+        # Fiscal / macro aggregates
+        "BR_GROSS_DEBT_GDP": "13762",
+        "BR_NET_DEBT_GDP": "4513",
+        "BR_PRIMARY_BALANCE": "5793",
+        "BR_GDP_QOQ": "22099",
+        "BR_IBC_BR_YOY": "24364",
+        "BR_IPCA_12M": "13522",
+        "BR_SELIC_TARGET": "432",
+        # Flow data aliases
+        "BR_FX_FLOW_COMMERCIAL": "22704",
+        "BR_FX_FLOW_FINANCIAL": "22705",
+    }
+
     def __init__(self) -> None:
         self.log = structlog.get_logger().bind(component="pit_data_loader")
+
+    @classmethod
+    def _normalize_series_code(cls, code: str) -> str:
+        """Normalize agent-facing series codes to DB series_code values.
+
+        Handles four patterns:
+        1. Exact alias match (BR_GROSS_DEBT_GDP → 13762)
+        2. Focus CY/NY dynamic resolution (BR_FOCUS_IPCA_CY → BR_FOCUS_IPCA_2026_MEDIAN)
+        3. Prefix stripping (BCB-433 → 433, FRED-CPILFESL → CPILFESL)
+        4. Pass-through for codes already matching DB format
+        """
+        # 1. Check exact alias first (handles FOCUS-IPCA-12M → BR_FOCUS_IPCA_NY)
+        resolved = cls._SERIES_ALIASES.get(code, code)
+
+        # 2. Resolve Focus CY/NY to year-based codes
+        #    BR_FOCUS_IPCA_CY → BR_FOCUS_IPCA_<current_year>_MEDIAN
+        #    BR_FOCUS_IPCA_NY → BR_FOCUS_IPCA_<next_year>_MEDIAN
+        if resolved.startswith("BR_FOCUS_") and resolved.endswith(("_CY", "_NY")):
+            from datetime import date as _date
+            year = _date.today().year
+            if resolved.endswith("_NY"):
+                year += 1
+            base = resolved[:-3]  # strip _CY or _NY
+            resolved = f"{base}_{year}_MEDIAN"
+            return resolved
+
+        if resolved != code:
+            return resolved
+
+        # 3. Strip BCB- or FRED- prefix
+        for prefix in ("BCB-", "FRED-"):
+            if code.startswith(prefix):
+                return code[len(prefix):]
+        # 4. Pass through (already in DB format)
+        return code
 
     # ------------------------------------------------------------------
     # macro_series (PIT via release_time)
@@ -157,7 +218,7 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, MacroSeries.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == series_code,
+                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
                     cast(MacroSeries.release_time, Date) <= as_of_date,
                     MacroSeries.observation_date >= start,
                 )
@@ -218,7 +279,7 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, MacroSeries.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == series_code,
+                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
                     cast(MacroSeries.release_time, Date) <= as_of_date,
                 )
             )
@@ -329,6 +390,7 @@ class PointInTimeDataLoader:
             DataFrame with columns ``["date", "rate"]`` indexed on ``date``.
         """
         curve_id = _normalize_curve_id(curve_id)
+
         start = as_of_date - timedelta(days=lookback_days)
 
         stmt = (
@@ -467,7 +529,7 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, FlowData.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == series_code,
+                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
                     FlowData.observation_date >= start,
                     # PIT: use release_time if available, else observation_date
                     func.coalesce(

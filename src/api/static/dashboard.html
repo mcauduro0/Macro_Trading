@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Macro Trading System</title>
+  <title>ARC Macro PMS</title>
 
-  <!-- JetBrains Mono font for PMS Bloomberg-dense styling -->
+  <!-- JetBrains Mono font for Bloomberg-dense styling -->
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- React 18 — pinned to exact version for production stability -->
@@ -67,18 +67,18 @@
 
   <style>
     body {
-      background: #0a0a0f;
+      background: #0d1117;
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
     }
-    .font-mono { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace; }
+    .font-mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace; }
     .small-caps { font-variant: small-caps; letter-spacing: 0.08em; }
     .skeleton { animation: pulse 1.5s ease-in-out infinite; }
     @keyframes pulse {
       0%, 100% { opacity: 0.4; }
       50% { opacity: 0.8; }
     }
-    @keyframes slide-in {
+    @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
@@ -98,10 +98,11 @@
 <body>
   <div id="root"></div>
 
-  <!-- Load .jsx files in dependency order: hooks -> pms libs -> Sidebar -> pages -> App -->
+  <!-- Load .jsx files in dependency order: hooks -> pms libs -> utils -> Sidebar -> PMS pages -> App -->
   <script type="text/babel" src="/static/js/hooks.jsx"></script>
   <script type="text/babel" src="/static/js/pms/theme.jsx"></script>
   <script type="text/babel" src="/static/js/pms/components.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/utils.jsx"></script>
   <script type="text/babel" src="/static/js/pms/pages/MorningPackPage.jsx"></script>
   <script type="text/babel" src="/static/js/pms/pages/PositionBookPage.jsx"></script>
   <script type="text/babel" src="/static/js/pms/pages/TradeBlotterPage.jsx"></script>

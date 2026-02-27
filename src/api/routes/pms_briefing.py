@@ -41,6 +41,14 @@ def _get_service():
         pm = PositionManager()
         tw = TradeWorkflowService(position_manager=pm)
         _service = MorningPackService(position_manager=pm, trade_workflow=tw)
+        # Hydrate from DB so in-memory stores have real data
+        try:
+            from src.pms.db_loader import hydrate_trade_workflow, hydrate_morning_pack_service
+            hydrate_trade_workflow(tw)
+            hydrate_morning_pack_service(_service)
+            logger.info("MorningPackService hydrated from DB")
+        except Exception as exc:
+            logger.warning("Failed to hydrate MorningPackService: %s", exc)
     return _service
 
 

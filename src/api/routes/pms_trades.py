@@ -43,6 +43,13 @@ def _get_workflow():
         from src.pms import TradeWorkflowService
 
         _workflow = TradeWorkflowService()
+        # Hydrate from DB so in-memory stores have real data
+        try:
+            from src.pms.db_loader import hydrate_trade_workflow
+            hydrate_trade_workflow(_workflow)
+            logger.info("TradeWorkflowService hydrated from DB (trades route)")
+        except Exception as exc:
+            logger.warning("Failed to hydrate TradeWorkflowService: %s", exc)
     return _workflow
 
 

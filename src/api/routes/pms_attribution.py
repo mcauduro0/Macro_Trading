@@ -37,7 +37,15 @@ def _get_service():
         from src.pms import PositionManager
         from src.pms.attribution import PerformanceAttributionEngine
 
-        _service = PerformanceAttributionEngine(position_manager=PositionManager())
+        pm = PositionManager()
+        _service = PerformanceAttributionEngine(position_manager=pm)
+        # Hydrate from DB so in-memory stores have real data
+        try:
+            from src.pms.db_loader import hydrate_position_manager
+            hydrate_position_manager(pm)
+            logger.info("PerformanceAttributionEngine hydrated from DB")
+        except Exception as exc:
+            logger.warning("Failed to hydrate PerformanceAttributionEngine: %s", exc)
     return _service
 
 
