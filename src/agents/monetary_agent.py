@@ -85,9 +85,9 @@ class TaylorRuleModel:
                 metadata={"reason": reason},
             )
 
-        # Validate required features
-        required = ("focus_ipca_12m", "ibc_br_output_gap", "policy_inertia", "selic_target")
-        for key in required:
+        # Validate hard-required features (output gap has neutral fallback)
+        hard_required = ("focus_ipca_12m", "selic_target")
+        for key in hard_required:
             val = features.get(key)
             if val is None or (isinstance(val, float) and np.isnan(val)):
                 return _no_signal(f"missing_feature:{key}")
@@ -95,9 +95,19 @@ class TaylorRuleModel:
             return _no_signal("r_star_nan")
 
         focus_ipca = features["focus_ipca_12m"]
-        output_gap = features["ibc_br_output_gap"]
-        inertia = features["policy_inertia"]
         selic = features["selic_target"]
+
+        # Output gap: use 0.0 (neutral) when IBC-Br HP filter unavailable
+        raw_gap = features.get("ibc_br_output_gap")
+        if raw_gap is None or (isinstance(raw_gap, float) and np.isnan(raw_gap)):
+            output_gap = 0.0
+            logger.info("taylor_using_neutral_output_gap")
+        else:
+            output_gap = raw_gap
+
+        # Policy inertia: default 0.0 when unavailable
+        raw_inertia = features.get("policy_inertia")
+        inertia = raw_inertia if raw_inertia is not None and not (isinstance(raw_inertia, float) and np.isnan(raw_inertia)) else 0.0
 
         # Taylor Rule: i* = r* + π_e + α(π_e − π*) + β(y_gap) + γ(inertia)
         i_star = (
@@ -703,7 +713,9 @@ class MonetaryPolicyAgent(BaseAgent):
                 try:
                     fred_df = self.loader.get_macro_series(fred_code, as_of_date, lookback_days=30)
                     if fred_df is not None and not fred_df.empty and "value" in fred_df.columns:
-                        ust_row[col_name] = float(fred_df["value"].dropna().iloc[-1]) / 100.0
+                        # FRED DGS series are in percentage (e.g. 4.35);
+                        # store as-is — feature engine normalizes to pct
+                        ust_row[col_name] = float(fred_df["value"].dropna().iloc[-1])
                 except Exception:
                     pass
             if ust_row:

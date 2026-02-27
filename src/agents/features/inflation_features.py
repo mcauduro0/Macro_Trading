@@ -626,6 +626,12 @@ class InflationFeatureEngine:
             for col in ["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]:
                 if col not in df.columns:
                     df[col] = np.nan
+
+            # If output_gap is entirely NaN (IBC-Br unavailable or HP filter failed),
+            # fill with 0.0 (neutral gap) so OLS can still run with the other 3 regressors.
+            if df["output_gap"].isna().all():
+                df["output_gap"] = 0.0
+
             return df[["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]]
 
         except Exception:
