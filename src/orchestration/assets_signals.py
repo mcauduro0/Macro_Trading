@@ -75,10 +75,12 @@ def signal_aggregation(
     # Collect strategy signals from the strategy registry
     from src.strategies import ALL_STRATEGIES
 
+    from src.agents.data_loader import PointInTimeDataLoader
+    _loader = PointInTimeDataLoader()
     strategy_signals = []
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
         try:
-            strategy = strategy_cls() if isinstance(strategy_cls, type) else strategy_cls
+            strategy = strategy_cls(data_loader=_loader) if isinstance(strategy_cls, type) else strategy_cls
             if hasattr(strategy, "generate_signals"):
                 sigs = strategy.generate_signals(as_of)
                 if sigs:
