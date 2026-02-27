@@ -193,6 +193,8 @@ class TradeProposalResponse(BaseModel):
     suggested_notional_brl: float = 0.0
     conviction: float = 0.0
     signal_source: Optional[str] = None
+    agent_id: Optional[str] = None
+    agent: Optional[str] = None
     strategy_ids: Optional[list[str]] = None
     rationale: Optional[str] = None
     risk_impact: Optional[dict[str, Any]] = None

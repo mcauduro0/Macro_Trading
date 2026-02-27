@@ -37,7 +37,15 @@ def _get_service():
         from src.pms import PositionManager
         from src.pms.risk_monitor import RiskMonitorService
 
-        _service = RiskMonitorService(position_manager=PositionManager())
+        pm = PositionManager()
+        _service = RiskMonitorService(position_manager=pm)
+        # Hydrate from DB so in-memory stores have real data
+        try:
+            from src.pms.db_loader import hydrate_position_manager
+            hydrate_position_manager(pm)
+            logger.info("RiskMonitorService hydrated from DB")
+        except Exception as exc:
+            logger.warning("Failed to hydrate RiskMonitorService: %s", exc)
     return _service
 
 
