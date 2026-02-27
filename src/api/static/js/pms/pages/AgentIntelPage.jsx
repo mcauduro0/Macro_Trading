@@ -292,6 +292,7 @@ function AgentIntelPage() {
   const [agentReports, setAgentReports] = _aiUseState({});
   const [loading, setLoading] = _aiUseState(true);
   const [lastUpdated, setLastUpdated] = _aiUseState(null);
+  const [usingSampleData, setUsingSampleData] = _aiUseState(false);
 
   _aiUseEffect(() => {
     let cancelled = false;
@@ -367,6 +368,7 @@ function AgentIntelPage() {
         if (!cancelled) {
           setAgentReports(generateSampleAgentData());
           setLastUpdated(new Date());
+          setUsingSampleData(true);
         }
       }
 
@@ -392,6 +394,8 @@ function AgentIntelPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _AS.md }}>
         <div style={{ fontSize: _AT.sizes['2xl'], fontWeight: _AT.weights.bold, color: _AC.text.primary, marginBottom: '2px' }}>

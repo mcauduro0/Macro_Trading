@@ -114,7 +114,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ---------------------------------------------------------------------------
 # Middleware
 # ---------------------------------------------------------------------------
-_allowed_origins = ["http://localhost:3000", "http://localhost:8000"]
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://157.230.187.3:8000",
+    "http://157.230.187.3",
+]
 if settings.debug:
     _allowed_origins = ["*"]
 app.add_middleware(

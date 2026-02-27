@@ -683,6 +683,8 @@ function PendingTab({ proposals }) {
   const [approvingProposal, setApprovingProposal] = useState(null);
   const [localStatuses, setLocalStatuses] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
   const activeProposals = proposals.filter(p => !localStatuses[p.id]);
 
@@ -765,12 +767,17 @@ function PendingTab({ proposals }) {
     setTimeout(() => setBatchProgress(null), 1500);
   };
 
+  const openRejectModal = () => {
+    if (selectedIds.size === 0) return;
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
   const handleBatchReject = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    const reason = window.prompt('Enter rejection reason for all selected proposals:');
-    if (reason === null) return;
-    const notes = reason || 'Batch rejected';
+    setRejectModalOpen(false);
+    const notes = rejectReason.trim() || 'Batch rejected';
     setBatchProgress('0/' + ids.length);
     for (let i = 0; i < ids.length; i++) {
       const pid = ids[i];
@@ -829,7 +836,7 @@ function PendingTab({ proposals }) {
         </button>
 
         <button
-          onClick={handleBatchReject}
+          onClick={openRejectModal}
           disabled={!hasSelection}
           style={{
             padding: '4px 12px', backgroundColor: hasSelection ? _C.pnl.negative : _C.bg.elevated,
@@ -880,6 +887,91 @@ function PendingTab({ proposals }) {
         onClose={() => setApprovingProposal(null)}
         onApproved={handleApproved}
       />
+
+      {/* Reject Reason Modal */}
+      {rejectModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={() => setRejectModalOpen(false)}>
+          <div style={{
+            backgroundColor: _C.bg.secondary,
+            border: '1px solid ' + _C.border.default,
+            borderRadius: '8px',
+            padding: '20px',
+            width: '400px',
+            maxWidth: '90vw',
+            fontFamily: _T.fontFamily,
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              fontSize: _T.sizes.md, fontWeight: _T.weights.bold,
+              color: _C.text.primary, marginBottom: '12px',
+            }}>
+              Reject {selectedIds.size} Proposal{selectedIds.size > 1 ? 's' : ''}
+            </div>
+            <div style={{
+              fontSize: _T.sizes.sm, color: _C.text.secondary, marginBottom: '8px',
+            }}>
+              Enter rejection reason:
+            </div>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection..."
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                backgroundColor: _C.bg.primary,
+                border: '1px solid ' + _C.border.default,
+                borderRadius: '4px',
+                padding: '8px',
+                color: _C.text.primary,
+                fontSize: _T.sizes.sm,
+                fontFamily: _T.fontFamily,
+                resize: 'vertical',
+                outline: 'none',
+              }}
+              autoFocus
+            />
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px',
+            }}>
+              <button
+                onClick={() => setRejectModalOpen(false)}
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: _C.bg.elevated,
+                  color: _C.text.secondary,
+                  border: '1px solid ' + _C.border.default,
+                  borderRadius: '4px',
+                  fontSize: _T.sizes.sm,
+                  fontFamily: _T.fontFamily,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBatchReject}
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: _C.pnl.negative,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: _T.sizes.sm,
+                  fontWeight: _T.weights.semibold,
+                  fontFamily: _T.fontFamily,
+                  cursor: 'pointer',
+                }}
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1075,6 +1167,8 @@ function TradeBlotterPage() {
     ? all.data
     : SAMPLE_HISTORY;
 
+  const usingSampleData = pendingProposals === SAMPLE_PENDING_PROPOSALS;
+
   const pageStyle = {
     fontFamily: _T.fontFamily,
     color: _C.text.primary,
@@ -1136,6 +1230,8 @@ function TradeBlotterPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Trade Blotter</div>

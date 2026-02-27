@@ -709,6 +709,154 @@ function AttributionSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
+// Backtest Detail Section (migrated from Dashboard StrategiesPage)
+// ---------------------------------------------------------------------------
+function BacktestDetailSection() {
+  const { useState: _bUseState, useMemo: _bUseMemo, useCallback: _bUseCallback } = React;
+  const strategies = window.useFetch('/api/v1/strategies', 60000);
+  const [expandedId, setExpandedId] = _bUseState(null);
+
+  const stratList = _bUseMemo(() => {
+    const d = strategies.data;
+    return d && d.data ? d.data : [];
+  }, [strategies.data]);
+
+  const cardStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+    marginTop: _S.md,
+  };
+
+  const sectionTitleSt = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '8px',
+  };
+
+  if (strategies.loading && stratList.length === 0) {
+    return (
+      <div style={cardStyle}>
+        <div style={sectionTitleSt}>Strategy Backtest Metrics</div>
+        <div style={{ height: '60px', backgroundColor: _C.bg.tertiary, borderRadius: '4px' }} />
+      </div>
+    );
+  }
+
+  if (stratList.length === 0) return null;
+
+  const thStyle = {
+    fontSize: _T.sizes.xs, color: _C.text.muted, textTransform: 'uppercase',
+    letterSpacing: '0.04em', fontFamily: _T.fontFamily, padding: '6px 8px',
+    borderBottom: '1px solid ' + _C.border.default, textAlign: 'left',
+  };
+  const tdStyle = {
+    fontSize: _T.sizes.sm, color: _C.text.primary, fontFamily: _T.fontFamily,
+    padding: '6px 8px', borderBottom: '1px solid ' + _C.border.subtle,
+  };
+
+  return (
+    <div style={cardStyle}>
+      <div style={sectionTitleSt}>Strategy Backtest Metrics</div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Strategy</th>
+              <th style={thStyle}>Asset Class</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Signal</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Sharpe</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Max DD</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stratList.map((s) => {
+              const sid = s.strategy_id;
+              const isExpanded = expandedId === sid;
+              const dir = (s.signal_direction || '').toUpperCase();
+              const dirColor = dir === 'LONG' ? _C.pnl.positive : dir === 'SHORT' ? _C.pnl.negative : _C.text.muted;
+              const dirLabel = dir === 'LONG' ? '\u2191 LONG' : dir === 'SHORT' ? '\u2193 SHORT' : '\u2014 NEUTRAL';
+              return (
+                <React.Fragment key={sid}>
+                  <tr
+                    style={{ cursor: 'pointer', backgroundColor: isExpanded ? _C.bg.tertiary : 'transparent' }}
+                    onClick={() => setExpandedId(isExpanded ? null : sid)}
+                    onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.backgroundColor = _C.bg.tertiary; }}
+                    onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    <td style={{ ...tdStyle, fontWeight: _T.weights.medium }}>{sid}</td>
+                    <td style={tdStyle}>{s.asset_class || '--'}</td>
+                    <td style={{ ...tdStyle, textAlign: 'center', color: dirColor, fontWeight: _T.weights.semibold }}>{dirLabel}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{s.sharpe_ratio != null ? s.sharpe_ratio.toFixed(2) : '--'}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{s.max_drawdown != null ? (s.max_drawdown * 100).toFixed(1) + '%' : '--'}</td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '8px', backgroundColor: _C.bg.primary }}>
+                        <BacktestMetricsPanel strategyId={sid} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function BacktestMetricsPanel({ strategyId }) {
+  const bt = window.useFetch('/api/v1/backtest/results?strategy_id=' + encodeURIComponent(strategyId), 60000);
+
+  if (bt.loading) {
+    return <div style={{ height: '60px', backgroundColor: _C.bg.tertiary, borderRadius: '4px' }} />;
+  }
+
+  const d = bt.data && bt.data.data ? bt.data.data : {};
+  const metrics = [
+    { label: 'Ann. Ret', value: d.annual_return != null ? (d.annual_return * 100).toFixed(1) + '%' : '--' },
+    { label: 'Sharpe', value: d.sharpe_ratio != null ? d.sharpe_ratio.toFixed(2) : '--' },
+    { label: 'Sortino', value: d.sortino_ratio != null ? d.sortino_ratio.toFixed(2) : '--' },
+    { label: 'Max DD', value: d.max_drawdown != null ? (d.max_drawdown * 100).toFixed(1) + '%' : '--' },
+    { label: 'Win Rate', value: d.win_rate != null ? (d.win_rate * 100).toFixed(0) + '%' : '--' },
+    { label: 'Trades', value: d.total_trades != null ? d.total_trades : '--' },
+    { label: 'P. Factor', value: d.profit_factor != null ? d.profit_factor.toFixed(2) : '--' },
+  ];
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+    gap: '6px',
+  };
+
+  const metricCardStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.subtle,
+    borderRadius: '4px',
+    padding: '6px 8px',
+    textAlign: 'center',
+  };
+
+  return (
+    <div style={gridStyle}>
+      {metrics.map((m, i) => (
+        <div key={i} style={metricCardStyle}>
+          <div style={{ fontSize: _T.sizes.xs, color: _C.text.muted, textTransform: 'uppercase', marginBottom: '2px', fontFamily: _T.fontFamily }}>{m.label}</div>
+          <div style={{ fontSize: _T.sizes.sm, fontWeight: _T.weights.bold, color: _C.text.primary, fontFamily: _T.fontFamily }}>{m.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main PerformanceAttributionPage Component
 // ---------------------------------------------------------------------------
 function PerformanceAttributionPage() {
@@ -762,6 +910,7 @@ function PerformanceAttributionPage() {
     return period;
   }, [attrData, period]);
 
+  const usingSampleData = attrData === SAMPLE_ATTRIBUTION;
   const today = new Date().toISOString().split('T')[0];
 
   const pageStyle = {
@@ -835,6 +984,8 @@ function PerformanceAttributionPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.sm }}>
         <div style={titleStyle}>Performance Attribution</div>
@@ -908,6 +1059,9 @@ function PerformanceAttributionPage() {
             equityCurve={equityData}
             periodLabel={periodLabel}
           />
+
+          {/* Strategy Backtest Detail (migrated from Dashboard) */}
+          <BacktestDetailSection />
         </React.Fragment>
       )}
     </div>

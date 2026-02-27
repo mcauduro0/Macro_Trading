@@ -837,6 +837,76 @@ function RiskMonitorSkeleton() {
 // ---------------------------------------------------------------------------
 // Main RiskMonitorPage Component
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Circuit Breaker Status (migrated from Dashboard RiskPage)
+// ---------------------------------------------------------------------------
+function CircuitBreakerStatus({ riskData }) {
+  const cb = riskData && riskData.circuit_breaker;
+  if (!cb) return null;
+
+  const stateUpper = (cb.state || 'unknown').toUpperCase();
+  let stateColor, stateBg;
+  if (stateUpper === 'NORMAL') {
+    stateColor = _C.pnl.positive;
+    stateBg = 'rgba(34, 197, 94, 0.12)';
+  } else if (stateUpper === 'WARNING') {
+    stateColor = '#f59e0b';
+    stateBg = 'rgba(245, 158, 11, 0.12)';
+  } else {
+    stateColor = _C.pnl.negative;
+    stateBg = 'rgba(239, 68, 68, 0.12)';
+  }
+
+  const containerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginTop: _S.md,
+    padding: '8px 12px',
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    fontFamily: _T.fontFamily,
+  };
+
+  const labelStyle = {
+    fontSize: _T.sizes.xs,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    fontWeight: _T.weights.semibold,
+  };
+
+  const badgeStyle = {
+    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: '4px',
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.bold,
+    color: stateColor,
+    backgroundColor: stateBg,
+  };
+
+  const detailStyle = {
+    fontSize: _T.sizes.xs,
+    color: _C.text.secondary,
+  };
+
+  return (
+    <div style={containerStyle}>
+      <span style={labelStyle}>Circuit Breaker:</span>
+      <span style={badgeStyle}>{stateUpper}</span>
+      <span style={detailStyle}>
+        Scale: {cb.scale != null ? (cb.scale * 100).toFixed(0) + '%' : '--'} |
+        Drawdown: {cb.drawdown_pct != null ? (cb.drawdown_pct * 100).toFixed(2) + '%' : '--'}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main RiskMonitorPage Component
+// ---------------------------------------------------------------------------
 function RiskMonitorPage() {
   // Fetch live risk snapshot (30s polling)
   const riskLive = window.useFetch('/api/v1/pms/risk/live', 30000);
@@ -866,6 +936,7 @@ function RiskMonitorPage() {
     return SAMPLE_LIMITS;
   }, [riskLimits.data]);
 
+  const usingSampleData = risk === SAMPLE_RISK_LIVE;
   const today = new Date().toISOString().split('T')[0];
 
   const pageStyle = {
@@ -908,6 +979,8 @@ function RiskMonitorPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Risk Monitor</div>
@@ -962,6 +1035,9 @@ function RiskMonitorPage() {
             trendData={trend}
             limitsConfig={limits.config}
           />
+
+          {/* Circuit Breaker Status (migrated from Dashboard) */}
+          <CircuitBreakerStatus riskData={risk} />
         </React.Fragment>
       )}
     </div>

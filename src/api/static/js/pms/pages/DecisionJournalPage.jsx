@@ -466,6 +466,7 @@ function DecisionJournalPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [usingSampleData, setUsingSampleData] = useState(false);
   const [filters, setFilters] = useState({
     datePreset: 'YTD',
     startDate: fmtIso(new Date(new Date().getFullYear(), 0, 1)),
@@ -545,6 +546,7 @@ function DecisionJournalPage() {
         setEntries(sample);
       }
       setHasMore(false);
+      setUsingSampleData(true);
     }
 
     setLoading(false);
@@ -599,6 +601,8 @@ function DecisionJournalPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _JS.md }}>
         <div style={{ fontSize: _JT.sizes['2xl'], fontWeight: _JT.weights.bold, color: _JC.text.primary, marginBottom: '2px' }}>

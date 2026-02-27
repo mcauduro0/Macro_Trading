@@ -950,6 +950,7 @@ function PositionBookPage() {
   // Resolve data with sample fallback
   const bookData = (book.data && book.data.summary) ? book.data : SAMPLE_BOOK;
   const equityData = (equityCurve.data && Array.isArray(equityCurve.data) && equityCurve.data.length > 0) ? equityCurve.data : SAMPLE_EQUITY_CURVE;
+  const usingSampleData = bookData === SAMPLE_BOOK;
 
   // Filter out locally closed positions
   const openPositions = (bookData.positions || []).filter(p => !closedIds.has(p.id));
@@ -997,6 +998,8 @@ function PositionBookPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Position Book</div>

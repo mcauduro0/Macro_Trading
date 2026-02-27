@@ -238,6 +238,7 @@ function ComplianceAuditPage() {
   const [totalCount, setTotalCount] = _cUseState(0);
   const [visibleCount, setVisibleCount] = _cUseState(COMPLIANCE_PAGE_SIZE);
   const [verificationMap, setVerificationMap] = _cUseState({});
+  const [usingSampleData, setUsingSampleData] = _cUseState(false);
   const [filters, setFilters] = _cUseState({
     datePreset: 'YTD',
     startDate: _cFmtIso(new Date(new Date().getFullYear(), 0, 1)),
@@ -288,6 +289,7 @@ function ComplianceAuditPage() {
           setEntries(sample);
           setTotalCount(sample.length);
           setVisibleCount(COMPLIANCE_PAGE_SIZE);
+          setUsingSampleData(true);
         }
       }
       if (!cancelled) setLoading(false);
@@ -408,6 +410,8 @@ function ComplianceAuditPage() {
 
   return (
     <div style={pageStyle}>
+      {/* Sample data banner */}
+      {usingSampleData && <window.SampleDataBanner />}
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: _CSP.md }}>
         <div>
