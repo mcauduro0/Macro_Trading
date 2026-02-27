@@ -605,11 +605,55 @@ class MonetaryPolicyAgent(BaseAgent):
                     if col:
                         row_data[col] = rate
                     else:
-                        # Closest mapping
+                        # Closest mapping — tolerance scales with tenor
                         for t_days, col_name in sorted(tenor_map.items()):
-                            if abs(tenor_days - t_days) < 30:
-                                row_data[col_name] = rate
+                            tolerance = max(30, int(t_days * 0.15))
+                            if abs(tenor_days - t_days) < tolerance:
+                                if col_name not in row_data:
+                                    row_data[col_name] = rate
                                 break
+
+                # Synthetic long-end DI from NTN-B real + Focus IPCA (Fisher eq.)
+                # B3 DI swap curve only covers up to 12M; for 2Y/5Y/10Y we use:
+                #   nominal_rate ≈ real_rate(NTN-B) + inflation_expectation(Focus)
+                if "tenor_10y" not in row_data or "tenor_5y" not in row_data:
+                    try:
+                        ntnb_raw = self.loader.get_curve("NTN_B_REAL", as_of_date)
+                        if ntnb_raw:
+                            # Get Focus IPCA 12M for inflation add-on
+                            focus_df = data.get("focus")
+                            focus_ipca = np.nan
+                            if focus_df is not None and not focus_df.empty:
+                                if "focus_ipca_12m" in focus_df.columns:
+                                    focus_ipca = float(focus_df["focus_ipca_12m"].dropna().iloc[-1])
+                                elif "value" in focus_df.columns:
+                                    focus_ipca = float(focus_df["value"].dropna().iloc[-1])
+
+                            if not np.isnan(focus_ipca):
+                                ipca_decimal = focus_ipca / 100.0
+                                ntnb_tenor_map = {1825: "tenor_5y", 2520: "tenor_10y"}
+                                for target_days, col_name in ntnb_tenor_map.items():
+                                    if col_name not in row_data:
+                                        # Find closest NTN-B tenor
+                                        closest_tenor = min(
+                                            ntnb_raw.keys(),
+                                            key=lambda t: abs(t - target_days),
+                                        )
+                                        if abs(closest_tenor - target_days) < target_days * 0.30:
+                                            real_rate = ntnb_raw[closest_tenor]
+                                            # Fisher: (1+nom) = (1+real)*(1+infl)
+                                            nominal = (1 + real_rate) * (1 + ipca_decimal) - 1
+                                            row_data[col_name] = nominal
+                                            self.log.info(
+                                                "synthetic_di_from_ntnb",
+                                                tenor=col_name,
+                                                real_rate=round(real_rate, 4),
+                                                focus_ipca=round(focus_ipca, 2),
+                                                nominal=round(nominal, 4),
+                                            )
+                    except Exception as ntnb_exc:
+                        self.log.warning("ntnb_fallback_failed", error=str(ntnb_exc))
+
                 data["di_curve"] = pd.DataFrame([row_data]) if row_data else pd.DataFrame()
             else:
                 data["di_curve"] = pd.DataFrame()
@@ -623,7 +667,7 @@ class MonetaryPolicyAgent(BaseAgent):
         _safe_load("pce_core", self.loader.get_macro_series, "FRED-PCEPILFE", as_of_date, lookback_days=1825)
         _safe_load("us_breakeven", self.loader.get_macro_series, "FRED-T10YIE", as_of_date, lookback_days=1825)
 
-        # UST curve
+        # UST curve — primary: Treasury.gov curve data
         try:
             ust_raw = self.loader.get_curve("UST", as_of_date)
             if ust_raw:
@@ -644,6 +688,26 @@ class MonetaryPolicyAgent(BaseAgent):
         except Exception as exc:
             self.log.warning("ust_curve_load_failed", error=str(exc))
             data["ust_curve"] = pd.DataFrame()
+
+        # UST curve — fallback: FRED DGS series when Treasury.gov is empty
+        ust_df = data.get("ust_curve")
+        if ust_df is None or ust_df.empty:
+            self.log.info("ust_curve_empty_using_fred_fallback")
+            fred_map = {
+                "ust_2y": "FRED-DGS2",
+                "ust_5y": "FRED-DGS5",
+                "ust_10y": "FRED-DGS10",
+            }
+            ust_row = {}
+            for col_name, fred_code in fred_map.items():
+                try:
+                    fred_df = self.loader.get_macro_series(fred_code, as_of_date, lookback_days=30)
+                    if fred_df is not None and not fred_df.empty and "value" in fred_df.columns:
+                        ust_row[col_name] = float(fred_df["value"].dropna().iloc[-1]) / 100.0
+                except Exception:
+                    pass
+            if ust_row:
+                data["ust_curve"] = pd.DataFrame([ust_row])
 
         return data
 

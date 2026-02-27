@@ -526,21 +526,29 @@ class InflationFeatureEngine:
             # Build a monthly date-indexed DataFrame
             records: dict[pd.Timestamp, dict] = {}
 
-            # Dependent: smoothed core (MoM) -> compute rolling 12M YoY
+            # Dependent: core inflation MoM -> compute rolling 12M YoY
+            # Priority: smoothed P55 (BCB-4466) > trimmed mean (BCB-11427) > ex-F&E (BCB-16122)
             cores = data.get("ipca_cores")
+            core_series: pd.Series | None = None
             if isinstance(cores, dict):
-                smoothed_df = cores.get("smoothed")
-                if smoothed_df is not None and isinstance(smoothed_df, pd.DataFrame) and not smoothed_df.empty:
-                    val_col = self._value_col(smoothed_df)
-                    s = smoothed_df[val_col].dropna()
-                    if len(s) >= 12:
-                        for i in range(12, len(s) + 1):
-                            window = s.iloc[i - 12 : i]
-                            yoy = (np.prod(1.0 + window.values / 100.0) - 1.0) * 100.0
-                            ts = s.index[i - 1]
-                            if ts not in records:
-                                records[ts] = {}
-                            records[ts]["core_yoy"] = float(yoy)
+                for core_key in ("smoothed", "trimmed", "ex_fe"):
+                    core_df = cores.get(core_key)
+                    if core_df is not None and isinstance(core_df, pd.DataFrame) and not core_df.empty:
+                        val_col = self._value_col(core_df)
+                        candidate = core_df[val_col].dropna()
+                        if len(candidate) >= 12:
+                            core_series = candidate
+                            break
+
+            if core_series is not None:
+                s = core_series
+                for i in range(12, len(s) + 1):
+                    window = s.iloc[i - 12 : i]
+                    yoy = (np.prod(1.0 + window.values / 100.0) - 1.0) * 100.0
+                    ts = s.index[i - 1]
+                    if ts not in records:
+                        records[ts] = {}
+                    records[ts]["core_yoy"] = float(yoy)
 
             # Focus 12M expectations
             focus_df = data.get("focus")

@@ -130,11 +130,11 @@ class InflationAgent(BaseAgent):
         # IPCA headline (MoM series)
         ipca = _safe_macro(self._IPCA_HEADLINE)
 
-        # IPCA cores
+        # IPCA cores — 10Y lookback for Phillips OLS rolling window (120 months)
         ipca_cores = {
-            "smoothed": _safe_macro(self._IPCA_CORE_SMOOTHED),
-            "trimmed": _safe_macro(self._IPCA_CORE_TRIMMED),
-            "ex_fe": _safe_macro(self._IPCA_CORE_EX_FE),
+            "smoothed": _safe_macro(self._IPCA_CORE_SMOOTHED, lookback=lookback_10y),
+            "trimmed": _safe_macro(self._IPCA_CORE_TRIMMED, lookback=lookback_10y),
+            "ex_fe": _safe_macro(self._IPCA_CORE_EX_FE, lookback=lookback_10y),
         }
 
         # IPCA 9 components
