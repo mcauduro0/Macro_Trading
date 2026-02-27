@@ -253,10 +253,13 @@ class CftcCotConnector(BaseConnector):
             return []
 
         for _, row in df.iterrows():
-            # Parse report date
+            # Parse report date — guard against NaT values
             try:
-                report_date = pd.to_datetime(row[date_col]).date()
-            except Exception:
+                dt = pd.to_datetime(row[date_col])
+                if pd.isna(dt):
+                    continue
+                report_date = dt.date()
+            except (ValueError, TypeError, AttributeError):
                 continue
 
             # Lookup contract name
@@ -348,10 +351,14 @@ class CftcCotConnector(BaseConnector):
         combined = pd.concat(all_dfs, ignore_index=True)
         records = self.compute_net_positions(combined)
 
-        # Filter to requested date range
+        # Filter to requested date range — guard against None/NaT values
         filtered = [
             r for r in records
-            if start_date <= r["observation_date"] <= end_date
+            if (
+                r.get("observation_date") is not None
+                and isinstance(r["observation_date"], date)
+                and start_date <= r["observation_date"] <= end_date
+            )
         ]
 
         self.log.info(

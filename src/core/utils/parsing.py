@@ -44,6 +44,9 @@ def parse_numeric_value(raw: str, decimal_sep: str = ".") -> float | None:
         >>> parse_numeric_value("-", ".")  # returns None
         >>> parse_numeric_value(".", ".")  # returns None
     """
+    if raw is None:
+        return None
+
     if not isinstance(raw, str):
         raw = str(raw)
 

@@ -49,13 +49,13 @@ class TreasuryGovConnector(BaseConnector):
         "/resource-center/data-chart-center/interest-rates/"
         "daily-treasury-rates.csv/all/{year}"
         "?type=daily_treasury_yield_curve"
-        "&field_tdr_date_value={year}&page&_format=csv"
+        "&field_tdr_date_value={year}&_format=csv"
     )
     REAL_URL: str = (
         "/resource-center/data-chart-center/interest-rates/"
         "daily-treasury-rates.csv/all/{year}"
         "?type=daily_treasury_real_yield_curve"
-        "&field_tdr_date_value={year}&page&_format=csv"
+        "&field_tdr_date_value={year}&_format=csv"
     )
 
     # Tenor mapping: CSV column name -> (tenor_label, tenor_days)
@@ -109,6 +109,21 @@ class TreasuryGovConnector(BaseConnector):
                 year=year,
                 error=str(exc),
             )
+            return []
+
+        # Validate response is CSV, not HTML error page
+        content_type = response.headers.get("content-type", "")
+        if content_type.startswith("text/html") or csv_text.strip().startswith("<!"):
+            self.log.warning(
+                "treasury_csv_html_response",
+                curve_id=curve_id,
+                year=year,
+                content_type=content_type,
+            )
+            return []
+
+        if not csv_text.strip():
+            self.log.warning("treasury_csv_empty_response", curve_id=curve_id, year=year)
             return []
 
         # Parse CSV in a thread to avoid blocking the event loop

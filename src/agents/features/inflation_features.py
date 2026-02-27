@@ -646,6 +646,13 @@ class InflationFeatureEngine:
             val_col = self._value_col(df)
             out = df[[val_col]].rename(columns={val_col: "value"}).copy()
             out.index = pd.to_datetime(out.index)
+
+            # Sanity check: if values look like price indices (median > 50)
+            # rather than MoM percentages, convert to pct_change.
+            if not out["value"].dropna().empty and out["value"].dropna().abs().median() > 50.0:
+                out["value"] = out["value"].pct_change() * 100.0
+                out = out.dropna()
+
             result[key] = out
 
         return result
