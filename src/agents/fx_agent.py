@@ -114,7 +114,14 @@ class BeerModel:
             # Reconstruct latest_X using the same add_constant as training
             # so column count always matches model.params (handles edge case
             # where sm.add_constant skips constant when predictors are constant)
-            latest_X = sm.add_constant(df_fit[available_preds].iloc[[-1]])
+            latest_X = sm.add_constant(
+                df_fit[available_preds].iloc[[-1]], has_constant="skip"
+            )
+            # Ensure column count matches model params
+            if latest_X.shape[1] != len(model.params):
+                latest_X = sm.add_constant(
+                    df_fit[available_preds].iloc[[-1]], has_constant="add"
+                )
             predicted_log = model.predict(latest_X).iloc[0]
             fair_value = float(np.exp(predicted_log))
             actual_usdbrl = float(np.exp(df_fit["log_usdbrl"].iloc[-1]))
