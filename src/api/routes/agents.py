@@ -9,6 +9,7 @@ Provides:
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -135,9 +136,8 @@ def _get_agent_instance(agent_id: str):
     return agent_map[agent_id]()
 
 
-def _sanitize_floats(obj):
-    """Recursively replace NaN/Inf with None for JSON safety."""
-    import math
+def _sanitize_floats(obj: Any) -> Any:
+    """Recursively replace NaN/Inf floats with None for JSON compliance."""
     if isinstance(obj, float):
         if math.isnan(obj) or math.isinf(obj):
             return None
@@ -153,7 +153,7 @@ def _report_to_dict(report) -> dict:
     """Serialize an AgentReport to JSON-safe dict."""
     signals = []
     for sig in report.signals:
-        signals.append(_sanitize_floats({
+        signals.append({
             "signal_id": sig.signal_id,
             "direction": sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction),
             "strength": sig.strength.value if hasattr(sig.strength, "value") else str(sig.strength),
@@ -161,7 +161,7 @@ def _report_to_dict(report) -> dict:
             "value": sig.value,
             "horizon_days": sig.horizon_days,
             "metadata": sig.metadata,
-        }))
+        })
     return _sanitize_floats({
         "agent_id": report.agent_id,
         "as_of_date": str(report.as_of_date),

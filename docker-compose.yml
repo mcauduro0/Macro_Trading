@@ -171,6 +171,10 @@ services:
     container_name: macro_api
     ports:
       - "0.0.0.0:8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./alembic:/app/alembic
     env_file:
       - .env
     depends_on:

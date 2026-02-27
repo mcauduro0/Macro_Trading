@@ -33,6 +33,64 @@ from src.core.models.market_data import MarketData
 from src.core.models.series_metadata import SeriesMetadata
 
 
+# ---------------------------------------------------------------------------
+# Series code normalization
+# ---------------------------------------------------------------------------
+# Agents reference series with provider-prefixed codes (e.g. "BCB-432",
+# "FRED-DFF") or human-readable aliases (e.g. "BR_GROSS_DEBT_GDP") while
+# the database stores raw codes ("432", "DFF", "13762").
+# This mapping + prefix-stripping resolves agent codes to DB codes.
+# ---------------------------------------------------------------------------
+_SERIES_ALIASES: dict[str, str] = {
+    # ── BCB SGS: non-obvious numeric code mappings ──
+    "BCB-24363": "24364",           # IBC-Br (agent convention → actual DB code)
+
+    # ── Human-readable BR macro → BCB numeric codes ──
+    "BR_GROSS_DEBT_GDP": "13762",   # DBGG / PIB
+    "BR_NET_DEBT_GDP": "4513",      # DLSP / PIB
+    "BR_PRIMARY_BALANCE": "5793",   # Resultado Primário Consolidado
+    "BR_GDP_QOQ": "22099",          # PIB Trimestral
+    "BR_RESERVES": "13621",         # Reservas Internacionais
+    "BR_TRADE_BALANCE": "22707",    # Balança Comercial
+    "BR_IPCA_12M": "13522",         # IPCA Acumulado 12 Meses
+    "BR_IBC_BR_YOY": "24364",       # IBC-Br proxy PIB mensal
+    "BR_SELIC_TARGET": "432",       # Meta Selic
+
+    # ── Focus survey (agent format → seed format) ──
+    "FOCUS-IPCA-12M": "BR_FOCUS_IPCA_CY",
+    "FOCUS-IPCA-EOY": "BR_FOCUS_IPCA_CY",
+
+    # ── FX Flow aliases → BCB FX Flow numeric codes ──
+    "BR_FX_FLOW_COMMERCIAL": "22704",
+    "BR_FX_FLOW_FINANCIAL": "22705",
+    "BR_FX_FLOW_TOTAL": "22706",
+
+    # ── CFTC: 6L = BRL futures, map to DX contract in seed ──
+    "CFTC_6L_LEVERAGED_NET": "CFTC_DX_LEVERAGED_NET",
+
+    # ── Focus câmbio ──
+    "BR_FOCUS_CAMBIO_12M_MEDIAN": "BR_FOCUS_CAMBIO_CY",
+}
+
+
+def _normalize_series_code(raw_code: str) -> str:
+    """Normalize agent series codes to match series_metadata.series_code.
+
+    Resolution order:
+    1. Explicit alias table (handles human-readable codes and edge cases).
+    2. Strip known provider prefixes (``BCB-``, ``FRED-``).
+    3. Return unchanged (code already matches DB format).
+    """
+    if raw_code in _SERIES_ALIASES:
+        return _SERIES_ALIASES[raw_code]
+
+    for prefix in ("BCB-", "FRED-"):
+        if raw_code.startswith(prefix):
+            return raw_code[len(prefix):]
+
+    return raw_code
+
+
 class PointInTimeDataLoader:
     """Load data respecting point-in-time constraints for backtesting.
 
@@ -139,6 +197,7 @@ class PointInTimeDataLoader:
             DataFrame with columns ``["date", "value", "release_time",
             "revision_number"]`` indexed on ``date``.  Empty if no data.
         """
+        series_code = _normalize_series_code(series_code)
         start = as_of_date - timedelta(days=lookback_days)
 
         stmt = (
@@ -206,6 +265,7 @@ class PointInTimeDataLoader:
         Returns:
             Float value, or ``None`` if no data is available.
         """
+        series_code = _normalize_series_code(series_code)
         stmt = (
             select(MacroSeries.value)
             .join(SeriesMetadata, MacroSeries.series_id == SeriesMetadata.id)
@@ -449,6 +509,7 @@ class PointInTimeDataLoader:
             DataFrame with columns ``["date", "value", "flow_type",
             "release_time"]`` indexed on ``date``.
         """
+        series_code = _normalize_series_code(series_code)
         start = as_of_date - timedelta(days=lookback_days)
 
         stmt = (
