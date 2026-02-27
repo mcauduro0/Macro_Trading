@@ -283,21 +283,25 @@ class MonetaryFeatureEngine:
             logger.warning("di_implied_path_failed: %s", exc)
             f["_di_implied_path"] = {}
 
-        # Term premium history
+        # Term premium history — use real DI 10Y curve history
         try:
-            di_10y = features.get("di_10y", np.nan)
+            di_10y_hist = data.get("di_10y_history")
             focus_ipca_12m = features.get("focus_ipca_12m", np.nan)
             # TP proxy = di_10y - (focus_ipca_12m + 3.5) as rough terminal Selic proxy
-            no_data = np.isnan(di_10y) or np.isnan(focus_ipca_12m)
-            current_tp = di_10y - (focus_ipca_12m + 3.5) if not no_data else np.nan
-
-            # Build synthetic 24M trailing history from ibc gap series if available
-            ibc_df = data.get("ibc_br")
-            if ibc_df is not None and not ibc_df.empty and not np.isnan(current_tp):
-                # Use the last 24 observations; approximate history as current TP +/- noise
-                n_hist = min(24, len(ibc_df))
-                hist_vals = np.full(n_hist, current_tp)
-                f["_tp_history"] = pd.Series(hist_vals)
+            if (
+                di_10y_hist is not None
+                and not di_10y_hist.empty
+                and not np.isnan(focus_ipca_12m)
+            ):
+                # Resample to monthly (last obs per month) for a stable z-score
+                rates = di_10y_hist["rate"] if "rate" in di_10y_hist.columns else di_10y_hist["value"]
+                tp_series = rates - (focus_ipca_12m + 3.5)
+                # Take last 24 monthly observations
+                tp_monthly = tp_series.resample("ME").last().dropna().tail(24)
+                if len(tp_monthly) >= 12:
+                    f["_tp_history"] = tp_monthly.reset_index(drop=True)
+                else:
+                    f["_tp_history"] = pd.Series(dtype=float)
             else:
                 f["_tp_history"] = pd.Series(dtype=float)
         except Exception as exc:

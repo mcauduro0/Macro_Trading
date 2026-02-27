@@ -583,6 +583,16 @@ class MonetaryPolicyAgent(BaseAgent):
             lookback_days=5475,
         )
 
+        # DI 10Y history (for term premium z-score)
+        try:
+            di_10y_hist = self.loader.get_curve_history(
+                "DI", tenor_days=2520, as_of_date=as_of_date, lookback_days=756,
+            )
+            data["di_10y_history"] = di_10y_hist
+        except Exception as exc:
+            self.log.warning("di_10y_history_load_failed", error=str(exc))
+            data["di_10y_history"] = None
+
         # DI curve (raw dict of tenor_days → rate; convert to DataFrame)
         try:
             di_raw = self.loader.get_curve("DI", as_of_date)

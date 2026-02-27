@@ -574,11 +574,12 @@ class FxEquilibriumAgent(BaseAgent):
             data["di_curve"] = {}
 
         # DI curve history at 5Y tenor (for BEER real rate diff)
+        # DI_PRE 5Y = 1260 trading days (5 * 252)
         _safe_load(
             "di_curve_history",
             self.loader.get_curve_history,
             "DI",
-            1825,
+            1260,
             as_of_date,
             lookback_days=5475,
         )

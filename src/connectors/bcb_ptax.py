@@ -82,9 +82,12 @@ class BcbPtaxConnector(BaseConnector):
 
         records: list[dict[str, Any]] = []
         for item in items:
-            tipo_boletim = item.get("tipoBoletim", "")
+            tipo_boletim = item.get("tipoBoletim") or ""
 
-            if tipo_boletim != "Fechamento":
+            # BCB API used to return tipoBoletim='Fechamento' for the
+            # closing bulletin.  Since ~2024 the field is absent/empty
+            # and only one bulletin per day is returned.  Accept both.
+            if tipo_boletim and tipo_boletim != "Fechamento":
                 self.log.debug(
                     "non_closing_bulletin_skipped",
                     tipo_boletim=tipo_boletim,
