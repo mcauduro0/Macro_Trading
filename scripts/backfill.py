@@ -44,9 +44,11 @@ from src.connectors import (
     BcbSgsConnector,
     B3MarketDataConnector,
     CftcCotConnector,
+    FmpTreasuryConnector,
     FredConnector,
     IbgeSidraConnector,
     StnFiscalConnector,
+    TradingEconDiCurveConnector,
     TreasuryGovConnector,
     YahooFinanceConnector,
 )
@@ -66,6 +68,8 @@ SOURCES: list[tuple[str, str, Type[BaseConnector]]] = [
     ("stn",         "STN Fiscal (fiscal data)",           StnFiscalConnector),
     ("b3",          "B3/Tesouro (DI curve, NTN-B)",       B3MarketDataConnector),
     ("treasury",    "Treasury.gov (US yield curves)",     TreasuryGovConnector),
+    ("fmp_ust",     "FMP Treasury (US yield curves)",     FmpTreasuryConnector),
+    ("te_di",       "TE DI Curve (BR 2Y/5Y/10Y)",        TradingEconDiCurveConnector),
     ("yahoo",       "Yahoo Finance (market prices)",      YahooFinanceConnector),
     ("cftc",        "CFTC COT (positioning)",             CftcCotConnector),
 ]

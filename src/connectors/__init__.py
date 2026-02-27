@@ -11,6 +11,9 @@ Phase 3 connectors (7):
     CftcCotConnector, IbgeSidraConnector, StnFiscalConnector,
     TreasuryGovConnector
 
+Phase 4 connectors (2):
+    FmpTreasuryConnector, TradingEconDiCurveConnector
+
 Placeholder connectors (1):
     AnbimaConnector (pending API access)
 """
@@ -34,9 +37,13 @@ from .bcb_fx_flow import BcbFxFlowConnector
 from .bcb_ptax import BcbPtaxConnector
 from .bcb_sgs import BcbSgsConnector
 from .cftc_cot import CftcCotConnector
+
+# Phase 4 connectors
+from .fmp_treasury import FmpTreasuryConnector
 from .fred import FredConnector
 from .ibge_sidra import IbgeSidraConnector
 from .stn_fiscal import StnFiscalConnector
+from .te_di_curve import TradingEconDiCurveConnector
 from .treasury_gov import TreasuryGovConnector
 from .yahoo_finance import YahooFinanceConnector
 
@@ -60,6 +67,9 @@ __all__ = [
     "IbgeSidraConnector",
     "StnFiscalConnector",
     "TreasuryGovConnector",
+    # Phase 4 connectors
+    "FmpTreasuryConnector",
+    "TradingEconDiCurveConnector",
     # Placeholder connectors
     "AnbimaConnector",
 ]
