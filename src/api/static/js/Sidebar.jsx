@@ -13,80 +13,7 @@ const { useState } = React;
 const { NavLink } = window.ReactRouterDOM;
 
 // ---------------------------------------------------------------------------
-// SVG icon components (inline, lightweight)
-// ---------------------------------------------------------------------------
-function IconActivity() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5 flex-shrink-0"
-  },
-    React.createElement("polyline", { points: "22 12 18 12 15 21 9 3 6 12 2 12" })
-  );
-}
-
-function IconShield() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5 flex-shrink-0"
-  },
-    React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })
-  );
-}
-
-function IconBriefcase() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5 flex-shrink-0"
-  },
-    React.createElement("rect", { x: "2", y: "7", width: "20", height: "14", rx: "2" }),
-    React.createElement("path", { d: "M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" })
-  );
-}
-
-function IconCpu() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5 flex-shrink-0"
-  },
-    React.createElement("rect", { x: "4", y: "4", width: "16", height: "16", rx: "2" }),
-    React.createElement("rect", { x: "9", y: "9", width: "6", height: "6" }),
-    React.createElement("line", { x1: "9", y1: "1", x2: "9", y2: "4" }),
-    React.createElement("line", { x1: "15", y1: "1", x2: "15", y2: "4" }),
-    React.createElement("line", { x1: "9", y1: "20", x2: "9", y2: "23" }),
-    React.createElement("line", { x1: "15", y1: "20", x2: "15", y2: "23" }),
-    React.createElement("line", { x1: "20", y1: "9", x2: "23", y2: "9" }),
-    React.createElement("line", { x1: "20", y1: "14", x2: "23", y2: "14" }),
-    React.createElement("line", { x1: "1", y1: "9", x2: "4", y2: "9" }),
-    React.createElement("line", { x1: "1", y1: "14", x2: "4", y2: "14" })
-  );
-}
-
-function IconChevronLeft() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5"
-  },
-    React.createElement("polyline", { points: "15 18 9 12 15 6" })
-  );
-}
-
-function IconChevronRight() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    className: "w-5 h-5"
-  },
-    React.createElement("polyline", { points: "9 18 15 12 9 6" })
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PMS-specific SVG icon components
+// SVG icon components (inline, lightweight, PMS-sized 18×18)
 // ---------------------------------------------------------------------------
 function IconSunrise() {
   return React.createElement("svg", {
@@ -116,16 +43,6 @@ function IconBriefcase() {
   );
 }
 
-function IconShield() {
-  return React.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
-    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
-    width: 18, height: 18, style: { flexShrink: 0 }
-  },
-    React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })
-  );
-}
-
 function IconList() {
   return React.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
@@ -138,6 +55,26 @@ function IconList() {
     React.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }),
     React.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }),
     React.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" })
+  );
+}
+
+function IconActivity() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    width: 18, height: 18, style: { flexShrink: 0 }
+  },
+    React.createElement("polyline", { points: "22 12 18 12 15 21 9 3 6 12 2 12" })
+  );
+}
+
+function IconShield() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    width: 18, height: 18, style: { flexShrink: 0 }
+  },
+    React.createElement("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" })
   );
 }
 
@@ -163,6 +100,25 @@ function IconBook() {
   );
 }
 
+function IconCpu() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    width: 18, height: 18, style: { flexShrink: 0 }
+  },
+    React.createElement("rect", { x: "4", y: "4", width: "16", height: "16", rx: "2" }),
+    React.createElement("rect", { x: "9", y: "9", width: "6", height: "6" }),
+    React.createElement("line", { x1: "9", y1: "1", x2: "9", y2: "4" }),
+    React.createElement("line", { x1: "15", y1: "1", x2: "15", y2: "4" }),
+    React.createElement("line", { x1: "9", y1: "20", x2: "9", y2: "23" }),
+    React.createElement("line", { x1: "15", y1: "20", x2: "15", y2: "23" }),
+    React.createElement("line", { x1: "20", y1: "9", x2: "23", y2: "9" }),
+    React.createElement("line", { x1: "20", y1: "14", x2: "23", y2: "14" }),
+    React.createElement("line", { x1: "1", y1: "9", x2: "4", y2: "9" }),
+    React.createElement("line", { x1: "1", y1: "14", x2: "4", y2: "14" })
+  );
+}
+
 function IconClipboardCheck() {
   return React.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
@@ -172,6 +128,26 @@ function IconClipboardCheck() {
     React.createElement("path", { d: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" }),
     React.createElement("rect", { x: "8", y: "2", width: "8", height: "4", rx: "1" }),
     React.createElement("path", { d: "M9 14l2 2 4-4" })
+  );
+}
+
+function IconChevronLeft() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    width: 18, height: 18, style: { flexShrink: 0 }
+  },
+    React.createElement("polyline", { points: "15 18 9 12 15 6" })
+  );
+}
+
+function IconChevronRight() {
+  return React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+    width: 18, height: 18, style: { flexShrink: 0 }
+  },
+    React.createElement("polyline", { points: "9 18 15 12 9 6" })
   );
 }
 
@@ -191,24 +167,61 @@ const PMS_NAV_ITEMS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Style helpers
+// ---------------------------------------------------------------------------
+function getNavItemStyle(isActive) {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px 12px',
+    margin: '0 8px',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    fontSize: '13px',
+    fontFamily: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace",
+    color: isActive ? '#e6edf3' : '#8b949e',
+    backgroundColor: isActive ? '#1f2937' : 'transparent',
+    borderLeft: isActive ? '2px solid #3fb950' : '2px solid transparent',
+    position: 'relative',
+    transition: 'all 0.15s ease',
+  };
+}
+
+const collapseStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '10px 12px',
+  margin: '8px',
+  border: '1px solid #30363d',
+  borderRadius: '6px',
+  backgroundColor: 'transparent',
+  color: '#8b949e',
+  fontSize: '12px',
+  fontFamily: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace",
+  cursor: 'pointer',
+  transition: 'all 0.15s ease',
+};
+
+// ---------------------------------------------------------------------------
 // Sidebar component — PMS-only, Bloomberg dark theme
 // ---------------------------------------------------------------------------
 function Sidebar({ alertCount = 0 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { PMS_COLORS: _C, PMS_TYPOGRAPHY: _T } = window.PMS_THEME;
 
   return (
     <div
-      className={`text-white flex flex-col h-screen fixed left-0 top-0 z-40 border-r border-gray-800 transition-all duration-200 ${
+      className={`text-white flex flex-col h-screen fixed left-0 top-0 z-40 border-r transition-all duration-200 ${
         collapsed ? "w-16" : "w-56"
       }`}
-      style={{ backgroundColor: '#0d1117' }}
+      style={{ backgroundColor: '#0d1117', borderColor: '#30363d' }}
     >
       {/* Logo / Brand area */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <span className="text-green-500 font-mono text-xl font-bold flex-shrink-0">MT</span>
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #30363d' }}>
+        <span style={{ color: '#3fb950', fontFamily: "'JetBrains Mono', monospace", fontSize: '18px', fontWeight: 700, flexShrink: 0 }}>MT</span>
         {!collapsed && (
-          <span className="text-gray-500 text-xs font-mono uppercase tracking-wider">PMS</span>
+          <span style={{ color: '#8b949e', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.1em' }}>PMS</span>
         )}
       </div>
 
@@ -223,16 +236,27 @@ function Sidebar({ alertCount = 0 }) {
           >
             <Icon />
             {!collapsed && (
-              <span className="text-sm truncate">{label}</span>
+              <span style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
             )}
             {/* Badge count on Risk item */}
             {to === "/pms/risk" && alertCount > 0 && (
               <span
-                className={`absolute flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full ${
-                  collapsed
-                    ? "w-4 h-4 top-0 right-0 text-[10px]"
-                    : "w-5 h-5 right-2"
-                }`}
+                style={{
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#f85149',
+                  color: '#fff',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  borderRadius: '50%',
+                  width: collapsed ? '16px' : '20px',
+                  height: collapsed ? '16px' : '20px',
+                  top: collapsed ? '0' : '50%',
+                  right: collapsed ? '0' : '8px',
+                  transform: collapsed ? 'none' : 'translateY(-50%)',
+                }}
               >
                 {alertCount > 99 ? "99+" : alertCount}
               </span>
