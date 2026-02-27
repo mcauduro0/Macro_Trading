@@ -305,7 +305,8 @@ function AgentIntelPage() {
         // Fetch agent list
         const listRes = await fetch('/api/v1/agents');
         if (!listRes.ok) throw new Error('HTTP ' + listRes.status);
-        const agentList = await listRes.json();
+        const agentListRaw = await listRes.json();
+        const agentList = agentListRaw.data || agentListRaw;
         const agentIds = Array.isArray(agentList) ? agentList.map((a) => a.id || a.agent_id || a) : AGENT_ORDER;
 
         // Parallel fetch all agents simultaneously
@@ -313,7 +314,8 @@ function AgentIntelPage() {
           try {
             const res = await fetch(`/api/v1/agents/${agentId}/latest`);
             if (!res.ok) return null;
-            const report = await res.json();
+            const reportRaw = await res.json();
+            const report = reportRaw.data || reportRaw;
 
             const signals = report.signals || [];
             let direction = 'NEUTRAL';

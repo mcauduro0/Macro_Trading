@@ -135,11 +135,25 @@ def _get_agent_instance(agent_id: str):
     return agent_map[agent_id]()
 
 
+def _sanitize_floats(obj):
+    """Recursively replace NaN/Inf with None for JSON safety."""
+    import math
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_floats(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_floats(v) for v in obj]
+    return obj
+
+
 def _report_to_dict(report) -> dict:
     """Serialize an AgentReport to JSON-safe dict."""
     signals = []
     for sig in report.signals:
-        signals.append({
+        signals.append(_sanitize_floats({
             "signal_id": sig.signal_id,
             "direction": sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction),
             "strength": sig.strength.value if hasattr(sig.strength, "value") else str(sig.strength),
@@ -147,13 +161,13 @@ def _report_to_dict(report) -> dict:
             "value": sig.value,
             "horizon_days": sig.horizon_days,
             "metadata": sig.metadata,
-        })
-    return {
+        }))
+    return _sanitize_floats({
         "agent_id": report.agent_id,
         "as_of_date": str(report.as_of_date),
         "narrative": report.narrative,
         "signals": signals,
-    }
+    })
 
 
 # ---------------------------------------------------------------------------
