@@ -316,11 +316,10 @@ class BaseAgent(abc.ABC):
             session.close()
 
     def _persist_signals(self, signals: list[AgentSignal]) -> int:
-        """Persist signals to the signals hypertable.
+        """Persist signals to the signals hypertable using sync session.
 
-        Bridges sync calling context to the async database session by
-        running ``_persist_signals_async`` in a thread pool if an event
-        loop is already running, or via ``asyncio.run()`` otherwise.
+        Uses the sync engine to avoid event-loop conflicts when called
+        from ``asyncio.to_thread()`` inside FastAPI handlers.
 
         Args:
             signals: List of AgentSignal objects to persist.
@@ -328,14 +327,47 @@ class BaseAgent(abc.ABC):
         Returns:
             Number of rows inserted (conflicts excluded).
         """
+        from sqlalchemy.dialects.postgresql import insert as pg_insert_sync
+
+        records = [
+            {
+                "signal_type": sig.signal_id,
+                "signal_date": sig.as_of_date,
+                "instrument_id": None,
+                "series_id": None,
+                "value": sig.value,
+                "confidence": sig.confidence,
+                "metadata_json": json.dumps(
+                    {
+                        "direction": sig.direction.value,
+                        "strength": sig.strength.value,
+                        "horizon_days": sig.horizon_days,
+                        "agent_id": sig.agent_id,
+                        **sig.metadata,
+                    }
+                ),
+            }
+            for sig in signals
+        ]
+        if not records:
+            self.log.info("signals_persisted", count=0)
+            return 0
+
+        session = sync_session_factory()
         try:
-            asyncio.get_running_loop()
-            # Already in async context -- run in shared thread pool
-            future = _SHARED_THREAD_POOL.submit(asyncio.run, self._persist_signals_async(signals))
-            inserted = future.result()
-        except RuntimeError:
-            # No running loop -- safe to use asyncio.run
-            inserted = asyncio.run(self._persist_signals_async(signals))
+            stmt = pg_insert_sync(Signal).values(records)
+            stmt = stmt.on_conflict_do_nothing(
+                constraint="uq_signals_natural_key"
+            )
+            result = session.execute(stmt)
+            session.commit()
+            inserted = result.rowcount
+        except Exception as exc:
+            session.rollback()
+            self.log.error("signals_persist_failed", error=str(exc))
+            inserted = 0
+        finally:
+            session.close()
 
         self.log.info("signals_persisted", count=inserted)
         return inserted
