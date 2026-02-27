@@ -195,6 +195,63 @@ function formatNumber(value, decimals) {
 }
 
 // ---------------------------------------------------------------------------
+// Shared Utility Functions (consolidated from individual pages)
+// ---------------------------------------------------------------------------
+
+/**
+ * Seeded PRNG for deterministic sample data generation.
+ * Lehmer (Park-Miller) linear congruential generator.
+ */
+function seededRng(seed) {
+  let s = seed;
+  return function () {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+/**
+ * Format P&L in BRL with abbreviated notation and sign.
+ * Example: 25000000 -> "+R$ 25.0M", -1500000 -> "-R$ 1.5M"
+ */
+function formatPnLShort(value) {
+  if (value == null || isNaN(value)) return '--';
+  const sign = value >= 0 ? '+' : '-';
+  const abs = Math.abs(value);
+  let formatted;
+  if (abs >= 1e9) formatted = (abs / 1e9).toFixed(1) + 'B';
+  else if (abs >= 1e6) formatted = (abs / 1e6).toFixed(1) + 'M';
+  else if (abs >= 1e3) formatted = (abs / 1e3).toFixed(0) + 'K';
+  else formatted = abs.toFixed(0);
+  return sign + 'R$ ' + formatted;
+}
+
+/**
+ * Format notional/size with abbreviated notation.
+ * Example: 25000000 -> "25.0M", 1500 -> "1K"
+ */
+function formatSize(value) {
+  if (value == null || isNaN(value)) return '--';
+  const abs = Math.abs(value);
+  if (abs >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+  if (abs >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+  if (abs >= 1e3) return (value / 1e3).toFixed(0) + 'K';
+  return value.toFixed(0);
+}
+
+/**
+ * Get PMSBadge variant string for a direction.
+ * LONG -> 'positive', SHORT -> 'negative', else -> 'neutral'
+ */
+function dirBadgeVariant(dir) {
+  if (!dir) return 'neutral';
+  const d = String(dir).toUpperCase();
+  if (d === 'LONG' || d === 'BUY' || d === 'BULLISH') return 'positive';
+  if (d === 'SHORT' || d === 'SELL' || d === 'BEARISH') return 'negative';
+  return 'neutral';
+}
+
+// ---------------------------------------------------------------------------
 // Export on window for CDN/Babel compatibility
 // ---------------------------------------------------------------------------
 window.PMS_THEME = {
@@ -208,4 +265,8 @@ window.PMS_THEME = {
   formatPnL,
   formatPercent,
   formatNumber,
+  seededRng,
+  formatPnLShort,
+  formatSize,
+  dirBadgeVariant,
 };

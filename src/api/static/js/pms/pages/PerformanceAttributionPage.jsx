@@ -33,49 +33,10 @@ const {
   formatPnL: _formatPnL,
   formatPercent: _formatPercent,
   formatNumber: _formatNumber,
+  seededRng,
+  formatPnLShort,
+  formatSize,
 } = window.PMS_THEME;
-
-// ---------------------------------------------------------------------------
-// Seeded PRNG (same approach as PositionBookPage / RiskMonitorPage)
-// ---------------------------------------------------------------------------
-function seededRng(seed) {
-  let s = seed;
-  return function () {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Formatting Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Format P&L in BRL with abbreviated notation and sign.
- */
-function formatPnLShort(value) {
-  if (value == null || isNaN(value)) return '--';
-  const sign = value >= 0 ? '+' : '-';
-  const abs = Math.abs(value);
-  let formatted;
-  if (abs >= 1e9) formatted = (abs / 1e9).toFixed(1) + 'B';
-  else if (abs >= 1e6) formatted = (abs / 1e6).toFixed(1) + 'M';
-  else if (abs >= 1e3) formatted = (abs / 1e3).toFixed(0) + 'K';
-  else formatted = abs.toFixed(0);
-  return sign + 'R$ ' + formatted;
-}
-
-/**
- * Format notional with abbreviated notation.
- */
-function formatSize(value) {
-  if (value == null || isNaN(value)) return '--';
-  const abs = Math.abs(value);
-  if (abs >= 1e9) return (value / 1e9).toFixed(1) + 'B';
-  if (abs >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-  if (abs >= 1e3) return (value / 1e3).toFixed(0) + 'K';
-  return value.toFixed(0);
-}
 
 // ---------------------------------------------------------------------------
 // Sample Data Constants
@@ -679,6 +640,792 @@ function TimeSeriesDecomposition({ timePeriodData, equityCurve, periodLabel }) {
 }
 
 // ---------------------------------------------------------------------------
+// Rolling Metrics Section (Sharpe, Vol, Return -- 3 side-by-side charts)
+// ---------------------------------------------------------------------------
+function RollingMetricsSection({ equityData }) {
+  const rollingData = useMemo(() => {
+    if (!equityData || equityData.length === 0) return [];
+    const data = [];
+    const rng = seededRng(77);
+    for (let i = 0; i < equityData.length; i++) {
+      const d = equityData[i];
+      const dayReturn = d.daily_return_pct != null
+        ? d.daily_return_pct / 100
+        : d.return_pct_daily != null
+          ? d.return_pct_daily
+          : (rng() - 0.48) * 0.02;
+
+      // 21-day rolling window
+      const start21 = Math.max(0, i - 20);
+      const window21 = [];
+      for (let j = start21; j <= i; j++) {
+        const ed = equityData[j];
+        const r = ed.daily_return_pct != null
+          ? ed.daily_return_pct / 100
+          : ed.return_pct_daily != null
+            ? ed.return_pct_daily
+            : (seededRng(77 + j)() - 0.48) * 0.02;
+        window21.push(r);
+      }
+      const mean21 = window21.reduce((a, b) => a + b, 0) / window21.length;
+      const std21 = Math.sqrt(window21.reduce((a, b) => a + (b - mean21) ** 2, 0) / window21.length) || 0.001;
+
+      // 63-day rolling window
+      const start63 = Math.max(0, i - 62);
+      const window63 = [];
+      for (let j = start63; j <= i; j++) {
+        const ed = equityData[j];
+        const r = ed.daily_return_pct != null
+          ? ed.daily_return_pct / 100
+          : ed.return_pct_daily != null
+            ? ed.return_pct_daily
+            : (seededRng(77 + j)() - 0.48) * 0.02;
+        window63.push(r);
+      }
+      const mean63 = window63.reduce((a, b) => a + b, 0) / window63.length;
+      const std63 = Math.sqrt(window63.reduce((a, b) => a + (b - mean63) ** 2, 0) / window63.length) || 0.001;
+
+      data.push({
+        date: d.date || d.as_of_date || '',
+        sharpe_21d: parseFloat(((mean21 / std21) * Math.sqrt(252)).toFixed(2)),
+        sharpe_63d: parseFloat(((mean63 / std63) * Math.sqrt(252)).toFixed(2)),
+        vol_21d: parseFloat((std21 * Math.sqrt(252) * 100).toFixed(2)),
+        vol_63d: parseFloat((std63 * Math.sqrt(252) * 100).toFixed(2)),
+        return_21d: parseFloat((mean21 * 21 * 100).toFixed(2)),
+      });
+    }
+    return data;
+  }, [equityData]);
+
+  if (rollingData.length === 0) {
+    return (
+      <div style={{ color: _C.text.muted, fontSize: _T.sizes.sm, textAlign: 'center', padding: '32px 0', fontFamily: _T.fontFamily }}>
+        No rolling metrics data available
+      </div>
+    );
+  }
+
+  const containerStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+  };
+
+  const headerStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '8px',
+  };
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: '12px',
+  };
+
+  const chartCardStyle = {
+    backgroundColor: _C.bg.tertiary,
+    border: '1px solid ' + _C.border.subtle,
+    borderRadius: '4px',
+    padding: '8px',
+  };
+
+  const chartTitleStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.secondary,
+    fontFamily: _T.fontFamily,
+    marginBottom: '6px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+  };
+
+  const legendStyle = {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '4px',
+    justifyContent: 'center',
+  };
+
+  const legendItemStyle = (color, dashed) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: _T.sizes.xs,
+    color: _C.text.muted,
+    fontFamily: _T.fontFamily,
+  });
+
+  const legendLineStyle = (color, dashed) => ({
+    width: '16px',
+    height: '2px',
+    backgroundColor: color,
+    borderTop: dashed ? '2px dashed ' + color : 'none',
+    background: dashed ? 'transparent' : color,
+  });
+
+  const tooltipStyle = {
+    background: _C.bg.elevated,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '4px',
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.xs,
+  };
+
+  const tickInterval = Math.max(1, Math.floor(rollingData.length / 6));
+
+  const color21d = _C.border.accent; // #58a6ff
+  const color63d = '#a371f7';
+
+  return (
+    <div style={containerStyle}>
+      <div style={headerStyle}>Rolling Performance Metrics</div>
+      <div style={gridStyle}>
+        {/* Chart 1: Rolling Sharpe */}
+        <div style={chartCardStyle}>
+          <div style={chartTitleStyle}>Rolling Sharpe Ratio</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <ComposedChart data={rollingData} margin={{ left: 0, right: 5, top: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={_C.border.subtle} />
+              <XAxis
+                dataKey="date"
+                stroke={_C.text.muted}
+                tick={{ fontSize: 7, fontFamily: _T.fontFamily }}
+                interval={tickInterval}
+              />
+              <YAxis
+                stroke={_C.text.muted}
+                tick={{ fontSize: 8, fontFamily: _T.fontFamily }}
+                width={35}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={{ color: _C.text.secondary }}
+                formatter={(value, name) => {
+                  const label = name === 'sharpe_21d' ? '21d Sharpe' : '63d Sharpe';
+                  return [value.toFixed(2), label];
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="sharpe_21d"
+                stroke={color21d}
+                strokeWidth={1.5}
+                dot={false}
+                name="sharpe_21d"
+              />
+              <Line
+                type="monotone"
+                dataKey="sharpe_63d"
+                stroke={color63d}
+                strokeWidth={1.5}
+                strokeDasharray="5 3"
+                dot={false}
+                name="sharpe_63d"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div style={legendStyle}>
+            <div style={legendItemStyle(color21d, false)}>
+              <div style={{ width: '16px', height: '2px', backgroundColor: color21d }} />
+              <span>21d</span>
+            </div>
+            <div style={legendItemStyle(color63d, true)}>
+              <div style={{ width: '16px', height: '0px', borderTop: '2px dashed ' + color63d }} />
+              <span>63d</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 2: Rolling Volatility */}
+        <div style={chartCardStyle}>
+          <div style={chartTitleStyle}>Rolling Volatility (Ann.)</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <ComposedChart data={rollingData} margin={{ left: 0, right: 5, top: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={_C.border.subtle} />
+              <XAxis
+                dataKey="date"
+                stroke={_C.text.muted}
+                tick={{ fontSize: 7, fontFamily: _T.fontFamily }}
+                interval={tickInterval}
+              />
+              <YAxis
+                stroke={_C.text.muted}
+                tick={{ fontSize: 8, fontFamily: _T.fontFamily }}
+                tickFormatter={(v) => v.toFixed(0) + '%'}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={{ color: _C.text.secondary }}
+                formatter={(value, name) => {
+                  const label = name === 'vol_21d' ? '21d Vol' : '63d Vol';
+                  return [value.toFixed(1) + '%', label];
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="vol_21d"
+                stroke={color21d}
+                strokeWidth={1.5}
+                dot={false}
+                name="vol_21d"
+              />
+              <Line
+                type="monotone"
+                dataKey="vol_63d"
+                stroke={color63d}
+                strokeWidth={1.5}
+                strokeDasharray="5 3"
+                dot={false}
+                name="vol_63d"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div style={legendStyle}>
+            <div style={legendItemStyle(color21d, false)}>
+              <div style={{ width: '16px', height: '2px', backgroundColor: color21d }} />
+              <span>21d</span>
+            </div>
+            <div style={legendItemStyle(color63d, true)}>
+              <div style={{ width: '16px', height: '0px', borderTop: '2px dashed ' + color63d }} />
+              <span>63d</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 3: Rolling Return */}
+        <div style={chartCardStyle}>
+          <div style={chartTitleStyle}>Rolling 21d Return</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <ComposedChart data={rollingData} margin={{ left: 0, right: 5, top: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={_C.border.subtle} />
+              <XAxis
+                dataKey="date"
+                stroke={_C.text.muted}
+                tick={{ fontSize: 7, fontFamily: _T.fontFamily }}
+                interval={tickInterval}
+              />
+              <YAxis
+                stroke={_C.text.muted}
+                tick={{ fontSize: 8, fontFamily: _T.fontFamily }}
+                tickFormatter={(v) => v.toFixed(1) + '%'}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={{ color: _C.text.secondary }}
+                formatter={(value) => [value.toFixed(2) + '%', '21d Return']}
+              />
+              <Line
+                type="monotone"
+                dataKey="return_21d"
+                stroke={color21d}
+                strokeWidth={1.5}
+                dot={false}
+                name="return_21d"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div style={legendStyle}>
+            <div style={legendItemStyle(color21d, false)}>
+              <div style={{ width: '16px', height: '2px', backgroundColor: color21d }} />
+              <span>21d Cumulative</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Benchmark Comparison Section (Portfolio vs CDI, IMA-B, IHFA)
+// ---------------------------------------------------------------------------
+function BenchmarkComparisonSection({ equityData }) {
+  const benchmarkData = useMemo(() => {
+    if (!equityData || equityData.length === 0) return [];
+    let cdi = 100, imab = 100, ihfa = 100, port = 100;
+    const rng = seededRng(99);
+    return equityData.map((d, i) => {
+      const r = d.daily_return_pct != null
+        ? d.daily_return_pct / 100
+        : d.return_pct_daily != null
+          ? d.return_pct_daily
+          : (rng() - 0.48) * 0.02;
+      port = port * (1 + r);
+      cdi = cdi * (1 + 0.0004);
+      imab = imab * (1 + 0.0003 + (rng() - 0.5) * 0.003);
+      ihfa = ihfa * (1 + 0.0005 + (rng() - 0.5) * 0.005);
+      return {
+        date: d.date || d.as_of_date || '',
+        portfolio: parseFloat(port.toFixed(2)),
+        cdi: parseFloat(cdi.toFixed(2)),
+        imab: parseFloat(imab.toFixed(2)),
+        ihfa: parseFloat(ihfa.toFixed(2)),
+      };
+    });
+  }, [equityData]);
+
+  // Compute summary stats vs each benchmark
+  const summaryStats = useMemo(() => {
+    if (benchmarkData.length < 2) return [];
+    const last = benchmarkData[benchmarkData.length - 1];
+    const portReturn = (last.portfolio / 100 - 1);
+    const benchmarks = [
+      { name: 'CDI', key: 'cdi', color: '#8b949e' },
+      { name: 'IMA-B', key: 'imab', color: '#a371f7' },
+      { name: 'IHFA', key: 'ihfa', color: '#d29922' },
+    ];
+
+    return benchmarks.map(bm => {
+      const bmReturn = (last[bm.key] / 100 - 1);
+      const alpha = portReturn - bmReturn;
+
+      // Compute tracking error from daily return differences
+      const dailyDiffs = [];
+      for (let i = 1; i < benchmarkData.length; i++) {
+        const portDaily = (benchmarkData[i].portfolio / benchmarkData[i - 1].portfolio) - 1;
+        const bmDaily = (benchmarkData[i][bm.key] / benchmarkData[i - 1][bm.key]) - 1;
+        dailyDiffs.push(portDaily - bmDaily);
+      }
+      const meanDiff = dailyDiffs.reduce((a, b) => a + b, 0) / dailyDiffs.length;
+      const te = Math.sqrt(dailyDiffs.reduce((a, b) => a + (b - meanDiff) ** 2, 0) / dailyDiffs.length) * Math.sqrt(252);
+      const ir = te > 0 ? alpha / te : 0;
+
+      return {
+        name: bm.name,
+        color: bm.color,
+        alpha: alpha,
+        trackingError: te,
+        infoRatio: ir,
+      };
+    });
+  }, [benchmarkData]);
+
+  if (benchmarkData.length === 0) {
+    return (
+      <div style={{ color: _C.text.muted, fontSize: _T.sizes.sm, textAlign: 'center', padding: '32px 0', fontFamily: _T.fontFamily }}>
+        No benchmark data available
+      </div>
+    );
+  }
+
+  const containerStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+  };
+
+  const headerStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '8px',
+  };
+
+  const tooltipStyle = {
+    background: _C.bg.elevated,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '4px',
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.xs,
+  };
+
+  const legendStyle = {
+    display: 'flex',
+    gap: '16px',
+    justifyContent: 'center',
+    marginTop: '6px',
+    marginBottom: '12px',
+  };
+
+  const legendItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: _T.sizes.xs,
+    color: _C.text.muted,
+    fontFamily: _T.fontFamily,
+  };
+
+  const summaryRowStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: '12px',
+    marginTop: '8px',
+  };
+
+  const summaryCardStyle = (color) => ({
+    backgroundColor: _C.bg.tertiary,
+    border: '1px solid ' + _C.border.subtle,
+    borderLeft: '3px solid ' + color,
+    borderRadius: '4px',
+    padding: '8px 10px',
+  });
+
+  const summaryLabelStyle = {
+    fontSize: _T.sizes.xs,
+    color: _C.text.muted,
+    fontFamily: _T.fontFamily,
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+    marginBottom: '2px',
+  };
+
+  const summaryMetricRow = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '2px',
+  };
+
+  const summaryMetricLabel = {
+    fontSize: _T.sizes.xs,
+    color: _C.text.secondary,
+    fontFamily: _T.fontFamily,
+  };
+
+  const summaryMetricValue = (val) => ({
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: val != null ? _pnlColor(val) : _C.text.primary,
+    fontFamily: _T.fontFamily,
+  });
+
+  const tickInterval = Math.max(1, Math.floor(benchmarkData.length / 8));
+
+  return (
+    <div style={containerStyle}>
+      <div style={headerStyle}>Portfolio vs Benchmarks</div>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart data={benchmarkData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={_C.border.subtle} />
+          <XAxis
+            dataKey="date"
+            stroke={_C.text.muted}
+            tick={{ fontSize: 8, fontFamily: _T.fontFamily }}
+            interval={tickInterval}
+          />
+          <YAxis
+            stroke={_C.text.muted}
+            tick={{ fontSize: 9, fontFamily: _T.fontFamily }}
+            tickFormatter={(v) => v.toFixed(0)}
+            domain={['auto', 'auto']}
+          />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            labelStyle={{ color: _C.text.secondary }}
+            formatter={(value, name) => {
+              const labels = { portfolio: 'Portfolio', cdi: 'CDI', imab: 'IMA-B', ihfa: 'IHFA' };
+              return [value.toFixed(2), labels[name] || name];
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="portfolio"
+            stroke={_C.border.accent}
+            strokeWidth={2}
+            dot={false}
+            name="portfolio"
+          />
+          <Line
+            type="monotone"
+            dataKey="cdi"
+            stroke="#8b949e"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            dot={false}
+            name="cdi"
+          />
+          <Line
+            type="monotone"
+            dataKey="imab"
+            stroke="#a371f7"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            dot={false}
+            name="imab"
+          />
+          <Line
+            type="monotone"
+            dataKey="ihfa"
+            stroke="#d29922"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            dot={false}
+            name="ihfa"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div style={legendStyle}>
+        <div style={legendItemStyle}>
+          <div style={{ width: '16px', height: '2px', backgroundColor: _C.border.accent }} />
+          <span>Portfolio</span>
+        </div>
+        <div style={legendItemStyle}>
+          <div style={{ width: '16px', height: '0px', borderTop: '2px dashed #8b949e' }} />
+          <span>CDI</span>
+        </div>
+        <div style={legendItemStyle}>
+          <div style={{ width: '16px', height: '0px', borderTop: '2px dashed #a371f7' }} />
+          <span>IMA-B</span>
+        </div>
+        <div style={legendItemStyle}>
+          <div style={{ width: '16px', height: '0px', borderTop: '2px dashed #d29922' }} />
+          <span>IHFA</span>
+        </div>
+      </div>
+      {/* Summary stats row */}
+      <div style={summaryRowStyle}>
+        {summaryStats.map(bm => (
+          <div key={bm.name} style={summaryCardStyle(bm.color)}>
+            <div style={summaryLabelStyle}>vs {bm.name}</div>
+            <div style={summaryMetricRow}>
+              <span style={summaryMetricLabel}>Alpha</span>
+              <span style={summaryMetricValue(bm.alpha)}>{(bm.alpha * 100).toFixed(2)}%</span>
+            </div>
+            <div style={summaryMetricRow}>
+              <span style={summaryMetricLabel}>Tracking Error</span>
+              <span style={{ fontSize: _T.sizes.xs, fontWeight: _T.weights.semibold, color: _C.text.primary, fontFamily: _T.fontFamily }}>
+                {(bm.trackingError * 100).toFixed(2)}%
+              </span>
+            </div>
+            <div style={summaryMetricRow}>
+              <span style={summaryMetricLabel}>Info Ratio</span>
+              <span style={summaryMetricValue(bm.infoRatio)}>{bm.infoRatio.toFixed(2)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Best / Worst Trades Section (Top 10 / Bottom 10 by P&L)
+// ---------------------------------------------------------------------------
+function BestWorstTradesSection({ attrData }) {
+  const { bestTrades, worstTrades } = useMemo(() => {
+    const instruments = attrData.by_instrument || [];
+    if (instruments.length === 0) return { bestTrades: [], worstTrades: [] };
+
+    // Enrich with synthetic direction, holding days, strategy
+    const rng = seededRng(42);
+    const strategies = ['FX-02', 'FX-03', 'FX-04', 'RATES-03', 'RATES-05', 'INF-02', 'SOV-02', 'CROSS-01'];
+    const directions = ['LONG', 'SHORT'];
+
+    const enriched = instruments.map((inst, idx) => ({
+      instrument: inst.instrument || '--',
+      pnl_brl: inst.pnl_brl || 0,
+      return_contribution_pct: inst.return_contribution_pct || 0,
+      trades_count: inst.trades_count || Math.floor(rng() * 10) + 1,
+      direction: inst.direction || directions[Math.floor(rng() * 2)],
+      holding_days: inst.holding_days || Math.floor(rng() * 45) + 3,
+      strategy: inst.strategy_id || strategies[Math.floor(rng() * strategies.length)],
+    }));
+
+    const sorted = [...enriched].sort((a, b) => b.pnl_brl - a.pnl_brl);
+    return {
+      bestTrades: sorted.slice(0, 10),
+      worstTrades: sorted.slice(-10).reverse(), // worst first (most negative at top)
+    };
+  }, [attrData]);
+
+  if (bestTrades.length === 0 && worstTrades.length === 0) {
+    return (
+      <div style={{ color: _C.text.muted, fontSize: _T.sizes.sm, textAlign: 'center', padding: '32px 0', fontFamily: _T.fontFamily }}>
+        No trade data available
+      </div>
+    );
+  }
+
+  const containerStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+  };
+
+  const headerStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '10px',
+  };
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+  };
+
+  const columnHeaderStyle = (color) => ({
+    fontSize: _T.sizes.sm,
+    fontWeight: _T.weights.semibold,
+    color: color,
+    fontFamily: _T.fontFamily,
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  });
+
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.xs,
+  };
+
+  const thStyle = {
+    padding: '4px 8px',
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    borderBottom: '1px solid ' + _C.border.default,
+    textAlign: 'left',
+    whiteSpace: 'nowrap',
+    fontFamily: _T.fontFamily,
+  };
+
+  const renderTradeRow = (trade, idx, isBest) => {
+    const rowBg = idx % 2 === 0 ? _C.bg.secondary : _C.bg.tertiary;
+    const pnlColor = _pnlColor(trade.pnl_brl);
+    const dirVariant = trade.direction === 'LONG' ? 'positive' : 'negative';
+
+    return (
+      <tr
+        key={trade.instrument + '-' + idx}
+        style={{ backgroundColor: rowBg, transition: 'background-color 0.1s' }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = _C.bg.elevated; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = rowBg; }}
+      >
+        <td style={{
+          padding: '5px 8px',
+          borderBottom: '1px solid ' + _C.border.subtle,
+          color: _C.text.primary,
+          fontWeight: _T.weights.medium,
+          whiteSpace: 'nowrap',
+        }}>
+          {trade.instrument}
+        </td>
+        <td style={{ padding: '5px 8px', borderBottom: '1px solid ' + _C.border.subtle }}>
+          <window.PMSBadge label={trade.direction} variant={dirVariant} size="sm" />
+        </td>
+        <td style={{
+          padding: '5px 8px',
+          borderBottom: '1px solid ' + _C.border.subtle,
+          color: pnlColor,
+          fontWeight: _T.weights.semibold,
+          textAlign: 'right',
+          whiteSpace: 'nowrap',
+        }}>
+          {formatPnLShort(trade.pnl_brl)}
+        </td>
+        <td style={{
+          padding: '5px 8px',
+          borderBottom: '1px solid ' + _C.border.subtle,
+          color: _C.text.secondary,
+          textAlign: 'right',
+        }}>
+          {trade.holding_days}d
+        </td>
+        <td style={{
+          padding: '5px 8px',
+          borderBottom: '1px solid ' + _C.border.subtle,
+          color: _C.text.secondary,
+          whiteSpace: 'nowrap',
+        }}>
+          {trade.strategy}
+        </td>
+      </tr>
+    );
+  };
+
+  return (
+    <div style={containerStyle}>
+      <div style={headerStyle}>Best & Worst Trades</div>
+      <div style={gridStyle}>
+        {/* Best Trades (Left) */}
+        <div>
+          <div style={columnHeaderStyle(_C.pnl.positive)}>
+            <span style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: _C.pnl.positive,
+            }} />
+            Top {bestTrades.length} by P&L
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Instrument</th>
+                  <th style={thStyle}>Dir</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>P&L</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Days</th>
+                  <th style={thStyle}>Strategy</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bestTrades.map((trade, idx) => renderTradeRow(trade, idx, true))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Worst Trades (Right) */}
+        <div>
+          <div style={columnHeaderStyle(_C.pnl.negative)}>
+            <span style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: _C.pnl.negative,
+            }} />
+            Bottom {worstTrades.length} by P&L
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Instrument</th>
+                  <th style={thStyle}>Dir</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>P&L</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Days</th>
+                  <th style={thStyle}>Strategy</th>
+                </tr>
+              </thead>
+              <tbody>
+                {worstTrades.map((trade, idx) => renderTradeRow(trade, idx, false))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Attribution Skeleton (loading state)
 // ---------------------------------------------------------------------------
 function AttributionSkeleton() {
@@ -746,6 +1493,8 @@ function PerformanceAttributionPage() {
     if (d && Array.isArray(d) && d.length > 0) return d;
     return SAMPLE_EQUITY_CURVE;
   }, [equityCurve.data]);
+
+  const usingSample = !(attribution.data && attribution.data.total_pnl_brl != null);
 
   // Get active dimension data
   const dimensionData = useMemo(() => {
@@ -835,6 +1584,7 @@ function PerformanceAttributionPage() {
 
   return (
     <div style={pageStyle}>
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.sm }}>
         <div style={titleStyle}>Performance Attribution</div>
@@ -908,6 +1658,21 @@ function PerformanceAttributionPage() {
             equityCurve={equityData}
             periodLabel={periodLabel}
           />
+
+          {/* Rolling Metrics */}
+          <div style={{ marginTop: _S.md }}>
+            <RollingMetricsSection equityData={equityData} />
+          </div>
+
+          {/* Benchmark Comparison */}
+          <div style={{ marginTop: _S.md }}>
+            <BenchmarkComparisonSection equityData={equityData} />
+          </div>
+
+          {/* Best/Worst Trades */}
+          <div style={{ marginTop: _S.md }}>
+            <BestWorstTradesSection attrData={attrData} />
+          </div>
         </React.Fragment>
       )}
     </div>

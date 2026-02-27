@@ -292,6 +292,7 @@ function AgentIntelPage() {
   const [agentReports, setAgentReports] = _aiUseState({});
   const [loading, setLoading] = _aiUseState(true);
   const [lastUpdated, setLastUpdated] = _aiUseState(null);
+  const [usingSample, setUsingSample] = _aiUseState(false);
 
   _aiUseEffect(() => {
     let cancelled = false;
@@ -307,15 +308,13 @@ function AgentIntelPage() {
         const agentList = await listRes.json();
         const agentIds = Array.isArray(agentList) ? agentList.map((a) => a.id || a.agent_id || a) : AGENT_ORDER;
 
-        // Sequential fetch per agent (per Phase 19 pattern)
-        for (const agentId of agentIds) {
-          if (cancelled) return;
+        // Parallel fetch all agents simultaneously
+        const fetchPromises = agentIds.map(async (agentId) => {
           try {
             const res = await fetch(`/api/v1/agents/${agentId}/latest`);
-            if (!res.ok) continue;
+            if (!res.ok) return null;
             const report = await res.json();
 
-            // Parse report into our format
             const signals = report.signals || [];
             let direction = 'NEUTRAL';
             let totalConf = 0;
@@ -335,26 +334,31 @@ function AgentIntelPage() {
               totalConf = totalConf / signals.length;
             }
 
-            // Generate sparkline from signal values or synthetic
             const sparkline = signals.length > 0
               ? Array.from({ length: 30 }, (_, i) => 0.5 + Math.sin(i * 0.5 + signals.length) * 0.2)
               : Array.from({ length: 30 }, (_, i) => 0.5 + Math.sin(i * 0.3) * 0.15);
 
-            results[agentId] = {
-              agent_id: agentId,
-              direction,
-              confidence: totalConf || 0.5,
-              drivers: drivers.length > 0 ? drivers.slice(0, 3) : ['No signal data'],
-              risks: [],
-              sparkline,
-              narrative: report.narrative || null,
+            return {
+              id: agentId,
+              data: {
+                agent_id: agentId,
+                direction,
+                confidence: totalConf || 0.5,
+                drivers: drivers.length > 0 ? drivers.slice(0, 3) : ['No signal data'],
+                risks: [],
+                sparkline,
+                narrative: report.narrative || null,
+              },
             };
           } catch (_) {
-            // Skip failed agent
+            return null;
           }
-        }
+        });
 
+        const settled = await Promise.all(fetchPromises);
         if (cancelled) return;
+
+        settled.filter(Boolean).forEach((r) => { results[r.id] = r.data; });
 
         if (Object.keys(results).length > 0) {
           setAgentReports(results);
@@ -365,6 +369,7 @@ function AgentIntelPage() {
       } catch (_) {
         // Full fallback to sample data
         if (!cancelled) {
+          setUsingSample(true);
           setAgentReports(generateSampleAgentData());
           setLastUpdated(new Date());
         }
@@ -392,6 +397,7 @@ function AgentIntelPage() {
 
   return (
     <div style={pageStyle}>
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _AS.md }}>
         <div style={{ fontSize: _AT.sizes['2xl'], fontWeight: _AT.weights.bold, color: _AC.text.primary, marginBottom: '2px' }}>

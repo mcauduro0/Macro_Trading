@@ -466,6 +466,7 @@ function DecisionJournalPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [usingSample, setUsingSample] = useState(false);
   const [filters, setFilters] = useState({
     datePreset: 'YTD',
     startDate: fmtIso(new Date(new Date().getFullYear(), 0, 1)),
@@ -528,6 +529,7 @@ function DecisionJournalPage() {
       setHasMore(data.length >= PAGE_SIZE);
     } catch (_) {
       // Sample data fallback
+      setUsingSample(true);
       let sample = generateSampleEntries();
       if (filters.types && filters.types.length > 0) {
         sample = sample.filter((e) => filters.types.includes(e.entry_type));
@@ -599,6 +601,7 @@ function DecisionJournalPage() {
 
   return (
     <div style={pageStyle}>
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _JS.md }}>
         <div style={{ fontSize: _JT.sizes['2xl'], fontWeight: _JT.weights.bold, color: _JC.text.primary, marginBottom: '2px' }}>

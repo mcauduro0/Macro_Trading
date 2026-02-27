@@ -83,6 +83,16 @@
       to { transform: translateX(0); opacity: 1; }
     }
     .animate-slide-in { animation: slide-in 0.3s ease-out; }
+    /* Responsive breakpoints for tablet */
+    @media (max-width: 1024px) {
+      .ml-56 { margin-left: 4rem !important; }
+      .w-56 { width: 4rem !important; }
+    }
+    @media (max-width: 768px) {
+      .ml-56 { margin-left: 0 !important; }
+      .w-56 { display: none !important; }
+      .w-16 { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -100,12 +110,8 @@
   <script type="text/babel" src="/static/js/pms/pages/DecisionJournalPage.jsx"></script>
   <script type="text/babel" src="/static/js/pms/pages/AgentIntelPage.jsx"></script>
   <script type="text/babel" src="/static/js/pms/pages/ComplianceAuditPage.jsx"></script>
+  <script type="text/babel" src="/static/js/pms/pages/PMSSignalsPage.jsx"></script>
   <script type="text/babel" src="/static/js/Sidebar.jsx"></script>
-  <script type="text/babel" src="/static/js/pages/StrategiesPage.jsx"></script>
-  <script type="text/babel" src="/static/js/pages/SignalsPage.jsx"></script>
-  <script type="text/babel" src="/static/js/pages/RiskPage.jsx"></script>
-  <script type="text/babel" src="/static/js/pages/PortfolioPage.jsx"></script>
-  <script type="text/babel" src="/static/js/pages/AgentsPage.jsx"></script>
   <script type="text/babel" src="/static/js/App.jsx"></script>
 
   <!-- Mount the application -->

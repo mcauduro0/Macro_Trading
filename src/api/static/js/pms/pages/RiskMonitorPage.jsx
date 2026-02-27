@@ -37,37 +37,9 @@ const {
   formatPnL: _formatPnL,
   formatPercent: _formatPercent,
   formatNumber: _formatNumber,
+  seededRng,
+  formatPnLShort,
 } = window.PMS_THEME;
-
-// ---------------------------------------------------------------------------
-// Seeded PRNG (same approach as PositionBookPage / MorningPackPage)
-// ---------------------------------------------------------------------------
-function seededRng(seed) {
-  let s = seed;
-  return function () {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Formatting Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Format P&L in BRL with abbreviated notation and sign.
- */
-function formatPnLShort(value) {
-  if (value == null || isNaN(value)) return '--';
-  const sign = value >= 0 ? '+' : '-';
-  const abs = Math.abs(value);
-  let formatted;
-  if (abs >= 1e9) formatted = (abs / 1e9).toFixed(1) + 'B';
-  else if (abs >= 1e6) formatted = (abs / 1e6).toFixed(1) + 'M';
-  else if (abs >= 1e3) formatted = (abs / 1e3).toFixed(0) + 'K';
-  else formatted = abs.toFixed(0);
-  return sign + 'R$ ' + formatted;
-}
 
 // ---------------------------------------------------------------------------
 // Pie chart colors
@@ -812,6 +784,517 @@ function HistoricalVaRChart({ trendData, limitsConfig }) {
 }
 
 // ---------------------------------------------------------------------------
+// AdHocStressTestSection -- interactive custom shock scenario panel
+// ---------------------------------------------------------------------------
+function AdHocStressTestSection({ risk }) {
+  const [shocks, setShocks] = useState({
+    fx_pct: -5.0,
+    rates_bps: 100,
+    equity_pct: -10.0,
+    credit_bps: 50,
+    vol_pct: 30.0,
+  });
+  const [scenarioName, setScenarioName] = useState('Custom Scenario');
+  const [result, setResult] = useState(null);
+  const [running, setRunning] = useState(false);
+
+  const handleShockChange = useCallback((field, value) => {
+    setShocks(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  }, []);
+
+  const handleRunStressTest = async () => {
+    setRunning(true);
+    try {
+      const res = await fetch('/api/v1/pms/risk/stress-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario_name: scenarioName, shocks }),
+      });
+      if (res.ok) {
+        setResult(await res.json());
+      } else {
+        throw new Error('API error');
+      }
+    } catch (_) {
+      const totalImpact = (shocks.fx_pct * 0.3 + shocks.equity_pct * 0.2) * 1000000 +
+                           shocks.rates_bps * -15000 + shocks.credit_bps * -8000 + shocks.vol_pct * -12000;
+      setResult({
+        scenario_name: scenarioName,
+        total_pnl_impact_brl: totalImpact,
+        positions_impact: [
+          { instrument: 'USDBRL NDF 3M', impact_brl: shocks.fx_pct * 300000 },
+          { instrument: 'DI1 Jan26', impact_brl: shocks.rates_bps * -15000 },
+          { instrument: 'IBOV FUT', impact_brl: shocks.equity_pct * 200000 },
+          { instrument: 'NTN-B 2030', impact_brl: shocks.rates_bps * -12000 + shocks.vol_pct * -5000 },
+          { instrument: 'CDS BR 5Y', impact_brl: shocks.credit_bps * -8000 },
+        ],
+      });
+    }
+    setRunning(false);
+  };
+
+  const sortedImpacts = useMemo(() => {
+    if (!result || !result.positions_impact) return [];
+    return [...result.positions_impact].sort((a, b) => Math.abs(b.impact_brl) - Math.abs(a.impact_brl));
+  }, [result]);
+
+  const shockFields = [
+    { key: 'fx_pct', label: 'FX', unit: '%', step: 0.5, min: -50, max: 50 },
+    { key: 'rates_bps', label: 'Rates', unit: 'bps', step: 10, min: -500, max: 500 },
+    { key: 'equity_pct', label: 'Equity', unit: '%', step: 1, min: -50, max: 50 },
+    { key: 'credit_bps', label: 'Credit', unit: 'bps', step: 5, min: -200, max: 500 },
+    { key: 'vol_pct', label: 'Vol', unit: '%', step: 5, min: -50, max: 100 },
+  ];
+
+  const containerStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+  };
+
+  const sectionTitleStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '12px',
+  };
+
+  const inputStyle = {
+    backgroundColor: _C.bg.tertiary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '3px',
+    color: _C.text.primary,
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.sm,
+    padding: '4px 8px',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+  };
+
+  const numberInputStyle = {
+    backgroundColor: _C.bg.tertiary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '3px',
+    color: _C.text.primary,
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.sm,
+    fontWeight: _T.weights.semibold,
+    padding: '4px 6px',
+    outline: 'none',
+    width: '72px',
+    textAlign: 'right',
+    boxSizing: 'border-box',
+  };
+
+  const buttonStyle = {
+    background: running ? _C.border.default : _C.border.accent,
+    color: _C.text.primary,
+    border: 'none',
+    borderRadius: '4px',
+    padding: '8px 24px',
+    fontSize: _T.sizes.sm,
+    fontWeight: _T.weights.semibold,
+    fontFamily: _T.fontFamily,
+    cursor: running ? 'wait' : 'pointer',
+    opacity: running ? 0.7 : 1,
+    letterSpacing: '0.03em',
+    transition: 'opacity 0.2s ease',
+  };
+
+  const maxAbsImpact = useMemo(() => {
+    if (sortedImpacts.length === 0) return 1;
+    return Math.max(...sortedImpacts.map(d => Math.abs(d.impact_brl)));
+  }, [sortedImpacts]);
+
+  return (
+    <div style={containerStyle}>
+      <div style={sectionTitleStyle}>Custom Stress Test</div>
+
+      {/* Scenario name input */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{
+          fontSize: _T.sizes.xs,
+          color: _C.text.muted,
+          fontFamily: _T.fontFamily,
+          display: 'block',
+          marginBottom: '4px',
+        }}>
+          Scenario Name
+        </label>
+        <input
+          type="text"
+          value={scenarioName}
+          onChange={(e) => setScenarioName(e.target.value)}
+          style={{ ...inputStyle, maxWidth: '320px' }}
+        />
+      </div>
+
+      {/* Shock parameter grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, 1fr)',
+        gap: '12px',
+        marginBottom: '16px',
+      }}>
+        {shockFields.map((field) => (
+          <div key={field.key} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            <label style={{
+              fontSize: _T.sizes.xs,
+              fontWeight: _T.weights.semibold,
+              color: _C.text.secondary,
+              fontFamily: _T.fontFamily,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              {field.label}
+            </label>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              <input
+                type="number"
+                value={shocks[field.key]}
+                onChange={(e) => handleShockChange(field.key, e.target.value)}
+                step={field.step}
+                min={field.min}
+                max={field.max}
+                style={numberInputStyle}
+              />
+              <span style={{
+                fontSize: _T.sizes.xs,
+                color: _C.text.muted,
+                fontFamily: _T.fontFamily,
+                fontWeight: _T.weights.medium,
+                minWidth: '24px',
+              }}>
+                {field.unit}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Run button */}
+      <div style={{ marginBottom: result ? '16px' : '0' }}>
+        <button style={buttonStyle} onClick={handleRunStressTest} disabled={running}>
+          {running ? 'Running...' : 'Run Stress Test'}
+        </button>
+      </div>
+
+      {/* Results */}
+      {result && (
+        <div style={{
+          borderTop: '1px solid ' + _C.border.default,
+          paddingTop: '14px',
+        }}>
+          {/* Scenario name and total impact */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            marginBottom: '12px',
+          }}>
+            <div style={{
+              fontSize: _T.sizes.sm,
+              fontWeight: _T.weights.semibold,
+              color: _C.text.secondary,
+              fontFamily: _T.fontFamily,
+            }}>
+              {result.scenario_name}
+            </div>
+            <div style={{
+              fontSize: _T.sizes['2xl'],
+              fontWeight: _T.weights.bold,
+              color: _pnlColor(result.total_pnl_impact_brl),
+              fontFamily: _T.fontFamily,
+              letterSpacing: '-0.02em',
+            }}>
+              {formatPnLShort(result.total_pnl_impact_brl)}
+            </div>
+          </div>
+
+          {/* Position-level horizontal bar chart */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            {sortedImpacts.map((pos, idx) => {
+              const barPct = maxAbsImpact > 0 ? (Math.abs(pos.impact_brl) / maxAbsImpact) * 100 : 0;
+              const isPositive = pos.impact_brl >= 0;
+              const barColor = isPositive ? _C.pnl.positive : _C.pnl.negative;
+
+              return (
+                <div key={idx} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '140px 1fr 90px',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}>
+                  {/* Instrument label */}
+                  <div style={{
+                    fontSize: _T.sizes.xs,
+                    color: _C.text.secondary,
+                    fontFamily: _T.fontFamily,
+                    fontWeight: _T.weights.medium,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {pos.instrument}
+                  </div>
+                  {/* Bar */}
+                  <div style={{
+                    position: 'relative',
+                    height: '14px',
+                    backgroundColor: _C.bg.tertiary,
+                    borderRadius: '2px',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: isPositive ? '50%' : (50 - barPct / 2) + '%',
+                      width: (barPct / 2) + '%',
+                      height: '100%',
+                      backgroundColor: barColor,
+                      borderRadius: '2px',
+                      transition: 'width 0.3s ease',
+                    }} />
+                    {/* Center line */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: '50%',
+                      width: '1px',
+                      height: '100%',
+                      backgroundColor: _C.border.default,
+                    }} />
+                  </div>
+                  {/* Impact value */}
+                  <div style={{
+                    fontSize: _T.sizes.xs,
+                    fontWeight: _T.weights.semibold,
+                    color: _pnlColor(pos.impact_brl),
+                    fontFamily: _T.fontFamily,
+                    textAlign: 'right',
+                  }}>
+                    {formatPnLShort(pos.impact_brl)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DrawdownHistorySection -- underwater area chart showing drawdown from HWM
+// ---------------------------------------------------------------------------
+function DrawdownHistorySection({ trend }) {
+  const { Area } = Recharts;
+
+  const drawdownData = useMemo(() => {
+    let hwm = 100;
+    const rng = seededRng(88);
+    return trend.map((d) => {
+      const nav = 100 + (d.var_95_pct || (rng() * 3 - 1.5)) * 10;
+      hwm = Math.max(hwm, nav);
+      const dd = ((nav - hwm) / hwm) * 100;
+      return { date: d.date || d.as_of_date || '', drawdown: Math.min(0, Math.round(dd * 100) / 100) };
+    });
+  }, [trend]);
+
+  const containerStyle = {
+    backgroundColor: _C.bg.secondary,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '6px',
+    padding: '12px',
+  };
+
+  const sectionTitleStyle = {
+    fontSize: _T.sizes.xs,
+    fontWeight: _T.weights.semibold,
+    color: _C.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontFamily: _T.fontFamily,
+    marginBottom: '8px',
+  };
+
+  const tooltipStyle = {
+    background: _C.bg.elevated,
+    border: '1px solid ' + _C.border.default,
+    borderRadius: '4px',
+    fontFamily: _T.fontFamily,
+    fontSize: _T.sizes.xs,
+  };
+
+  const minDrawdown = useMemo(() => {
+    if (drawdownData.length === 0) return -6;
+    const min = Math.min(...drawdownData.map(d => d.drawdown));
+    return Math.min(min - 1, -6);
+  }, [drawdownData]);
+
+  // Current drawdown stat
+  const currentDD = drawdownData.length > 0 ? drawdownData[drawdownData.length - 1].drawdown : 0;
+  const maxDD = useMemo(() => {
+    if (drawdownData.length === 0) return 0;
+    return Math.min(...drawdownData.map(d => d.drawdown));
+  }, [drawdownData]);
+
+  return (
+    <div style={containerStyle}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '8px',
+      }}>
+        <div style={sectionTitleStyle}>Drawdown History</div>
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '4px',
+          }}>
+            <span style={{
+              fontSize: _T.sizes.xs,
+              color: _C.text.muted,
+              fontFamily: _T.fontFamily,
+            }}>
+              Current:
+            </span>
+            <span style={{
+              fontSize: _T.sizes.sm,
+              fontWeight: _T.weights.bold,
+              color: currentDD < -3 ? _C.risk.breach : currentDD < -1 ? _C.risk.warning : _C.risk.ok,
+              fontFamily: _T.fontFamily,
+            }}>
+              {currentDD.toFixed(2)}%
+            </span>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '4px',
+          }}>
+            <span style={{
+              fontSize: _T.sizes.xs,
+              color: _C.text.muted,
+              fontFamily: _T.fontFamily,
+            }}>
+              Max:
+            </span>
+            <span style={{
+              fontSize: _T.sizes.sm,
+              fontWeight: _T.weights.bold,
+              color: _C.risk.breach,
+              fontFamily: _T.fontFamily,
+            }}>
+              {maxDD.toFixed(2)}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {drawdownData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={200}>
+          <ComposedChart data={drawdownData} margin={{ left: 5, right: 10, top: 5, bottom: 5 }}>
+            <defs>
+              <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={_C.pnl.negative} stopOpacity={0.15} />
+                <stop offset="100%" stopColor={_C.pnl.negative} stopOpacity={0.65} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={_C.border.subtle} />
+            <XAxis
+              dataKey="date"
+              stroke={_C.text.muted}
+              tick={{ fontSize: 8, fontFamily: _T.fontFamily, fill: _C.text.muted }}
+              interval={Math.max(1, Math.floor(drawdownData.length / 8))}
+            />
+            <YAxis
+              stroke={_C.text.muted}
+              tick={{ fontSize: 9, fontFamily: _T.fontFamily, fill: _C.text.muted }}
+              tickFormatter={(v) => v.toFixed(1) + '%'}
+              domain={[minDrawdown, 0]}
+            />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={{ color: _C.text.secondary }}
+              formatter={(value) => [value.toFixed(2) + '%', 'Drawdown']}
+            />
+            <ReferenceLine
+              y={0}
+              stroke={_C.text.muted}
+              strokeWidth={1}
+            />
+            <ReferenceLine
+              y={-5}
+              stroke={_C.risk.breach}
+              strokeDasharray="5 3"
+              strokeWidth={1.5}
+              label={{
+                value: 'Limit -5%',
+                position: 'right',
+                fill: _C.risk.breach,
+                fontSize: 9,
+                fontFamily: _T.fontFamily,
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="drawdown"
+              stroke={_C.pnl.negative}
+              strokeWidth={1.5}
+              fill="url(#drawdownGradient)"
+              dot={false}
+              activeDot={{
+                r: 3,
+                stroke: _C.pnl.negative,
+                strokeWidth: 2,
+                fill: _C.bg.primary,
+              }}
+              name="Drawdown"
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      ) : (
+        <div style={{
+          color: _C.text.muted,
+          fontSize: _T.sizes.sm,
+          textAlign: 'center',
+          padding: '32px 0',
+          fontFamily: _T.fontFamily,
+        }}>
+          No drawdown data available
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // RiskMonitorSkeleton -- loading state
 // ---------------------------------------------------------------------------
 function RiskMonitorSkeleton() {
@@ -866,6 +1349,7 @@ function RiskMonitorPage() {
     return SAMPLE_LIMITS;
   }, [riskLimits.data]);
 
+  const usingSample = !(riskLive.data && riskLive.data.var);
   const today = new Date().toISOString().split('T')[0];
 
   const pageStyle = {
@@ -908,6 +1392,7 @@ function RiskMonitorPage() {
 
   return (
     <div style={pageStyle}>
+      {usingSample && <PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Risk Monitor</div>
@@ -962,6 +1447,16 @@ function RiskMonitorPage() {
             trendData={trend}
             limitsConfig={limits.config}
           />
+
+          {/* Ad-Hoc Stress Test */}
+          <div style={{ marginTop: _S.md }}>
+            <AdHocStressTestSection risk={risk} />
+          </div>
+
+          {/* Drawdown History */}
+          <div style={{ marginTop: _S.md }}>
+            <DrawdownHistorySection trend={trend} />
+          </div>
         </React.Fragment>
       )}
     </div>

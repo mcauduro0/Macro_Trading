@@ -1,16 +1,15 @@
 /**
- * App.jsx - Main application component for the Macro Trading Dashboard.
+ * App.jsx - Main application component for the Macro Trading PMS.
  *
  * Features:
- * - HashRouter with Dashboard (5 routes) + PMS (8 routes) + default redirect
- * - Mode switch: Dashboard vs PMS mode with separate navigation
- * - Sidebar + content area layout with mode-aware styling
+ * - HashRouter with PMS routes (9 pages) + legacy redirects
+ * - Bloomberg-dense dark theme (#0d1117) for all pages
  * - WebSocket alert connection with toast notifications
  * - Alert badge count passed to Sidebar
  */
 
 const { useState, useEffect } = React;
-const { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } = window.ReactRouterDOM;
+const { HashRouter, Routes, Route, Navigate, useLocation } = window.ReactRouterDOM;
 
 // ---------------------------------------------------------------------------
 // Toast notification card
@@ -51,35 +50,15 @@ function ToastContainer({ toasts, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
-// PMS Placeholder page for future pages
+// Layout wrapper — sidebar + content with PMS styling
 // ---------------------------------------------------------------------------
-function PMSPlaceholder({ title }) {
+function Layout({ children, alertCount, toasts, onCloseToast }) {
   return (
-    <div style={{
-      color: '#e6edf3',
-      padding: '2rem',
-      fontFamily: "'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace",
-    }}>
-      <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{title}</h1>
-      <p style={{ color: '#8b949e' }}>Coming soon...</p>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Layout wrapper — sidebar + content with mode-aware styling
-// ---------------------------------------------------------------------------
-function Layout({ children, alertCount, pmsMode, onModeChange, toasts, onCloseToast }) {
-  const mainBg = pmsMode
-    ? { backgroundColor: '#0d1117' }
-    : {};
-
-  return (
-    <div className="flex h-screen text-gray-100" style={pmsMode ? { backgroundColor: '#0d1117' } : {}}>
-      <Sidebar alertCount={alertCount} pmsMode={pmsMode} onModeChange={onModeChange} />
+    <div className="flex h-screen text-gray-100" style={{ backgroundColor: '#0d1117' }}>
+      <Sidebar alertCount={alertCount} />
       {/* Content area — offset by sidebar width */}
-      <main className={`flex-1 ml-56 overflow-y-auto ${!pmsMode ? 'bg-gray-950' : ''}`} style={mainBg}>
-        <div className={pmsMode ? "p-4 max-w-screen-2xl mx-auto" : "p-6 max-w-screen-2xl mx-auto"}>
+      <main className="flex-1 ml-56 overflow-y-auto" style={{ backgroundColor: '#0d1117' }}>
+        <div className="p-4 max-w-screen-2xl mx-auto">
           {children}
         </div>
       </main>
@@ -89,31 +68,10 @@ function Layout({ children, alertCount, pmsMode, onModeChange, toasts, onCloseTo
 }
 
 // ---------------------------------------------------------------------------
-// Inner app content (needs to be inside HashRouter for useNavigate)
+// Inner app content (needs to be inside HashRouter for hooks)
 // ---------------------------------------------------------------------------
 function AppContent() {
   const [toasts, setToasts] = useState([]);
-  const [pmsMode, setPmsMode] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Detect PMS mode from URL on initial load and hash changes
-  useEffect(() => {
-    const isPmsRoute = location.pathname.startsWith('/pms/');
-    if (isPmsRoute && !pmsMode) {
-      setPmsMode(true);
-    }
-  }, [location.pathname]);
-
-  // Mode change handler — navigates to default page for each mode
-  const handleModeChange = (isPms) => {
-    setPmsMode(isPms);
-    if (isPms) {
-      navigate('/pms/morning-pack');
-    } else {
-      navigate('/strategies');
-    }
-  };
 
   // Connect to alerts WebSocket
   const { connected, lastMessage } = useWebSocket("/ws/alerts");
@@ -144,49 +102,43 @@ function AppContent() {
 
   const alertCount = toasts.length;
 
-  // MorningPackPage — resolved from window global (loaded from pms/pages/MorningPackPage.jsx)
+  // PMS page components from window globals
   const MorningPackPage = window.MorningPackPage;
-  // PositionBookPage — resolved from window global (loaded from pms/pages/PositionBookPage.jsx)
   const PositionBookPage = window.PositionBookPage;
-  // TradeBlotterPage — resolved from window global (loaded from pms/pages/TradeBlotterPage.jsx)
   const TradeBlotterPage = window.TradeBlotterPage;
-  // RiskMonitorPage — resolved from window global (loaded from pms/pages/RiskMonitorPage.jsx)
   const RiskMonitorPage = window.RiskMonitorPage;
-  // PerformanceAttributionPage — resolved from window global (loaded from pms/pages/PerformanceAttributionPage.jsx)
   const PerformanceAttributionPage = window.PerformanceAttributionPage;
-  // DecisionJournalPage — resolved from window global (loaded from pms/pages/DecisionJournalPage.jsx)
   const DecisionJournalPage = window.DecisionJournalPage;
-  // AgentIntelPage — resolved from window global (loaded from pms/pages/AgentIntelPage.jsx)
   const AgentIntelPage = window.AgentIntelPage;
-  // ComplianceAuditPage — resolved from window global (loaded from pms/pages/ComplianceAuditPage.jsx)
   const ComplianceAuditPage = window.ComplianceAuditPage;
+  const PMSSignalsPage = window.PMSSignalsPage;
 
   return (
     <Layout
       alertCount={alertCount}
-      pmsMode={pmsMode}
-      onModeChange={handleModeChange}
       toasts={toasts}
       onCloseToast={handleCloseToast}
     >
       <Routes>
-        {/* Dashboard routes */}
-        <Route path="/" element={<Navigate to="/strategies" replace />} />
-        <Route path="/strategies" element={<StrategiesPage />} />
-        <Route path="/signals" element={<SignalsPage />} />
-        <Route path="/risk" element={<RiskPage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/agents" element={<AgentsPage />} />
-
         {/* PMS routes */}
         <Route path="/pms/morning-pack" element={<MorningPackPage />} />
         <Route path="/pms/portfolio" element={<PositionBookPage />} />
         <Route path="/pms/risk" element={<RiskMonitorPage />} />
         <Route path="/pms/blotter" element={<TradeBlotterPage />} />
+        <Route path="/pms/signals" element={<PMSSignalsPage />} />
         <Route path="/pms/attribution" element={<PerformanceAttributionPage />} />
         <Route path="/pms/journal" element={<DecisionJournalPage />} />
         <Route path="/pms/agents" element={<AgentIntelPage />} />
         <Route path="/pms/compliance" element={<ComplianceAuditPage />} />
+
+        {/* Default + legacy redirects */}
+        <Route path="/" element={<Navigate to="/pms/morning-pack" replace />} />
+        <Route path="/strategies" element={<Navigate to="/pms/morning-pack" replace />} />
+        <Route path="/signals" element={<Navigate to="/pms/signals" replace />} />
+        <Route path="/risk" element={<Navigate to="/pms/risk" replace />} />
+        <Route path="/portfolio" element={<Navigate to="/pms/portfolio" replace />} />
+        <Route path="/agents" element={<Navigate to="/pms/agents" replace />} />
+        <Route path="*" element={<Navigate to="/pms/morning-pack" replace />} />
       </Routes>
     </Layout>
   );

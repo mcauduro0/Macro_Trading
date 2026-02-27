@@ -671,8 +671,11 @@ function MorningPackPage() {
     ? briefing.data.briefing_date
     : new Date().toISOString().split('T')[0];
 
+  const usingSample = !briefing.data && !briefing.loading;
+
   return (
     <div style={pageStyle}>
+      {usingSample && <PMSSampleDataBanner />}
       {/* Section 1: Alerts Banner (sticky within content area) */}
       <AlertsSection riskData={risk.data} briefingData={briefing.data} />
 

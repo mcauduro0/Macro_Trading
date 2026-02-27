@@ -402,6 +402,30 @@ function PMSAlertBanner({ alerts, onDismiss }) {
 }
 
 // ---------------------------------------------------------------------------
+// 9. PMSSampleDataBanner — Sticky banner when using fallback data
+// ---------------------------------------------------------------------------
+function PMSSampleDataBanner() {
+  return (
+    <div style={{
+      backgroundColor: '#d29922',
+      color: '#0d1117',
+      padding: '4px 12px',
+      fontSize: PMS_TYPOGRAPHY.sizes.xs,
+      fontFamily: PMS_TYPOGRAPHY.fontFamily,
+      fontWeight: PMS_TYPOGRAPHY.weights.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: '0.08em',
+      textAlign: 'center',
+      position: 'sticky',
+      top: 0,
+      zIndex: 25,
+    }}>
+      SAMPLE DATA — API unavailable, displaying demonstration data
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Export all components on window for CDN/Babel compatibility
 // ---------------------------------------------------------------------------
 window.PMSCard = PMSCard;
@@ -412,3 +436,4 @@ window.PMSLayout = PMSLayout;
 window.PMSMetricCard = PMSMetricCard;
 window.PMSSkeleton = PMSSkeleton;
 window.PMSAlertBanner = PMSAlertBanner;
+window.PMSSampleDataBanner = PMSSampleDataBanner;
