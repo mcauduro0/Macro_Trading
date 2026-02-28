@@ -66,14 +66,16 @@ def test_dashboard_contains_react(client: TestClient):
 
 
 def test_dashboard_contains_all_tabs(client: TestClient):
-    """Response body contains all 5 navigation tab labels."""
+    """Response body contains all SPA page component references."""
     response = client.get("/dashboard")
     body = response.text
-    assert "Strategies" in body
-    assert "Signals" in body
-    assert "Risk" in body
-    assert "Portfolio" in body
-    assert "Agents" in body
+    # The dashboard is a React SPA; tab labels are rendered client-side.
+    # Verify the page component scripts are included in the HTML.
+    assert "AgentIntelPage.jsx" in body
+    assert "RiskMonitorPage.jsx" in body
+    assert "PositionBookPage.jsx" in body
+    assert "PMSSignalsPage.jsx" in body
+    assert "TradeBlotterPage.jsx" in body
 
 
 def test_dashboard_dark_theme(client: TestClient):
