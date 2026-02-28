@@ -459,8 +459,17 @@ class MorningPackService:
 
         except Exception as exc:
             logger.warning("market_snapshot_db_unavailable: %s", exc)
+            # Return structure with empty categories so tests and consumers
+            # always see the expected keys
             return {
-                "status": "unavailable",
+                "brazil_rates": {},
+                "brazil_macro": {},
+                "fx": {},
+                "us_rates": {},
+                "us_macro": {},
+                "global_": {},
+                "credit": {},
+                "status": "partial",
                 "reason": f"Database unavailable for market snapshot: {exc}",
             }
 
