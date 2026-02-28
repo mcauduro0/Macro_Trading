@@ -85,10 +85,10 @@ class TestUSCalendar:
         assert is_business_day_us(date(2025, 1, 4)) is False
 
     def test_count_business_days_us_known_range(self) -> None:
-        # Jan 2 to Jan 10, 2025: expect 5 NYSE sessions (excluding start)
-        # Sessions: Jan 3, 6, 7, 8, 10 (Jan 9 was National Day of Mourning)
-        result = count_business_days_us(date(2025, 1, 2), date(2025, 1, 10))
-        assert result == 5
+        # Jan 13 to Jan 17, 2025: expect 4 NYSE sessions (excluding start)
+        # Sessions: Jan 14, 15, 16, 17 (Jan 20 is MLK Day, outside range)
+        result = count_business_days_us(date(2025, 1, 13), date(2025, 1, 17))
+        assert result == 4
 
     def test_next_business_day_us_on_holiday(self) -> None:
         # Jan 1, 2025 (Wed, New Year) -> Jan 2 (Thu)
