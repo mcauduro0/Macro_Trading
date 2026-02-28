@@ -36,6 +36,7 @@ from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.pms_attribution import router as pms_attribution_router
 from src.api.routes.pms_briefing import router as pms_briefing_router
 from src.api.routes.pms_journal import router as pms_journal_router
+from src.api.routes.pms_pipeline import router as pms_pipeline_router
 from src.api.routes.pms_portfolio import router as pms_portfolio_router
 from src.api.routes.pms_risk import router as pms_risk_router
 from src.api.routes.pms_trades import router as pms_trades_router
@@ -145,7 +146,7 @@ app.add_middleware(
     allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["*"],
 )
 
 
@@ -185,6 +186,7 @@ app.include_router(pms_journal_router, prefix="/api/v1")
 app.include_router(pms_briefing_router, prefix="/api/v1")
 app.include_router(pms_risk_router, prefix="/api/v1")
 app.include_router(pms_attribution_router, prefix="/api/v1")
+app.include_router(pms_pipeline_router, prefix="/api/v1")
 
 # WebSocket endpoints at root (no prefix — ws:// paths)
 app.include_router(websocket_router)

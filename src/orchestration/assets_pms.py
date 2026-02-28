@@ -39,6 +39,69 @@ logger = logging.getLogger(__name__)
 _retry_policy = RetryPolicy(max_retries=2, delay=30)
 
 
+def _collect_aggregated_signals(context: AssetExecutionContext) -> list[dict]:
+    """Collect signals from all registered strategies via SignalAggregatorV2.
+
+    Returns a list of signal dicts suitable for TradeWorkflowService.
+    """
+    try:
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.portfolio.signal_aggregator_v2 import SignalAggregatorV2
+        from src.strategies import ALL_STRATEGIES
+
+        loader = PointInTimeDataLoader()
+        strategy_signals = []
+        as_of = date.today()
+
+        for strategy_id, strategy_cls in ALL_STRATEGIES.items():
+            try:
+                strategy = (
+                    strategy_cls(data_loader=loader)
+                    if isinstance(strategy_cls, type)
+                    else strategy_cls
+                )
+                if hasattr(strategy, "generate_signals"):
+                    sigs = strategy.generate_signals(as_of)
+                    if sigs:
+                        strategy_signals.extend(
+                            sigs if isinstance(sigs, list) else [sigs]
+                        )
+            except Exception:
+                context.log.warning(
+                    f"Strategy {strategy_id} signal generation failed, skipping"
+                )
+
+        if not strategy_signals:
+            context.log.warning("No strategy signals collected")
+            return []
+
+        aggregator = SignalAggregatorV2(method="bayesian")
+        results = aggregator.aggregate(strategy_signals)
+
+        # Convert AggregatedSignalV2 objects to dicts for TradeWorkflowService
+        signal_dicts = []
+        for r in results:
+            signal_dicts.append({
+                "instrument": r.instrument,
+                "asset_class": getattr(r, "asset_class", "UNKNOWN"),
+                "direction": r.direction,
+                "conviction": r.conviction,
+                "signal_source": "aggregator_v2",
+                "strategy_ids": getattr(r, "strategy_ids", []),
+                "suggested_notional_brl": 10_000_000.0,
+            })
+
+        context.log.info(
+            f"Collected {len(signal_dicts)} aggregated signals from "
+            f"{len(strategy_signals)} raw strategy signals"
+        )
+        return signal_dicts
+
+    except Exception as exc:
+        context.log.warning(f"Signal collection failed: {exc}")
+        return []
+
+
 async def _warm_cache_book(book_data: dict) -> None:
     """Write-through: cache the portfolio book in Redis."""
     redis = await get_redis()
@@ -120,11 +183,18 @@ def pms_trade_proposals(context: AssetExecutionContext) -> Output:
 
     Depends on ``pms_mark_to_market`` so proposals reflect current
     portfolio state and avoid stale position data.
+
+    Collects signals from all registered strategies via
+    SignalAggregatorV2, then converts them into trade proposals.
     """
     try:
         tws = TradeWorkflowService()
-        # Generate proposals from signals (empty list = use internal signals)
-        proposals = tws.generate_proposals_from_signals(signals=[])
+
+        # Collect real signals from strategy registry
+        signals = _collect_aggregated_signals(context)
+        context.log.info(f"Collected {len(signals)} signals for proposal generation")
+
+        proposals = tws.generate_proposals_from_signals(signals=signals)
         proposals_count = len(proposals)
 
         context.log.info(f"Trade proposals generated: {proposals_count}")
