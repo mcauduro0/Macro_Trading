@@ -199,7 +199,7 @@ class SignalAggregatorV2:
 
     def aggregate(
         self,
-        signals: list[StrategySignal],
+        signals: list,  # Accepts StrategySignal or StrategyPosition objects
         regime_probs: dict[str, float] | None = None,
         as_of: datetime | None = None,
     ) -> list[AggregatedSignalV2]:
@@ -224,9 +224,17 @@ class SignalAggregatorV2:
             as_of = datetime.utcnow()
 
         # Group signals by instrument
-        instrument_groups: dict[str, list[StrategySignal]] = {}
+        # Support both StrategySignal (.instruments: list) and
+        # StrategyPosition (.instrument: str) via duck typing.
+        instrument_groups: dict[str, list] = {}
         for sig in signals:
-            for instr in sig.instruments:
+            if hasattr(sig, "instruments"):
+                instr_list = sig.instruments
+            elif hasattr(sig, "instrument"):
+                instr_list = [sig.instrument]
+            else:
+                continue
+            for instr in instr_list:
                 instrument_groups.setdefault(instr, []).append(sig)
 
         results: list[AggregatedSignalV2] = []
@@ -248,7 +256,7 @@ class SignalAggregatorV2:
     def _aggregate_instrument(
         self,
         instrument: str,
-        signals: list[StrategySignal],
+        signals: list,
         regime_probs: dict[str, float] | None,
         as_of: datetime,
     ) -> AggregatedSignalV2 | None:
@@ -256,12 +264,13 @@ class SignalAggregatorV2:
 
         # Compute staleness factors
         staleness_map: dict[str, float] = {}
-        active_signals: list[tuple[StrategySignal, float]] = (
-            []
-        )  # (signal, staleness_factor)
+        active_signals: list[tuple] = []  # (signal, staleness_factor)
 
         for sig in signals:
-            days = _count_business_days(sig.timestamp, as_of)
+            # StrategySignal has .timestamp; StrategyPosition does not.
+            # Treat missing timestamp as fresh (staleness = 0 days).
+            sig_ts = getattr(sig, "timestamp", as_of)
+            days = _count_business_days(sig_ts, as_of)
             factor = max(0.0, 1.0 - days / self.staleness_max_days)
             staleness_map[sig.strategy_id] = factor
             if factor > 0:
@@ -347,7 +356,7 @@ class SignalAggregatorV2:
     # ------------------------------------------------------------------
     def _confidence_weighted(
         self,
-        active_signals: list[tuple[StrategySignal, float]],
+        active_signals: list[tuple],
     ) -> tuple[float, float, list[dict]]:
         """Confidence-weighted average aggregation.
 
@@ -396,7 +405,7 @@ class SignalAggregatorV2:
     # ------------------------------------------------------------------
     def _rank_based(
         self,
-        active_signals: list[tuple[StrategySignal, float]],
+        active_signals: list[tuple],
     ) -> tuple[float, float, list[dict]]:
         """Rank-based aggregation, robust to outliers.
 
@@ -408,9 +417,7 @@ class SignalAggregatorV2:
             (conviction, confidence, contributing_strategies)
         """
         # Get convictions with staleness
-        entries: list[tuple[StrategySignal, float, float]] = (
-            []
-        )  # (sig, staleness, conviction)
+        entries: list[tuple] = []  # (sig, staleness, conviction)
         for sig, staleness_factor in active_signals:
             conv = self._signal_conviction(sig)
             entries.append((sig, staleness_factor, conv))
@@ -465,7 +472,7 @@ class SignalAggregatorV2:
     # ------------------------------------------------------------------
     def _bayesian(
         self,
-        active_signals: list[tuple[StrategySignal, float]],
+        active_signals: list[tuple],
         regime_probs: dict[str, float] | None,
     ) -> tuple[float, float, list[dict]]:
         """Bayesian aggregation with optional regime-aware strategy tilting.
@@ -519,12 +526,18 @@ class SignalAggregatorV2:
     # Helpers
     # ------------------------------------------------------------------
     @staticmethod
-    def _signal_conviction(sig: StrategySignal) -> float:
-        """Derive conviction from a StrategySignal's z_score.
+    def _signal_conviction(sig) -> float:
+        """Derive conviction from a signal object.
 
-        Conviction = z_score / 2.0, clamped to [-1, +1].
+        For StrategySignal: conviction = z_score / 2.0, clamped to [-1, +1].
+        For StrategyPosition: conviction = weight (already in [-1, +1]).
         """
-        return max(-1.0, min(1.0, sig.z_score / 2.0))
+        if hasattr(sig, "z_score"):
+            return max(-1.0, min(1.0, sig.z_score / 2.0))
+        # StrategyPosition: use weight directly (already in [-1, 1])
+        if hasattr(sig, "weight"):
+            return max(-1.0, min(1.0, sig.weight))
+        return 0.0
 
     @staticmethod
     def _compute_regime_tilt(

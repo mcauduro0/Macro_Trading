@@ -1,2 +1,16 @@
 telemetry:
   enabled: false
+
+# Use PostgreSQL for run/event/schedule storage (same DB as the app)
+storage:
+  postgres:
+    postgres_url:
+      env: DATABASE_URL
+
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+sensors:
+  use_threads: true
+  num_workers: 4

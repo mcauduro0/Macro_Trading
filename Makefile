@@ -117,8 +117,9 @@ test-all:
 # ── Dagster Orchestration ────────────────────────────────────────────
 # Start Dagster webserver (UI at http://localhost:3001)
 dagster:
-	docker compose --profile dagster up -d dagster-webserver
+	docker compose --profile dagster up -d dagster-webserver dagster-daemon
 	@echo "Dagster UI available at http://localhost:3001"
+	@echo "Dagster daemon started (schedules + sensors active)"
 
 # Run full pipeline (materialize all assets in dependency order)
 dagster-run-all:
