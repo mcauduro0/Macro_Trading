@@ -29,9 +29,9 @@ jobs:
       timescaledb:
         image: timescale/timescaledb:latest-pg15
         env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'macro_user' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'macro_ci_pass' }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'macro_trading_test' }}
         ports:
           - 5432:5432
         options: >-
@@ -49,8 +49,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql+asyncpg://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
-      SYNC_DATABASE_URL: postgresql+psycopg2://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+      DATABASE_URL: postgresql+asyncpg://${{ secrets.POSTGRES_USER || 'macro_user' }}:${{ secrets.POSTGRES_PASSWORD || 'macro_ci_pass' }}@localhost:5432/${{ secrets.POSTGRES_DB || 'macro_trading_test' }}
+      SYNC_DATABASE_URL: postgresql+psycopg2://${{ secrets.POSTGRES_USER || 'macro_user' }}:${{ secrets.POSTGRES_PASSWORD || 'macro_ci_pass' }}@localhost:5432/${{ secrets.POSTGRES_DB || 'macro_trading_test' }}
       REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
