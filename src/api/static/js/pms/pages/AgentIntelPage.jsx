@@ -366,13 +366,12 @@ function AgentIntelPage() {
           setAgentReports(results);
           setLastUpdated(new Date());
         } else {
-          throw new Error('No agent data');
+          setAgentReports({});
+          setLastUpdated(new Date());
         }
       } catch (_) {
-        // Full fallback to sample data
         if (!cancelled) {
-          setUsingSample(true);
-          setAgentReports(generateSampleAgentData());
+          setAgentReports({});
           setLastUpdated(new Date());
         }
       }

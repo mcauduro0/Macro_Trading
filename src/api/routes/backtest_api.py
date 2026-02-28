@@ -50,43 +50,6 @@ def _envelope(data: Any) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Sample / placeholder data helpers
-# ---------------------------------------------------------------------------
-def _sample_backtest_result(strategy_id: str) -> dict:
-    """Return a placeholder backtest result for demo/fallback."""
-    return {
-        "strategy_id": strategy_id,
-        "sharpe_ratio": 1.25,
-        "annual_return": 0.12,
-        "max_drawdown": -0.08,
-        "total_trades": 48,
-        "win_rate": 0.58,
-        "profit_factor": 1.65,
-        "equity_curve": [100000, 101200, 103500, 102800, 105600, 108200, 112000],
-        "note": "Sample data -- live backtest engine unavailable",
-    }
-
-
-def _sample_portfolio_result(
-    strategy_ids: list[str], weights: dict[str, float]
-) -> dict:
-    """Return a placeholder portfolio backtest result."""
-    return {
-        "strategy_ids": strategy_ids,
-        "weights": weights,
-        "combined_sharpe": 1.45,
-        "combined_annual_return": 0.14,
-        "combined_max_drawdown": -0.06,
-        "equity_curve": [100000, 101500, 103800, 103200, 106100, 109500, 114200],
-        "attribution": {sid: w for sid, w in weights.items()},
-        "correlation_matrix": {
-            f"{a}_{b}": 0.35 for a in strategy_ids for b in strategy_ids if a != b
-        },
-        "note": "Sample data -- live backtest engine unavailable",
-    }
-
-
-# ---------------------------------------------------------------------------
 # POST /backtest/run -- Trigger backtest for a strategy
 # ---------------------------------------------------------------------------
 @router.post("/run", status_code=202)
@@ -122,7 +85,6 @@ async def run_backtest(request: BacktestRunRequest):
             else date(2024, 12, 31)
         )
 
-        # Try to run actual backtest
         from src.agents.data_loader import PointInTimeDataLoader
         from src.backtesting.engine import BacktestConfig, BacktestEngine
 
@@ -132,7 +94,6 @@ async def run_backtest(request: BacktestRunRequest):
             initial_capital=1_000_000.0,
         )
 
-        # Get strategy instance
         strategy_cls = ALL_STRATEGIES.get(
             request.strategy_id,
             StrategyRegistry._strategies.get(request.strategy_id),
@@ -143,7 +104,6 @@ async def run_backtest(request: BacktestRunRequest):
         engine = BacktestEngine(config, loader)
         result = await asyncio.to_thread(engine.run, strategy)
 
-        # Convert BacktestResult to dict
         equity_curve = []
         if hasattr(result, "equity_curve") and result.equity_curve:
             equity_curve = [float(e) for _, e in result.equity_curve]
@@ -175,13 +135,19 @@ async def run_backtest(request: BacktestRunRequest):
 
     except HTTPException:
         raise
-    except Exception as exc:
-        logger.warning(
-            "backtest_run_fallback strategy_id=%s error=%s", request.strategy_id, exc
+    except ImportError as exc:
+        logger.error("backtest_run import_error: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Backtest engine dependencies unavailable: {exc}. "
+            "Ensure all packages are installed (pip install -e '.[dev]').",
         )
-        result = _sample_backtest_result(request.strategy_id)
-        result["note"] = "Backtest engine unavailable. Returning sample data."
-        return _envelope(result)
+    except Exception as exc:
+        logger.error("backtest_run failed strategy_id=%s: %s", request.strategy_id, exc, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Backtest execution failed for '{request.strategy_id}': {exc}",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +158,6 @@ async def get_backtest_results(
     strategy_id: str = Query(..., description="Strategy ID to fetch results for"),
 ):
     """Retrieve stored backtest results for a strategy."""
-    # Try to fetch from database
     try:
         from sqlalchemy import text
 
@@ -226,13 +191,21 @@ async def get_backtest_results(
                         },
                     }
                 )
-    except Exception as exc:
-        logger.debug(
-            "backtest_results_db_unavailable strategy_id=%s error=%s", strategy_id, exc
-        )
 
-    # Fallback to placeholder data
-    return _envelope(_sample_backtest_result(strategy_id))
+        raise HTTPException(
+            status_code=404,
+            detail=f"No backtest results found for strategy '{strategy_id}'. "
+            "Run a backtest first via POST /backtest/run.",
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("backtest_results_db error strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database unavailable for backtest results: {exc}. "
+            "Ensure TimescaleDB is running and migrations are applied.",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +221,6 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
     if not request.strategy_ids:
         raise HTTPException(status_code=400, detail="strategy_ids must not be empty")
 
-    # Default to equal weights if not provided
     weights = request.weights
     if weights is None:
         n = len(request.strategy_ids)
@@ -260,7 +232,6 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
         from src.strategies import ALL_STRATEGIES
         from src.strategies.registry import StrategyRegistry
 
-        # Validate all strategy IDs exist
         for sid in request.strategy_ids:
             if sid not in ALL_STRATEGIES and sid not in StrategyRegistry._strategies:
                 raise HTTPException(
@@ -274,7 +245,6 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
             initial_capital=1_000_000.0,
         )
 
-        # Instantiate strategies
         loader = PointInTimeDataLoader()
         strategies = []
         for sid in request.strategy_ids:
@@ -286,13 +256,11 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
         engine = BacktestEngine(config, loader)
         result = await asyncio.to_thread(engine.run_portfolio, strategies, weights)
 
-        # Convert BacktestResult to serializable dict
         portfolio_result = result["portfolio_result"]
         equity_curve = []
         if hasattr(portfolio_result, "equity_curve") and portfolio_result.equity_curve:
             equity_curve = [float(e) for _, e in portfolio_result.equity_curve]
 
-        # Convert correlation matrix with tuple keys to string keys
         correlation = {}
         for (a, b), corr_val in result.get("correlation_matrix", {}).items():
             correlation[f"{a}_{b}"] = float(corr_val)
@@ -312,9 +280,17 @@ async def portfolio_backtest(request: PortfolioBacktestRequest):
 
     except HTTPException:
         raise
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Portfolio backtest dependencies unavailable: {exc}",
+        )
     except Exception as exc:
-        logger.warning("portfolio_backtest_fallback error=%s", exc)
-        return _envelope(_sample_portfolio_result(request.strategy_ids, weights))
+        logger.error("portfolio_backtest failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Portfolio backtest failed: {exc}",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -335,17 +311,18 @@ async def compare_backtests(
         raise HTTPException(status_code=400, detail="strategy_ids must not be empty")
 
     comparison: dict[str, dict] = {}
-    for sid in ids:
-        # Try to fetch from DB first
-        try:
-            from sqlalchemy import text
+    missing: list[str] = []
 
-            from src.core.database import async_session_factory
+    try:
+        from sqlalchemy import text
 
+        from src.core.database import async_session_factory
+
+        for sid in ids:
             async with async_session_factory() as session:
                 result = await session.execute(
                     text(
-                        "SELECT strategy_id, sharpe_ratio, annual_return, "
+                        "SELECT strategy_id, sharpe_ratio, annualized_return, "
                         "max_drawdown, win_rate, profit_factor "
                         "FROM backtest_results "
                         "WHERE strategy_id = :sid "
@@ -362,18 +339,25 @@ async def compare_backtests(
                         "win_rate": row.win_rate,
                         "profit_factor": row.profit_factor,
                     }
-                    continue
-        except Exception:
-            pass
+                else:
+                    missing.append(sid)
 
-        # Fallback to sample data
-        sample = _sample_backtest_result(sid)
-        comparison[sid] = {
-            "sharpe_ratio": sample["sharpe_ratio"],
-            "annual_return": sample["annual_return"],
-            "max_drawdown": sample["max_drawdown"],
-            "win_rate": sample["win_rate"],
-            "profit_factor": sample["profit_factor"],
-        }
+    except Exception as exc:
+        logger.error("backtest_comparison_db error: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database unavailable for backtest comparison: {exc}. "
+            "Ensure TimescaleDB is running.",
+        )
+
+    if missing:
+        return _envelope(
+            {
+                "comparison": comparison,
+                "missing_strategies": missing,
+                "note": f"No backtest results found for: {', '.join(missing)}. "
+                "Run backtests first via POST /backtest/run.",
+            }
+        )
 
     return _envelope(comparison)

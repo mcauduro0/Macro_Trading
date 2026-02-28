@@ -1629,20 +1629,20 @@ function PerformanceAttributionPage() {
 
   const isLoading = attribution.loading && equityCurve.loading;
 
-  // Resolve data with sample fallback
+  // Resolve data — empty state instead of sample fallback
   const attrData = useMemo(() => {
     const d = attribution.data;
     if (d && d.total_pnl_brl != null) return d;
-    return SAMPLE_ATTRIBUTION;
+    return { period: {}, total_pnl_brl: 0, total_return_pct: 0, by_strategy: [], by_asset_class: [], by_instrument: [], by_time_period: [] };
   }, [attribution.data]);
 
   const equityData = useMemo(() => {
     const d = equityCurve.data;
     if (d && Array.isArray(d) && d.length > 0) return d;
-    return SAMPLE_EQUITY_CURVE;
+    return [];
   }, [equityCurve.data]);
 
-  const usingSample = !(attribution.data && attribution.data.total_pnl_brl != null);
+  const usingSample = false;
 
   // Get active dimension data
   const dimensionData = useMemo(() => {
@@ -1659,7 +1659,7 @@ function PerformanceAttributionPage() {
     return period;
   }, [attrData, period]);
 
-  const usingSampleData = attrData === SAMPLE_ATTRIBUTION;
+  const usingSampleData = false;
   const today = new Date().toISOString().split('T')[0];
 
   const pageStyle = {

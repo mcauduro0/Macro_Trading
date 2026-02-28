@@ -44,36 +44,158 @@ def _error_response(message: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Helpers: build sample data for computation
+# Data loaders: fetch real portfolio data from PMS and database
 # ---------------------------------------------------------------------------
 
 
-def _sample_portfolio_returns() -> np.ndarray:
-    """Generate sample portfolio returns for VaR computation.
+def _load_portfolio_returns() -> np.ndarray:
+    """Load historical portfolio returns from the database.
 
-    In production this would pull from the database. For now returns
-    a deterministic synthetic series with realistic properties.
+    Queries TimescaleDB for daily portfolio returns over the last 252 trading
+    days. Raises RuntimeError if data is unavailable.
     """
-    rng = np.random.default_rng(seed=42)
-    # 252 days of daily returns with ~15% annualized vol
-    daily_vol = 0.15 / np.sqrt(252)
-    returns = rng.normal(loc=0.0003, scale=daily_vol, size=252)
-    return returns
+    try:
+        from sqlalchemy import create_engine, text
+
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        with engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT daily_return FROM portfolio_returns "
+                    "ORDER BY return_date DESC LIMIT 252"
+                )
+            )
+            rows = result.fetchall()
+            if rows and len(rows) >= 30:
+                return np.array([float(r[0]) for r in reversed(rows)])
+    except Exception:
+        pass
+
+    # Fallback: compute from market data positions
+    try:
+        from src.pms.position_manager import PositionManager
+
+        pm = PositionManager()
+        book = pm.get_book()
+        positions = book.get("positions", [])
+        if positions:
+            # Use position weights with historical asset returns
+            weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
+            if weights:
+                from src.agents.data_loader import PointInTimeDataLoader
+
+                loader = PointInTimeDataLoader()
+                returns_data = loader.load_returns(list(weights.keys()), lookback_days=252)
+                if returns_data is not None and len(returns_data) >= 30:
+                    w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+                    portfolio_returns = returns_data.values @ w
+                    return portfolio_returns
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        "Portfolio returns unavailable. Ensure database is running and "
+        "portfolio_returns table is populated, or PMS has active positions "
+        "with historical market data."
+    )
 
 
-def _sample_positions() -> dict[str, float]:
-    """Build sample positions for stress testing."""
-    return {
-        "USDBRL": 200_000.0,
-        "DI_PRE_360": 300_000.0,
-        "NTN_B_REAL": 250_000.0,
-        "IBOVESPA": 150_000.0,
-        "SP500": 100_000.0,
-    }
+def _load_positions() -> dict[str, float]:
+    """Load current positions from the Position Manager.
+
+    Returns dict of {instrument: notional_value}. Raises RuntimeError if
+    PMS is unavailable or has no positions.
+    """
+    try:
+        from src.pms.position_manager import PositionManager
+
+        pm = PositionManager()
+        book = pm.get_book()
+        positions = book.get("positions", [])
+        if positions:
+            return {
+                p["instrument"]: p.get("notional", p.get("weight", 0.0) * 1_000_000.0)
+                for p in positions
+            }
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        "Position data unavailable. Ensure PositionManager is configured "
+        "with active positions from the trade workflow."
+    )
 
 
-def _sample_portfolio_value() -> float:
-    return 1_000_000.0
+def _load_portfolio_value() -> float:
+    """Load current portfolio NAV from PMS.
+
+    Returns total portfolio value in BRL. Raises RuntimeError if unavailable.
+    """
+    try:
+        from src.pms.position_manager import PositionManager
+
+        pm = PositionManager()
+        book = pm.get_book()
+        summary = book.get("summary", {})
+        nav = summary.get("total_nav_brl", summary.get("total_market_value", 0.0))
+        if nav > 0:
+            return float(nav)
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        "Portfolio NAV unavailable. Ensure PositionManager is configured "
+        "and positions have been marked to market."
+    )
+
+
+def _load_portfolio_state() -> dict:
+    """Load full portfolio state for risk limit checking.
+
+    Returns dict with weights, leverage, VaR, drawdown, risk contributions,
+    and asset class mappings. Raises RuntimeError if unavailable.
+    """
+    try:
+        from src.pms.position_manager import PositionManager
+
+        pm = PositionManager()
+        book = pm.get_book()
+        positions = book.get("positions", [])
+        summary = book.get("summary", {})
+
+        if not positions:
+            raise RuntimeError("No positions in book")
+
+        weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
+        risk_contributions = {p["instrument"]: abs(p.get("weight", 0.0)) for p in positions}
+        asset_class_map = {p["instrument"]: p.get("asset_class", "OTHER") for p in positions}
+
+        # Aggregate asset class weights
+        ac_weights: dict[str, float] = {}
+        for inst, w in weights.items():
+            ac = asset_class_map.get(inst, "OTHER")
+            ac_weights[ac] = ac_weights.get(ac, 0.0) + abs(w)
+
+        return {
+            "weights": weights,
+            "leverage": summary.get("leverage", sum(abs(w) for w in weights.values())),
+            "var_95": summary.get("var_95", 0.0),
+            "var_99": summary.get("var_99", 0.0),
+            "drawdown_pct": summary.get("drawdown_pct", 0.0),
+            "risk_contributions": risk_contributions,
+            "asset_class_weights": ac_weights,
+            "strategy_daily_pnl": summary.get("strategy_daily_pnl", {}),
+            "asset_class_daily_pnl": summary.get("asset_class_daily_pnl", {}),
+            "asset_class_map": asset_class_map,
+        }
+    except Exception as exc:
+        raise RuntimeError(
+            f"Portfolio state unavailable for limit checking: {exc}. "
+            "Ensure PositionManager has active positions."
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +224,7 @@ async def risk_var(
 
         def _compute_var():
             calc = VaRCalculator()
-            returns = _sample_portfolio_returns()
+            returns = _load_portfolio_returns()
 
             valid_methods = {"historical", "parametric", "monte_carlo", "all"}
             selected = method if method in valid_methods else "all"
@@ -135,17 +257,23 @@ async def risk_var(
                 }
 
             if selected in ("monte_carlo", "all"):
-                # Build a simple returns matrix for Monte Carlo
-                rng = np.random.default_rng(seed=42)
-                n_assets = 3
-                n_obs = 252
-                daily_vol = 0.15 / np.sqrt(252)
-                returns_matrix = rng.normal(
-                    loc=0.0003, scale=daily_vol, size=(n_obs, n_assets)
-                )
-                weights = np.array([0.4, 0.35, 0.25])
+                # Build real returns matrix from portfolio positions
+                positions = _load_positions()
+                instruments = list(positions.keys())
+                from src.agents.data_loader import PointInTimeDataLoader
 
-                vr = calc.calculate_monte_carlo(returns_matrix, weights, rng=rng)
+                loader = PointInTimeDataLoader()
+                returns_df = loader.load_returns(instruments, lookback_days=252)
+                if returns_df is not None and len(returns_df) >= 30:
+                    returns_matrix = returns_df.values
+                    total = sum(positions.values())
+                    weights = np.array([positions[i] / total for i in instruments])
+                else:
+                    # Use portfolio-level returns as single-asset fallback
+                    returns_matrix = returns.reshape(-1, 1)
+                    weights = np.array([1.0])
+
+                vr = calc.calculate_monte_carlo(returns_matrix, weights)
                 results["monte_carlo"] = {
                     "method": "monte_carlo",
                     "var_95": round(vr.var_95, 6),
@@ -159,7 +287,6 @@ async def risk_var(
             if warning:
                 output["warning"] = warning
             if selected != "all":
-                # For a single method, flatten to just that result
                 output["results"] = results.get(selected, {})
 
             return output
@@ -167,9 +294,11 @@ async def risk_var(
         data = await asyncio.to_thread(_compute_var)
         return _envelope(data)
 
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("risk_api error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("risk_var error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"VaR computation failed: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -190,8 +319,8 @@ async def risk_stress(
 
         def _compute_stress():
             tester = StressTester()
-            positions = _sample_positions()
-            portfolio_value = _sample_portfolio_value()
+            positions = _load_positions()
+            portfolio_value = _load_portfolio_value()
 
             all_results = tester.run_all(positions, portfolio_value)
 
@@ -206,7 +335,6 @@ async def risk_stress(
                 }
                 scenarios_out.append(entry)
 
-            # If specific scenario requested, filter
             if scenario:
                 scenario_lower = scenario.lower()
                 scenarios_out = [
@@ -220,9 +348,11 @@ async def risk_stress(
         data = await asyncio.to_thread(_compute_stress)
         return _envelope(data)
 
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("risk_api error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("risk_stress error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Stress test failed: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -238,43 +368,9 @@ async def risk_limits():
 
         def _compute_limits():
             mgr = RiskLimitsManager()
-
-            # Build a portfolio state for limit checking
-            portfolio_state = {
-                "weights": {
-                    "USDBRL": 0.20,
-                    "DI_PRE": 0.30,
-                    "IBOV": 0.15,
-                    "SP500": 0.10,
-                },
-                "leverage": 0.75,
-                "var_95": -0.015,
-                "var_99": -0.025,
-                "drawdown_pct": 0.008,
-                "risk_contributions": {
-                    "USDBRL": 0.10,
-                    "DI_PRE": 0.15,
-                    "IBOV": 0.08,
-                    "SP500": 0.05,
-                },
-                "asset_class_weights": {"FX": 0.20, "RATES": 0.30, "EQUITY": 0.25},
-                "strategy_daily_pnl": {"FX_BR_01": -0.003, "RATES_BR_01": 0.002},
-                "asset_class_daily_pnl": {
-                    "FX": -0.003,
-                    "RATES": 0.002,
-                    "EQUITY": -0.001,
-                },
-                "asset_class_map": {
-                    "USDBRL": "FX",
-                    "DI_PRE": "RATES",
-                    "IBOV": "EQUITY",
-                    "SP500": "EQUITY",
-                },
-            }
-
+            portfolio_state = _load_portfolio_state()
             result = mgr.check_all_v2(portfolio_state)
 
-            # Serialize limit results
             limits_out = []
             for lr in result["limit_results"]:
                 limits_out.append(
@@ -287,7 +383,6 @@ async def risk_limits():
                     }
                 )
 
-            # Loss status
             loss_status = None
             ls = result.get("loss_status")
             if ls is not None:
@@ -298,7 +393,6 @@ async def risk_limits():
                     "weekly_breached": ls.breach_weekly,
                 }
 
-            # Risk budget
             risk_budget = None
             rb = result.get("risk_budget")
             if rb is not None:
@@ -319,9 +413,11 @@ async def risk_limits():
         data = await asyncio.to_thread(_compute_limits)
         return _envelope(data)
 
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("risk_api error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("risk_limits error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Limit check failed: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -337,9 +433,9 @@ async def risk_dashboard():
 
         def _compute_dashboard():
             monitor = RiskMonitor()
-            portfolio_returns = _sample_portfolio_returns()
-            positions = _sample_positions()
-            portfolio_value = _sample_portfolio_value()
+            portfolio_returns = _load_portfolio_returns()
+            positions = _load_positions()
+            portfolio_value = _load_portfolio_value()
             weights = {k: v / portfolio_value for k, v in positions.items()}
 
             report = monitor.generate_report(
@@ -349,7 +445,6 @@ async def risk_dashboard():
                 weights=weights,
             )
 
-            # Serialize VaR
             var_data: dict[str, dict] = {}
             for method_name, vr in report.var_results.items():
                 var_data[method_name] = {
@@ -359,7 +454,6 @@ async def risk_dashboard():
                     "cvar_99": round(vr.cvar_99, 6),
                 }
 
-            # Worst stress scenario
             worst_stress: dict[str, Any] = {}
             if report.stress_results:
                 worst = min(report.stress_results, key=lambda s: s.portfolio_pnl)
@@ -368,7 +462,6 @@ async def risk_dashboard():
                     "pnl_pct": round(worst.portfolio_pnl_pct, 6),
                 }
 
-            # Count breached limits
             limits_breached = sum(1 for lr in report.limit_results if lr.breached)
 
             return {
@@ -387,9 +480,11 @@ async def risk_dashboard():
         data = await asyncio.to_thread(_compute_dashboard)
         return _envelope(data)
 
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("risk_api error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("risk_dashboard error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Risk dashboard failed: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -410,6 +505,8 @@ async def risk_report(
 
         risk_data = await asyncio.to_thread(_build_risk_report)
         return _envelope(risk_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("risk_api error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("risk_report error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Risk report failed: {exc}")

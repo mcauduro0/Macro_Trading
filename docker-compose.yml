@@ -164,6 +164,32 @@ services:
       - backend
     restart: unless-stopped
 
+  dagster-daemon:
+    image: python:3.11-slim
+    container_name: macro_dagster_daemon
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DAGSTER_HOME: /app/.dagster
+      DATABASE_URL: postgresql://${POSTGRES_USER:-macro_user}:${POSTGRES_PASSWORD:?required}@timescaledb:5432/${POSTGRES_DB:-macro_trading}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+    command: >
+      bash -c "pip install -q dagster dagster-webserver dagster-postgres &&
+               pip install -q -e /app &&
+               mkdir -p /app/.dagster &&
+               dagster-daemon run"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - dagster
+    networks:
+      - backend
+    restart: unless-stopped
+
   api:
     build:
       context: .

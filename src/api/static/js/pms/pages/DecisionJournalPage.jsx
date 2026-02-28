@@ -486,11 +486,7 @@ function DecisionJournalPage() {
         const data = await res.json();
         setStats(data);
       } catch (_) {
-        setStats({
-          total_entries: 42, approval_rate: 0.72, avg_holding_days: 8.3,
-          total_positions_opened: 18, total_positions_closed: 12, total_rejections: 7,
-          by_type: { OPEN: 18, CLOSE: 12, REJECT: 7, NOTE: 5 },
-        });
+        setStats(null);
       }
     })();
   }, []);
@@ -528,26 +524,13 @@ function DecisionJournalPage() {
       }
       setHasMore(data.length >= PAGE_SIZE);
     } catch (_) {
-      // Sample data fallback
-      setUsingSample(true);
-      let sample = generateSampleEntries();
-      if (filters.types && filters.types.length > 0) {
-        sample = sample.filter((e) => filters.types.includes(e.entry_type));
-      }
-      if (filters.assetClass && filters.assetClass !== 'All') {
-        sample = sample.filter((e) => (e.asset_class || '').toLowerCase() === filters.assetClass.toLowerCase());
-      }
-      if (filters.instrument) {
-        const q = filters.instrument.toLowerCase();
-        sample = sample.filter((e) => (e.instrument || '').toLowerCase().includes(q));
-      }
+      // Show empty state on error
       if (append) {
-        setEntries((prev) => [...prev, ...sample]);
+        setEntries((prev) => prev);
       } else {
-        setEntries(sample);
+        setEntries([]);
       }
       setHasMore(false);
-      setUsingSample(true);
     }
 
     setLoading(false);

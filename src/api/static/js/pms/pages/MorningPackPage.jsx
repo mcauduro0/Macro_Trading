@@ -143,10 +143,7 @@ function AlertsSection({ riskData, briefingData }) {
     allAlerts = [...allAlerts, ...actionAlerts];
   }
 
-  // Use sample alerts if no live data
-  if (allAlerts.length === 0 && !riskData && !briefingData) {
-    allAlerts = SAMPLE_ALERTS;
-  }
+  // No sample alert fallback - empty alerts is a valid state
 
   // Filter dismissed
   const visibleAlerts = allAlerts.filter(a => !dismissed[a.id]);
@@ -164,7 +161,7 @@ function AlertsSection({ riskData, briefingData }) {
 function MarketOverviewStrip({ briefingData }) {
   const marketData = (briefingData && briefingData.market_snapshot && Array.isArray(briefingData.market_snapshot))
     ? briefingData.market_snapshot
-    : SAMPLE_MARKET_DATA;
+    : [];
 
   const stripStyle = {
     display: 'flex',
@@ -210,7 +207,7 @@ function MarketOverviewStrip({ briefingData }) {
 function AgentSummariesSection({ briefingData }) {
   const agents = (briefingData && briefingData.agent_views && Array.isArray(briefingData.agent_views))
     ? briefingData.agent_views
-    : SAMPLE_AGENTS;
+    : [];
 
   const gridStyle = {
     display: 'grid',
@@ -313,8 +310,6 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
     proposals = proposalsData;
   } else if (briefingData && briefingData.trade_proposals && Array.isArray(briefingData.trade_proposals) && briefingData.trade_proposals.length > 0) {
     proposals = briefingData.trade_proposals;
-  } else {
-    proposals = SAMPLE_PROPOSALS;
   }
 
   // Group proposals by agent
@@ -352,12 +347,7 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       setProposalStatuses(prev => ({ ...prev, [proposalId]: 'APPROVED' }));
     } catch (err) {
-      // Gracefully handle - mark as approved in UI for sample data scenario
-      if (proposals === SAMPLE_PROPOSALS) {
-        setProposalStatuses(prev => ({ ...prev, [proposalId]: 'APPROVED' }));
-      } else {
-        setErrors(prev => ({ ...prev, [proposalId]: 'Approve failed: ' + err.message }));
-      }
+      setErrors(prev => ({ ...prev, [proposalId]: 'Approve failed: ' + err.message }));
     }
   };
 
@@ -387,11 +377,7 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       setProposalStatuses(prev => ({ ...prev, [proposalId]: 'REJECTED' }));
     } catch (err) {
-      if (proposals === SAMPLE_PROPOSALS) {
-        setProposalStatuses(prev => ({ ...prev, [proposalId]: 'REJECTED' }));
-      } else {
-        setErrors(prev => ({ ...prev, [proposalId]: 'Reject failed: ' + err.message }));
-      }
+      setErrors(prev => ({ ...prev, [proposalId]: 'Reject failed: ' + err.message }));
     }
     setRejectReason('');
   };
@@ -887,7 +873,7 @@ function MorningPackPage() {
     ? briefing.data.briefing_date
     : new Date().toISOString().split('T')[0];
 
-  const usingSample = !briefing.data && !briefing.loading;
+  const usingSample = false;
 
   return (
     <div style={pageStyle}>

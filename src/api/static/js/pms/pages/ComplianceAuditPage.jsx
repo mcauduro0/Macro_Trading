@@ -283,14 +283,10 @@ function ComplianceAuditPage() {
           setVisibleCount(COMPLIANCE_PAGE_SIZE);
         }
       } catch (_) {
-        // Sample data fallback
         if (!cancelled) {
-          setUsingSample(true);
-          const sample = generateSampleAuditEntries();
-          setEntries(sample);
-          setTotalCount(sample.length);
+          setEntries([]);
+          setTotalCount(0);
           setVisibleCount(COMPLIANCE_PAGE_SIZE);
-          setUsingSample(true);
         }
       }
       if (!cancelled) setLoading(false);

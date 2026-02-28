@@ -18,8 +18,8 @@ async def health_check(session: AsyncSession = Depends(get_db)) -> dict:
     try:
         await session.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception:
-        pass
+    except Exception as exc:
+        db_status = f"disconnected: {exc}"
 
     return {
         "status": "ok" if db_status == "connected" else "degraded",

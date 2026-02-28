@@ -20,7 +20,7 @@ from src.portfolio.signal_aggregator_v2 import (
     SignalAggregatorV2,
     _count_business_days,
 )
-from src.strategies.base import StrategySignal
+from src.strategies.base import StrategyPosition, StrategySignal
 
 
 # ---------------------------------------------------------------------------
@@ -402,6 +402,106 @@ class TestEdgeCases:
         """Invalid method should raise ValueError."""
         with pytest.raises(ValueError, match="Invalid method"):
             SignalAggregatorV2(method="invalid_method")
+
+
+# ---------------------------------------------------------------------------
+# Test: StrategyPosition duck typing support
+# ---------------------------------------------------------------------------
+def _make_position(
+    strategy_id: str,
+    instrument: str = "DI_PRE",
+    weight: float = 0.5,
+    confidence: float = 0.8,
+    direction: SignalDirection = SignalDirection.LONG,
+) -> StrategyPosition:
+    """Create a StrategyPosition with sensible defaults."""
+    return StrategyPosition(
+        strategy_id=strategy_id,
+        instrument=instrument,
+        weight=weight,
+        confidence=confidence,
+        direction=direction,
+        entry_signal="test_signal",
+    )
+
+
+class TestStrategyPositionSupport:
+    """Verify that SignalAggregatorV2 handles StrategyPosition objects
+    (which have .instrument singular) via duck typing."""
+
+    def test_single_position_aggregates(self):
+        """A single StrategyPosition should aggregate without error."""
+        agg = SignalAggregatorV2(method="confidence_weighted")
+        positions = [_make_position("RATES_BR_01", weight=0.6, confidence=0.9)]
+        results = agg.aggregate(positions)
+        assert len(results) == 1
+        assert results[0].instrument == "DI_PRE"
+        assert results[0].conviction > 0  # weight=0.6 -> positive conviction
+
+    def test_position_conviction_uses_weight(self):
+        """StrategyPosition conviction should derive from .weight field."""
+        agg = SignalAggregatorV2(method="confidence_weighted")
+        positions = [_make_position("RATES_BR_01", weight=0.4, confidence=0.8)]
+        results = agg.aggregate(positions)
+        assert len(results) == 1
+        # conviction = weight = 0.4 (clamped to [-1, 1])
+        assert abs(results[0].conviction - 0.4) < 1e-9
+
+    def test_position_no_timestamp_treated_as_fresh(self):
+        """StrategyPosition without .timestamp should get staleness factor 1.0."""
+        agg = SignalAggregatorV2(method="confidence_weighted")
+        positions = [_make_position("RATES_BR_01")]
+        results = agg.aggregate(positions)
+        assert len(results) == 1
+        assert results[0].staleness_adjustments["RATES_BR_01"] == 1.0
+
+    def test_mixed_signal_and_position(self):
+        """Mix of StrategySignal and StrategyPosition on same instrument."""
+        agg = SignalAggregatorV2(method="confidence_weighted")
+        now = datetime.utcnow()
+        sig = _make_signal(
+            "RATES_BR_01", z_score=1.0, confidence=0.8, timestamp=now,
+        )
+        pos = _make_position(
+            "RATES_BR_02", instrument="DI_PRE", weight=0.3, confidence=0.7,
+        )
+        results = agg.aggregate([sig, pos], as_of=now)
+        assert len(results) == 1
+        assert results[0].instrument == "DI_PRE"
+        # Both strategies should contribute
+        strategy_ids = [
+            c["strategy_id"] for c in results[0].contributing_strategies
+        ]
+        assert "RATES_BR_01" in strategy_ids
+        assert "RATES_BR_02" in strategy_ids
+
+    def test_multiple_positions_different_instruments(self):
+        """Multiple StrategyPositions on different instruments produce separate results."""
+        agg = SignalAggregatorV2(method="confidence_weighted")
+        positions = [
+            _make_position("RATES_BR_01", instrument="DI_PRE", weight=0.5),
+            _make_position("FX_BR_01", instrument="USDBRL", weight=-0.3),
+        ]
+        results = agg.aggregate(positions)
+        assert len(results) == 2
+        instruments = {r.instrument for r in results}
+        assert instruments == {"DI_PRE", "USDBRL"}
+
+    def test_position_bayesian_aggregation(self):
+        """StrategyPosition should work with bayesian method and regime probs."""
+        agg = SignalAggregatorV2(method="bayesian")
+        regime_probs = {
+            "Goldilocks": 0.6,
+            "Reflation": 0.2,
+            "Stagflation": 0.1,
+            "Deflation": 0.1,
+        }
+        positions = [
+            _make_position("RATES_BR_01", weight=0.5, confidence=0.8),
+        ]
+        results = agg.aggregate(positions, regime_probs=regime_probs)
+        assert len(results) == 1
+        assert results[0].regime_context == "Goldilocks"
 
 
 # ---------------------------------------------------------------------------

@@ -35,6 +35,118 @@ def _envelope(data: Any) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Data loaders
+# ---------------------------------------------------------------------------
+
+def _load_pms_book(as_of: date | None = None) -> dict:
+    """Load portfolio book from Position Manager.
+
+    Returns the full book dict with positions and summary.
+    Raises RuntimeError if PMS is unavailable.
+    """
+    try:
+        from src.pms.position_manager import PositionManager
+
+        pm = PositionManager()
+        if as_of:
+            book = pm.get_book(as_of_date=as_of)
+        else:
+            book = pm.get_book()
+        return book
+    except Exception as exc:
+        raise RuntimeError(
+            f"PositionManager unavailable: {exc}. "
+            "Ensure PMS is configured with active positions."
+        ) from exc
+
+
+def _load_current_weights(as_of: date | None = None) -> dict[str, float]:
+    """Load current portfolio weights from PMS.
+
+    Returns dict of {instrument: weight}. Raises RuntimeError if unavailable.
+    """
+    book = _load_pms_book(as_of)
+    positions = book.get("positions", [])
+    if not positions:
+        raise RuntimeError(
+            "No positions in portfolio book. Open positions via the trade workflow."
+        )
+    return {p["instrument"]: p.get("weight", 0.0) for p in positions}
+
+
+def _load_portfolio_returns_for_risk() -> np.ndarray:
+    """Load historical portfolio returns for risk calculations.
+
+    Tries PMS first, then database query. Raises RuntimeError if unavailable.
+    """
+    # Try loading from portfolio_returns table
+    try:
+        from sqlalchemy import create_engine, text
+
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        with engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT daily_return FROM portfolio_returns "
+                    "ORDER BY return_date DESC LIMIT 252"
+                )
+            )
+            rows = result.fetchall()
+            if rows and len(rows) >= 30:
+                return np.array([float(r[0]) for r in reversed(rows)])
+    except Exception:
+        pass
+
+    # Try computing from current positions and market data
+    try:
+        weights = _load_current_weights()
+        from src.agents.data_loader import PointInTimeDataLoader
+
+        loader = PointInTimeDataLoader()
+        returns_data = loader.load_returns(list(weights.keys()), lookback_days=252)
+        if returns_data is not None and len(returns_data) >= 30:
+            w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+            return returns_data.values @ w
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        "Historical portfolio returns unavailable. Ensure database is running "
+        "and market data has been collected."
+    )
+
+
+def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarray, np.ndarray]:
+    """Load covariance matrix from actual market data.
+
+    Returns (covariance_matrix, market_weights) computed from historical returns.
+    Raises RuntimeError if market data is unavailable.
+    """
+    try:
+        from src.agents.data_loader import PointInTimeDataLoader
+
+        loader = PointInTimeDataLoader()
+        returns_data = loader.load_returns(instruments, lookback_days=504)
+        if returns_data is not None and len(returns_data) >= 60:
+            covariance = returns_data.cov().values * 252  # Annualize
+            # Market-cap weights proxy: inverse volatility
+            vols = np.sqrt(np.diag(covariance))
+            inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
+            market_weights = inv_vol / inv_vol.sum()
+            return covariance, market_weights
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        f"Market data unavailable for instruments {instruments}. "
+        "Ensure historical data has been collected by the data pipeline."
+    )
+
+
+# ---------------------------------------------------------------------------
 # GET /api/v1/portfolio/current
 # ---------------------------------------------------------------------------
 @router.get("/current")
@@ -68,9 +180,11 @@ async def portfolio_current(
                 "as_of_date": str(as_of),
             }
         )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("portfolio_current error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("portfolio_current error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Portfolio query failed: {exc}")
 
 
 def _build_portfolio_positions(as_of: date) -> list[dict]:
@@ -80,6 +194,8 @@ def _build_portfolio_positions(as_of: date) -> list[dict]:
 
     data_loader = PointInTimeDataLoader()
     positions: list[dict] = []
+    errors: list[str] = []
+
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
         try:
             strategy = strategy_cls(data_loader=data_loader)
@@ -105,13 +221,13 @@ def _build_portfolio_positions(as_of: date) -> list[dict]:
                     }
                 )
         except Exception as e:
-            import logging
+            errors.append(f"{strategy_id}: {e}")
+            logger.warning("Strategy %s signal generation failed: %s", strategy_id, e)
 
-            logging.getLogger(__name__).error(
-                "Strategy %s failed: %s",
-                strategy_id,
-                e,
-            )
+    if not positions and errors:
+        raise RuntimeError(
+            f"All strategies failed to generate signals. Errors: {'; '.join(errors[:5])}"
+        )
 
     return positions
 
@@ -127,29 +243,39 @@ async def portfolio_risk(
     try:
         risk_data = await asyncio.to_thread(_build_risk_report)
         return _envelope(risk_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("portfolio_risk error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("portfolio_risk error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Risk report failed: {exc}")
 
 
 def _build_risk_report() -> dict:
-    """Generate risk report using RiskMonitor."""
+    """Generate risk report using RiskMonitor with real data."""
     from datetime import date as date_type
 
     from src.risk.risk_monitor import RiskMonitor
 
     monitor = RiskMonitor()
 
-    # Compute portfolio returns from current positions
+    # Load real portfolio data
     positions_data = _build_portfolio_positions(date_type.today())
     weights: dict[str, float] = {p["instrument"]: p["weight"] for p in positions_data}
     positions: dict[str, float] = dict(weights)
-    portfolio_value = 1_000_000.0
 
-    # Generate synthetic returns from weights as fallback
-    # (real implementation would query historical portfolio returns from DB)
-    rng = np.random.default_rng(42)
-    portfolio_returns = rng.normal(0.0003, 0.01, 252)
+    # Try to get real portfolio value from PMS
+    portfolio_value = 1_000_000.0  # Default initial capital
+    try:
+        book = _load_pms_book()
+        summary = book.get("summary", {})
+        nav = summary.get("total_nav_brl", 0.0)
+        if nav > 0:
+            portfolio_value = float(nav)
+    except RuntimeError:
+        logger.info("Using default portfolio value; PMS NAV not available")
+
+    # Load real historical returns
+    portfolio_returns = _load_portfolio_returns_for_risk()
 
     report = monitor.generate_report(
         portfolio_returns=portfolio_returns,
@@ -160,8 +286,8 @@ def _build_risk_report() -> dict:
 
     # Serialize VaR results
     var_data = {}
-    for method, var_result in report.var_results.items():
-        var_data[method] = {
+    for method_name, var_result in report.var_results.items():
+        var_data[method_name] = {
             "var_95": round(var_result.var_95, 6),
             "cvar_95": round(var_result.cvar_95, 6),
             "var_99": round(var_result.var_99, 6),
@@ -179,7 +305,6 @@ def _build_risk_report() -> dict:
             }
         )
 
-    # Limit utilization
     limit_util = {}
     for lr in report.limit_results:
         limit_util[lr.limit_name] = round(lr.utilization_pct, 2)
@@ -202,15 +327,17 @@ def _build_risk_report() -> dict:
 async def portfolio_target():
     """Return target portfolio weights from optimization.
 
-    Instantiates PortfolioOptimizer, runs on sample/placeholder data,
-    and returns target weights with optimization metadata.
+    Uses Black-Litterman with real market data covariance matrix and
+    portfolio optimizer with institutional constraints.
     """
     try:
         target_data = await asyncio.to_thread(_build_target_weights)
         return _envelope(target_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("portfolio_target error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("portfolio_target error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {exc}")
 
 
 def _build_target_weights() -> dict:
@@ -218,14 +345,30 @@ def _build_target_weights() -> dict:
     from src.portfolio.black_litterman import BlackLitterman
     from src.portfolio.portfolio_optimizer import PortfolioOptimizer
 
-    instruments = ["IBOV", "DI1F25", "USDBRL", "PETR4", "VALE3"]
+    # Get instruments from current positions or strategy universe
+    try:
+        current_weights = _load_current_weights()
+        instruments = list(current_weights.keys())
+    except RuntimeError:
+        # No current positions - use strategy universe
+        from src.strategies import ALL_STRATEGIES
+        from src.agents.data_loader import PointInTimeDataLoader
 
-    # Sample covariance (diagonal approximation with realistic Brazilian market vols)
-    vols = np.array([0.25, 0.10, 0.15, 0.30, 0.28])
-    covariance = np.diag(vols**2)
+        loader = PointInTimeDataLoader()
+        instruments_set: set[str] = set()
+        for strategy_cls in ALL_STRATEGIES.values():
+            try:
+                instance = strategy_cls(data_loader=loader)
+                instruments_set.update(instance.config.instruments)
+            except Exception:
+                continue
+        instruments = sorted(instruments_set)
+        if not instruments:
+            raise RuntimeError("No instruments available from strategies")
+        current_weights = {inst: 0.0 for inst in instruments}
 
-    # Market cap weights (approximate)
-    market_weights = np.array([0.30, 0.20, 0.15, 0.20, 0.15])
+    # Load real covariance from market data
+    covariance, market_weights = _load_covariance_from_market_data(instruments)
 
     # Run Black-Litterman with no views (equilibrium only) as baseline
     bl = BlackLitterman()
@@ -241,7 +384,6 @@ def _build_target_weights() -> dict:
     optimizer = PortfolioOptimizer()
     target_weights = optimizer.optimize_with_bl(bl_result, instruments)
 
-    # Build response
     targets = []
     for inst in instruments:
         tw = target_weights.get(inst, 0.0)
@@ -251,7 +393,7 @@ def _build_target_weights() -> dict:
                 "instrument": inst,
                 "direction": direction,
                 "target_weight": round(tw, 6),
-                "current_weight": 0.0,  # Placeholder -- would come from live positions
+                "current_weight": round(current_weights.get(inst, 0.0), 6),
                 "sizing_method": "mean_variance",
             }
         )
@@ -284,9 +426,11 @@ async def portfolio_rebalance_trades():
     try:
         trades_data = await asyncio.to_thread(_build_rebalance_trades)
         return _envelope(trades_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("portfolio_rebalance_trades error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("portfolio_rebalance_trades error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Rebalance computation failed: {exc}")
 
 
 def _build_rebalance_trades() -> dict:
@@ -295,14 +439,8 @@ def _build_rebalance_trades() -> dict:
 
     optimizer = PortfolioOptimizer()
 
-    # Sample current and target weights
-    current_weights: dict[str, float] = {
-        "IBOV": 0.10,
-        "DI1F25": 0.05,
-        "USDBRL": -0.05,
-        "PETR4": 0.08,
-        "VALE3": 0.07,
-    }
+    # Load real current weights from PMS
+    current_weights = _load_current_weights()
 
     # Build target weights from optimization
     target_data = _build_target_weights()
@@ -310,18 +448,26 @@ def _build_rebalance_trades() -> dict:
         t["instrument"]: t["target_weight"] for t in target_data["targets"]
     }
 
-    # Determine if rebalancing is needed
-    signal_change = 0.0  # Placeholder for aggregate signal change
+    signal_change = 0.0
     should_rebalance = optimizer.should_rebalance(
         current_weights=current_weights,
         target_weights=target_weights,
         signal_change=signal_change,
     )
 
-    # Compute individual trades
     all_instruments = set(current_weights) | set(target_weights)
     trades = []
-    total_notional = 1_000_000.0  # Reference portfolio value
+
+    # Get portfolio value from PMS
+    total_notional = 1_000_000.0
+    try:
+        book = _load_pms_book()
+        summary = book.get("summary", {})
+        nav = summary.get("total_nav_brl", 0.0)
+        if nav > 0:
+            total_notional = float(nav)
+    except RuntimeError:
+        logger.info("Using default notional; PMS NAV not available")
 
     for inst in sorted(all_instruments):
         current_w = current_weights.get(inst, 0.0)
@@ -345,7 +491,6 @@ def _build_rebalance_trades() -> dict:
 
     trigger_reason = None
     if should_rebalance:
-        # Determine reason
         max_drift = (
             max(
                 abs(target_weights.get(inst, 0.0) - current_weights.get(inst, 0.0))
@@ -377,58 +522,37 @@ def _build_rebalance_trades() -> dict:
 async def portfolio_attribution():
     """Return strategy attribution for current portfolio.
 
-    Reads from strategy_attribution JSON in portfolio_state records
-    or builds from in-memory state as fallback.
+    Reads from PMS position manager to compute real attribution.
     """
     try:
         attribution_data = await asyncio.to_thread(_build_attribution)
         return _envelope(attribution_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        logger.error("portfolio_attribution error: %s", exc)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("portfolio_attribution error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Attribution failed: {exc}")
 
 
 def _build_attribution() -> dict:
-    """Build strategy attribution for portfolio positions."""
-    # Sample attribution data (would come from portfolio_state records)
-    sample_positions = [
-        {
-            "instrument": "IBOV",
-            "strategy_attribution": {
-                "FX_BR_01": 0.40,
-                "RATES_01": 0.30,
-                "CROSS_01": 0.30,
-            },
-            "pnl": 15000.0,
-        },
-        {
-            "instrument": "DI1F25",
-            "strategy_attribution": {
-                "RATES_01": 0.60,
-                "RATES_02": 0.25,
-                "INF_01": 0.15,
-            },
-            "pnl": -5000.0,
-        },
-        {
-            "instrument": "USDBRL",
-            "strategy_attribution": {
-                "FX_BR_01": 0.50,
-                "FX_02": 0.30,
-                "CUPOM_01": 0.20,
-            },
-            "pnl": 8000.0,
-        },
-    ]
+    """Build strategy attribution from real PMS data."""
+    book = _load_pms_book()
+    positions = book.get("positions", [])
+
+    if not positions:
+        raise RuntimeError(
+            "No positions available for attribution. "
+            "Open positions via the trade workflow first."
+        )
 
     attribution = []
     by_strategy: dict[str, float] = {}
     total_pnl = 0.0
 
-    for pos in sample_positions:
-        instrument = pos["instrument"]
+    for pos in positions:
+        instrument = pos.get("instrument", "UNKNOWN")
         strat_attr = pos.get("strategy_attribution", {})
-        pos_pnl = pos.get("pnl", 0.0)
+        pos_pnl = pos.get("unrealized_pnl", pos.get("pnl", 0.0))
         total_pnl += pos_pnl
 
         strategies = []
@@ -452,7 +576,6 @@ def _build_attribution() -> dict:
             }
         )
 
-    # Round by_strategy values
     by_strategy = {k: round(v, 2) for k, v in by_strategy.items()}
 
     return {
