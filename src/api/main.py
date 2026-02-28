@@ -61,6 +61,29 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("Database connection verified")
     except Exception as exc:
         logger.error("Database connection failed: %s", exc)
+
+    # Register analytical agents
+    try:
+        from src.agents.registry import AgentRegistry
+        from src.agents.inflation_agent import InflationAgent
+        from src.agents.monetary_agent import MonetaryPolicyAgent
+        from src.agents.fiscal_agent import FiscalAgent
+        from src.agents.fx_agent import FxEquilibriumAgent
+        from src.agents.cross_asset_agent import CrossAssetAgent
+
+        agent_classes = [
+            InflationAgent, MonetaryPolicyAgent, FiscalAgent,
+            FxEquilibriumAgent, CrossAssetAgent,
+        ]
+        for agent_cls in agent_classes:
+            try:
+                AgentRegistry.register(agent_cls)
+            except ValueError:
+                pass  # Already registered
+        logger.info("Registered %d agents", len(AgentRegistry.list_agents()))
+    except Exception as exc:
+        logger.warning("Agent registration skipped: %s", exc)
+
     yield
     # Shutdown
     await async_engine.dispose()

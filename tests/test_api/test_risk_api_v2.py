@@ -3,16 +3,116 @@
 Verifies all 4 new risk endpoints return 200 with expected response
 structure, and confirms backward-compatible /report still works.
 Uses the same TestClient pattern as test_dashboard.py.
+
+All data loaders are mocked at module scope so tests run without a
+database, PMS, or any external infrastructure.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+# ---------------------------------------------------------------------------
+# Synthetic test data (deterministic via fixed RandomState seed)
+# ---------------------------------------------------------------------------
+
+_SYNTHETIC_RETURNS = np.random.RandomState(42).normal(0.0005, 0.012, 252)
+
+_SYNTHETIC_POSITIONS = {
+    "DI1F27": 5_000_000.0,
+    "USDBRL": 3_000_000.0,
+    "NTN_B_2027": 2_000_000.0,
+}
+
+_SYNTHETIC_PORTFOLIO_VALUE = 10_000_000.0
+
+_SYNTHETIC_PORTFOLIO_STATE = {
+    "weights": {"DI1F27": 0.5, "USDBRL": 0.3, "NTN_B_2027": 0.2},
+    "leverage": 1.0,
+    "var_95": 0.015,
+    "var_99": 0.025,
+    "drawdown_pct": 2.0,
+    "risk_contributions": {"DI1F27": 0.5, "USDBRL": 0.3, "NTN_B_2027": 0.2},
+    "asset_class_weights": {"RATES_BR": 0.7, "FX_BR": 0.3},
+    "strategy_daily_pnl": {},
+    "asset_class_daily_pnl": {},
+    "asset_class_map": {
+        "DI1F27": "RATES_BR",
+        "USDBRL": "FX_BR",
+        "NTN_B_2027": "RATES_BR",
+    },
+}
+
+# Minimal synthetic risk report dict for the /report backward-compat endpoint.
+_SYNTHETIC_RISK_REPORT = {
+    "var": {
+        "parametric": {
+            "var_95": -0.018,
+            "cvar_95": -0.025,
+            "var_99": -0.028,
+            "cvar_99": -0.035,
+        }
+    },
+    "stress": [],
+    "limits": [],
+    "circuit_breaker": {"state": "NORMAL", "scale": 1.0, "drawdown_pct": 0.0},
+}
+
+
+# ---------------------------------------------------------------------------
+# Module-level autouse fixture: patch all data loaders so endpoints never
+# hit PMS, TimescaleDB, or any external service.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _mock_risk_data():
+    """Patch all data loaders in risk_api so endpoints work without DB."""
+    with (
+        patch(
+            "src.api.routes.risk_api._load_portfolio_returns",
+            return_value=_SYNTHETIC_RETURNS,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_positions",
+            return_value=_SYNTHETIC_POSITIONS,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_portfolio_value",
+            return_value=_SYNTHETIC_PORTFOLIO_VALUE,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_portfolio_state",
+            return_value=_SYNTHETIC_PORTFOLIO_STATE,
+        ),
+        patch(
+            "src.api.routes.portfolio_api._build_risk_report",
+            return_value=_SYNTHETIC_RISK_REPORT,
+        ),
+        patch(
+            "src.agents.data_loader.PointInTimeDataLoader",
+        ) as mock_loader_cls,
+    ):
+        # Configure PointInTimeDataLoader mock so monte_carlo path's
+        # loader.get_market_data() raises, forcing the single-asset fallback.
+        mock_loader = MagicMock()
+        mock_loader_cls.return_value = mock_loader
+        mock_loader.get_market_data.side_effect = RuntimeError(
+            "No market data in test"
+        )
+        yield
+
+
+# ---------------------------------------------------------------------------
+# Test app and client fixture
+# ---------------------------------------------------------------------------
 
 
 def _make_test_app() -> FastAPI:

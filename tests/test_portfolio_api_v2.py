@@ -10,11 +10,65 @@ Covers:
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
+import numpy as np
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.api.routes.portfolio_api import router
+
+# ---------------------------------------------------------------------------
+# Mock data returned by patched builder functions
+# ---------------------------------------------------------------------------
+_MOCK_POSITIONS = [
+    {"instrument": "DI1F27", "direction": "LONG", "weight": 0.4, "contributing_strategy_ids": ["RATES_BR_01_CARRY"], "asset_class": "RATES_BR"},
+    {"instrument": "USDBRL", "direction": "SHORT", "weight": -0.3, "contributing_strategy_ids": ["FX_BR_01_CARRY"], "asset_class": "FX_BR"},
+    {"instrument": "NTN_B_2027", "direction": "LONG", "weight": 0.2, "contributing_strategy_ids": ["INF_BR_01_BREAKEVEN"], "asset_class": "INFLATION_BR"},
+]
+
+_MOCK_TARGET_WEIGHTS = {
+    "targets": [
+        {"instrument": "DI1F27", "direction": "LONG", "target_weight": 0.35, "current_weight": 0.4, "sizing_method": "mean_variance"},
+        {"instrument": "USDBRL", "direction": "SHORT", "target_weight": -0.25, "current_weight": -0.3, "sizing_method": "mean_variance"},
+        {"instrument": "NTN_B_2027", "direction": "LONG", "target_weight": 0.15, "current_weight": 0.2, "sizing_method": "mean_variance"},
+    ],
+    "optimization": {
+        "method": "black_litterman",
+        "regime_clarity": 0.7,
+        "constraints": {"min_weight": -1.0, "max_weight": 1.0, "max_leverage": 3.0, "long_only": False},
+    },
+}
+
+_MOCK_REBALANCE = {
+    "trades": [
+        {"instrument": "DI1F27", "direction": "SELL", "current_weight": 0.4, "target_weight": 0.35, "trade_weight": -0.05, "trade_notional": -50000.0},
+        {"instrument": "USDBRL", "direction": "BUY", "current_weight": -0.3, "target_weight": -0.25, "trade_weight": 0.05, "trade_notional": 50000.0},
+    ],
+    "should_rebalance": True,
+    "trigger_reason": "position_drift",
+    "estimated_cost": 50.0,
+}
+
+_MOCK_ATTRIBUTION = {
+    "attribution": [
+        {"instrument": "DI1F27", "strategies": [{"strategy_id": "RATES_BR_01_CARRY", "contribution_weight": 1.0, "contribution_pnl": 15000.0}]},
+        {"instrument": "USDBRL", "strategies": [{"strategy_id": "FX_BR_01_CARRY", "contribution_weight": 1.0, "contribution_pnl": -5000.0}]},
+    ],
+    "total_pnl": 10000.0,
+    "by_strategy": {"RATES_BR_01_CARRY": 15000.0, "FX_BR_01_CARRY": -5000.0},
+}
+
+
+@pytest.fixture(autouse=True)
+def _mock_portfolio_data():
+    """Patch portfolio builder functions so endpoints work without DB."""
+    with patch("src.api.routes.portfolio_api._build_portfolio_positions", return_value=_MOCK_POSITIONS), \
+         patch("src.api.routes.portfolio_api._build_target_weights", return_value=_MOCK_TARGET_WEIGHTS), \
+         patch("src.api.routes.portfolio_api._build_rebalance_trades", return_value=_MOCK_REBALANCE), \
+         patch("src.api.routes.portfolio_api._build_attribution", return_value=_MOCK_ATTRIBUTION):
+        yield
 
 
 @pytest.fixture

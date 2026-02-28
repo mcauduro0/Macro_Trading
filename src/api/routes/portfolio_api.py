@@ -102,14 +102,27 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
 
     # Try computing from current positions and market data
     try:
+        import pandas as pd
+        from datetime import date as date_type
         weights = _load_current_weights()
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
-        returns_data = loader.load_returns(list(weights.keys()), lookback_days=252)
-        if returns_data is not None and len(returns_data) >= 30:
-            w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
-            return returns_data.values @ w
+        returns_frames = []
+        for ticker in list(weights.keys()):
+            try:
+                md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
+                if md is not None and not md.empty and "close" in md.columns:
+                    ret = md["close"].pct_change().dropna()
+                    ret.name = ticker
+                    returns_frames.append(ret)
+            except Exception:
+                continue
+        if returns_frames:
+            returns_data = pd.concat(returns_frames, axis=1).dropna()
+            if len(returns_data) >= 30:
+                w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+                return returns_data.values @ w
     except Exception:
         pass
 
@@ -126,10 +139,22 @@ def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarra
     Raises RuntimeError if market data is unavailable.
     """
     try:
+        import pandas as pd
+        from datetime import date as date_type
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
-        returns_data = loader.load_returns(instruments, lookback_days=504)
+        returns_frames = []
+        for ticker in instruments:
+            try:
+                md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=504)
+                if md is not None and not md.empty and "close" in md.columns:
+                    ret = md["close"].pct_change().dropna()
+                    ret.name = ticker
+                    returns_frames.append(ret)
+            except Exception:
+                continue
+        returns_data = pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
         if returns_data is not None and len(returns_data) >= 60:
             covariance = returns_data.cov().values * 252  # Annualize
             # Market-cap weights proxy: inverse volatility

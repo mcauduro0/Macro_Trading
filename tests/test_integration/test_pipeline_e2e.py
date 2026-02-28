@@ -169,7 +169,45 @@ def test_full_pipeline_e2e():
         from src.reporting.daily_report import DailyReportGenerator
 
         generator = DailyReportGenerator()
-        sections = generator.generate()
+        # DailyReportGenerator.generate() requires pipeline_context with real data.
+        # Provide a minimal synthetic context for CI/integration testing.
+        pipeline_context = {
+            "market_snapshot": {"USDBRL": 5.15, "DI1F27": 12.5, "IBOV": 125000},
+            "regime": {
+                "classification": "RISK_ON",
+                "confidence": 0.72,
+                "probabilities": {"risk_on": 0.72, "risk_off": 0.28},
+                "drivers": ["fiscal_surplus", "rate_cut_cycle"],
+                "transition_risk": "LOW",
+            },
+            "agent_views": {
+                "inflation_agent": {"direction": "LONG", "conviction": 0.6},
+                "monetary_agent": {"direction": "LONG", "conviction": 0.7},
+            },
+            "signals": {
+                "total": 5, "bullish": 3, "bearish": 1, "neutral": 1,
+                "flips": 0, "crowding_warnings": 0, "top_signal": "DI1F27 LONG",
+            },
+            "portfolio": {
+                "nav": 10_000_000.0, "daily_pnl": 25_000.0,
+                "mtd": 0.012, "ytd": 0.045,
+                "n_positions": 3, "gross_leverage": 0.8, "net_leverage": 0.5,
+                "rebalance_needed": False,
+            },
+            "risk": {
+                "var_95": -0.018, "var_99": -0.032, "cvar_95": -0.025,
+                "worst_stress": "EM Crisis: -4.5%",
+                "limit_util": "62%", "limits_breached": 0,
+                "circuit_breaker": "NORMAL", "risk_budget": "38%",
+            },
+            "actions": {
+                "table": [
+                    {"action": "Review DI1F27 LONG position", "priority": "MEDIUM"},
+                ],
+                "commentary": "No urgent action required.",
+            },
+        }
+        sections = generator.generate(pipeline_context=pipeline_context)
         assert sections is not None, "Report generation returned None"
         assert len(sections) > 0, "Report generated zero sections"
 

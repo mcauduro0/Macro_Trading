@@ -86,14 +86,14 @@ class TestAPIv1Endpoints:
         assert resp.status_code in (200, 500)
 
     def test_portfolio_current(self, client):
-        """GET /api/v1/portfolio/current -> 200 or 500."""
+        """GET /api/v1/portfolio/current -> 200, 500, or 503 (no DB/PMS in CI)."""
         resp = client.get("/api/v1/portfolio/current")
-        assert resp.status_code in (200, 500)
+        assert resp.status_code in (200, 500, 503)
 
     def test_portfolio_risk(self, client):
-        """GET /api/v1/portfolio/risk -> 200 or 500."""
+        """GET /api/v1/portfolio/risk -> 200, 500, or 503 (no DB/PMS in CI)."""
         resp = client.get("/api/v1/portfolio/risk")
-        assert resp.status_code in (200, 500)
+        assert resp.status_code in (200, 500, 503)
 
     def test_dashboard_html(self, client):
         """GET /dashboard -> 200, response contains HTML."""

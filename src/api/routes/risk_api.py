@@ -85,14 +85,27 @@ def _load_portfolio_returns() -> np.ndarray:
             # Use position weights with historical asset returns
             weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
             if weights:
+                import pandas as pd
+                from datetime import date as date_type
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-                returns_data = loader.load_returns(list(weights.keys()), lookback_days=252)
-                if returns_data is not None and len(returns_data) >= 30:
-                    w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
-                    portfolio_returns = returns_data.values @ w
-                    return portfolio_returns
+                returns_frames = []
+                for ticker in list(weights.keys()):
+                    try:
+                        md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
+                        if md is not None and not md.empty and "close" in md.columns:
+                            ret = md["close"].pct_change().dropna()
+                            ret.name = ticker
+                            returns_frames.append(ret)
+                    except Exception:
+                        continue
+                if returns_frames:
+                    returns_data = pd.concat(returns_frames, axis=1).dropna()
+                    if len(returns_data) >= 30:
+                        w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+                        portfolio_returns = returns_data.values @ w
+                        return portfolio_returns
     except Exception:
         pass
 
@@ -263,7 +276,19 @@ async def risk_var(
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-                returns_df = loader.load_returns(instruments, lookback_days=252)
+                import pandas as pd
+                from datetime import date as date_type
+                returns_frames = []
+                for ticker in instruments:
+                    try:
+                        md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
+                        if md is not None and not md.empty and "close" in md.columns:
+                            ret = md["close"].pct_change().dropna()
+                            ret.name = ticker
+                            returns_frames.append(ret)
+                    except Exception:
+                        continue
+                returns_df = pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
                 if returns_df is not None and len(returns_df) >= 30:
                     returns_matrix = returns_df.values
                     total = sum(positions.values())
