@@ -104,13 +104,25 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
     # Try computing from current positions and market data
     try:
         weights = _load_current_weights()
+        from datetime import date as date_type
+
+        import pandas as pd
+
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
-        returns_data = loader.load_returns(list(weights.keys()), lookback_days=252)
-        if returns_data is not None and len(returns_data) >= 30:
-            w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
-            return returns_data.values @ w
+        returns_frames = {}
+        for ticker in weights:
+            md = loader.get_market_data(
+                ticker, as_of_date=date_type.today(), lookback_days=252
+            )
+            if md is not None and len(md) >= 30:
+                returns_frames[ticker] = md["close"].pct_change().dropna()
+        if returns_frames:
+            returns_data = pd.DataFrame(returns_frames).dropna()
+            if len(returns_data) >= 30:
+                w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+                return returns_data.values @ w
     except Exception:
         pass
 
@@ -129,17 +141,29 @@ def _load_covariance_from_market_data(
     Raises RuntimeError if market data is unavailable.
     """
     try:
+        from datetime import date as date_type
+
+        import pandas as pd
+
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
-        returns_data = loader.load_returns(instruments, lookback_days=504)
-        if returns_data is not None and len(returns_data) >= 60:
-            covariance = returns_data.cov().values * 252  # Annualize
-            # Market-cap weights proxy: inverse volatility
-            vols = np.sqrt(np.diag(covariance))
-            inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
-            market_weights = inv_vol / inv_vol.sum()
-            return covariance, market_weights
+        returns_frames = {}
+        for ticker in instruments:
+            md = loader.get_market_data(
+                ticker, as_of_date=date_type.today(), lookback_days=504
+            )
+            if md is not None and len(md) >= 60:
+                returns_frames[ticker] = md["close"].pct_change().dropna()
+        if returns_frames:
+            returns_data = pd.DataFrame(returns_frames).dropna()
+            if len(returns_data) >= 60:
+                covariance = returns_data.cov().values * 252  # Annualize
+                # Market-cap weights proxy: inverse volatility
+                vols = np.sqrt(np.diag(covariance))
+                inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
+                market_weights = inv_vol / inv_vol.sum()
+                return covariance, market_weights
     except Exception:
         pass
 

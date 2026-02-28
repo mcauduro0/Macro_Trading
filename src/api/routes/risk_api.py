@@ -85,18 +85,28 @@ def _load_portfolio_returns() -> np.ndarray:
             # Use position weights with historical asset returns
             weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
             if weights:
+                from datetime import date as date_type
+
+                import pandas as pd
+
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-                returns_data = loader.load_returns(
-                    list(weights.keys()), lookback_days=252
-                )
-                if returns_data is not None and len(returns_data) >= 30:
-                    w = np.array(
-                        [weights.get(col, 0.0) for col in returns_data.columns]
+                returns_frames = {}
+                for ticker in weights:
+                    md = loader.get_market_data(
+                        ticker, as_of_date=date_type.today(), lookback_days=252
                     )
-                    portfolio_returns = returns_data.values @ w
-                    return portfolio_returns
+                    if md is not None and len(md) >= 30:
+                        returns_frames[ticker] = md["close"].pct_change().dropna()
+                if returns_frames:
+                    returns_data = pd.DataFrame(returns_frames).dropna()
+                    if len(returns_data) >= 30:
+                        w = np.array(
+                            [weights.get(col, 0.0) for col in returns_data.columns]
+                        )
+                        portfolio_returns = returns_data.values @ w
+                        return portfolio_returns
     except Exception:
         pass
 
@@ -314,10 +324,25 @@ async def risk_var(
                 # Build real returns matrix from portfolio positions
                 positions = _load_positions()
                 instruments = list(positions.keys())
+                from datetime import date as date_type
+
+                import pandas as pd
+
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-                returns_df = loader.load_returns(instruments, lookback_days=252)
+                returns_frames = {}
+                for ticker in instruments:
+                    md = loader.get_market_data(
+                        ticker,
+                        as_of_date=date_type.today(),
+                        lookback_days=252,
+                    )
+                    if md is not None and len(md) >= 30:
+                        returns_frames[ticker] = md["close"].pct_change().dropna()
+                returns_df = (
+                    pd.DataFrame(returns_frames).dropna() if returns_frames else None
+                )
                 if returns_df is not None and len(returns_df) >= 30:
                     returns_matrix = returns_df.values
                     total = sum(positions.values())
