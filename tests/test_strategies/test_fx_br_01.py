@@ -309,7 +309,7 @@ class TestFxBR01RegimeAdjustment:
     """Test regime adjustment scale-down."""
 
     def test_unfavorable_regime_scales_weight(self) -> None:
-        """Regime score < -0.3 => weight scaled by 0.50."""
+        """Regime score > 0.3 (risk-off) => weight scaled by 0.50."""
         # Set up for a clear signal
         prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
             5.50 + 0.02 * (i % 10 - 5) for i in range(48)
@@ -324,10 +324,10 @@ class TestFxBR01RegimeAdjustment:
         # Without regime
         pos_normal = strategy.generate_signals(date(2025, 6, 15))
 
-        # With unfavorable regime
+        # With unfavorable regime (risk-off: score > 0.3)
         pos_regime = strategy.generate_signals(
             date(2025, 6, 15),
-            regime_score=-0.5,
+            regime_score=0.5,
         )
 
         assert len(pos_normal) == 1
@@ -336,7 +336,7 @@ class TestFxBR01RegimeAdjustment:
         assert abs(pos_regime[0].weight) < abs(pos_normal[0].weight)
 
     def test_favorable_regime_no_scaling(self) -> None:
-        """Regime score >= -0.3 => no scaling."""
+        """Regime score <= 0.3 (risk-on) => no scaling."""
         prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
             5.50 + 0.02 * (i % 10 - 5) for i in range(48)
         ]
@@ -350,7 +350,7 @@ class TestFxBR01RegimeAdjustment:
         pos_normal = strategy.generate_signals(date(2025, 6, 15))
         pos_favorable = strategy.generate_signals(
             date(2025, 6, 15),
-            regime_score=0.5,
+            regime_score=-0.5,
         )
 
         assert len(pos_normal) == 1
