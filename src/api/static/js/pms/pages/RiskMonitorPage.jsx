@@ -1400,26 +1400,26 @@ function RiskMonitorPage() {
 
   const isLoading = riskLive.loading && riskTrend.loading && riskLimits.loading;
 
-  // Resolve data with sample fallback
+  // Resolve data — empty state instead of sample fallback
   const risk = useMemo(() => {
     const d = riskLive.data;
     if (d && d.var) return d;
-    return SAMPLE_RISK_LIVE;
+    return { var: {}, leverage: {}, drawdown: {}, concentration: {}, stress_tests: [], limits_summary: { items: [] }, alerts: [] };
   }, [riskLive.data]);
 
   const trend = useMemo(() => {
     const d = riskTrend.data;
     if (d && Array.isArray(d) && d.length > 0) return d;
-    return SAMPLE_RISK_TREND;
+    return [];
   }, [riskTrend.data]);
 
   const limits = useMemo(() => {
     const d = riskLimits.data;
     if (d && d.config) return d;
-    return SAMPLE_LIMITS;
+    return { config: {}, limits_summary: { items: [] } };
   }, [riskLimits.data]);
 
-  const usingSample = !(riskLive.data && riskLive.data.var);
+  const usingSample = false;
   const today = new Date().toISOString().split('T')[0];
 
   const pageStyle = {

@@ -426,6 +426,33 @@ function PMSSampleDataBanner() {
 }
 
 // ---------------------------------------------------------------------------
+// 10. PMSEmptyState — Empty state placeholder when no data available
+// ---------------------------------------------------------------------------
+function PMSEmptyState({ message, subtitle }) {
+  return (
+    <div style={{
+      padding: '40px 20px',
+      textAlign: 'center',
+      color: PMS_COLORS.text.muted,
+      fontFamily: PMS_TYPOGRAPHY.fontFamily,
+    }}>
+      <div style={{
+        fontSize: PMS_TYPOGRAPHY.sizes.lg,
+        fontWeight: PMS_TYPOGRAPHY.weights.semibold,
+        marginBottom: '8px',
+      }}>
+        {message || 'No data available'}
+      </div>
+      {subtitle && (
+        <div style={{ fontSize: PMS_TYPOGRAPHY.sizes.sm }}>
+          {subtitle}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Export all components on window for CDN/Babel compatibility
 // ---------------------------------------------------------------------------
 window.PMSCard = PMSCard;
@@ -437,3 +464,4 @@ window.PMSMetricCard = PMSMetricCard;
 window.PMSSkeleton = PMSSkeleton;
 window.PMSAlertBanner = PMSAlertBanner;
 window.PMSSampleDataBanner = PMSSampleDataBanner;
+window.PMSEmptyState = PMSEmptyState;

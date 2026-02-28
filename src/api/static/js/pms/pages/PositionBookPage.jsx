@@ -905,17 +905,17 @@ function PositionBookPage() {
 
   const isLoading = book.loading && equityCurve.loading;
 
-  // Resolve data with sample fallback
-  const bookData = (book.data && book.data.summary) ? book.data : SAMPLE_BOOK;
+  // Resolve data — empty state instead of sample fallback
+  const bookData = (book.data && book.data.summary) ? book.data : { summary: { aum: 0, total_notional_brl: 0, leverage: 0, open_positions: 0, pnl_today_brl: 0, pnl_mtd_brl: 0, pnl_ytd_brl: 0, total_unrealized_pnl_brl: 0, total_realized_pnl_brl: 0 }, positions: [], by_asset_class: {} };
   const equityData = useMemo(() => {
     const d = equityCurve.data;
     if (d) {
       const raw = Array.isArray(d) ? d : (d.data && Array.isArray(d.data) ? d.data : null);
       if (raw && raw.length > 0) return raw;
     }
-    return SAMPLE_EQUITY_CURVE;
+    return [];
   }, [equityCurve.data]);
-  const usingSample = !(book.data && book.data.summary);
+  const usingSample = false;
 
   // Filter out locally closed positions
   const openPositions = (bookData.positions || []).filter(p => !closedIds.has(p.id));

@@ -619,23 +619,19 @@ function PMSSignalsPage() {
 
   const isLoading = signalsFetch.loading;
 
-  // Resolve data with sample fallback
+  // Resolve data — empty state instead of sample fallback
   const resolved = useMemo(() => {
     const d = signalsFetch.data;
-    if (d && d.data && d.data.signals && d.data.signals.length > 0) {
+    if (d && d.data && d.data.signals) {
       return d;
     }
-    // Also handle when data.signals is at the top level
-    if (d && d.signals && d.signals.length > 0) {
+    if (d && d.signals) {
       return { data: d };
     }
-    return generateSampleSignals();
+    return { data: { signals: [], consensus: null } };
   }, [signalsFetch.data]);
 
-  const usingSample = !(
-    (signalsFetch.data && signalsFetch.data.data && signalsFetch.data.data.signals && signalsFetch.data.data.signals.length > 0) ||
-    (signalsFetch.data && signalsFetch.data.signals && signalsFetch.data.signals.length > 0)
-  );
+  const usingSample = false;
 
   const signals = resolved.data.signals || [];
   const consensus = resolved.data.consensus || null;

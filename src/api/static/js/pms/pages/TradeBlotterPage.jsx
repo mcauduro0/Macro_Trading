@@ -1411,16 +1411,10 @@ function TradeBlotterPage() {
   // Fetch all proposals (for history tab)
   const all = window.useFetch('/api/v1/pms/trades/proposals', 60000);
 
-  // Resolve data with sample fallback
-  const pendingProposals = (pending.data && Array.isArray(pending.data) && pending.data.length > 0)
-    ? pending.data
-    : SAMPLE_PENDING_PROPOSALS;
-
-  const allProposals = (all.data && Array.isArray(all.data) && all.data.length > 0)
-    ? all.data
-    : SAMPLE_HISTORY;
-
-  const usingSample = !(pending.data && Array.isArray(pending.data) && pending.data.length > 0);
+  // Resolve data — empty state instead of sample fallback
+  const pendingProposals = (pending.data && Array.isArray(pending.data)) ? pending.data : [];
+  const allProposals = (all.data && Array.isArray(all.data)) ? all.data : [];
+  const usingSample = false;
 
   const pageStyle = {
     fontFamily: _T.fontFamily,
