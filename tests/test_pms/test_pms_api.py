@@ -14,6 +14,8 @@ A fresh singleton is injected per test via the ``client`` fixture.
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -68,7 +70,10 @@ def _create_test_app() -> FastAPI:
 # -------------------------------------------------------------------------
 @pytest.fixture
 def client():
-    """Fresh TestClient with reset PMS state for each test."""
+    """Fresh TestClient with reset PMS state for each test.
+
+    Sets debug=True to bypass JWT auth (unit tests don't carry tokens).
+    """
     import src.api.routes.pms_attribution as attribution_mod
     import src.api.routes.pms_briefing as briefing_mod
     import src.api.routes.pms_journal as journal_mod
@@ -97,8 +102,10 @@ def client():
     attribution_mod._service = PerformanceAttributionEngine(position_manager=pm)
 
     app = _create_test_app()
-    with TestClient(app) as c:
-        yield c
+    # Bypass JWT auth in test mode (debug=True returns {"sub":"dev-user","role":"ADMIN"})
+    with patch("src.core.config.settings.debug", True):
+        with TestClient(app) as c:
+            yield c
 
     # Cleanup: reset singletons so other tests are unaffected
     pms_mod._workflow = None

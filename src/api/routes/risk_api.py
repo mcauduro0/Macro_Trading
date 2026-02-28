@@ -43,6 +43,38 @@ def _error_response(message: str) -> dict:
     }
 
 
+def _check_data_freshness(returns: Any) -> str | None:
+    """Return a warning string if market data appears stale (>2 business days).
+
+    Returns None if data is fresh.
+    """
+    try:
+        import pandas as pd
+
+        if isinstance(returns, pd.DataFrame) and not returns.empty:
+            last_date = returns.index.max()
+            if hasattr(last_date, "date"):
+                last_date = last_date.date()
+            from datetime import date
+
+            gap = (date.today() - last_date).days
+            if gap > 4:  # >4 calendar days ≈ >2 business days
+                return (
+                    f"Market data may be stale: last observation is {last_date} "
+                    f"({gap} days ago). Risk metrics may not reflect current conditions."
+                )
+        elif hasattr(returns, "__len__") and len(returns) > 0:
+            # numpy array — can't check dates, just validate length
+            if len(returns) < 60:
+                return (
+                    f"Limited data: only {len(returns)} observations. "
+                    "Risk estimates may be unreliable."
+                )
+    except Exception:
+        pass
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Data loaders: fetch real portfolio data from PMS and database
 # ---------------------------------------------------------------------------

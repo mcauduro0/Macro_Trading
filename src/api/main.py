@@ -31,6 +31,7 @@ from src.api.routes import (
     signals,
     strategies_api,
 )
+from src.api.routes.auth_api import router as auth_router
 from src.api.routes.backtest_api import router as backtest_router
 from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.pms_attribution import router as pms_attribution_router
@@ -201,6 +202,9 @@ app.include_router(reports_api_router, prefix="/api/v1")
 
 # Backtest endpoints
 app.include_router(backtest_router, prefix="/api/v1")
+
+# Auth endpoints
+app.include_router(auth_router, prefix="/api/v1")
 
 # PMS v4.0 endpoints
 app.include_router(pms_portfolio_router, prefix="/api/v1")

@@ -32,6 +32,7 @@ from src.api.schemas.pms_schemas import (
     PositionResponse,
     UpdatePriceRequest,
 )
+from src.api.auth import Role, require_role
 from src.cache import PMSCache, get_pms_cache
 
 logger = logging.getLogger(__name__)
@@ -144,8 +145,9 @@ async def get_positions(
 async def open_position(
     body: OpenPositionRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Open a new discretionary position via TradeWorkflowService."""
+    """Open a new discretionary position (MANAGER only)."""
     try:
         wf = _get_workflow()
         result = wf.open_discretionary_trade(
@@ -188,8 +190,9 @@ async def close_position(
     position_id: int,
     body: ClosePositionRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Close an open position."""
+    """Close an open position (MANAGER only)."""
     try:
         wf = _get_workflow()
         closed = wf.close_position(
@@ -267,8 +270,9 @@ async def update_price(
 async def run_mark_to_market(
     body: MTMRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Mark all open positions to market."""
+    """Mark all open positions to market (MANAGER only)."""
     try:
         wf = _get_workflow()
         updated = wf.position_manager.mark_to_market(
