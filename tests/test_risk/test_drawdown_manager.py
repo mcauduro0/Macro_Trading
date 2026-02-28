@@ -98,7 +98,12 @@ class TestDrawdownManager:
         assert scale == 0.0
 
     def test_recovery_gradual_ramp(self) -> None:
-        """Recovery should gradually ramp up over 3 days: 0.33, 0.66, 1.0."""
+        """Recovery ramps via (day-1)/(days-1): 0.0, 0.5, 1.0 for 3-day.
+
+        The scale formula is max(0, (recovery_day - 1) / (recovery_days - 1)).
+        Day 1 starts at 0% exposure (conservative re-entry), Day 2 at 50%,
+        and Day 3 reaches full exposure and transitions to NORMAL.
+        """
         dm = DrawdownManager()
         dm.update(100_000.0)
         dm.update(97_000.0)  # L1
@@ -111,17 +116,17 @@ class TestDrawdownManager:
 
         assert dm.state == CircuitBreakerState.RECOVERING
 
-        # Day 1 of recovery
+        # Day 1 of recovery: (1-1)/(3-1) = 0.0
         scale = dm.update(99_500.0)
         assert dm.state == CircuitBreakerState.RECOVERING
-        assert scale == pytest.approx(1 / 3, abs=0.01)
+        assert scale == pytest.approx(0.0, abs=0.01)
 
-        # Day 2 of recovery
+        # Day 2 of recovery: (2-1)/(3-1) = 0.5
         scale = dm.update(99_600.0)
         assert dm.state == CircuitBreakerState.RECOVERING
-        assert scale == pytest.approx(2 / 3, abs=0.01)
+        assert scale == pytest.approx(0.5, abs=0.01)
 
-        # Day 3 of recovery -> NORMAL
+        # Day 3 of recovery -> NORMAL: scale = 1.0
         scale = dm.update(99_700.0)
         assert dm.state == CircuitBreakerState.NORMAL
         assert scale == 1.0
