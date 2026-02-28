@@ -43,7 +43,7 @@ def _get_service():
         _service = MorningPackService(position_manager=pm, trade_workflow=tw)
         # Hydrate from DB so in-memory stores have real data
         try:
-            from src.pms.db_loader import hydrate_trade_workflow, hydrate_morning_pack_service
+            from src.pms.db_loader import hydrate_morning_pack_service, hydrate_trade_workflow
             hydrate_trade_workflow(tw)
             hydrate_morning_pack_service(_service)
             logger.info("MorningPackService hydrated from DB")

@@ -9,7 +9,6 @@ AgentReport bundles all signals from a single agent run with metadata.
 """
 
 import abc
-import asyncio
 import concurrent.futures
 import json
 from dataclasses import dataclass, field

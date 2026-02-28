@@ -32,7 +32,6 @@ from src.core.models.macro_series import MacroSeries
 from src.core.models.market_data import MarketData
 from src.core.models.series_metadata import SeriesMetadata
 
-
 # ---------------------------------------------------------------------------
 # Series code normalization
 # ---------------------------------------------------------------------------

@@ -20,7 +20,6 @@ import os
 from datetime import date, timedelta
 from typing import Any
 
-import httpx
 import pandas as pd
 import structlog
 

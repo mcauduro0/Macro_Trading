@@ -73,9 +73,8 @@ def signal_aggregation(
     aggregator = SignalAggregatorV2(method="bayesian")
 
     # Collect strategy signals from the strategy registry
-    from src.strategies import ALL_STRATEGIES
-
     from src.agents.data_loader import PointInTimeDataLoader
+    from src.strategies import ALL_STRATEGIES
     _loader = PointInTimeDataLoader()
     strategy_signals = []
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
