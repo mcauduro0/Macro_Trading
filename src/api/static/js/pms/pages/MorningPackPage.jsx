@@ -362,18 +362,27 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
   };
 
   /**
-   * Handle reject action
+   * Handle reject action (opens inline modal instead of window.prompt)
    */
-  const handleReject = async (proposalId) => {
-    const reason = window.prompt('Rejection reason (optional):');
-    if (reason === null) return; // User cancelled prompt
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const handleReject = (proposalId) => {
+    setRejectingId(proposalId);
+    setRejectReason('');
+  };
+
+  const confirmReject = async () => {
+    const proposalId = rejectingId;
+    if (!proposalId) return;
+    setRejectingId(null);
 
     try {
       setErrors(prev => ({ ...prev, [proposalId]: null }));
       const res = await fetch(`/api/v1/pms/trades/proposals/${proposalId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: reason || '' }),
+        body: JSON.stringify({ notes: rejectReason || 'Rejected from Morning Pack' }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       setProposalStatuses(prev => ({ ...prev, [proposalId]: 'REJECTED' }));
@@ -384,6 +393,12 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
         setErrors(prev => ({ ...prev, [proposalId]: 'Reject failed: ' + err.message }));
       }
     }
+    setRejectReason('');
+  };
+
+  const cancelReject = () => {
+    setRejectingId(null);
+    setRejectReason('');
   };
 
   /**
@@ -573,6 +588,55 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
                     </button>
                   )}
                 </div>
+
+                {/* Inline reject modal */}
+                {rejectingId === pid && (
+                  <div style={{
+                    marginTop: '6px',
+                    padding: '8px 10px',
+                    backgroundColor: _COLORS.bg.elevated,
+                    border: `1px solid ${_COLORS.pnl.negative}`,
+                    borderRadius: '4px',
+                  }}>
+                    <div style={{ fontSize: _TYPO.sizes.xs, color: _COLORS.text.secondary, marginBottom: '4px', fontFamily: _TYPO.fontFamily }}>
+                      Rejection reason (optional):
+                    </div>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Enter reason for rejection..."
+                      style={{
+                        width: '100%',
+                        minHeight: '48px',
+                        backgroundColor: _COLORS.bg.secondary,
+                        border: `1px solid ${_COLORS.border.default}`,
+                        borderRadius: '4px',
+                        padding: '6px 8px',
+                        color: _COLORS.text.primary,
+                        fontFamily: _TYPO.fontFamily,
+                        fontSize: _TYPO.sizes.xs,
+                        resize: 'vertical',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                      autoFocus
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '4px' }}>
+                      <button
+                        style={{ ...buttonBase, backgroundColor: 'transparent', color: _COLORS.text.muted, border: `1px solid ${_COLORS.border.default}` }}
+                        onClick={cancelReject}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        style={{ ...buttonBase, backgroundColor: _COLORS.pnl.negative, color: '#ffffff' }}
+                        onClick={confirmReject}
+                      >
+                        Confirm Reject
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

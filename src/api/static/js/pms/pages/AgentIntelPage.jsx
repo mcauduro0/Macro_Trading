@@ -374,7 +374,6 @@ function AgentIntelPage() {
           setUsingSample(true);
           setAgentReports(generateSampleAgentData());
           setLastUpdated(new Date());
-          setUsingSampleData(true);
         }
       }
 

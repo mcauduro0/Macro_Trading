@@ -290,7 +290,7 @@ function ComplianceAuditPage() {
           setEntries(sample);
           setTotalCount(sample.length);
           setVisibleCount(COMPLIANCE_PAGE_SIZE);
-          setUsingSampleData(true);
+          setUsingSample(true);
         }
       }
       if (!cancelled) setLoading(false);
