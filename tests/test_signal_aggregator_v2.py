@@ -460,18 +460,22 @@ class TestStrategyPositionSupport:
         agg = SignalAggregatorV2(method="confidence_weighted")
         now = datetime.utcnow()
         sig = _make_signal(
-            "RATES_BR_01", z_score=1.0, confidence=0.8, timestamp=now,
+            "RATES_BR_01",
+            z_score=1.0,
+            confidence=0.8,
+            timestamp=now,
         )
         pos = _make_position(
-            "RATES_BR_02", instrument="DI_PRE", weight=0.3, confidence=0.7,
+            "RATES_BR_02",
+            instrument="DI_PRE",
+            weight=0.3,
+            confidence=0.7,
         )
         results = agg.aggregate([sig, pos], as_of=now)
         assert len(results) == 1
         assert results[0].instrument == "DI_PRE"
         # Both strategies should contribute
-        strategy_ids = [
-            c["strategy_id"] for c in results[0].contributing_strategies
-        ]
+        strategy_ids = [c["strategy_id"] for c in results[0].contributing_strategies]
         assert "RATES_BR_01" in strategy_ids
         assert "RATES_BR_02" in strategy_ids
 

@@ -143,7 +143,12 @@ async def run_backtest(request: BacktestRunRequest):
             "Ensure all packages are installed (pip install -e '.[dev]').",
         )
     except Exception as exc:
-        logger.error("backtest_run failed strategy_id=%s: %s", request.strategy_id, exc, exc_info=True)
+        logger.error(
+            "backtest_run failed strategy_id=%s: %s",
+            request.strategy_id,
+            exc,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Backtest execution failed for '{request.strategy_id}': {exc}",
@@ -200,7 +205,12 @@ async def get_backtest_results(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("backtest_results_db error strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        logger.error(
+            "backtest_results_db error strategy_id=%s: %s",
+            strategy_id,
+            exc,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=503,
             detail=f"Database unavailable for backtest results: {exc}. "
