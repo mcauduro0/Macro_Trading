@@ -40,44 +40,47 @@ def _envelope(data: Any) -> dict:
 @router.get("")
 async def list_strategies():
     """Return list of all strategies with metadata."""
-    from src.agents.data_loader import PointInTimeDataLoader
-    from src.strategies import ALL_STRATEGIES
+    try:
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.strategies import ALL_STRATEGIES
 
-    data_loader = PointInTimeDataLoader()
-    strategies = []
-    for strategy_id, strategy_cls in ALL_STRATEGIES.items():
-        config = None
-        description = strategy_cls.__doc__ or ""
-        description = description.strip().split("\n")[0]  # first line only
+        data_loader = PointInTimeDataLoader()
+        strategies = []
+        for strategy_id, strategy_cls in ALL_STRATEGIES.items():
+            description = strategy_cls.__doc__ or ""
+            description = description.strip().split("\n")[0]
 
-        # Try to extract config from class
-        asset_class = "UNKNOWN"
-        instruments: list[str] = []
-        try:
-            # Instantiate to read config
-            instance = strategy_cls(data_loader=data_loader)
-            config = instance.config
-            asset_class = (
-                config.asset_class.value
-                if hasattr(config.asset_class, "value")
-                else str(config.asset_class)
+            asset_class = "UNKNOWN"
+            instruments: list[str] = []
+            try:
+                instance = strategy_cls(data_loader=data_loader)
+                config = instance.config
+                asset_class = (
+                    config.asset_class.value
+                    if hasattr(config.asset_class, "value")
+                    else str(config.asset_class)
+                )
+                instruments = list(config.instruments)
+            except Exception as exc:
+                logger.debug("strategy_config_extract failed for %s: %s", strategy_id, exc)
+
+            strategies.append(
+                {
+                    "strategy_id": strategy_id,
+                    "class_name": strategy_cls.__name__,
+                    "description": description,
+                    "asset_class": asset_class,
+                    "instruments": instruments,
+                    "status": "active",
+                }
             )
-            instruments = list(config.instruments)
-        except Exception:
-            pass
 
-        strategies.append(
-            {
-                "strategy_id": strategy_id,
-                "class_name": strategy_cls.__name__,
-                "description": description,
-                "asset_class": asset_class,
-                "instruments": instruments,
-                "status": "active",
-            }
+        return _envelope(strategies)
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Strategy dependencies unavailable: {exc}",
         )
-
-    return _envelope(strategies)
 
 
 # ---------------------------------------------------------------------------
@@ -96,21 +99,14 @@ async def strategy_backtest(
             status_code=404, detail=f"Strategy '{strategy_id}' not found"
         )
 
-    # Try to query DB for latest backtest result
     backtest_data = await _fetch_backtest_result(strategy_id)
 
     if backtest_data is None:
-        # Return placeholder
-        backtest_data = {
-            "strategy_id": strategy_id,
-            "sharpe_ratio": None,
-            "annual_return": None,
-            "max_drawdown": None,
-            "win_rate": None,
-            "profit_factor": None,
-            "equity_curve": [],
-            "note": "No backtest results available yet",
-        }
+        raise HTTPException(
+            status_code=404,
+            detail=f"No backtest results found for '{strategy_id}'. "
+            "Run a backtest first via POST /backtest/run.",
+        )
 
     return _envelope(backtest_data)
 
@@ -144,8 +140,8 @@ async def _fetch_backtest_result(strategy_id: str) -> dict | None:
                     "profit_factor": row.profit_factor,
                     "equity_curve": [],
                 }
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("backtest_result_db_unavailable strategy_id=%s: %s", strategy_id, exc)
     return None
 
 
@@ -187,7 +183,6 @@ async def get_strategy_detail(strategy_id: str):
     description = strategy_cls.__doc__ or ""
     description = description.strip().split("\n")[0]
 
-    # Try to extract config by instantiation
     from src.agents.data_loader import PointInTimeDataLoader
 
     asset_class = "UNKNOWN"
@@ -203,7 +198,6 @@ async def get_strategy_detail(strategy_id: str):
                 else str(config.asset_class)
             )
             instruments = list(config.instruments)
-            # Extract config as parameters dict
             parameters = {
                 "strategy_id": config.strategy_id,
                 "strategy_name": config.strategy_name,
@@ -217,8 +211,8 @@ async def get_strategy_detail(strategy_id: str):
                 "stop_loss_pct": config.stop_loss_pct,
                 "take_profit_pct": config.take_profit_pct,
             }
-    except Exception:
-        # Fallback to metadata
+    except Exception as exc:
+        logger.debug("strategy_detail_config failed for %s: %s", strategy_id, exc)
         if metadata.get("asset_class"):
             ac = metadata["asset_class"]
             asset_class = ac.value if hasattr(ac, "value") else str(ac)
@@ -246,7 +240,7 @@ async def get_latest_signal(strategy_id: str):
     """Return the latest signal generated by the strategy.
 
     Instantiates the strategy and runs generate_signals() for today's date.
-    Falls back to placeholder signal if the strategy fails.
+    Returns 503 if the strategy engine or data is unavailable.
     """
     strategy_cls, _ = _get_strategy_info(strategy_id)
 
@@ -257,10 +251,8 @@ async def get_latest_signal(strategy_id: str):
         today = date.today()
         raw_signals = await asyncio.to_thread(instance.generate_signals, today)
 
-        # Adapt the signal output
         if isinstance(raw_signals, list) and len(raw_signals) > 0:
             sig = raw_signals[0]
-            # StrategySignal has direction, strength, z_score, confidence
             direction = "NEUTRAL"
             strength = 0.0
             confidence = 0.0
@@ -289,7 +281,6 @@ async def get_latest_signal(strategy_id: str):
                 }
             )
         elif isinstance(raw_signals, dict) and raw_signals:
-            # dict[str, float] format -- take first entry
             first_ticker = next(iter(raw_signals))
             weight = raw_signals[first_ticker]
             direction = "LONG" if weight > 0 else ("SHORT" if weight < 0 else "NEUTRAL")
@@ -303,21 +294,22 @@ async def get_latest_signal(strategy_id: str):
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
-    except Exception as exc:
-        logger.debug("signal_latest_fallback strategy_id=%s error=%s", strategy_id, exc)
 
-    # Fallback placeholder
-    return _envelope(
-        {
-            "strategy_id": strategy_id,
-            "direction": "NEUTRAL",
-            "strength": 0.0,
-            "confidence": 0.0,
-            "z_score": 0.0,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "note": "Placeholder signal -- strategy data unavailable",
-        }
-    )
+        raise HTTPException(
+            status_code=404,
+            detail=f"No signal generated by '{strategy_id}' for {today}. "
+            "The strategy may require data that is not yet available.",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("signal_latest failed strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Signal generation failed for '{strategy_id}': {exc}. "
+            "Ensure market data is available and database is running.",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -330,11 +322,11 @@ async def get_signal_history(
 ):
     """Return signal history for a strategy (used for heatmap visualization).
 
-    Returns a list of {date, direction, conviction} entries.
+    Returns a list of {date, direction, conviction} entries from the database.
     """
     strategy_cls, _ = _get_strategy_info(strategy_id)
 
-    # Try to query strategy_signals table
+    # Query strategy_signals table
     try:
         from sqlalchemy import text
 
@@ -362,32 +354,22 @@ async def get_signal_history(
                     for row in rows
                 ]
                 return _envelope(history)
+
+        raise HTTPException(
+            status_code=404,
+            detail=f"No signal history found for '{strategy_id}' in the last {days} days. "
+            "Run the daily pipeline to generate and persist signals.",
+        )
+
+    except HTTPException:
+        raise
     except Exception as exc:
-        logger.debug(
-            "signal_history_db_unavailable strategy_id=%s error=%s", strategy_id, exc
+        logger.error("signal_history_db error strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Signal history unavailable: {exc}. "
+            "Ensure TimescaleDB is running and strategy_signals table exists.",
         )
-
-    # Fallback: generate sample history
-    import random
-    from datetime import timedelta
-
-    random.seed(hash(strategy_id) % 2**32)
-    history = []
-    today = date.today()
-    directions = ["LONG", "SHORT", "NEUTRAL"]
-    for i in range(days):
-        d = today - timedelta(days=days - 1 - i)
-        direction = random.choice(directions)
-        conviction = round(random.uniform(0.1, 0.9), 2)
-        history.append(
-            {
-                "date": str(d),
-                "direction": direction,
-                "conviction": conviction,
-            }
-        )
-
-    return _envelope(history)
 
 
 # ---------------------------------------------------------------------------
@@ -407,11 +389,9 @@ async def update_strategy_params(
     """
     strategy_cls, _ = _get_strategy_info(strategy_id)
 
-    # Validate params are not empty
     if not params:
         raise HTTPException(status_code=400, detail="params must not be empty")
 
-    # Attempt to apply params to strategy instance for validation
     from src.agents.data_loader import PointInTimeDataLoader
 
     ALLOWED_STRATEGY_PARAMS = {
@@ -445,8 +425,11 @@ async def update_strategy_params(
                     "note": "attribute not found on strategy class",
                 }
     except Exception as exc:
-        logger.debug("params_update_fallback strategy_id=%s error=%s", strategy_id, exc)
-        updated_params = params
+        logger.warning("params_update failed strategy_id=%s: %s", strategy_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update parameters for '{strategy_id}': {exc}",
+        )
 
     return _envelope(
         {

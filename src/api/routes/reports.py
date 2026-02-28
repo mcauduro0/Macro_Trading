@@ -75,8 +75,8 @@ def _generate_brief(as_of: date):
             if agent is not None:
                 report = agent.backtest_run(as_of)
                 agent_reports[agent_id] = report
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("agent_report_failed agent_id=%s: %s", agent_id, exc)
 
     # Generate narrative (reads ANTHROPIC_API_KEY from settings; template fallback if empty)
     generator = NarrativeGenerator()

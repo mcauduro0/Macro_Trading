@@ -8,6 +8,9 @@ Generates a comprehensive daily report covering:
 5. Portfolio Status — positions, weights, and P&L
 6. Risk Metrics — VaR, stress tests, limits
 7. Action Items — concrete trade recommendations
+
+All sections require real pipeline_context data. When data is missing,
+sections explicitly report "data unavailable" instead of showing fake values.
 """
 
 import json
@@ -37,7 +40,12 @@ class ReportSection:
 
 
 class DailyReportGenerator:
-    """Generates comprehensive daily trading reports with 7 sections."""
+    """Generates comprehensive daily trading reports with 7 sections.
+
+    Requires a pipeline_context dict populated by the daily pipeline with
+    real data from agents, strategies, PMS, and risk engine. Will not
+    generate reports with fake/placeholder data.
+    """
 
     def __init__(self, as_of_date: date | None = None):
         self.as_of_date = as_of_date or date.today()
@@ -48,8 +56,25 @@ class DailyReportGenerator:
     # ------------------------------------------------------------------
 
     def generate(self, pipeline_context: dict | None = None) -> dict:
-        """Build all 7 sections. Returns dict of section_key -> ReportSection."""
-        ctx = pipeline_context or self._sample_context()
+        """Build all 7 sections. Returns dict of section_key -> ReportSection.
+
+        Args:
+            pipeline_context: Dict with real data from the daily pipeline.
+                Required keys: market_snapshot, regime, agent_views, signals,
+                portfolio, risk, actions. Missing keys will produce sections
+                with explicit "data unavailable" content.
+
+        Raises:
+            ValueError: If pipeline_context is None (no data provided).
+        """
+        if pipeline_context is None:
+            raise ValueError(
+                "pipeline_context is required. Run the daily pipeline first to "
+                "collect real market data, agent views, signals, portfolio state, "
+                "and risk metrics. Report generation requires real data."
+            )
+
+        ctx = pipeline_context
 
         self.sections["market_snapshot"] = self._build_market_snapshot(ctx)
         self.sections["regime"] = self._build_regime(ctx)
@@ -64,13 +89,13 @@ class DailyReportGenerator:
     def to_markdown(self) -> str:
         """Render the report as formatted markdown."""
         if not self.sections:
-            self.generate()
+            raise RuntimeError("Call generate() with real pipeline data first.")
         return templates.render_markdown(self.sections)
 
     def to_html(self) -> str:
         """Render the report as professional HTML with embedded charts."""
         if not self.sections:
-            self.generate()
+            raise RuntimeError("Call generate() with real pipeline data first.")
 
         charts: dict[str, str] = {}
         try:
@@ -121,7 +146,7 @@ class DailyReportGenerator:
             return False
 
         if not self.sections:
-            self.generate()
+            raise RuntimeError("Call generate() with real pipeline data first.")
 
         summary = self._build_slack_summary()
         blocks = templates.render_slack_blocks(summary)
@@ -141,191 +166,145 @@ class DailyReportGenerator:
             return False
 
     # ------------------------------------------------------------------
-    # Section builders
+    # Section builders — require real data, no hardcoded defaults
     # ------------------------------------------------------------------
 
     def _build_market_snapshot(self, ctx: dict) -> ReportSection:
         market = ctx.get("market_snapshot", {})
+        if not market:
+            return ReportSection(
+                title="Market Snapshot",
+                content={"status": "Data unavailable — run daily pipeline to collect market data"},
+                commentary="Market snapshot data not yet collected for this date.",
+            )
         return ReportSection(
             title="Market Snapshot",
             content={
                 "date": str(self.as_of_date),
-                "IBOV": market.get("ibov", "127,450"),
-                "IBOV Chg": market.get("ibov_chg", "+0.82%"),
-                "USDBRL": market.get("usdbrl", "4.9720"),
-                "USDBRL Chg": market.get("usdbrl_chg", "-0.35%"),
-                "DI 1Y": market.get("di_1y", "10.15%"),
-                "Selic": market.get("selic", "10.50%"),
-                "IPCA 12m": market.get("ipca_12m", "4.23%"),
-                "VIX": market.get("vix", "14.2"),
-                "SPX": market.get("spx", "5,220"),
-                "UST 10Y": market.get("ust_10y", "4.28%"),
+                **{k: v for k, v in market.items() if k != "commentary"},
             },
-            commentary=market.get(
-                "commentary", "Markets traded higher on dovish BCB minutes."
-            ),
+            commentary=market.get("commentary", ""),
         )
 
     def _build_regime(self, ctx: dict) -> ReportSection:
         regime = ctx.get("regime", {})
+        if not regime:
+            return ReportSection(
+                title="Regime Assessment",
+                content={"status": "Data unavailable — run cross-asset agent to classify regime"},
+                commentary="Regime classification not yet run for this date.",
+            )
         return ReportSection(
             title="Regime Assessment",
             content={
-                "Current Regime": regime.get("classification", "Goldilocks"),
-                "Confidence": regime.get("confidence", "72%"),
-                "Probabilities": regime.get(
-                    "probabilities",
-                    "Goldilocks 45% | Reflation 30% | Stagflation 15% | Deflation 10%",
-                ),
-                "Key Drivers": regime.get(
-                    "drivers", "Declining inflation, stable growth, dovish BCB guidance"
-                ),
-                "Transition Risk": regime.get(
-                    "transition_risk", "Moderate — watch for IPCA acceleration"
-                ),
+                "Current Regime": regime.get("classification", "Unknown"),
+                "Confidence": regime.get("confidence", "N/A"),
+                "Probabilities": regime.get("probabilities", "N/A"),
+                "Key Drivers": regime.get("drivers", "N/A"),
+                "Transition Risk": regime.get("transition_risk", "N/A"),
             },
-            commentary=regime.get(
-                "commentary",
-                "Goldilocks conditions persist with moderate transition risk to Reflation.",
-            ),
+            commentary=regime.get("commentary", ""),
         )
 
     def _build_agent_views(self, ctx: dict) -> ReportSection:
         agents = ctx.get("agent_views", {})
-        default_agents = {
-            "Agent": [
-                "Inflation",
-                "Monetary Policy",
-                "Fiscal",
-                "FX Equilibrium",
-                "Cross-Asset",
-            ],
-            "Signal": ["Bullish", "Bullish", "Neutral", "Bearish", "Bullish"],
-            "Strength": [0.65, 0.72, 0.12, -0.45, 0.58],
-            "Confidence": [0.78, 0.85, 0.42, 0.68, 0.73],
-            "Key Driver": [
-                "IPCA deceleration trend",
-                "Selic cut cycle continuation",
-                "Fiscal framework uncertainty",
-                "USD strength vs EM FX",
-                "Risk-on global environment",
-            ],
-        }
+        if not agents:
+            return ReportSection(
+                title="Agent Views",
+                content={"status": "Data unavailable — run analytical agents to generate views"},
+                commentary="Agent views not yet generated for this date.",
+            )
         return ReportSection(
             title="Agent Views",
-            content=agents.get("table", default_agents),
-            commentary=agents.get(
-                "commentary",
-                "4 of 5 agents lean bullish; Fiscal agent neutral on framework concerns.",
-            ),
+            content=agents.get("table", agents),
+            commentary=agents.get("commentary", ""),
         )
 
     def _build_signals(self, ctx: dict) -> ReportSection:
         signals = ctx.get("signals", {})
+        if not signals:
+            return ReportSection(
+                title="Signal Summary",
+                content={"status": "Data unavailable — run signal aggregation pipeline"},
+                commentary="Signal aggregation not yet run for this date.",
+            )
         return ReportSection(
             title="Signal Summary",
             content={
-                "Total Signals": signals.get("total", 25),
-                "Bullish": signals.get("bullish", 14),
-                "Bearish": signals.get("bearish", 7),
-                "Neutral": signals.get("neutral", 4),
-                "Signal Flips (24h)": signals.get("flips", 2),
-                "Crowding Warnings": signals.get("crowding_warnings", 1),
-                "Top Signal": signals.get(
-                    "top_signal", "DI1F25 — Bullish 0.82 conviction"
-                ),
+                "Total Signals": signals.get("total", "N/A"),
+                "Bullish": signals.get("bullish", "N/A"),
+                "Bearish": signals.get("bearish", "N/A"),
+                "Neutral": signals.get("neutral", "N/A"),
+                "Signal Flips (24h)": signals.get("flips", "N/A"),
+                "Crowding Warnings": signals.get("crowding_warnings", "N/A"),
+                "Top Signal": signals.get("top_signal", "N/A"),
             },
-            commentary=signals.get(
-                "commentary", "Bullish bias in rates space; 2 signal flips in equities."
-            ),
+            commentary=signals.get("commentary", ""),
         )
 
     def _build_portfolio(self, ctx: dict) -> ReportSection:
         portfolio = ctx.get("portfolio", {})
+        if not portfolio:
+            return ReportSection(
+                title="Portfolio Status",
+                content={"status": "Data unavailable — PMS portfolio data not loaded"},
+                commentary="Portfolio data not available. Ensure PMS is configured.",
+            )
         return ReportSection(
             title="Portfolio Status",
             content={
-                "NAV": portfolio.get("nav", "R$ 100,000,000"),
-                "Daily P&L": portfolio.get("daily_pnl", "+R$ 245,000 (+0.25%)"),
-                "MTD Return": portfolio.get("mtd", "+1.82%"),
-                "YTD Return": portfolio.get("ytd", "+8.45%"),
-                "Positions": portfolio.get("n_positions", 12),
-                "Gross Leverage": portfolio.get("gross_leverage", "1.85x"),
-                "Net Leverage": portfolio.get("net_leverage", "0.62x"),
-                "Rebalance Needed": portfolio.get(
-                    "rebalance_needed", "Yes — 3 positions exceed target by >5%"
-                ),
+                "NAV": portfolio.get("nav", "N/A"),
+                "Daily P&L": portfolio.get("daily_pnl", "N/A"),
+                "MTD Return": portfolio.get("mtd", "N/A"),
+                "YTD Return": portfolio.get("ytd", "N/A"),
+                "Positions": portfolio.get("n_positions", "N/A"),
+                "Gross Leverage": portfolio.get("gross_leverage", "N/A"),
+                "Net Leverage": portfolio.get("net_leverage", "N/A"),
+                "Rebalance Needed": portfolio.get("rebalance_needed", "N/A"),
             },
-            commentary=portfolio.get(
-                "commentary",
-                "Portfolio performing within targets; minor rebalance recommended.",
-            ),
+            commentary=portfolio.get("commentary", ""),
         )
 
     def _build_risk(self, ctx: dict) -> ReportSection:
         risk = ctx.get("risk", {})
+        if not risk:
+            return ReportSection(
+                title="Risk Metrics",
+                content={"status": "Data unavailable — run risk engine to compute metrics"},
+                commentary="Risk metrics not yet computed for this date.",
+            )
         return ReportSection(
             title="Risk Metrics",
             content={
-                "VaR 95%": risk.get("var_95", "2.12%"),
-                "VaR 99%": risk.get("var_99", "3.45%"),
-                "CVaR 95%": risk.get("cvar_95", "2.98%"),
-                "Worst Stress Scenario": risk.get("worst_stress", "2008 GFC: -8.2%"),
-                "Limit Utilization": risk.get("limit_util", "68%"),
-                "Limits Breached": risk.get("limits_breached", 0),
-                "Circuit Breaker": risk.get("circuit_breaker", "Inactive"),
-                "Risk Budget Remaining": risk.get("risk_budget", "32%"),
+                "VaR 95%": risk.get("var_95", "N/A"),
+                "VaR 99%": risk.get("var_99", "N/A"),
+                "CVaR 95%": risk.get("cvar_95", "N/A"),
+                "Worst Stress Scenario": risk.get("worst_stress", "N/A"),
+                "Limit Utilization": risk.get("limit_util", "N/A"),
+                "Limits Breached": risk.get("limits_breached", "N/A"),
+                "Circuit Breaker": risk.get("circuit_breaker", "N/A"),
+                "Risk Budget Remaining": risk.get("risk_budget", "N/A"),
             },
-            commentary=risk.get(
-                "commentary", "Risk within acceptable bounds. No limit breaches."
-            ),
+            commentary=risk.get("commentary", ""),
         )
 
     def _build_actions(self, ctx: dict) -> ReportSection:
         actions = ctx.get("actions", {})
-        default_actions = {
-            "Priority": ["High", "High", "Medium", "Medium", "Low"],
-            "Instrument": ["DI1F25", "PETR4", "VALE3", "USDBRL Fwd", "IBOV Put"],
-            "Direction": ["Short", "Long", "Reduce Long", "Sell Forward", "Buy"],
-            "Size": [
-                "+20 contracts",
-                "+15,000 shares",
-                "-8,000 shares",
-                "USD 2M notional",
-                "100 contracts",
-            ],
-            "Rationale": [
-                "Strong bearish DI signal (0.82 conviction), Selic cut cycle",
-                "Underweight vs target; oil price supportive",
-                "Position exceeds target by 12%; take profit",
-                "FX agent bearish on BRL; hedge exposure",
-                "Tail risk protection ahead of COPOM",
-            ],
-        }
+        if not actions:
+            return ReportSection(
+                title="Action Items",
+                content={"status": "No action items — pipeline data not available"},
+                commentary="Action items will be generated once the full pipeline runs.",
+            )
         return ReportSection(
             title="Action Items",
-            content=actions.get("table", default_actions),
-            commentary=actions.get(
-                "commentary",
-                "5 action items: 2 high priority trades requiring immediate attention.",
-            ),
+            content=actions.get("table", actions),
+            commentary=actions.get("commentary", ""),
         )
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-
-    def _sample_context(self) -> dict:
-        """Return sample/placeholder context for demo reports (seed=42)."""
-        return {
-            "market_snapshot": {},
-            "regime": {},
-            "agent_views": {},
-            "signals": {},
-            "portfolio": {},
-            "risk": {},
-            "actions": {},
-        }
 
     def _build_slack_summary(self) -> dict:
         """Build condensed summary dict for Slack."""
@@ -336,7 +315,7 @@ class DailyReportGenerator:
         actions = self.sections.get("actions")
 
         top_signals_list = []
-        if signals:
+        if signals and "status" not in signals.content:
             top_signals_list.append(f"Top: {signals.content.get('Top Signal', 'N/A')}")
             bullish = signals.content.get("Bullish", 0)
             bearish = signals.content.get("Bearish", 0)
@@ -349,12 +328,24 @@ class DailyReportGenerator:
         return {
             "report_date": str(self.as_of_date),
             "portfolio_return": (
-                portfolio.content.get("Daily P&L", "N/A") if portfolio else "N/A"
+                portfolio.content.get("Daily P&L", "N/A")
+                if portfolio and "status" not in portfolio.content
+                else "N/A"
             ),
-            "var_95": risk.content.get("VaR 95%", "N/A") if risk else "N/A",
-            "regime": regime.content.get("Current Regime", "N/A") if regime else "N/A",
+            "var_95": (
+                risk.content.get("VaR 95%", "N/A")
+                if risk and "status" not in risk.content
+                else "N/A"
+            ),
+            "regime": (
+                regime.content.get("Current Regime", "N/A")
+                if regime and "status" not in regime.content
+                else "N/A"
+            ),
             "risk_status": (
-                risk.content.get("Circuit Breaker", "N/A") if risk else "N/A"
+                risk.content.get("Circuit Breaker", "N/A")
+                if risk and "status" not in risk.content
+                else "N/A"
             ),
             "top_signals": "\n".join(top_signals_list) if top_signals_list else "N/A",
             "action_count": action_count,
@@ -364,7 +355,12 @@ class DailyReportGenerator:
         }
 
     def _generate_charts(self) -> dict[str, str]:
-        """Generate base64-encoded PNG charts for HTML embedding."""
+        """Generate base64-encoded PNG charts from real portfolio data.
+
+        Charts are generated from actual portfolio equity curve and risk
+        metrics stored in the report sections. Returns empty dict if
+        matplotlib is unavailable or data is insufficient.
+        """
         import base64
         import io
 
@@ -372,40 +368,46 @@ class DailyReportGenerator:
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        import numpy as np
 
         charts: dict[str, str] = {}
-        rng = np.random.default_rng(42)
 
-        # Portfolio equity curve
-        fig, ax = plt.subplots(figsize=(7, 3))
-        days = np.arange(252)
-        equity = 100 * np.exp(np.cumsum(rng.normal(0.0003, 0.008, 252)))
-        ax.plot(days, equity, color="#2563eb", linewidth=1.5)
-        ax.fill_between(days, equity, equity.min(), alpha=0.1, color="#2563eb")
-        ax.set_title("Equity Curve (YTD)", fontsize=12)
-        ax.set_ylabel("NAV Index")
-        ax.grid(alpha=0.3)
-        fig.tight_layout()
-        buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=100)
-        plt.close(fig)
-        buf.seek(0)
-        charts["portfolio"] = base64.b64encode(buf.read()).decode()
+        # Portfolio equity curve from real data
+        portfolio_section = self.sections.get("portfolio")
+        if portfolio_section and "status" not in portfolio_section.content:
+            equity_data = portfolio_section.content.get("equity_curve")
+            if equity_data and len(equity_data) >= 5:
+                fig, ax = plt.subplots(figsize=(7, 3))
+                ax.plot(range(len(equity_data)), equity_data, color="#2563eb", linewidth=1.5)
+                ax.fill_between(
+                    range(len(equity_data)), equity_data,
+                    min(equity_data), alpha=0.1, color="#2563eb"
+                )
+                ax.set_title("Equity Curve (YTD)", fontsize=12)
+                ax.set_ylabel("NAV Index")
+                ax.grid(alpha=0.3)
+                fig.tight_layout()
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png", dpi=100)
+                plt.close(fig)
+                buf.seek(0)
+                charts["portfolio"] = base64.b64encode(buf.read()).decode()
 
-        # Risk VaR gauge
-        fig, ax = plt.subplots(figsize=(7, 2.5))
-        var_history = rng.uniform(0.015, 0.035, 60)
-        ax.plot(var_history, color="#dc2626", linewidth=1.5, label="VaR 95%")
-        ax.axhline(0.05, color="#d97706", linestyle="--", linewidth=1, label="Limit")
-        ax.set_title("VaR 95% (60-day)", fontsize=12)
-        ax.legend(fontsize=9)
-        ax.grid(alpha=0.3)
-        fig.tight_layout()
-        buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=100)
-        plt.close(fig)
-        buf.seek(0)
-        charts["risk"] = base64.b64encode(buf.read()).decode()
+        # Risk VaR history from real data
+        risk_section = self.sections.get("risk")
+        if risk_section and "status" not in risk_section.content:
+            var_history = risk_section.content.get("var_history")
+            if var_history and len(var_history) >= 5:
+                fig, ax = plt.subplots(figsize=(7, 2.5))
+                ax.plot(var_history, color="#dc2626", linewidth=1.5, label="VaR 95%")
+                ax.axhline(0.05, color="#d97706", linestyle="--", linewidth=1, label="Limit")
+                ax.set_title("VaR 95% (60-day)", fontsize=12)
+                ax.legend(fontsize=9)
+                ax.grid(alpha=0.3)
+                fig.tight_layout()
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png", dpi=100)
+                plt.close(fig)
+                buf.seek(0)
+                charts["risk"] = base64.b64encode(buf.read()).decode()
 
         return charts

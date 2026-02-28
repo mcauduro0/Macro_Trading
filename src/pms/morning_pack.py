@@ -401,20 +401,68 @@ class MorningPackService:
             return {"status": "unavailable", "reason": str(exc)}
 
     def _collect_market_snapshot(self) -> dict:
-        """Build placeholder market snapshot structure.
+        """Collect market snapshot from database macro series.
 
-        Direct DB access for macro indicators is deferred; this provides
-        the expected structure for callers or Dagster pipelines to populate.
+        Queries the latest values for key macro indicators from TimescaleDB.
+        Returns structured dict with real market data, or unavailable status
+        if database is not accessible.
         """
-        return {
-            "brazil_rates": {},
-            "brazil_macro": {},
-            "fx": {},
-            "us_rates": {},
-            "us_macro": {},
-            "global_": {},
-            "credit": {},
-        }
+        try:
+            from sqlalchemy import create_engine, text
+
+            from src.core.config import get_settings
+
+            settings = get_settings()
+            engine = create_engine(settings.database_url)
+
+            snapshot: dict[str, dict] = {
+                "brazil_rates": {},
+                "brazil_macro": {},
+                "fx": {},
+                "us_rates": {},
+                "us_macro": {},
+                "global_": {},
+                "credit": {},
+            }
+
+            # Key series mappings: {db_series_id: (category, display_name)}
+            series_map = {
+                "BCB_432": ("brazil_rates", "SELIC"),
+                "BCB_4389": ("fx", "USDBRL"),
+                "BCB_433": ("brazil_macro", "IPCA_12M"),
+                "FRED_DFF": ("us_rates", "FED_FUNDS"),
+                "FRED_DGS10": ("us_rates", "UST_10Y"),
+                "FRED_VIXCLS": ("global_", "VIX"),
+            }
+
+            with engine.connect() as conn:
+                for series_id, (category, name) in series_map.items():
+                    try:
+                        result = conn.execute(
+                            text(
+                                "SELECT value, reference_date FROM macro_series "
+                                "WHERE series_id = :sid "
+                                "ORDER BY reference_date DESC LIMIT 1"
+                            ),
+                            {"sid": series_id},
+                        )
+                        row = result.first()
+                        if row:
+                            snapshot[category][name] = {
+                                "value": float(row.value),
+                                "date": str(row.reference_date),
+                            }
+                    except Exception:
+                        continue
+
+            return snapshot
+
+        except Exception as exc:
+            logger.warning("market_snapshot_db_unavailable: %s", exc)
+            return {
+                "status": "unavailable",
+                "reason": f"Database unavailable for market snapshot: {exc}",
+            }
 
     # -------------------------------------------------------------------------
     # Action items builder

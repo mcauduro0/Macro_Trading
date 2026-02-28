@@ -55,19 +55,12 @@ def silver_curves(context: AssetExecutionContext) -> dict:
     as_of = _partition_date(context)
     context.log.info(f"Computing curve transforms for {as_of}")
 
-    try:
-        from src.transforms.curves import CurveTransform
+    from src.transforms.curves import CurveTransform
 
-        transform = CurveTransform()
-        result = transform.run(as_of)
-        context.log.info(f"Curve transforms complete: {result}")
-        return {"status": "success", "date": str(as_of), "result": str(result)}
-    except ImportError:
-        context.log.warning("CurveTransform not available, running placeholder")
-        return {"status": "success", "date": str(as_of), "result": "placeholder"}
-    except Exception as exc:
-        context.log.error(f"Curve transform failed: {exc}")
-        raise
+    transform = CurveTransform()
+    result = transform.run(as_of)
+    context.log.info(f"Curve transforms complete: {result}")
+    return {"status": "success", "date": str(as_of), "result": str(result)}
 
 
 @asset(
@@ -85,19 +78,12 @@ def silver_returns(context: AssetExecutionContext) -> dict:
     as_of = _partition_date(context)
     context.log.info(f"Computing returns/vol/z-scores for {as_of}")
 
-    try:
-        from src.transforms.returns import ReturnsTransform
+    from src.transforms.returns import ReturnsTransform
 
-        transform = ReturnsTransform()
-        result = transform.run(as_of)
-        context.log.info(f"Returns transforms complete: {result}")
-        return {"status": "success", "date": str(as_of), "result": str(result)}
-    except ImportError:
-        context.log.warning("ReturnsTransform not available, running placeholder")
-        return {"status": "success", "date": str(as_of), "result": "placeholder"}
-    except Exception as exc:
-        context.log.error(f"Returns transform failed: {exc}")
-        raise
+    transform = ReturnsTransform()
+    result = transform.run(as_of)
+    context.log.info(f"Returns transforms complete: {result}")
+    return {"status": "success", "date": str(as_of), "result": str(result)}
 
 
 @asset(
@@ -115,16 +101,9 @@ def silver_macro(context: AssetExecutionContext) -> dict:
     as_of = _partition_date(context)
     context.log.info(f"Computing macro transforms for {as_of}")
 
-    try:
-        from src.transforms.macro import MacroTransform
+    from src.transforms.macro import MacroTransform
 
-        transform = MacroTransform()
-        result = transform.run(as_of)
-        context.log.info(f"Macro transforms complete: {result}")
-        return {"status": "success", "date": str(as_of), "result": str(result)}
-    except ImportError:
-        context.log.warning("MacroTransform not available, running placeholder")
-        return {"status": "success", "date": str(as_of), "result": "placeholder"}
-    except Exception as exc:
-        context.log.error(f"Macro transform failed: {exc}")
-        raise
+    transform = MacroTransform()
+    result = transform.run(as_of)
+    context.log.info(f"Macro transforms complete: {result}")
+    return {"status": "success", "date": str(as_of), "result": str(result)}

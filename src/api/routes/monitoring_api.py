@@ -9,6 +9,7 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -16,6 +17,8 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.monitoring.alert_manager import AlertManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
@@ -84,66 +87,81 @@ async def get_active_alerts():
 
 @router.get("/pipeline-status")
 async def get_pipeline_status():
-    """Return pipeline health summary per connector.
+    """Return pipeline health summary per connector from real database records."""
+    connectors: list[dict] = []
 
-    Uses sample data for now (matching Phase 17 API pattern).
-    """
-    connectors = [
-        {
-            "connector": "bcb_sgs",
-            "status": "OK",
-            "last_run": "2026-02-23T06:00:00Z",
-            "last_run_age": 1200,
-            "duration_seconds": 45,
-            "records_fetched": 1250,
-        },
-        {
-            "connector": "fred",
-            "status": "OK",
-            "last_run": "2026-02-23T06:01:00Z",
-            "last_run_age": 1140,
-            "duration_seconds": 32,
-            "records_fetched": 890,
-        },
-        {
-            "connector": "yahoo",
-            "status": "OK",
-            "last_run": "2026-02-23T06:02:00Z",
-            "last_run_age": 1080,
-            "duration_seconds": 28,
-            "records_fetched": 650,
-        },
-        {
-            "connector": "bcb_ptax",
-            "status": "OK",
-            "last_run": "2026-02-23T06:00:30Z",
-            "last_run_age": 1170,
-            "duration_seconds": 12,
-            "records_fetched": 30,
-        },
-        {
-            "connector": "b3_market_data",
-            "status": "OK",
-            "last_run": "2026-02-23T06:03:00Z",
-            "last_run_age": 1020,
-            "duration_seconds": 55,
-            "records_fetched": 2100,
-        },
-        {
-            "connector": "treasury_gov",
-            "status": "OK",
-            "last_run": "2026-02-23T06:01:30Z",
-            "last_run_age": 1110,
-            "duration_seconds": 18,
-            "records_fetched": 420,
-        },
-    ]
+    try:
+        from sqlalchemy import text
 
-    # Overall pipeline status
-    all_ok = all(c["status"] == "OK" for c in connectors)
+        from src.core.database import async_session_factory
+
+        async with async_session_factory() as session:
+            result = await session.execute(
+                text(
+                    "SELECT connector_name, status, last_run_at, "
+                    "duration_seconds, records_fetched "
+                    "FROM pipeline_runs "
+                    "WHERE last_run_at = ("
+                    "  SELECT MAX(last_run_at) FROM pipeline_runs pr2 "
+                    "  WHERE pr2.connector_name = pipeline_runs.connector_name"
+                    ") "
+                    "ORDER BY connector_name"
+                )
+            )
+            rows = result.fetchall()
+            for row in rows:
+                age_seconds = 0
+                if row.last_run_at:
+                    age_seconds = int(
+                        (datetime.now(timezone.utc) - row.last_run_at).total_seconds()
+                    )
+                connectors.append(
+                    {
+                        "connector": row.connector_name,
+                        "status": row.status or "UNKNOWN",
+                        "last_run": row.last_run_at.isoformat() if row.last_run_at else None,
+                        "last_run_age": age_seconds,
+                        "duration_seconds": row.duration_seconds,
+                        "records_fetched": row.records_fetched,
+                    }
+                )
+    except Exception as exc:
+        logger.warning("pipeline_status_db_unavailable: %s", exc)
+        # Return honest status instead of fake data
+        from src.connectors import base
+
+        known_connectors = [
+            "bcb_sgs", "fred", "yahoo", "bcb_ptax", "b3_market_data",
+            "treasury_gov", "ibge_sidra", "oecd_sdmx", "cftc_cot",
+            "anbima", "bcb_focus", "bcb_fx_flow", "stn_fiscal",
+            "fmp_treasury", "te_di_curve",
+        ]
+        for name in known_connectors:
+            connectors.append(
+                {
+                    "connector": name,
+                    "status": "UNKNOWN",
+                    "last_run": None,
+                    "last_run_age": None,
+                    "duration_seconds": None,
+                    "records_fetched": None,
+                    "note": "Database unavailable - no pipeline run history",
+                }
+            )
+
+    all_ok = all(c.get("status") == "OK" for c in connectors) if connectors else False
+    has_unknown = any(c.get("status") == "UNKNOWN" for c in connectors)
+
+    if has_unknown:
+        overall = "unknown"
+    elif all_ok:
+        overall = "healthy"
+    else:
+        overall = "degraded"
+
     return _envelope(
         {
-            "overall_status": "healthy" if all_ok else "degraded",
+            "overall_status": overall,
             "connectors": connectors,
             "total_connectors": len(connectors),
         }
@@ -157,30 +175,123 @@ async def get_pipeline_status():
 
 @router.get("/system-health")
 async def get_system_health():
-    """Return aggregate system health: DB, Redis, pipeline, agents, risk."""
-    # Sample health status (matching Phase 17 deterministic pattern)
-    components = {
-        "database": {"status": "healthy", "latency_ms": 2.3},
-        "redis": {"status": "healthy", "latency_ms": 0.8},
-        "pipeline": {
+    """Return aggregate system health: DB, Redis, pipeline, agents, risk.
+
+    Performs real health checks against each component.
+    """
+    components: dict[str, dict] = {}
+
+    # Database health check
+    try:
+        import time
+
+        from sqlalchemy import text
+
+        from src.core.database import async_session_factory
+
+        t0 = time.monotonic()
+        async with async_session_factory() as session:
+            await session.execute(text("SELECT 1"))
+        latency = (time.monotonic() - t0) * 1000
+        components["database"] = {"status": "healthy", "latency_ms": round(latency, 1)}
+    except Exception as exc:
+        components["database"] = {"status": "unhealthy", "error": str(exc)}
+
+    # Redis health check
+    try:
+        import time
+
+        from src.core.redis import get_redis
+
+        t0 = time.monotonic()
+        r = get_redis()
+        r.ping()
+        latency = (time.monotonic() - t0) * 1000
+        components["redis"] = {"status": "healthy", "latency_ms": round(latency, 1)}
+    except Exception as exc:
+        components["redis"] = {"status": "unhealthy", "error": str(exc)}
+
+    # Pipeline status (count recent runs from DB)
+    try:
+        from sqlalchemy import text
+
+        from src.core.database import async_session_factory
+
+        async with async_session_factory() as session:
+            result = await session.execute(
+                text(
+                    "SELECT COUNT(DISTINCT connector_name) as total, "
+                    "COUNT(DISTINCT CASE WHEN status = 'OK' THEN connector_name END) as ok_count, "
+                    "MAX(last_run_at) as last_run "
+                    "FROM pipeline_runs "
+                    "WHERE last_run_at > NOW() - INTERVAL '24 hours'"
+                )
+            )
+            row = result.first()
+            if row and row.total > 0:
+                components["pipeline"] = {
+                    "status": "healthy" if row.ok_count == row.total else "degraded",
+                    "last_run": row.last_run.isoformat() if row.last_run else None,
+                    "connectors_ok": row.ok_count,
+                    "connectors_total": row.total,
+                }
+            else:
+                components["pipeline"] = {
+                    "status": "unknown",
+                    "note": "No pipeline runs in last 24 hours",
+                }
+    except Exception as exc:
+        components["pipeline"] = {"status": "unknown", "error": str(exc)}
+
+    # Agent freshness (check agent_reports table)
+    try:
+        from sqlalchemy import text
+
+        from src.core.database import async_session_factory
+
+        async with async_session_factory() as session:
+            result = await session.execute(
+                text(
+                    "SELECT COUNT(DISTINCT agent_id) as total, "
+                    "COUNT(DISTINCT CASE WHEN created_at > NOW() - INTERVAL '24 hours' "
+                    "  THEN agent_id END) as fresh, "
+                    "EXTRACT(EPOCH FROM (NOW() - MIN(created_at))) / 3600 as oldest_hours "
+                    "FROM agent_reports "
+                    "WHERE created_at > NOW() - INTERVAL '7 days'"
+                )
+            )
+            row = result.first()
+            if row and row.total > 0:
+                components["agents"] = {
+                    "status": "healthy" if row.fresh >= 3 else "degraded",
+                    "agents_fresh": row.fresh or 0,
+                    "agents_total": row.total or 0,
+                    "oldest_report_age_hours": round(row.oldest_hours, 1) if row.oldest_hours else None,
+                }
+            else:
+                components["agents"] = {
+                    "status": "unknown",
+                    "note": "No agent reports found in last 7 days",
+                }
+    except Exception as exc:
+        components["agents"] = {"status": "unknown", "error": str(exc)}
+
+    # Risk status (quick VaR check)
+    try:
+        from src.api.routes.risk_api import _load_portfolio_returns
+
+        returns = _load_portfolio_returns()
+        from src.risk.var_calculator import VaRCalculator
+
+        calc = VaRCalculator()
+        vr = calc.calculate(returns, "historical")
+        components["risk"] = {
             "status": "healthy",
-            "last_run": "2026-02-23T06:03:00Z",
-            "connectors_ok": 6,
-            "connectors_total": 6,
-        },
-        "agents": {
-            "status": "healthy",
-            "agents_fresh": 5,
-            "agents_total": 5,
-            "oldest_report_age_hours": 18.5,
-        },
-        "risk": {
-            "status": "healthy",
-            "var_95": 0.032,
-            "drawdown": 0.018,
-            "limits_breached": 0,
-        },
-    }
+            "var_95": round(vr.var_95, 6),
+            "n_observations": vr.n_observations,
+        }
+    except Exception as exc:
+        components["risk"] = {"status": "unknown", "error": str(exc)}
 
     # Determine overall status
     statuses = [c["status"] for c in components.values()]
