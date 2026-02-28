@@ -132,11 +132,17 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
     )
 
 
-def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarray, np.ndarray]:
+def _load_covariance_from_market_data(
+    instruments: list[str],
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """Load covariance matrix from actual market data.
 
-    Returns (covariance_matrix, market_weights) computed from historical returns.
-    Raises RuntimeError if market data is unavailable.
+    Returns (covariance_matrix, market_weights, available_instruments) computed
+    from historical returns.  Only instruments with sufficient data are included,
+    so the caller must use the returned ``available_instruments`` list (not the
+    original input) to stay aligned with the matrix dimensions.
+
+    Raises RuntimeError if fewer than 2 instruments have data.
     """
     try:
         import pandas as pd
@@ -145,6 +151,7 @@ def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarra
 
         loader = PointInTimeDataLoader()
         returns_frames = []
+        available_instruments: list[str] = []
         for ticker in instruments:
             try:
                 md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=504)
@@ -152,16 +159,23 @@ def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarra
                     ret = md["close"].pct_change().dropna()
                     ret.name = ticker
                     returns_frames.append(ret)
+                    available_instruments.append(ticker)
             except Exception:
                 continue
         returns_data = pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
-        if returns_data is not None and len(returns_data) >= 60:
+        if returns_data is not None and len(returns_data) >= 60 and len(available_instruments) >= 2:
             covariance = returns_data.cov().values * 252  # Annualize
             # Market-cap weights proxy: inverse volatility
             vols = np.sqrt(np.diag(covariance))
             inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
             market_weights = inv_vol / inv_vol.sum()
-            return covariance, market_weights
+            logger.info(
+                "covariance_loaded",
+                requested=len(instruments),
+                available=len(available_instruments),
+                missing=[t for t in instruments if t not in available_instruments],
+            )
+            return covariance, market_weights, available_instruments
     except Exception:
         pass
 
@@ -392,8 +406,8 @@ def _build_target_weights() -> dict:
             raise RuntimeError("No instruments available from strategies")
         current_weights = {inst: 0.0 for inst in instruments}
 
-    # Load real covariance from market data
-    covariance, market_weights = _load_covariance_from_market_data(instruments)
+    # Load real covariance from market data — only instruments with data
+    covariance, market_weights, available = _load_covariance_from_market_data(instruments)
 
     # Run Black-Litterman with no views (equilibrium only) as baseline
     bl = BlackLitterman()
@@ -401,14 +415,15 @@ def _build_target_weights() -> dict:
         views=[],
         covariance=covariance,
         market_weights=market_weights,
-        instrument_names=instruments,
+        instrument_names=available,
         regime_clarity=0.7,
     )
 
     # Run mean-variance optimization on posterior returns
     optimizer = PortfolioOptimizer()
-    target_weights = optimizer.optimize_with_bl(bl_result, instruments)
+    target_weights = optimizer.optimize_with_bl(bl_result, available)
 
+    # Include all original instruments — those without data get weight 0
     targets = []
     for inst in instruments:
         tw = target_weights.get(inst, 0.0)
