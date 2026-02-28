@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     fred_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # ANBIMA Data API (OAuth2 client credentials)
+    anbima_client_id: str = ""
+    anbima_client_secret: str = ""
+
     # CORS
     allowed_origins: str = ""  # Comma-separated extra CORS origins
 

@@ -77,6 +77,13 @@ class FredConnector(BaseConnector):
         "US_BEI_5Y": "T5YIE",
         "US_BEI_10Y": "T10YIE",
         "US_FWD_INF_5Y5Y": "T5YIFR",
+        # STRUCTURAL / GAP ESTIMATES (CBO & Fed)
+        "US_GDP_POTENTIAL": "GDPPOT",            # CBO Real Potential GDP (quarterly, Billions)
+        "US_NROU": "NROU",                       # CBO Natural Rate of Unemployment (Long-Term)
+        "US_NROU_ST": "NROUST",                  # CBO Natural Rate of Unemployment (Short-Term)
+        "US_OUTPUT_GAP": "GDPGAP",               # CBO GDP Gap as % of Potential (quarterly, negative = slack)
+        "US_LABOR_FORCE_PART": "CIVPART",         # Civilian Labor Force Participation Rate
+        "US_EMPLOYMENT_POP": "EMRATIO",           # Employment-Population Ratio
         # ACTIVITY & LABOR
         "US_GDP_REAL": "GDPC1",
         "US_NFP_TOTAL": "PAYEMS",

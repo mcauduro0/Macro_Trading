@@ -14,6 +14,9 @@ Phase 3 connectors (7):
 Phase 4 connectors (2):
     FmpTreasuryConnector, TradingEconDiCurveConnector
 
+Global macro connectors (1):
+    OecdSdmxConnector (OECD Economic Outlook structural estimates)
+
 Placeholder connectors (1):
     AnbimaConnector (pending API access)
 """
@@ -42,6 +45,7 @@ from .cftc_cot import CftcCotConnector
 from .fmp_treasury import FmpTreasuryConnector
 from .fred import FredConnector
 from .ibge_sidra import IbgeSidraConnector
+from .oecd_sdmx import OecdSdmxConnector
 from .stn_fiscal import StnFiscalConnector
 from .te_di_curve import TradingEconDiCurveConnector
 from .treasury_gov import TreasuryGovConnector
@@ -70,6 +74,8 @@ __all__ = [
     # Phase 4 connectors
     "FmpTreasuryConnector",
     "TradingEconDiCurveConnector",
+    # Global macro connectors
+    "OecdSdmxConnector",
     # Placeholder connectors
     "AnbimaConnector",
 ]
