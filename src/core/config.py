@@ -101,6 +101,12 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
+    def database_url(self) -> str:
+        """Alias for sync_database_url (backward compatibility)."""
+        return self.sync_database_url
+
+    @computed_field
+    @property
     def redis_url(self) -> str:
         """Redis connection URL."""
         if self.redis_password:
@@ -120,3 +126,8 @@ class Settings(BaseSettings):
 
 # Singleton instance
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """Return the singleton Settings instance."""
+    return settings

@@ -81,15 +81,17 @@ def _collect_aggregated_signals(context: AssetExecutionContext) -> list[dict]:
         # Convert AggregatedSignalV2 objects to dicts for TradeWorkflowService
         signal_dicts = []
         for r in results:
-            signal_dicts.append({
-                "instrument": r.instrument,
-                "asset_class": getattr(r, "asset_class", "UNKNOWN"),
-                "direction": r.direction,
-                "conviction": r.conviction,
-                "signal_source": "aggregator_v2",
-                "strategy_ids": getattr(r, "strategy_ids", []),
-                "suggested_notional_brl": 10_000_000.0,
-            })
+            signal_dicts.append(
+                {
+                    "instrument": r.instrument,
+                    "asset_class": getattr(r, "asset_class", "UNKNOWN"),
+                    "direction": r.direction,
+                    "conviction": r.conviction,
+                    "signal_source": "aggregator_v2",
+                    "strategy_ids": getattr(r, "strategy_ids", []),
+                    "suggested_notional_brl": 10_000_000.0,
+                }
+            )
 
         context.log.info(
             f"Collected {len(signal_dicts)} aggregated signals from "

@@ -174,7 +174,9 @@ class DailyReportGenerator:
         if not market:
             return ReportSection(
                 title="Market Snapshot",
-                content={"status": "Data unavailable — run daily pipeline to collect market data"},
+                content={
+                    "status": "Data unavailable — run daily pipeline to collect market data"
+                },
                 commentary="Market snapshot data not yet collected for this date.",
             )
         return ReportSection(
@@ -191,7 +193,9 @@ class DailyReportGenerator:
         if not regime:
             return ReportSection(
                 title="Regime Assessment",
-                content={"status": "Data unavailable — run cross-asset agent to classify regime"},
+                content={
+                    "status": "Data unavailable — run cross-asset agent to classify regime"
+                },
                 commentary="Regime classification not yet run for this date.",
             )
         return ReportSection(
@@ -211,7 +215,9 @@ class DailyReportGenerator:
         if not agents:
             return ReportSection(
                 title="Agent Views",
-                content={"status": "Data unavailable — run analytical agents to generate views"},
+                content={
+                    "status": "Data unavailable — run analytical agents to generate views"
+                },
                 commentary="Agent views not yet generated for this date.",
             )
         return ReportSection(
@@ -225,7 +231,9 @@ class DailyReportGenerator:
         if not signals:
             return ReportSection(
                 title="Signal Summary",
-                content={"status": "Data unavailable — run signal aggregation pipeline"},
+                content={
+                    "status": "Data unavailable — run signal aggregation pipeline"
+                },
                 commentary="Signal aggregation not yet run for this date.",
             )
         return ReportSection(
@@ -270,7 +278,9 @@ class DailyReportGenerator:
         if not risk:
             return ReportSection(
                 title="Risk Metrics",
-                content={"status": "Data unavailable — run risk engine to compute metrics"},
+                content={
+                    "status": "Data unavailable — run risk engine to compute metrics"
+                },
                 commentary="Risk metrics not yet computed for this date.",
             )
         return ReportSection(
@@ -377,10 +387,15 @@ class DailyReportGenerator:
             equity_data = portfolio_section.content.get("equity_curve")
             if equity_data and len(equity_data) >= 5:
                 fig, ax = plt.subplots(figsize=(7, 3))
-                ax.plot(range(len(equity_data)), equity_data, color="#2563eb", linewidth=1.5)
+                ax.plot(
+                    range(len(equity_data)), equity_data, color="#2563eb", linewidth=1.5
+                )
                 ax.fill_between(
-                    range(len(equity_data)), equity_data,
-                    min(equity_data), alpha=0.1, color="#2563eb"
+                    range(len(equity_data)),
+                    equity_data,
+                    min(equity_data),
+                    alpha=0.1,
+                    color="#2563eb",
                 )
                 ax.set_title("Equity Curve (YTD)", fontsize=12)
                 ax.set_ylabel("NAV Index")
@@ -399,7 +414,9 @@ class DailyReportGenerator:
             if var_history and len(var_history) >= 5:
                 fig, ax = plt.subplots(figsize=(7, 2.5))
                 ax.plot(var_history, color="#dc2626", linewidth=1.5, label="VaR 95%")
-                ax.axhline(0.05, color="#d97706", linestyle="--", linewidth=1, label="Limit")
+                ax.axhline(
+                    0.05, color="#d97706", linestyle="--", linewidth=1, label="Limit"
+                )
                 ax.set_title("VaR 95% (60-day)", fontsize=12)
                 ax.legend(fontsize=9)
                 ax.grid(alpha=0.3)

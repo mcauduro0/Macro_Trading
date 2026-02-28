@@ -62,7 +62,9 @@ async def list_strategies():
                 )
                 instruments = list(config.instruments)
             except Exception as exc:
-                logger.debug("strategy_config_extract failed for %s: %s", strategy_id, exc)
+                logger.debug(
+                    "strategy_config_extract failed for %s: %s", strategy_id, exc
+                )
 
             strategies.append(
                 {
@@ -141,7 +143,9 @@ async def _fetch_backtest_result(strategy_id: str) -> dict | None:
                     "equity_curve": [],
                 }
     except Exception as exc:
-        logger.warning("backtest_result_db_unavailable strategy_id=%s: %s", strategy_id, exc)
+        logger.warning(
+            "backtest_result_db_unavailable strategy_id=%s: %s", strategy_id, exc
+        )
     return None
 
 
@@ -304,7 +308,9 @@ async def get_latest_signal(strategy_id: str):
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("signal_latest failed strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        logger.error(
+            "signal_latest failed strategy_id=%s: %s", strategy_id, exc, exc_info=True
+        )
         raise HTTPException(
             status_code=503,
             detail=f"Signal generation failed for '{strategy_id}': {exc}. "
@@ -364,7 +370,12 @@ async def get_signal_history(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("signal_history_db error strategy_id=%s: %s", strategy_id, exc, exc_info=True)
+        logger.error(
+            "signal_history_db error strategy_id=%s: %s",
+            strategy_id,
+            exc,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=503,
             detail=f"Signal history unavailable: {exc}. "

@@ -119,7 +119,9 @@ async def get_pipeline_status():
                     {
                         "connector": row.connector_name,
                         "status": row.status or "UNKNOWN",
-                        "last_run": row.last_run_at.isoformat() if row.last_run_at else None,
+                        "last_run": (
+                            row.last_run_at.isoformat() if row.last_run_at else None
+                        ),
                         "last_run_age": age_seconds,
                         "duration_seconds": row.duration_seconds,
                         "records_fetched": row.records_fetched,
@@ -128,13 +130,23 @@ async def get_pipeline_status():
     except Exception as exc:
         logger.warning("pipeline_status_db_unavailable: %s", exc)
         # Return honest status instead of fake data
-        from src.connectors import base
 
         known_connectors = [
-            "bcb_sgs", "fred", "yahoo", "bcb_ptax", "b3_market_data",
-            "treasury_gov", "ibge_sidra", "oecd_sdmx", "cftc_cot",
-            "anbima", "bcb_focus", "bcb_fx_flow", "stn_fiscal",
-            "fmp_treasury", "te_di_curve",
+            "bcb_sgs",
+            "fred",
+            "yahoo",
+            "bcb_ptax",
+            "b3_market_data",
+            "treasury_gov",
+            "ibge_sidra",
+            "oecd_sdmx",
+            "cftc_cot",
+            "anbima",
+            "bcb_focus",
+            "bcb_fx_flow",
+            "stn_fiscal",
+            "fmp_treasury",
+            "te_di_curve",
         ]
         for name in known_connectors:
             connectors.append(
@@ -266,7 +278,9 @@ async def get_system_health():
                     "status": "healthy" if row.fresh >= 3 else "degraded",
                     "agents_fresh": row.fresh or 0,
                     "agents_total": row.total or 0,
-                    "oldest_report_age_hours": round(row.oldest_hours, 1) if row.oldest_hours else None,
+                    "oldest_report_age_hours": (
+                        round(row.oldest_hours, 1) if row.oldest_hours else None
+                    ),
                 }
             else:
                 components["agents"] = {

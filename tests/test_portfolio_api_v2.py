@@ -10,19 +10,204 @@ Covers:
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.api.routes.portfolio_api import router
 
+# ---------------------------------------------------------------------------
+# Synthetic test data
+# ---------------------------------------------------------------------------
+
+_RNG = np.random.RandomState(42)
+_FAKE_POSITIONS = [
+    {
+        "instrument": "IBOV_FUT",
+        "direction": "LONG",
+        "weight": 0.3,
+        "contributing_strategy_ids": ["EQ_01"],
+        "asset_class": "EQUITY",
+    },
+    {
+        "instrument": "DI_PRE",
+        "direction": "SHORT",
+        "weight": -0.2,
+        "contributing_strategy_ids": ["RATES_01"],
+        "asset_class": "RATES",
+    },
+    {
+        "instrument": "USDBRL",
+        "direction": "SHORT",
+        "weight": -0.15,
+        "contributing_strategy_ids": ["FX_01"],
+        "asset_class": "FX",
+    },
+]
+_FAKE_RETURNS = _RNG.normal(0.0005, 0.012, 252)
+
+_FAKE_TARGET_DATA = {
+    "targets": [
+        {
+            "instrument": "IBOV_FUT",
+            "direction": "LONG",
+            "target_weight": 0.25,
+            "current_weight": 0.3,
+            "sizing_method": "risk_parity",
+        },
+        {
+            "instrument": "DI_PRE",
+            "direction": "SHORT",
+            "target_weight": -0.15,
+            "current_weight": -0.2,
+            "sizing_method": "risk_parity",
+        },
+        {
+            "instrument": "USDBRL",
+            "direction": "SHORT",
+            "target_weight": -0.10,
+            "current_weight": -0.15,
+            "sizing_method": "risk_parity",
+        },
+    ],
+    "optimization": {
+        "method": "black_litterman",
+        "regime_clarity": 0.75,
+        "constraints": {
+            "max_position_weight": 0.30,
+            "max_leverage": 2.0,
+        },
+    },
+}
+
+_FAKE_REBALANCE_DATA = {
+    "trades": [
+        {
+            "instrument": "IBOV_FUT",
+            "direction": "SELL",
+            "current_weight": 0.3,
+            "target_weight": 0.25,
+            "trade_weight": -0.05,
+            "trade_notional": -50000.0,
+        },
+        {
+            "instrument": "DI_PRE",
+            "direction": "BUY",
+            "current_weight": -0.2,
+            "target_weight": -0.15,
+            "trade_weight": 0.05,
+            "trade_notional": 50000.0,
+        },
+        {
+            "instrument": "USDBRL",
+            "direction": "BUY",
+            "current_weight": -0.15,
+            "target_weight": -0.10,
+            "trade_weight": 0.05,
+            "trade_notional": 50000.0,
+        },
+    ],
+    "should_rebalance": True,
+    "trigger_reason": "position_drift",
+    "estimated_cost": 75.0,
+}
+
+_FAKE_ATTRIBUTION_DATA = {
+    "attribution": [
+        {
+            "instrument": "IBOV_FUT",
+            "strategies": [
+                {
+                    "strategy_id": "EQ_01",
+                    "contribution_weight": 1.0,
+                    "contribution_pnl": 15000.0,
+                }
+            ],
+        },
+        {
+            "instrument": "DI_PRE",
+            "strategies": [
+                {
+                    "strategy_id": "RATES_01",
+                    "contribution_weight": 1.0,
+                    "contribution_pnl": -5000.0,
+                }
+            ],
+        },
+    ],
+    "total_pnl": 10000.0,
+    "by_strategy": {"EQ_01": 15000.0, "RATES_01": -5000.0},
+}
+
+_PORTFOLIO_MODULE = "src.api.routes.portfolio_api"
+
+
+def _make_mock_data_loader():
+    """Create a mock PointInTimeDataLoader."""
+    mock_loader = MagicMock()
+    dates = pd.date_range(end="2026-02-28", periods=253, freq="B", tz="UTC")
+    prices = 100 * np.exp(np.cumsum(_RNG.normal(0.0005, 0.012, 253)))
+    mock_df = pd.DataFrame(
+        {
+            "open": prices * 0.999,
+            "high": prices * 1.005,
+            "low": prices * 0.995,
+            "close": prices,
+            "volume": _RNG.randint(1000, 100000, 253),
+            "adjusted_close": prices,
+        },
+        index=dates,
+    )
+    mock_loader.get_market_data.return_value = mock_df
+    return mock_loader
+
 
 @pytest.fixture
 def client() -> TestClient:
-    """TestClient with portfolio router mounted."""
+    """TestClient with portfolio router mounted and data loaders mocked."""
     app = FastAPI()
     app.include_router(router, prefix="/api/v1")
-    return TestClient(app)
+    mock_loader = _make_mock_data_loader()
+    with (
+        patch(
+            f"{_PORTFOLIO_MODULE}._build_portfolio_positions",
+            return_value=_FAKE_POSITIONS,
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._load_portfolio_returns_for_risk",
+            return_value=_FAKE_RETURNS,
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._load_pms_book",
+            side_effect=RuntimeError("No PMS"),
+        ),
+        patch(
+            "src.agents.data_loader.PointInTimeDataLoader",
+            return_value=mock_loader,
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._load_current_weights",
+            return_value={"IBOV_FUT": 0.3, "DI_PRE": -0.2, "USDBRL": -0.15},
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._build_target_weights",
+            return_value=_FAKE_TARGET_DATA,
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._build_rebalance_trades",
+            return_value=_FAKE_REBALANCE_DATA,
+        ),
+        patch(
+            f"{_PORTFOLIO_MODULE}._build_attribution",
+            return_value=_FAKE_ATTRIBUTION_DATA,
+        ),
+        TestClient(app) as c,
+    ):
+        yield c
 
 
 # ---------------------------------------------------------------------------

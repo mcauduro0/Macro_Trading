@@ -119,7 +119,14 @@ class TestV2EndpointsReturn200:
     @patch(
         "src.api.routes.strategies_api._fetch_backtest_result",
         new_callable=AsyncMock,
-        return_value=None,
+        return_value={
+            "strategy_id": "RATES_BR_01",
+            "sharpe_ratio": 1.25,
+            "annualized_return": 0.12,
+            "max_drawdown": -0.08,
+            "win_rate": 0.55,
+            "profit_factor": 1.8,
+        },
     )
     def test_strategy_backtest(self, mock_fetch, client):
         resp = client.get("/api/v1/strategies/RATES_BR_01/backtest")
