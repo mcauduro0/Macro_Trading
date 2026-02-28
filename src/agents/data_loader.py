@@ -380,6 +380,10 @@ class PointInTimeDataLoader:
     ) -> pd.DataFrame:
         """Load the history of a single curve tenor point.
 
+        Uses exact tenor match first.  If no data is found, finds the
+        closest available tenor within 20% tolerance (handles DI_PRE
+        tenors that differ from canonical 252/504/1260/2520).
+
         Args:
             curve_id: Curve identifier.
             tenor_days: Target tenor in days (e.g. ``365`` for 1Y).
@@ -412,6 +416,49 @@ class PointInTimeDataLoader:
         session = sync_session_factory()
         try:
             rows = session.execute(stmt).all()
+
+            # Fuzzy tenor fallback: find closest available tenor within 20%
+            if not rows:
+                distinct_tenors_stmt = (
+                    select(func.distinct(CurveData.tenor_days))
+                    .where(
+                        and_(
+                            CurveData.curve_id == curve_id,
+                            CurveData.curve_date <= as_of_date,
+                            CurveData.curve_date >= start,
+                        )
+                    )
+                )
+                available = [
+                    int(r[0])
+                    for r in session.execute(distinct_tenors_stmt).all()
+                ]
+                if available:
+                    closest = min(available, key=lambda t: abs(t - tenor_days))
+                    tolerance = max(30, int(tenor_days * 0.20))
+                    if abs(closest - tenor_days) <= tolerance:
+                        self.log.info(
+                            "curve_history_fuzzy_tenor",
+                            curve_id=curve_id,
+                            requested=tenor_days,
+                            actual=closest,
+                        )
+                        fuzzy_stmt = (
+                            select(
+                                CurveData.curve_date.label("date"),
+                                CurveData.rate,
+                            )
+                            .where(
+                                and_(
+                                    CurveData.curve_id == curve_id,
+                                    CurveData.tenor_days == closest,
+                                    CurveData.curve_date <= as_of_date,
+                                    CurveData.curve_date >= start,
+                                )
+                            )
+                            .order_by(CurveData.curve_date)
+                        )
+                        rows = session.execute(fuzzy_stmt).all()
         finally:
             session.close()
 

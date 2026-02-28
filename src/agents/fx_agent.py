@@ -590,7 +590,8 @@ class FxEquilibriumAgent(BaseAgent):
             as_of_date,
             lookback_days=5475,
         )
-        # UST 5Y history (for BEER real rate diff — may be None)
+        # UST 5Y history (for BEER real rate diff)
+        # Primary: curve_data from Treasury.gov connector
         _safe_load(
             "ust_5y_history",
             self.loader.get_curve_history,
@@ -599,6 +600,21 @@ class FxEquilibriumAgent(BaseAgent):
             as_of_date,
             lookback_days=5475,
         )
+        # Fallback: FRED DGS5 when Treasury.gov curve data is unavailable
+        ust_5y = data.get("ust_5y_history")
+        if ust_5y is None or ust_5y.empty:
+            self.log.info("ust_curve_empty_using_fred_fallback")
+            _safe_load(
+                "_fred_ust_5y",
+                self.loader.get_macro_series,
+                "FRED-DGS5",
+                as_of_date,
+                lookback_days=5475,
+            )
+            fred_ust = data.get("_fred_ust_5y")
+            if fred_ust is not None and not fred_ust.empty and "value" in fred_ust.columns:
+                # Reshape FRED macro series to match curve_history format (date, rate)
+                data["ust_5y_history"] = fred_ust[["value"]].rename(columns={"value": "rate"})
         # BCB FX flow commercial + financial
         _safe_load(
             "bcb_flow",

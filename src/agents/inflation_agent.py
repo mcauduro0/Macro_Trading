@@ -55,6 +55,8 @@ class InflationAgent(BaseAgent):
     _IPCA_INDUSTRIAL = "BCB-10844"
     _IPCA_DIFFUSION = "BCB-21379"
     _IBC_BR = "BCB-24363"
+    _BR_UNEMPLOYMENT = "BCB-24369"    # PNAD unemployment rate (%)
+    _BR_CAPACITY_UTIL = "BCB-1344"    # NUCI capacity utilization (%)
 
     _COMPONENTS = {
         "food_home": "BCB-1637",
@@ -79,6 +81,9 @@ class InflationAgent(BaseAgent):
     _US_BREAKEVEN_10Y = "FRED-T10YIE"
     _US_MICHIGAN_1Y = "FRED-MICH"
     _US_MICHIGAN_5Y = "FRED-MICH5YR"
+    _US_OUTPUT_GAP = "FRED-GDPGAP"    # CBO output gap (% of potential)
+    _US_NROU = "FRED-NROU"            # CBO natural rate of unemployment
+    _US_UNEMP = "FRED-UNRATE"         # US unemployment rate
 
     # Market data instruments
     _USDBRL = "USDBRL"
@@ -130,11 +135,11 @@ class InflationAgent(BaseAgent):
         # IPCA headline (MoM series)
         ipca = _safe_macro(self._IPCA_HEADLINE)
 
-        # IPCA cores
+        # IPCA cores — 10Y lookback for Phillips OLS rolling window (120 months)
         ipca_cores = {
-            "smoothed": _safe_macro(self._IPCA_CORE_SMOOTHED),
-            "trimmed": _safe_macro(self._IPCA_CORE_TRIMMED),
-            "ex_fe": _safe_macro(self._IPCA_CORE_EX_FE),
+            "smoothed": _safe_macro(self._IPCA_CORE_SMOOTHED, lookback=lookback_10y),
+            "trimmed": _safe_macro(self._IPCA_CORE_TRIMMED, lookback=lookback_10y),
+            "ex_fe": _safe_macro(self._IPCA_CORE_EX_FE, lookback=lookback_10y),
         }
 
         # IPCA 9 components
@@ -173,6 +178,15 @@ class InflationAgent(BaseAgent):
 
         # IBC-Br (10Y lookback for HP filter and OLS)
         ibc_br = _safe_macro(self._IBC_BR, lookback=lookback_10y)
+
+        # BR labor market / activity (10Y lookback for HP trend)
+        br_unemployment = _safe_macro(self._BR_UNEMPLOYMENT, lookback=lookback_10y)
+        br_capacity_util = _safe_macro(self._BR_CAPACITY_UTIL, lookback=lookback_10y)
+
+        # US structural gap estimates (CBO, quarterly — 10Y lookback)
+        us_output_gap = _safe_macro(self._US_OUTPUT_GAP, lookback=lookback_10y)
+        us_nrou = _safe_macro(self._US_NROU, lookback=lookback_10y)
+        us_unemp = _safe_macro(self._US_UNEMP, lookback=lookback_5y)
 
         # Market data
         usdbrl = _safe_market(self._USDBRL)
@@ -216,11 +230,16 @@ class InflationAgent(BaseAgent):
             "ipca_diffusion": ipca_diffusion,
             "focus": focus,
             "ibc_br": ibc_br,
+            "br_unemployment": br_unemployment,
+            "br_capacity_util": br_capacity_util,
             "usdbrl": usdbrl,
             "crb": crb,
             "us_cpi": us_cpi,
             "us_pce": us_pce,
             "us_pce_supercore": us_pce_supercore,
+            "us_output_gap": us_output_gap,
+            "us_nrou": us_nrou,
+            "us_unemp": us_unemp,
             "us_breakevens": us_breakevens,
             "us_michigan": us_michigan,
         }
@@ -494,8 +513,12 @@ class PhillipsCurveModel:
     """Expectations-augmented OLS Phillips Curve on a rolling 10-year window.
 
     Fits:
-        core_inflation = α + β1*expectations_12m + β2*output_gap
+        core_inflation = α + β1*expectations_12m + β2*composite_activity_gap
                        + β3*usdbrl_yoy + β4*crb_yoy
+
+    The composite_activity_gap blends IBC-Br output gap (40%),
+    unemployment gap (35%), and capacity utilization gap (25%) when
+    available, falling back gracefully to output_gap alone.
 
     on the trailing WINDOW monthly observations.  Predicts 12M core
     inflation and generates a LONG/SHORT signal vs the BCB target.
@@ -534,7 +557,11 @@ class PhillipsCurveModel:
             # Use trailing WINDOW rows
             window_df = ols_df.iloc[-self.WINDOW :]
             y = window_df["core_yoy"]
-            x_cols = ["expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]
+
+            # Prefer composite_activity_gap (blends output gap + unemployment + capacity)
+            # Fall back to output_gap if composite not available
+            gap_col = "composite_activity_gap" if "composite_activity_gap" in window_df.columns else "output_gap"
+            x_cols = ["expectations_12m", gap_col, "usdbrl_yoy", "crb_yoy"]
 
             # Fill missing regressors with column means (allow partial obs)
             X = window_df[x_cols].copy()

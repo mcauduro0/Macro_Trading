@@ -59,6 +59,23 @@ class TaylorRuleModel:
     GAP_FLOOR = 1.0     # 100bps floor — locked per CONTEXT.md
     MODERATE_BAND = 1.5  # 150bps — above this → STRONG
 
+    @staticmethod
+    def _classify_gap_source(composite_gap: Any, ibc_gap: Any) -> str:
+        """Return a label for which gap measure was used."""
+        _is_valid_composite = (
+            composite_gap is not None
+            and not (isinstance(composite_gap, float) and np.isnan(composite_gap))
+        )
+        _is_valid_ibc = (
+            ibc_gap is not None
+            and not (isinstance(ibc_gap, float) and np.isnan(ibc_gap))
+        )
+        if _is_valid_composite:
+            return "composite"
+        if _is_valid_ibc:
+            return "ibc_br"
+        return "neutral"
+
     def run(self, features: dict, r_star: float, as_of_date: date) -> AgentSignal:
         """Compute Taylor Rule implied rate and generate policy gap signal.
 
@@ -85,9 +102,9 @@ class TaylorRuleModel:
                 metadata={"reason": reason},
             )
 
-        # Validate required features
-        required = ("focus_ipca_12m", "ibc_br_output_gap", "policy_inertia", "selic_target")
-        for key in required:
+        # Validate hard-required features (output gap has neutral fallback)
+        hard_required = ("focus_ipca_12m", "selic_target")
+        for key in hard_required:
             val = features.get(key)
             if val is None or (isinstance(val, float) and np.isnan(val)):
                 return _no_signal(f"missing_feature:{key}")
@@ -95,9 +112,24 @@ class TaylorRuleModel:
             return _no_signal("r_star_nan")
 
         focus_ipca = features["focus_ipca_12m"]
-        output_gap = features["ibc_br_output_gap"]
-        inertia = features["policy_inertia"]
         selic = features["selic_target"]
+
+        # Output gap: prefer composite_activity_gap (blends IBC-Br + unemployment + NUCI)
+        # Fall back to IBC-Br output_gap alone, then 0.0 (neutral)
+        composite_gap = features.get("composite_activity_gap")
+        ibc_gap = features.get("ibc_br_output_gap")
+        if composite_gap is not None and not (isinstance(composite_gap, float) and np.isnan(composite_gap)):
+            output_gap = composite_gap
+        elif ibc_gap is not None and not (isinstance(ibc_gap, float) and np.isnan(ibc_gap)):
+            output_gap = ibc_gap
+        else:
+            output_gap = 0.0
+            logger.info("taylor_using_neutral_output_gap")
+
+        # Policy inertia: default 0.0 when unavailable
+        raw_inertia = features.get("policy_inertia")
+        is_valid = raw_inertia is not None and not (isinstance(raw_inertia, float) and np.isnan(raw_inertia))
+        inertia = raw_inertia if is_valid else 0.0
 
         # Taylor Rule: i* = r* + π_e + α(π_e − π*) + β(y_gap) + γ(inertia)
         i_star = (
@@ -140,6 +172,10 @@ class TaylorRuleModel:
                 "i_star": round(i_star, 4),
                 "selic": selic,
                 "r_star": r_star,
+                "output_gap": round(output_gap, 4),
+                "gap_source": self._classify_gap_source(
+                    composite_gap, ibc_gap,
+                ),
                 "policy_gap_bps": round(policy_gap * 100, 1),
             },
         )
@@ -149,13 +185,21 @@ class TaylorRuleModel:
 # KalmanFilterRStar
 # ---------------------------------------------------------------------------
 class KalmanFilterRStar:
-    """State-space estimation of time-varying natural rate r* from Selic history.
+    """Laubach-Williams inspired estimation of time-varying natural rate r*.
 
-    Uses a simple random-walk state model:
-    - State transition: x_t = x_{t-1} + w_t,  w_t ~ N(0, Q)
-    - Observation:      y_t = x_t + v_t,        v_t ~ N(0, R)
+    Two-state Kalman filter:
+    - State 1: r* (natural real interest rate, slow-moving)
+    - State 2: g* (trend real GDP growth, slow-moving)
 
-    Observation y_t = selic_t - expectations_t (proxy for ex-ante real rate).
+    Observation equation (IS curve inspired):
+    - y_t = r*_t + g*_t/2 + v_t
+
+    where y_t = selic_t - expectations_t (ex-ante real rate proxy).
+
+    The g* component is informed by the IBC-Br output gap series: when a
+    persistent negative gap exists, g* should be lower (and r* falls).
+
+    Falls back to simple random-walk if gap_series is unavailable.
 
     Implemented directly with numpy — no external Kalman library required.
     """
@@ -169,20 +213,20 @@ class KalmanFilterRStar:
         expectations_series: pd.Series,
         gap_series: pd.Series,
     ) -> tuple[float, float]:
-        """Estimate the natural rate r* via Kalman filter.
+        """Estimate the natural rate r* via Laubach-Williams Kalman filter.
 
         Args:
             selic_series: Monthly Selic target series (%).
             expectations_series: Monthly Focus IPCA 12M median series (%).
-            gap_series: Monthly IBC-Br output gap series (not used in state eq,
-                reserved for future extension).
+            gap_series: Monthly IBC-Br output gap series (%). Used to inform
+                the trend growth component g*.
 
         Returns:
             Tuple of ``(r_star_estimate, uncertainty)`` where uncertainty is
-            the final filter variance ``P``. If insufficient data, returns
+            the final filter variance ``P[0,0]``. If insufficient data, returns
             ``(DEFAULT_R_STAR, inf)``.
         """
-        # Build observation series
+        # Build observation series (ex-ante real rate)
         try:
             obs_series = (selic_series - expectations_series).dropna()
         except Exception as exc:
@@ -198,25 +242,118 @@ class KalmanFilterRStar:
             )
             return self.DEFAULT_R_STAR, float("inf")
 
-        # Kalman filter parameters
+        # Check if we have gap data for the enhanced 2-state model
+        has_gap = isinstance(gap_series, pd.Series) and len(gap_series) >= self.MIN_OBS
+
+        if has_gap:
+            return self._estimate_lw(obs_series, gap_series)
+        else:
+            return self._estimate_simple(obs_series)
+
+    def _estimate_simple(self, obs_series: pd.Series) -> tuple[float, float]:
+        """Simple random-walk Kalman (fallback when gap data unavailable)."""
         Q = 0.01  # State noise (r* changes slowly)
         R = 1.0   # Observation noise
 
-        # Initialize
         x = 3.0   # Initial r* estimate
         P = 1.0   # Initial uncertainty
 
         for y in obs_series:
             if np.isnan(y):
                 continue
-            # Predict
             P_pred = P + Q
-            # Update
-            K = P_pred / (P_pred + R)  # Kalman gain
+            K = P_pred / (P_pred + R)
             x = x + K * (y - x)
             P = (1 - K) * P_pred
 
         return float(x), float(P)
+
+    def _estimate_lw(
+        self, obs_series: pd.Series, gap_series: pd.Series,
+    ) -> tuple[float, float]:
+        """Laubach-Williams 2-state Kalman filter.
+
+        State vector: [r*, g*]
+        Transition: x_t = F * x_{t-1} + w_t
+            r*_t = r*_{t-1} + w1_t     (random walk)
+            g*_t = g*_{t-1} + w2_t     (random walk)
+
+        Observation: y_t = H * x_t + v_t
+            y_t = r*_t + 0.5 * g*_t + v_t
+
+        When output gap is available, add a second observation:
+            gap_t = c * (y_{t-real} - r*_t) + noise
+        This constrains r* to be consistent with observed economic slack.
+        """
+        # Align series by common index
+        common_idx = obs_series.index.intersection(gap_series.index)
+        if len(common_idx) < self.MIN_OBS:
+            # Fall back: use obs_series alone with simple 2-state
+            common_idx = obs_series.index
+            gap_aligned = None
+        else:
+            gap_aligned = gap_series.reindex(common_idx)
+
+        obs_aligned = obs_series.reindex(common_idx)
+
+        # State: [r*, g*]
+        n_states = 2
+        F = np.eye(n_states)  # Random walk transition
+
+        # Observation matrix: y = [1, 0.5] * [r*, g*]
+        H = np.array([[1.0, 0.5]])
+
+        # Noise covariances
+        Q = np.diag([0.01, 0.005])   # r* varies more than g*
+        R = np.array([[1.0]])         # Observation noise
+
+        # Initial state
+        x = np.array([3.0, 2.0])     # r*=3%, g*=2% (historical BR priors)
+        P = np.eye(n_states) * 2.0   # Moderate initial uncertainty
+
+        for i, idx in enumerate(common_idx):
+            y = obs_aligned.get(idx, np.nan)
+            if np.isnan(y):
+                continue
+
+            # Predict
+            x_pred = F @ x
+            P_pred = F @ P @ F.T + Q
+
+            # Update with real rate observation
+            innovation = y - H @ x_pred
+            S = H @ P_pred @ H.T + R
+            K = P_pred @ H.T @ np.linalg.inv(S)
+            x = x_pred + (K @ innovation).flatten()
+            P = (np.eye(n_states) - K @ H) @ P_pred
+
+            # If gap data available, use it as soft constraint on r*:
+            # Large negative gap → r* should be lower (economy below potential)
+            if gap_aligned is not None:
+                gap_val = gap_aligned.get(idx, np.nan)
+                if not np.isnan(gap_val):
+                    # Soft observation: gap ~ -0.3 * (real_rate - r*)
+                    # This nudges r* toward consistency with output gap
+                    H_gap = np.array([[-0.3, 0.0]])
+                    R_gap = np.array([[4.0]])  # High noise (soft constraint)
+                    innov_gap = gap_val - H_gap @ x
+                    S_gap = H_gap @ P @ H_gap.T + R_gap
+                    K_gap = P @ H_gap.T @ np.linalg.inv(S_gap)
+                    x = x + (K_gap @ innov_gap).flatten()
+                    P = (np.eye(n_states) - K_gap @ H_gap) @ P
+
+        r_star = float(x[0])
+        g_star = float(x[1])
+        uncertainty = float(P[0, 0])
+
+        logger.debug(
+            "lw_rstar_estimate",
+            r_star=round(r_star, 3),
+            g_star=round(g_star, 3),
+            uncertainty=round(uncertainty, 4),
+        )
+
+        return r_star, uncertainty
 
 
 # ---------------------------------------------------------------------------
@@ -593,6 +730,22 @@ class MonetaryPolicyAgent(BaseAgent):
             self.log.warning("di_10y_history_load_failed", error=str(exc))
             data["di_10y_history"] = None
 
+        # BR labor market / activity for enhanced gap estimation
+        _safe_load(
+            "br_unemployment",
+            self.loader.get_macro_series,
+            "BCB-24369",
+            as_of_date,
+            lookback_days=3650,
+        )
+        _safe_load(
+            "br_capacity_util",
+            self.loader.get_macro_series,
+            "BCB-1344",
+            as_of_date,
+            lookback_days=3650,
+        )
+
         # DI curve (raw dict of tenor_days → rate; convert to DataFrame)
         try:
             di_raw = self.loader.get_curve("DI", as_of_date)
@@ -605,11 +758,55 @@ class MonetaryPolicyAgent(BaseAgent):
                     if col:
                         row_data[col] = rate
                     else:
-                        # Closest mapping
+                        # Closest mapping — tolerance scales with tenor
                         for t_days, col_name in sorted(tenor_map.items()):
-                            if abs(tenor_days - t_days) < 30:
-                                row_data[col_name] = rate
+                            tolerance = max(30, int(t_days * 0.15))
+                            if abs(tenor_days - t_days) < tolerance:
+                                if col_name not in row_data:
+                                    row_data[col_name] = rate
                                 break
+
+                # Synthetic long-end DI from NTN-B real + Focus IPCA (Fisher eq.)
+                # B3 DI swap curve only covers up to 12M; for 2Y/5Y/10Y we use:
+                #   nominal_rate ≈ real_rate(NTN-B) + inflation_expectation(Focus)
+                if "tenor_10y" not in row_data or "tenor_5y" not in row_data:
+                    try:
+                        ntnb_raw = self.loader.get_curve("NTN_B_REAL", as_of_date)
+                        if ntnb_raw:
+                            # Get Focus IPCA 12M for inflation add-on
+                            focus_df = data.get("focus")
+                            focus_ipca = np.nan
+                            if focus_df is not None and not focus_df.empty:
+                                if "focus_ipca_12m" in focus_df.columns:
+                                    focus_ipca = float(focus_df["focus_ipca_12m"].dropna().iloc[-1])
+                                elif "value" in focus_df.columns:
+                                    focus_ipca = float(focus_df["value"].dropna().iloc[-1])
+
+                            if not np.isnan(focus_ipca):
+                                ipca_decimal = focus_ipca / 100.0
+                                ntnb_tenor_map = {1825: "tenor_5y", 2520: "tenor_10y"}
+                                for target_days, col_name in ntnb_tenor_map.items():
+                                    if col_name not in row_data:
+                                        # Find closest NTN-B tenor
+                                        closest_tenor = min(
+                                            ntnb_raw.keys(),
+                                            key=lambda t: abs(t - target_days),
+                                        )
+                                        if abs(closest_tenor - target_days) < target_days * 0.30:
+                                            real_rate = ntnb_raw[closest_tenor]
+                                            # Fisher: (1+nom) = (1+real)*(1+infl)
+                                            nominal = (1 + real_rate) * (1 + ipca_decimal) - 1
+                                            row_data[col_name] = nominal
+                                            self.log.info(
+                                                "synthetic_di_from_ntnb",
+                                                tenor=col_name,
+                                                real_rate=round(real_rate, 4),
+                                                focus_ipca=round(focus_ipca, 2),
+                                                nominal=round(nominal, 4),
+                                            )
+                    except Exception as ntnb_exc:
+                        self.log.warning("ntnb_fallback_failed", error=str(ntnb_exc))
+
                 data["di_curve"] = pd.DataFrame([row_data]) if row_data else pd.DataFrame()
             else:
                 data["di_curve"] = pd.DataFrame()
@@ -623,7 +820,7 @@ class MonetaryPolicyAgent(BaseAgent):
         _safe_load("pce_core", self.loader.get_macro_series, "FRED-PCEPILFE", as_of_date, lookback_days=1825)
         _safe_load("us_breakeven", self.loader.get_macro_series, "FRED-T10YIE", as_of_date, lookback_days=1825)
 
-        # UST curve
+        # UST curve — primary: Treasury.gov curve data
         try:
             ust_raw = self.loader.get_curve("UST", as_of_date)
             if ust_raw:
@@ -644,6 +841,28 @@ class MonetaryPolicyAgent(BaseAgent):
         except Exception as exc:
             self.log.warning("ust_curve_load_failed", error=str(exc))
             data["ust_curve"] = pd.DataFrame()
+
+        # UST curve — fallback: FRED DGS series when Treasury.gov is empty
+        ust_df = data.get("ust_curve")
+        if ust_df is None or ust_df.empty:
+            self.log.info("ust_curve_empty_using_fred_fallback")
+            fred_map = {
+                "ust_2y": "FRED-DGS2",
+                "ust_5y": "FRED-DGS5",
+                "ust_10y": "FRED-DGS10",
+            }
+            ust_row = {}
+            for col_name, fred_code in fred_map.items():
+                try:
+                    fred_df = self.loader.get_macro_series(fred_code, as_of_date, lookback_days=30)
+                    if fred_df is not None and not fred_df.empty and "value" in fred_df.columns:
+                        # FRED DGS series are in percentage (e.g. 4.35);
+                        # store as-is — feature engine normalizes to pct
+                        ust_row[col_name] = float(fred_df["value"].dropna().iloc[-1])
+                except Exception:
+                    pass
+            if ust_row:
+                data["ust_curve"] = pd.DataFrame([ust_row])
 
         return data
 

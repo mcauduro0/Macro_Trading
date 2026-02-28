@@ -130,12 +130,17 @@ class FxFeatureEngine:
             if di_curve_hist is not None and not di_curve_hist.empty and "rate" in di_curve_hist.columns:
                 _s = di_curve_hist["rate"].copy()
                 _s.index = self._tz_naive(_s.index)
-                di_5y_series = _s.resample("ME").last()
+                raw = _s.resample("ME").last()
+                # Curve rates may be decimal (0.135) — convert to pct if needed
+                di_5y_series = raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+
             ust_5y_series: pd.Series | None = None
             if ust_5y_hist is not None and not ust_5y_hist.empty and "rate" in ust_5y_hist.columns:
                 _s = ust_5y_hist["rate"].copy()
                 _s.index = self._tz_naive(_s.index)
-                ust_5y_series = _s.resample("ME").last()
+                raw = _s.resample("ME").last()
+                ust_5y_series = raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+
             focus_ipca_series: pd.Series | None = None
             if focus_ipca_df is not None and not focus_ipca_df.empty and "value" in focus_ipca_df.columns:
                 _s = focus_ipca_df["value"].copy()
@@ -182,13 +187,15 @@ class FxFeatureEngine:
             usdbrl_yoy = features.get("usdbrl_yoy", np.nan)
             di_curve_dict = data.get("di_curve") or {}
 
-            # DI 1Y from curve dict
+            # DI 1Y from curve dict — convert decimal to percentage if needed
             di_1y = np.nan
             if di_curve_dict:
                 target = 252
                 try:
                     closest = min(di_curve_dict.keys(), key=lambda t: abs(t - target))
-                    di_1y = float(di_curve_dict[closest])
+                    raw_rate = float(di_curve_dict[closest])
+                    # Curve rates are decimal (0.135 = 13.5%); other rates are pct
+                    di_1y = raw_rate * 100.0 if raw_rate < 1.0 else raw_rate
                 except Exception:
                     di_1y = np.nan
             features["_di_1y_rate"] = di_1y

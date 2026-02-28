@@ -30,6 +30,8 @@ class InflationFeatureEngine:
     data["ipca_components"]   dict of 9 component DataFrames (MoM)
     data["focus"]             DataFrame: Focus expectations
     data["ibc_br"]            DataFrame: IBC-Br monthly activity index
+    data["br_unemployment"]   DataFrame or None: PNAD unemployment rate (%)
+    data["br_capacity_util"]  DataFrame or None: NUCI capacity utilization (%)
     data["usdbrl"]            DataFrame: USDBRL daily from market_data
     data["crb"]               DataFrame: CRB commodity index from market_data
     data["us_cpi"]            DataFrame: US CPI core
@@ -37,6 +39,9 @@ class InflationFeatureEngine:
     data["us_breakevens"]     DataFrame: breakeven inflation (5Y, 10Y)
     data["us_michigan"]       DataFrame: Michigan survey (1Y, 5Y)
     data["us_pce_supercore"]  DataFrame or None: PCE services ex-housing
+    data["us_output_gap"]     DataFrame or None: CBO US output gap (% of potential)
+    data["us_nrou"]           DataFrame or None: CBO natural rate of unemployment
+    data["us_unemp"]          DataFrame or None: US unemployment rate (UNRATE)
     data["ipca_services"]     DataFrame: services IPCA sub-index
     data["ipca_industrial"]   DataFrame: industrial goods IPCA sub-index
     data["ipca_diffusion"]    DataFrame or None: diffusion index
@@ -64,6 +69,8 @@ class InflationFeatureEngine:
         features.update(self._br_ipca_diffusion(data))
         features.update(self._br_focus(data))
         features.update(self._br_activity(data))
+        features.update(self._br_labor_gap(data))
+        features.update(self._us_activity_gap(data))
         features.update(self._br_fx_passthrough(data))
         features.update(self._br_commodity(data))
         features.update(self._us_cpi_pce(data))
@@ -276,17 +283,129 @@ class InflationFeatureEngine:
 
         out["ibc_br_level"] = float(series.iloc[-1])
 
-        # HP filter requires at least 13 observations for lambda=1600 (monthly)
-        if len(series) >= 13:
+        # HP filter for output gap (lambda=14400 for monthly data,
+        # balances smoothness and responsiveness per Ravn-Uhlig adaptation)
+        if len(series) >= 24:
             try:
-                _cycle, trend = hpfilter(series, lamb=1600)
+                _cycle, trend = hpfilter(series, lamb=14400)
                 trend_val = float(trend.iloc[-1])
                 level_val = out["ibc_br_level"]
                 out["ibc_br_trend"] = trend_val
                 if trend_val != 0:
                     out["ibc_br_output_gap"] = (level_val - trend_val) / trend_val * 100.0
+
+                # Hamilton (2018) filter as robustness check at endpoints:
+                # y_t = β0 + β1*y_{t-h} + ε_t, use h=24 months (2 years ahead)
+                # Residuals ε_t approximate the cyclical component
+                h = 24
+                if len(series) >= h + 24:
+                    y = series.iloc[h:]
+                    x = series.iloc[:-h]
+                    # Align indices
+                    x_vals = x.values[-len(y):]
+                    y_vals = y.values[-len(x_vals):]
+                    if len(y_vals) >= 24:
+                        from numpy.polynomial.polynomial import polyfit
+                        coeffs = polyfit(x_vals, y_vals, deg=1)
+                        hamilton_trend = coeffs[0] + coeffs[1] * float(series.iloc[-1 - h])
+                        if hamilton_trend != 0:
+                            hamilton_gap = (level_val - hamilton_trend) / hamilton_trend * 100.0
+                            out["ibc_br_hamilton_gap"] = float(hamilton_gap)
             except Exception:
                 pass
+
+        return out
+
+    # ------------------------------------------------------------------
+    # BR — Labor market gap (unemployment vs NAIRU proxy)
+    # ------------------------------------------------------------------
+    def _br_labor_gap(self, data: dict) -> dict[str, Any]:
+        """Compute BR unemployment gap and capacity utilization gap.
+
+        Unemployment gap = NAIRU_proxy - actual_unemployment (positive = tight labor)
+        NAIRU proxy: HP trend of the unemployment series (lambda=14400, monthly).
+        Capacity gap = actual_NUCI - HP_trend(NUCI) (positive = overheating).
+        """
+        out: dict[str, Any] = {
+            "br_unemployment_rate": np.nan,
+            "br_unemployment_gap": np.nan,
+            "br_nairu_proxy": np.nan,
+            "br_capacity_util": np.nan,
+            "br_capacity_gap": np.nan,
+        }
+
+        # Unemployment gap
+        unemp_df = data.get("br_unemployment")
+        if unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty:
+            val_col = self._value_col(unemp_df)
+            series = unemp_df[val_col].dropna()
+            if not series.empty:
+                out["br_unemployment_rate"] = float(series.iloc[-1])
+                # HP filter for NAIRU proxy (monthly lambda per Ravn-Uhlig)
+                if len(series) >= 24:
+                    try:
+                        _cycle, trend = hpfilter(series, lamb=14400)
+                        nairu = float(trend.iloc[-1])
+                        out["br_nairu_proxy"] = nairu
+                        # Gap: NAIRU - actual (positive = labor market tight)
+                        out["br_unemployment_gap"] = nairu - float(series.iloc[-1])
+                    except Exception:
+                        pass
+
+        # Capacity utilization gap
+        nuci_df = data.get("br_capacity_util")
+        if nuci_df is not None and isinstance(nuci_df, pd.DataFrame) and not nuci_df.empty:
+            val_col = self._value_col(nuci_df)
+            series = nuci_df[val_col].dropna()
+            if not series.empty:
+                out["br_capacity_util"] = float(series.iloc[-1])
+                if len(series) >= 24:
+                    try:
+                        _cycle, trend = hpfilter(series, lamb=14400)
+                        trend_val = float(trend.iloc[-1])
+                        # Gap: actual - trend (positive = above potential)
+                        out["br_capacity_gap"] = float(series.iloc[-1]) - trend_val
+                    except Exception:
+                        pass
+
+        return out
+
+    # ------------------------------------------------------------------
+    # US — Activity gap (CBO output gap + unemployment gap)
+    # ------------------------------------------------------------------
+    def _us_activity_gap(self, data: dict) -> dict[str, Any]:
+        """Compute US output gap and unemployment gap from CBO estimates.
+
+        If CBO GDPGAP is available, use it directly.
+        If CBO NROU is available, compute unemployment gap = NROU - UNRATE.
+        """
+        out: dict[str, Any] = {
+            "us_output_gap": np.nan,
+            "us_unemployment_gap": np.nan,
+            "us_nrou": np.nan,
+        }
+
+        # CBO output gap (direct from FRED GDPGAP)
+        gap_df = data.get("us_output_gap")
+        if gap_df is not None and isinstance(gap_df, pd.DataFrame) and not gap_df.empty:
+            val_col = self._value_col(gap_df)
+            series = gap_df[val_col].dropna()
+            if not series.empty:
+                out["us_output_gap"] = float(series.iloc[-1])
+
+        # CBO NROU + UNRATE → unemployment gap
+        nrou_df = data.get("us_nrou")
+        unemp_df = data.get("us_unemp")
+        if (nrou_df is not None and isinstance(nrou_df, pd.DataFrame) and not nrou_df.empty
+                and unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty):
+            nrou_col = self._value_col(nrou_df)
+            unemp_col = self._value_col(unemp_df)
+            nrou_val = nrou_df[nrou_col].dropna()
+            unemp_val = unemp_df[unemp_col].dropna()
+            if not nrou_val.empty and not unemp_val.empty:
+                out["us_nrou"] = float(nrou_val.iloc[-1])
+                # Gap: NROU - actual (positive = tight labor market)
+                out["us_unemployment_gap"] = float(nrou_val.iloc[-1]) - float(unemp_val.iloc[-1])
 
         return out
 
@@ -519,28 +638,39 @@ class InflationFeatureEngine:
     def _build_ols_data(self, data: dict, features: dict) -> pd.DataFrame:
         """Assemble a monthly DataFrame for the OLS Phillips Curve model.
 
-        Columns: core_yoy, expectations_12m, output_gap, usdbrl_yoy, crb_yoy.
+        Columns: core_yoy, expectations_12m, output_gap, unemployment_gap,
+                 capacity_gap, usdbrl_yoy, crb_yoy.
         Uses the IPCA core smoothed series as the dependent variable.
+        unemployment_gap and capacity_gap are optional enrichments from
+        BR_UNEMPLOYMENT and BR_CAPACITY_UTIL series.
         """
         try:
             # Build a monthly date-indexed DataFrame
             records: dict[pd.Timestamp, dict] = {}
 
-            # Dependent: smoothed core (MoM) -> compute rolling 12M YoY
+            # Dependent: core inflation MoM -> compute rolling 12M YoY
+            # Priority: smoothed P55 (BCB-4466) > trimmed mean (BCB-11427) > ex-F&E (BCB-16122)
             cores = data.get("ipca_cores")
+            core_series: pd.Series | None = None
             if isinstance(cores, dict):
-                smoothed_df = cores.get("smoothed")
-                if smoothed_df is not None and isinstance(smoothed_df, pd.DataFrame) and not smoothed_df.empty:
-                    val_col = self._value_col(smoothed_df)
-                    s = smoothed_df[val_col].dropna()
-                    if len(s) >= 12:
-                        for i in range(12, len(s) + 1):
-                            window = s.iloc[i - 12 : i]
-                            yoy = (np.prod(1.0 + window.values / 100.0) - 1.0) * 100.0
-                            ts = s.index[i - 1]
-                            if ts not in records:
-                                records[ts] = {}
-                            records[ts]["core_yoy"] = float(yoy)
+                for core_key in ("smoothed", "trimmed", "ex_fe"):
+                    core_df = cores.get(core_key)
+                    if core_df is not None and isinstance(core_df, pd.DataFrame) and not core_df.empty:
+                        val_col = self._value_col(core_df)
+                        candidate = core_df[val_col].dropna()
+                        if len(candidate) >= 12:
+                            core_series = candidate
+                            break
+
+            if core_series is not None:
+                s = core_series
+                for i in range(12, len(s) + 1):
+                    window = s.iloc[i - 12 : i]
+                    yoy = (np.prod(1.0 + window.values / 100.0) - 1.0) * 100.0
+                    ts = s.index[i - 1]
+                    if ts not in records:
+                        records[ts] = {}
+                    records[ts]["core_yoy"] = float(yoy)
 
             # Focus 12M expectations
             focus_df = data.get("focus")
@@ -569,6 +699,40 @@ class InflationFeatureEngine:
                             if ts not in records:
                                 records[ts] = {}
                             records[ts]["output_gap"] = gap
+                    except Exception:
+                        pass
+
+            # Unemployment gap time series (NAIRU proxy via HP filter)
+            unemp_df = data.get("br_unemployment")
+            if unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty:
+                val_col = self._value_col(unemp_df)
+                unemp_series = unemp_df[val_col].dropna()
+                if len(unemp_series) >= 24:
+                    try:
+                        _cycle, unemp_trend = hpfilter(unemp_series, lamb=14400)
+                        unemp_gap = unemp_trend - unemp_series  # positive = tight
+                        for i in range(len(unemp_gap)):
+                            ts = unemp_gap.index[i]
+                            if ts not in records:
+                                records[ts] = {}
+                            records[ts]["unemployment_gap"] = float(unemp_gap.iloc[i])
+                    except Exception:
+                        pass
+
+            # Capacity utilization gap time series
+            nuci_df = data.get("br_capacity_util")
+            if nuci_df is not None and isinstance(nuci_df, pd.DataFrame) and not nuci_df.empty:
+                val_col = self._value_col(nuci_df)
+                nuci_series = nuci_df[val_col].dropna()
+                if len(nuci_series) >= 24:
+                    try:
+                        _cycle, nuci_trend = hpfilter(nuci_series, lamb=14400)
+                        nuci_gap = nuci_series - nuci_trend  # positive = overheating
+                        for i in range(len(nuci_gap)):
+                            ts = nuci_gap.index[i]
+                            if ts not in records:
+                                records[ts] = {}
+                            records[ts]["capacity_gap"] = float(nuci_gap.iloc[i])
                     except Exception:
                         pass
 
@@ -607,22 +771,57 @@ class InflationFeatureEngine:
                                     records[ts] = {}
                                 records[ts]["crb_yoy"] = float(val)
 
+            all_cols = [
+                "core_yoy", "expectations_12m", "output_gap",
+                "unemployment_gap", "capacity_gap",
+                "usdbrl_yoy", "crb_yoy",
+            ]
+
             if not records:
-                return pd.DataFrame(
-                    columns=["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]
-                )
+                return pd.DataFrame(columns=all_cols)
 
             df = pd.DataFrame.from_dict(records, orient="index")
             df.index = pd.to_datetime(df.index)
             df = df.sort_index()
-            for col in ["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]:
+            for col in all_cols:
                 if col not in df.columns:
                     df[col] = np.nan
-            return df[["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]]
+
+            # If output_gap is entirely NaN (IBC-Br unavailable or HP filter failed),
+            # fill with 0.0 (neutral gap) so OLS can still run with the other regressors.
+            if df["output_gap"].isna().all():
+                df["output_gap"] = 0.0
+
+            # Build composite activity gap: weighted blend of available gap measures.
+            # This gives the Phillips curve a richer activity signal when multiple
+            # measures are available, while remaining robust when some are missing.
+            has_unemp = not df["unemployment_gap"].isna().all()
+            has_nuci = not df["capacity_gap"].isna().all()
+            if has_unemp or has_nuci:
+                # Composite: 40% output gap + 35% unemployment gap + 25% capacity gap
+                # (renormalized to available measures)
+                gap_components = {"output_gap": 0.40}
+                if has_unemp:
+                    gap_components["unemployment_gap"] = 0.35
+                if has_nuci:
+                    gap_components["capacity_gap"] = 0.25
+                total_w = sum(gap_components.values())
+                composite = pd.Series(0.0, index=df.index)
+                for col, w in gap_components.items():
+                    composite += df[col].fillna(0.0) * (w / total_w)
+                df["composite_activity_gap"] = composite
+            else:
+                df["composite_activity_gap"] = df["output_gap"]
+
+            return df[all_cols + ["composite_activity_gap"]]
 
         except Exception:
             return pd.DataFrame(
-                columns=["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]
+                columns=[
+                    "core_yoy", "expectations_12m", "output_gap",
+                    "unemployment_gap", "capacity_gap",
+                    "usdbrl_yoy", "crb_yoy", "composite_activity_gap",
+                ]
             )
 
     # ------------------------------------------------------------------

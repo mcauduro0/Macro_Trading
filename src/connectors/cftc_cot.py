@@ -75,6 +75,22 @@ class CftcCotConnector(BaseConnector):
         "6L": "102741",   # Brazilian Real (BRL/USD)
     }
 
+    # Financial futures (equity indices, FX, rates) live in the TFF report,
+    # while physical commodities (energy, metals) live in the disaggregated
+    # report.  We fetch both datasets to cover all tracked contracts.
+    _FINANCIAL_CODES: set[str] = {
+        "13874A",  # ES
+        "209742",  # NQ
+        "124603",  # YM
+        "043602",  # TY
+        "020601",  # US
+        "044601",  # FV
+        "042601",  # TU
+        "132741",  # ED
+        "098662",  # DX
+        "102741",  # 6L (BRL)
+    }
+
     # Reverse lookup: code -> short name
     _reverse_contract_map: dict[str, str] = {v: k for k, v in CONTRACT_CODES.items()}
 
@@ -95,26 +111,28 @@ class CftcCotConnector(BaseConnector):
     # ------------------------------------------------------------------
     # Historical ZIP download (generic for both report types)
     # ------------------------------------------------------------------
-    async def _download_zip_report(
-        self, url_path: str, year: int, report_label: str
+    async def _download_historical_zip(
+        self, year: int, report_type: str = "disagg"
     ) -> pd.DataFrame:
         """Download and parse one year of CFTC data from a ZIP archive.
 
         Args:
-            url_path: Relative URL path to the ZIP file.
-            year: Calendar year (for logging).
-            report_label: Human-readable label (e.g. "disagg" or "fin").
+            year: Calendar year to download (e.g., 2023).
+            report_type: ``"disagg"`` for disaggregated (physical commodities)
+                or ``"fin"`` for Traders in Financial Futures (FX, rates, indices).
 
         Returns:
             pandas DataFrame filtered to tracked contracts, or empty DataFrame.
         """
+        url = f"/files/dea/history/fut_{report_type}_txt_{year}.zip"
+
         try:
-            response = await self._request("GET", url_path)
+            response = await self._request("GET", url)
         except Exception as exc:
             self.log.warning(
                 "cftc_zip_download_error",
                 year=year,
-                report=report_label,
+                report_type=report_type,
                 error=str(exc),
             )
             return pd.DataFrame()
@@ -131,7 +149,7 @@ class CftcCotConnector(BaseConnector):
             self.log.warning(
                 "cftc_zip_parse_error",
                 year=year,
-                report=report_label,
+                report_type=report_type,
                 error=str(exc),
             )
             return pd.DataFrame()
@@ -144,7 +162,7 @@ class CftcCotConnector(BaseConnector):
             self.log.warning(
                 "cftc_missing_contract_code_column",
                 year=year,
-                report=report_label,
+                report_type=report_type,
             )
             return pd.DataFrame()
 
@@ -155,146 +173,148 @@ class CftcCotConnector(BaseConnector):
         self.log.info(
             "cftc_historical_year_loaded",
             year=year,
-            report=report_label,
+            report_type=report_type,
             rows_total=len(df),
             rows_tracked=len(filtered),
         )
         return filtered
 
     async def _download_historical_year(self, year: int) -> pd.DataFrame:
-        """Download both disaggregated and financial futures reports for a year.
+        """Download both disaggregated and TFF reports for a year.
 
-        The disaggregated report covers physical commodities (CL, GC, SI),
-        while the financial futures report covers everything else (ES, NQ,
-        TY, DX, 6L, etc.).
-
-        Args:
-            year: Calendar year to download.
+        Physical commodity contracts (CL, GC, SI) are in the disaggregated
+        report while financial futures (ES, TY, 6L, DX, etc.) are in the
+        Traders in Financial Futures (TFF) report.
 
         Returns:
             Combined DataFrame filtered to tracked contracts.
         """
-        dfs: list[pd.DataFrame] = []
-
-        # 1) Disaggregated Futures (physical commodities)
-        disagg_url = f"/files/dea/history/fut_disagg_txt_{year}.zip"
-        df_disagg = await self._download_zip_report(disagg_url, year, "disagg")
-        if not df_disagg.empty:
-            dfs.append(df_disagg)
-
+        disagg_df = await self._download_historical_zip(year, "disagg")
         await asyncio.sleep(0.5)
+        fin_df = await self._download_historical_zip(year, "fin")
 
-        # 2) Traders in Financial Futures (financial contracts)
-        fin_url = f"/files/dea/history/fut_fin_txt_{year}.zip"
-        df_fin = await self._download_zip_report(fin_url, year, "fin")
-        if not df_fin.empty:
-            dfs.append(df_fin)
-
+        dfs = [df for df in [disagg_df, fin_df] if not df.empty]
         if not dfs:
             return pd.DataFrame()
 
-        return pd.concat(dfs, ignore_index=True)
+        combined = pd.concat(dfs, ignore_index=True)
+        # Deduplicate in case a contract appears in both datasets
+        code_col = "CFTC_Contract_Market_Code"
+        date_col = "Report_Date_as_YYYY-MM-DD"
+        if code_col in combined.columns and date_col in combined.columns:
+            combined = combined.drop_duplicates(
+                subset=[code_col, date_col], keep="first"
+            )
+        return combined
 
     # ------------------------------------------------------------------
     # Current-week Socrata CSV
     # ------------------------------------------------------------------
-    async def _fetch_current_week(self) -> pd.DataFrame:
-        """Fetch current-week data from both CFTC Socrata CSV APIs.
+    async def _fetch_socrata_dataset(self, resource_id: str) -> pd.DataFrame:
+        """Fetch a single Socrata dataset and filter to tracked contracts.
 
-        Uses two Socrata endpoints:
-        - 72hh-3qpy: Disaggregated Futures (physical commodities)
-        - jun7-fc8e: Traders in Financial Futures
+        Args:
+            resource_id: Socrata resource identifier (e.g. ``"72hh-3qpy"``).
+
+        Returns:
+            Filtered DataFrame or empty DataFrame on error.
+        """
+        try:
+            async with httpx.AsyncClient(
+                base_url=self.SOCRATA_BASE_URL,
+                timeout=httpx.Timeout(self.TIMEOUT_SECONDS),
+            ) as socrata_client:
+                response = await socrata_client.get(
+                    f"/resource/{resource_id}.csv",
+                    params={"$limit": "5000"},
+                )
+                response.raise_for_status()
+        except Exception as exc:
+            self.log.warning(
+                "cftc_socrata_fetch_error",
+                resource_id=resource_id,
+                error=str(exc),
+            )
+            return pd.DataFrame()
+
+        try:
+            df: pd.DataFrame = await asyncio.to_thread(
+                pd.read_csv, io.StringIO(response.text)
+            )
+        except Exception as exc:
+            self.log.warning(
+                "cftc_socrata_parse_error",
+                resource_id=resource_id,
+                error=str(exc),
+            )
+            return pd.DataFrame()
+
+        if df.empty:
+            return df
+
+        # Socrata may use lowercase column names
+        code_col = "cftc_contract_market_code"
+        if code_col not in df.columns:
+            code_col = "CFTC_Contract_Market_Code"
+            if code_col not in df.columns:
+                self.log.warning(
+                    "cftc_socrata_missing_contract_code_column",
+                    resource_id=resource_id,
+                )
+                return pd.DataFrame()
+
+        df[code_col] = df[code_col].astype(str).str.strip()
+        tracked_codes = set(self.CONTRACT_CODES.values())
+        filtered = df[df[code_col].isin(tracked_codes)].copy()
+
+        # Normalise column names to match ZIP format if needed
+        rename_map: dict[str, str] = {}
+        for col in filtered.columns:
+            upper = col.strip()
+            if upper != col:
+                rename_map[col] = upper
+        if rename_map:
+            filtered = filtered.rename(columns=rename_map)
+
+        # Ensure report date column exists (Socrata may differ)
+        date_col = "Report_Date_as_YYYY-MM-DD"
+        if date_col not in filtered.columns:
+            for candidate in (
+                "report_date_as_yyyy_mm_dd",
+                "report_date_as_yyyy-mm-dd",
+            ):
+                if candidate in filtered.columns:
+                    filtered = filtered.rename(columns={candidate: date_col})
+                    break
+
+        self.log.info(
+            "cftc_socrata_loaded",
+            resource_id=resource_id,
+            rows_total=len(df),
+            rows_tracked=len(filtered),
+        )
+        return filtered
+
+    async def _fetch_current_week(self) -> pd.DataFrame:
+        """Fetch current-week data from CFTC Socrata for both report types.
+
+        Queries both the disaggregated (physical) and TFF (financial)
+        Socrata datasets and combines them.
 
         Returns:
             Combined DataFrame filtered to tracked contracts.
         """
-        socrata_endpoints = [
-            ("/resource/72hh-3qpy.csv", "disagg"),
-            ("/resource/jun7-fc8e.csv", "fin"),
-        ]
+        # 72hh-3qpy = Disaggregated Futures Only
+        # jun7-fc8e = Traders in Financial Futures (TFF)
+        disagg_df = await self._fetch_socrata_dataset("72hh-3qpy")
+        fin_df = await self._fetch_socrata_dataset("jun7-fc8e")
 
-        all_dfs: list[pd.DataFrame] = []
-
-        for endpoint, label in socrata_endpoints:
-            try:
-                async with httpx.AsyncClient(
-                    base_url=self.SOCRATA_BASE_URL,
-                    timeout=httpx.Timeout(self.TIMEOUT_SECONDS),
-                ) as socrata_client:
-                    response = await socrata_client.get(
-                        endpoint,
-                        params={"$limit": "5000"},
-                    )
-                    response.raise_for_status()
-            except Exception as exc:
-                self.log.warning(
-                    "cftc_socrata_fetch_error",
-                    endpoint=label,
-                    error=str(exc),
-                )
-                continue
-
-            try:
-                df: pd.DataFrame = await asyncio.to_thread(
-                    pd.read_csv, io.StringIO(response.text)
-                )
-            except Exception as exc:
-                self.log.warning(
-                    "cftc_socrata_parse_error",
-                    endpoint=label,
-                    error=str(exc),
-                )
-                continue
-
-            if df.empty:
-                continue
-
-            code_col = "cftc_contract_market_code"
-            if code_col not in df.columns:
-                code_col = "CFTC_Contract_Market_Code"
-                if code_col not in df.columns:
-                    self.log.warning(
-                        "cftc_socrata_missing_contract_code_column",
-                        endpoint=label,
-                    )
-                    continue
-
-            df[code_col] = df[code_col].astype(str).str.strip()
-            tracked_codes = set(self.CONTRACT_CODES.values())
-            filtered = df[df[code_col].isin(tracked_codes)].copy()
-
-            # Normalise column names to match ZIP format if needed
-            rename_map: dict[str, str] = {}
-            for col in filtered.columns:
-                upper = col.strip()
-                if upper != col:
-                    rename_map[col] = upper
-            if rename_map:
-                filtered = filtered.rename(columns=rename_map)
-
-            # Ensure report date column exists (Socrata may differ)
-            date_col = "Report_Date_as_YYYY-MM-DD"
-            if date_col not in filtered.columns:
-                for candidate in (
-                    "report_date_as_yyyy_mm_dd",
-                    "report_date_as_yyyy-mm-dd",
-                ):
-                    if candidate in filtered.columns:
-                        filtered = filtered.rename(columns={candidate: date_col})
-                        break
-
-            self.log.info(
-                "cftc_socrata_loaded",
-                endpoint=label,
-                rows_total=len(df),
-                rows_tracked=len(filtered),
-            )
-            all_dfs.append(filtered)
-
-        if not all_dfs:
+        dfs = [df for df in [disagg_df, fin_df] if not df.empty]
+        if not dfs:
             return pd.DataFrame()
 
-        return pd.concat(all_dfs, ignore_index=True)
+        combined = pd.concat(dfs, ignore_index=True)
+        return combined
 
     # ------------------------------------------------------------------
     # Net position computation

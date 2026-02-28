@@ -58,6 +58,8 @@ class MonetaryFeatureEngine:
     - ``selic``: DataFrame with column ``value`` (Selic target %)
     - ``focus``: DataFrame with column ``focus_ipca_12m`` (Focus IPCA 12M median)
     - ``ibc_br``: DataFrame with column ``value`` (IBC-Br index level, monthly)
+    - ``br_unemployment``: DataFrame or None: PNAD unemployment rate (%)
+    - ``br_capacity_util``: DataFrame or None: NUCI capacity utilization (%)
     - ``selic_history``: Full Selic monthly history DataFrame (same structure as selic)
     - ``fed_funds``: DataFrame with column ``value`` (Fed Funds Effective Rate)
     - ``ust_curve``: DataFrame with columns ust_2y, ust_5y, ust_10y
@@ -86,6 +88,7 @@ class MonetaryFeatureEngine:
         features.update(self._compute_di_curve_features(data))
         features.update(self._compute_bcb_policy_features(data, features))
         features.update(self._compute_ibc_br_features(data))
+        features.update(self._compute_labor_activity_features(data, features))
         features.update(self._compute_history_series(data, features))
 
         # US features
@@ -97,7 +100,12 @@ class MonetaryFeatureEngine:
     # BR DI curve shape
     # -----------------------------------------------------------------------
     def _compute_di_curve_features(self, data: dict) -> dict[str, Any]:
-        """Compute DI curve level and shape features."""
+        """Compute DI curve level and shape features.
+
+        DI curve rates from the database are in decimal form (e.g. 0.135 = 13.5%).
+        All features are emitted in **percentage form** (e.g. 13.5) for consistency
+        with Selic target, Focus IPCA, and r_star (all in %).
+        """
         f: dict[str, Any] = {}
         try:
             df = data.get("di_curve")
@@ -107,10 +115,27 @@ class MonetaryFeatureEngine:
             # Latest row
             row = df.iloc[-1]
 
-            di_1y = float(row.get("tenor_1y", np.nan))
-            di_2y = float(row.get("tenor_2y", np.nan))
-            di_5y = float(row.get("tenor_5y", np.nan))
-            di_10y = float(row.get("tenor_10y", np.nan))
+            # Raw values from curve data are in decimal; convert to percentage
+            di_1y_raw = float(row.get("tenor_1y", np.nan))
+            di_2y_raw = float(row.get("tenor_2y", np.nan))
+            di_5y_raw = float(row.get("tenor_5y", np.nan))
+            di_10y_raw = float(row.get("tenor_10y", np.nan))
+
+            # Heuristic: if max rate < 1.0 it's decimal, convert to percentage
+            max_rate = max(
+                r for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]
+                if not np.isnan(r)
+            ) if any(not np.isnan(r) for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]) else np.nan
+
+            if not np.isnan(max_rate) and max_rate < 1.0:
+                scale = 100.0
+            else:
+                scale = 1.0
+
+            di_1y = di_1y_raw * scale
+            di_2y = di_2y_raw * scale
+            di_5y = di_5y_raw * scale
+            di_10y = di_10y_raw * scale
 
             f["di_1y"] = di_1y
             f["di_2y"] = di_2y
@@ -202,16 +227,82 @@ class MonetaryFeatureEngine:
                 raise ValueError("ibc_br is empty")
 
             vals = ibc_df["value"].dropna()
-            if len(vals) < 12:
+            if len(vals) < 24:
                 raise ValueError("insufficient ibc_br observations")
 
-            # HP filter with monthly lambda
-            trend = _hp_filter_trend(vals, lamb=129600.0)
+            # HP filter with monthly lambda=14400 (Ravn-Uhlig adapted,
+            # balances smoothness and endpoint responsiveness for EM data)
+            trend = _hp_filter_trend(vals, lamb=14400.0)
             gap = (vals - trend) / trend * 100.0
             f["ibc_br_output_gap"] = float(gap.iloc[-1]) if len(gap) > 0 else np.nan
         except Exception as exc:
             logger.warning("ibc_br_output_gap_failed: %s", exc)
             f["ibc_br_output_gap"] = np.nan
+        return f
+
+    # -----------------------------------------------------------------------
+    # Labor market & composite activity gap
+    # -----------------------------------------------------------------------
+    def _compute_labor_activity_features(self, data: dict, features: dict) -> dict[str, Any]:
+        """Compute unemployment gap and composite activity gap for Taylor rule.
+
+        Unemployment gap = NAIRU_proxy - actual (positive = tight labor market).
+        Composite gap = 40% output_gap + 35% unemployment_gap + 25% capacity_gap
+        (renormalized to available measures).
+        """
+        f: dict[str, Any] = {
+            "br_unemployment_rate": np.nan,
+            "br_unemployment_gap": np.nan,
+            "br_capacity_util": np.nan,
+            "br_capacity_gap": np.nan,
+            "composite_activity_gap": np.nan,
+        }
+
+        output_gap = features.get("ibc_br_output_gap", np.nan)
+
+        # Unemployment gap (NAIRU proxy via HP trend)
+        try:
+            unemp_df = data.get("br_unemployment")
+            if unemp_df is not None and not unemp_df.empty:
+                vals = unemp_df["value"].dropna()
+                if not vals.empty:
+                    f["br_unemployment_rate"] = float(vals.iloc[-1])
+                    if len(vals) >= 24:
+                        trend = _hp_filter_trend(vals, lamb=14400.0)
+                        nairu = float(trend.iloc[-1])
+                        f["br_unemployment_gap"] = nairu - float(vals.iloc[-1])
+        except Exception as exc:
+            logger.warning("unemployment_gap_failed: %s", exc)
+
+        # Capacity utilization gap
+        try:
+            nuci_df = data.get("br_capacity_util")
+            if nuci_df is not None and not nuci_df.empty:
+                vals = nuci_df["value"].dropna()
+                if not vals.empty:
+                    f["br_capacity_util"] = float(vals.iloc[-1])
+                    if len(vals) >= 24:
+                        trend = _hp_filter_trend(vals, lamb=14400.0)
+                        f["br_capacity_gap"] = float(vals.iloc[-1]) - float(trend.iloc[-1])
+        except Exception as exc:
+            logger.warning("capacity_gap_failed: %s", exc)
+
+        # Composite activity gap: weighted blend of available measures
+        components: dict[str, tuple[float, float]] = {}  # name -> (value, weight)
+        if not np.isnan(output_gap):
+            components["output_gap"] = (output_gap, 0.40)
+        if not np.isnan(f["br_unemployment_gap"]):
+            components["unemployment_gap"] = (f["br_unemployment_gap"], 0.35)
+        if not np.isnan(f["br_capacity_gap"]):
+            components["capacity_gap"] = (f["br_capacity_gap"], 0.25)
+
+        if components:
+            total_w = sum(w for _, w in components.values())
+            composite = sum(v * (w / total_w) for v, w in components.values())
+            f["composite_activity_gap"] = composite
+        elif not np.isnan(output_gap):
+            f["composite_activity_gap"] = output_gap
+
         return f
 
     # -----------------------------------------------------------------------
@@ -254,7 +345,7 @@ class MonetaryFeatureEngine:
             if ibc_df is not None and not ibc_df.empty:
                 vals = ibc_df["value"].dropna()
                 if len(vals) >= 12:
-                    trend = _hp_filter_trend(vals, lamb=129600.0)
+                    trend = _hp_filter_trend(vals, lamb=14400.0)
                     gap_series = (vals - trend) / trend * 100.0
                     f["_ibc_gap_series"] = gap_series
                 else:
@@ -328,14 +419,24 @@ class MonetaryFeatureEngine:
             logger.warning("fed_funds_failed: %s", exc)
             f["fed_funds_rate"] = np.nan
 
-        # UST curve
+        # UST curve — rates from Treasury.gov are decimal; convert to percentage
         try:
             ust_df = data.get("ust_curve")
             if ust_df is not None and not ust_df.empty:
                 row = ust_df.iloc[-1]
-                f["ust_2y"] = float(row.get("ust_2y", np.nan))
-                f["ust_5y"] = float(row.get("ust_5y", np.nan))
-                f["ust_10y"] = float(row.get("ust_10y", np.nan))
+                raw_2y = float(row.get("ust_2y", np.nan))
+                raw_5y = float(row.get("ust_5y", np.nan))
+                raw_10y = float(row.get("ust_10y", np.nan))
+
+                # Heuristic: if max UST rate < 1.0 it's decimal, convert to pct
+                max_ust = max(
+                    r for r in [raw_2y, raw_5y, raw_10y] if not np.isnan(r)
+                ) if any(not np.isnan(r) for r in [raw_2y, raw_5y, raw_10y]) else np.nan
+                ust_scale = 100.0 if (not np.isnan(max_ust) and max_ust < 1.0) else 1.0
+
+                f["ust_2y"] = raw_2y * ust_scale
+                f["ust_5y"] = raw_5y * ust_scale
+                f["ust_10y"] = raw_10y * ust_scale
                 f["ust_slope"] = f["ust_10y"] - f["ust_2y"]
             else:
                 f["ust_2y"] = np.nan
