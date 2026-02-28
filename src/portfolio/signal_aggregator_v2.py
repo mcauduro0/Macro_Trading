@@ -25,7 +25,6 @@ from typing import Optional
 import structlog
 
 from src.core.enums import SignalDirection
-from src.strategies.base import StrategySignal
 
 log = structlog.get_logger(__name__)
 

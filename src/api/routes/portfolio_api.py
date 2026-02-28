@@ -38,6 +38,7 @@ def _envelope(data: Any) -> dict:
 # Data loaders
 # ---------------------------------------------------------------------------
 
+
 def _load_pms_book(as_of: date | None = None) -> dict:
     """Load portfolio book from Position Manager.
 
@@ -119,7 +120,9 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
     )
 
 
-def _load_covariance_from_market_data(instruments: list[str]) -> tuple[np.ndarray, np.ndarray]:
+def _load_covariance_from_market_data(
+    instruments: list[str],
+) -> tuple[np.ndarray, np.ndarray]:
     """Load covariance matrix from actual market data.
 
     Returns (covariance_matrix, market_weights) computed from historical returns.
@@ -351,8 +354,8 @@ def _build_target_weights() -> dict:
         instruments = list(current_weights.keys())
     except RuntimeError:
         # No current positions - use strategy universe
-        from src.strategies import ALL_STRATEGIES
         from src.agents.data_loader import PointInTimeDataLoader
+        from src.strategies import ALL_STRATEGIES
 
         loader = PointInTimeDataLoader()
         instruments_set: set[str] = set()
@@ -430,7 +433,9 @@ async def portfolio_rebalance_trades():
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_rebalance_trades error: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Rebalance computation failed: {exc}")
+        raise HTTPException(
+            status_code=500, detail=f"Rebalance computation failed: {exc}"
+        )
 
 
 def _build_rebalance_trades() -> dict:
