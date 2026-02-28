@@ -63,7 +63,7 @@ class BcbSgsConnector(BaseConnector):
         "BR_IPCA_CORE_MA": 11427,
         "BR_IPCA_CORE_DP": 27839,
         "BR_IPCA_CORE_P55": 4466,
-        "BR_IPCA_CORE_EX_FE": 16122,   # Core ex-food & energy (InflationPersistenceModel)
+        "BR_IPCA_CORE_EX_FE": 16122,  # Core ex-food & energy (InflationPersistenceModel)
         "BR_IPCA_DIFFUSION": 21379,
         "BR_IPCA15_MOM": 7478,
         "BR_INPC_MOM": 188,
@@ -73,8 +73,8 @@ class BcbSgsConnector(BaseConnector):
         "BR_IPC_S_WEEKLY": 7446,
         "BR_IPC_FIPE_WEEKLY": 10764,
         # INFLATION — sub-indices (InflationPersistenceModel)
-        "BR_IPCA_SERVICES": 10841,     # Servicos
-        "BR_IPCA_INDUSTRIAL": 10844,   # Bens Industriais
+        "BR_IPCA_SERVICES": 10841,  # Servicos
+        "BR_IPCA_INDUSTRIAL": 10844,  # Bens Industriais
         # INFLATION — 9 IPCA components (IpcaBottomUpModel)
         "BR_IPCA_COMP_FOOD_HOME": 1637,
         "BR_IPCA_COMP_FOOD_AWAY": 7170,
@@ -188,13 +188,15 @@ class BcbSgsConnector(BaseConnector):
                 if parsed_value is None:
                     continue
 
-                all_records.append({
-                    "observation_date": obs_date,
-                    "value": parsed_value,
-                    "release_time": datetime.now(tz=_SP_TZ),
-                    "revision_number": 0,
-                    "source": self.SOURCE_NAME,
-                })
+                all_records.append(
+                    {
+                        "observation_date": obs_date,
+                        "value": parsed_value,
+                        "release_time": datetime.now(tz=_SP_TZ),
+                        "revision_number": 0,
+                        "source": self.SOURCE_NAME,
+                    }
+                )
 
         return all_records
 
@@ -269,20 +271,24 @@ class BcbSgsConnector(BaseConnector):
         """Ensure a series_metadata row exists for the given series. Returns its id."""
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=str(bcb_code),
-                    name=series_key,
-                    frequency="D",
-                    country="BR",
-                    unit="index",
-                    decimal_separator=".",
-                    date_format="DD/MM/YYYY",
-                    is_revisable=False,
-                    release_timezone="America/Sao_Paulo",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=str(bcb_code),
+                        name=series_key,
+                        frequency="D",
+                        country="BR",
+                        unit="index",
+                        decimal_separator=".",
+                        date_format="DD/MM/YYYY",
+                        is_revisable=False,
+                        release_timezone="America/Sao_Paulo",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

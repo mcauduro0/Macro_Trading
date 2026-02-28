@@ -21,9 +21,7 @@ class DataSource(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     base_url: Mapped[str] = mapped_column(String(500), nullable=False)
     auth_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    rate_limit_per_minute: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True
-    )
+    rate_limit_per_minute: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     default_locale: Mapped[str] = mapped_column(String(10), default="en-US")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)

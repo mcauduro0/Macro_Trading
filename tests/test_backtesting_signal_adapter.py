@@ -9,6 +9,7 @@ Covers:
 
 Uses mock strategies and loaders to keep tests fast and self-contained.
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -188,9 +189,7 @@ class MockV3Strategy:
         self._call_count += 1
         # Alternate LONG/SHORT each month
         direction = (
-            SignalDirection.LONG
-            if self._call_count % 2 == 1
-            else SignalDirection.SHORT
+            SignalDirection.LONG if self._call_count % 2 == 1 else SignalDirection.SHORT
         )
         return [
             StrategySignal(
@@ -228,9 +227,7 @@ class MockV2Strategy:
                 instrument="DI_PRE_365",
                 weight=sign * 0.25,
                 confidence=0.8,
-                direction=(
-                    SignalDirection.LONG if sign > 0 else SignalDirection.SHORT
-                ),
+                direction=(SignalDirection.LONG if sign > 0 else SignalDirection.SHORT),
                 entry_signal="test",
             )
         ]
@@ -263,9 +260,9 @@ class TestV3StrategyBacktest:
         result = engine.run(strategy)
 
         assert isinstance(result, BacktestResult)
-        assert result.total_trades > 0, (
-            f"Expected non-zero trades, got {result.total_trades}"
-        )
+        assert (
+            result.total_trades > 0
+        ), f"Expected non-zero trades, got {result.total_trades}"
         assert result.strategy_id == "MOCK_V3"
 
     def test_v2_strategy_backtest_produces_trades(self):
@@ -279,9 +276,9 @@ class TestV3StrategyBacktest:
         result = engine.run(strategy)
 
         assert isinstance(result, BacktestResult)
-        assert result.total_trades > 0, (
-            f"Expected non-zero trades, got {result.total_trades}"
-        )
+        assert (
+            result.total_trades > 0
+        ), f"Expected non-zero trades, got {result.total_trades}"
         assert result.strategy_id == "MOCK_V2"
 
     def test_v3_strategy_tearsheet_has_valid_metrics(self):
@@ -295,17 +292,17 @@ class TestV3StrategyBacktest:
         result = engine.run(strategy)
 
         # Sharpe must be a finite float
-        assert np.isfinite(result.sharpe_ratio), (
-            f"Sharpe not finite: {result.sharpe_ratio}"
-        )
+        assert np.isfinite(
+            result.sharpe_ratio
+        ), f"Sharpe not finite: {result.sharpe_ratio}"
         # max_drawdown must be <= 0 (negative % or zero)
-        assert result.max_drawdown <= 0, (
-            f"max_drawdown should be <= 0, got {result.max_drawdown}"
-        )
+        assert (
+            result.max_drawdown <= 0
+        ), f"max_drawdown should be <= 0, got {result.max_drawdown}"
         # Equity curve should have entries (at least 2 for meaningful metrics)
-        assert len(result.equity_curve) >= 2, (
-            f"Expected >= 2 equity points, got {len(result.equity_curve)}"
-        )
+        assert (
+            len(result.equity_curve) >= 2
+        ), f"Expected >= 2 equity points, got {len(result.equity_curve)}"
         # Final equity should be positive
         assert result.final_equity > 0
 
@@ -341,9 +338,9 @@ class TestV3StrategyBacktest:
 
         # Portfolio-level total_trades is the aggregate across individual strategies
         aggregate_trades = v2_trades + v3_trades
-        assert aggregate_trades > 0, (
-            f"Expected non-zero aggregate trades, got {aggregate_trades}"
-        )
+        assert (
+            aggregate_trades > 0
+        ), f"Expected non-zero aggregate trades, got {aggregate_trades}"
 
         # Portfolio equity curve should exist
         assert len(pr.equity_curve) >= 2

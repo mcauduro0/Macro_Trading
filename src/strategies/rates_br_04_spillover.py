@@ -42,7 +42,7 @@ RATES_BR_04_CONFIG = StrategyConfig(
 )
 
 # Tenor targets
-_DI_1Y_TENOR = 252   # ~1 year in business days
+_DI_1Y_TENOR = 252  # ~1 year in business days
 _UST_1Y_TENOR = 365  # ~1 year in calendar days
 
 
@@ -93,7 +93,10 @@ class RatesBR04SpilloverStrategy(BaseStrategy):
         """
         # 1. Load DI 1Y history
         di_hist = self.data_loader.get_curve_history(
-            "DI_PRE", _DI_1Y_TENOR, as_of_date, lookback_days=756,
+            "DI_PRE",
+            _DI_1Y_TENOR,
+            as_of_date,
+            lookback_days=756,
         )
         if di_hist.empty:
             self.log.warning("empty_di_history", as_of_date=str(as_of_date))
@@ -101,7 +104,10 @@ class RatesBR04SpilloverStrategy(BaseStrategy):
 
         # 2. Load UST 1Y history
         ust_hist = self.data_loader.get_curve_history(
-            "UST_NOM", _UST_1Y_TENOR, as_of_date, lookback_days=756,
+            "UST_NOM",
+            _UST_1Y_TENOR,
+            as_of_date,
+            lookback_days=756,
         )
         if ust_hist.empty:
             self.log.warning("empty_ust_history", as_of_date=str(as_of_date))
@@ -148,7 +154,11 @@ class RatesBR04SpilloverStrategy(BaseStrategy):
 
         # 6. Generate signal
         return self._generate_spillover_position(
-            z_score, current_spread, weekly_ust_change, weekly_ust_bps, as_of_date,
+            z_score,
+            current_spread,
+            weekly_ust_change,
+            weekly_ust_bps,
+            as_of_date,
         )
 
     def _compute_spread_series(
@@ -166,7 +176,10 @@ class RatesBR04SpilloverStrategy(BaseStrategy):
             Series of spread values (DI - UST), or None if empty.
         """
         combined = di_hist[["rate"]].join(
-            ust_hist[["rate"]], lsuffix="_di", rsuffix="_ust", how="outer",
+            ust_hist[["rate"]],
+            lsuffix="_di",
+            rsuffix="_ust",
+            how="outer",
         )
         # Forward-fill for holiday mismatches
         combined = combined.ffill().dropna()
@@ -255,13 +268,15 @@ class RatesBR04SpilloverStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "z_score": z_score,
-                "current_spread": current_spread,
-                "weekly_ust_change": weekly_ust_change,
-                "weekly_ust_bps": weekly_ust_bps,
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "z_score": z_score,
+                    "current_spread": current_spread,
+                    "weekly_ust_change": weekly_ust_change,
+                    "weekly_ust_bps": weekly_ust_bps,
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         self.log.info(
             "spillover_signal_generated",

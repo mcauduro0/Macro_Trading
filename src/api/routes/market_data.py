@@ -35,9 +35,7 @@ class LatestPrice(BaseModel):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-async def _resolve_instrument_id(
-    session: AsyncSession, ticker: str
-) -> int:
+async def _resolve_instrument_id(session: AsyncSession, ticker: str) -> int:
     """Map a ticker string to the instruments.id, or raise 404."""
     stmt = select(Instrument.id).where(Instrument.ticker == ticker)
     row = (await session.execute(stmt)).scalar_one_or_none()
@@ -90,22 +88,23 @@ async def get_market_data(
     """Return OHLCV history for a single instrument."""
     instrument_id = await _resolve_instrument_id(session, ticker)
 
-    stmt = (
-        select(
-            MarketData.timestamp,
-            MarketData.open,
-            MarketData.high,
-            MarketData.low,
-            MarketData.close,
-            MarketData.volume,
-        )
-        .where(MarketData.instrument_id == instrument_id)
-    )
+    stmt = select(
+        MarketData.timestamp,
+        MarketData.open,
+        MarketData.high,
+        MarketData.low,
+        MarketData.close,
+        MarketData.volume,
+    ).where(MarketData.instrument_id == instrument_id)
 
     if start:
-        stmt = stmt.where(MarketData.timestamp >= datetime.combine(start, datetime.min.time()))
+        stmt = stmt.where(
+            MarketData.timestamp >= datetime.combine(start, datetime.min.time())
+        )
     if end:
-        stmt = stmt.where(MarketData.timestamp <= datetime.combine(end, datetime.max.time()))
+        stmt = stmt.where(
+            MarketData.timestamp <= datetime.combine(end, datetime.max.time())
+        )
 
     stmt = stmt.order_by(MarketData.timestamp.asc())
     rows = (await session.execute(stmt)).all()

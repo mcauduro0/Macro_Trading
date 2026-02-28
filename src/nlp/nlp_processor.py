@@ -259,9 +259,7 @@ class NLPProcessor:
         # Persist if session provided
         if session is not None:
             try:
-                result.documents_persisted = self.persist_results(
-                    processed, session
-                )
+                result.documents_persisted = self.persist_results(processed, session)
             except Exception as exc:
                 result.errors.append(f"Persistence failed: {exc}")
 

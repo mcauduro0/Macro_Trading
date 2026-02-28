@@ -54,6 +54,7 @@ def _get_workflow():
         # Hydrate from DB so in-memory stores have real data
         try:
             from src.pms.db_loader import hydrate_trade_workflow
+
             hydrate_trade_workflow(_workflow)
             logger.info("TradeWorkflowService hydrated from DB (portfolio route)")
         except Exception as exc:
@@ -125,7 +126,8 @@ async def get_positions(
         filtered = [p for p in positions if p["is_open"] == is_open]
         if asset_class:
             filtered = [
-                p for p in filtered
+                p
+                for p in filtered
                 if p.get("asset_class", "").upper() == asset_class.upper()
             ]
 
@@ -181,9 +183,7 @@ async def open_position(
 # ---------------------------------------------------------------------------
 # 4. POST /pms/book/positions/{position_id}/close
 # ---------------------------------------------------------------------------
-@router.post(
-    "/book/positions/{position_id}/close", response_model=PositionResponse
-)
+@router.post("/book/positions/{position_id}/close", response_model=PositionResponse)
 async def close_position(
     position_id: int,
     body: ClosePositionRequest,
@@ -236,7 +236,9 @@ async def update_price(
         wf = _get_workflow()
         position = wf.position_manager._find_position(position_id)
         if position is None:
-            raise HTTPException(status_code=404, detail=f"Position {position_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Position {position_id} not found"
+            )
 
         position["current_price"] = body.price
         position["updated_at"] = datetime.now(tz=timezone.utc)
@@ -324,9 +326,7 @@ async def pnl_equity_curve(
         wf = _get_workflow()
         sd = _parse_date(start_date)
         ed = _parse_date(end_date)
-        timeseries = wf.position_manager.get_pnl_timeseries(
-            start_date=sd, end_date=ed
-        )
+        timeseries = wf.position_manager.get_pnl_timeseries(start_date=sd, end_date=ed)
         return [PnLPointResponse(**point) for point in timeseries]
     except Exception as exc:
         logger.error("%s error: %s", __name__, exc)

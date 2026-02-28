@@ -116,7 +116,8 @@ class Cupom01CipBasisStrategy(BaseStrategy):
         sofr_rate = self.data_loader.get_latest_macro_value("US_SOFR", as_of_date)
         if sofr_rate is None:
             sofr_rate = self.data_loader.get_latest_macro_value(
-                "US_FED_FUNDS", as_of_date,
+                "US_FED_FUNDS",
+                as_of_date,
             )
         if sofr_rate is None:
             self.log.warning("missing_sofr", as_of_date=str(as_of_date))
@@ -127,10 +128,16 @@ class Cupom01CipBasisStrategy(BaseStrategy):
 
         # 7. Load historical basis from curve histories
         di_history = self.data_loader.get_curve_history(
-            "DI_PRE", di_1y, as_of_date, lookback_days=756,
+            "DI_PRE",
+            di_1y,
+            as_of_date,
+            lookback_days=756,
         )
         ust_history = self.data_loader.get_curve_history(
-            "UST_NOM", ust_1y, as_of_date, lookback_days=756,
+            "UST_NOM",
+            ust_1y,
+            as_of_date,
+            lookback_days=756,
         )
 
         if di_history.empty or ust_history.empty:
@@ -138,9 +145,13 @@ class Cupom01CipBasisStrategy(BaseStrategy):
             return []
 
         # Align histories via outer join + forward fill
-        combined = di_history[["rate"]].rename(columns={"rate": "di_rate"}).join(
-            ust_history[["rate"]].rename(columns={"rate": "ust_rate"}),
-            how="inner",
+        combined = (
+            di_history[["rate"]]
+            .rename(columns={"rate": "di_rate"})
+            .join(
+                ust_history[["rate"]].rename(columns={"rate": "ust_rate"}),
+                how="inner",
+            )
         )
 
         if len(combined) < 60:
@@ -151,7 +162,9 @@ class Cupom01CipBasisStrategy(BaseStrategy):
         combined["basis"] = combined["di_rate"] - combined["ust_rate"] - sofr_rate
 
         # 8. Compute z-score of current basis vs 252-day rolling stats
-        hist_window = combined["basis"].tail(252) if len(combined) >= 252 else combined["basis"]
+        hist_window = (
+            combined["basis"].tail(252) if len(combined) >= 252 else combined["basis"]
+        )
         basis_mean = float(hist_window.mean())
         basis_std = float(hist_window.std())
 
@@ -209,15 +222,16 @@ class Cupom01CipBasisStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "cupom_cambial": cupom_cambial,
-                "sofr_rate": sofr_rate,
-                "current_basis": current_basis,
-                "z_score": z_score,
-                "di_tenor": di_1y,
-                "ust_tenor": ust_1y,
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "cupom_cambial": cupom_cambial,
+                    "sofr_rate": sofr_rate,
+                    "current_basis": current_basis,
+                    "z_score": z_score,
+                    "di_tenor": di_1y,
+                    "ust_tenor": ust_1y,
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         return positions
-

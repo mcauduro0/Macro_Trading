@@ -57,15 +57,17 @@ async def portfolio_current(
         gross_leverage = sum(abs(p["weight"]) for p in positions)
         net_leverage = sum(p["weight"] for p in positions)
 
-        return _envelope({
-            "positions": positions,
-            "summary": {
-                "total_positions": total_positions,
-                "net_leverage": round(net_leverage, 4),
-                "gross_leverage": round(gross_leverage, 4),
-            },
-            "as_of_date": str(as_of),
-        })
+        return _envelope(
+            {
+                "positions": positions,
+                "summary": {
+                    "total_positions": total_positions,
+                    "net_leverage": round(net_leverage, 4),
+                    "gross_leverage": round(gross_leverage, 4),
+                },
+                "as_of_date": str(as_of),
+            }
+        )
     except Exception as exc:
         logger.error("portfolio_current error: %s", exc)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -83,23 +85,32 @@ def _build_portfolio_positions(as_of: date) -> list[dict]:
             strategy = strategy_cls(data_loader=data_loader)
             strat_positions = strategy.generate_signals(as_of)
             for pos in strat_positions:
-                direction = pos.direction.value if hasattr(pos.direction, "value") else str(pos.direction)
+                direction = (
+                    pos.direction.value
+                    if hasattr(pos.direction, "value")
+                    else str(pos.direction)
+                )
                 asset_class = (
                     strategy.config.asset_class.value
                     if hasattr(strategy.config.asset_class, "value")
                     else str(strategy.config.asset_class)
                 )
-                positions.append({
-                    "instrument": pos.instrument,
-                    "direction": direction,
-                    "weight": round(pos.weight, 6),
-                    "contributing_strategy_ids": [strategy_id],
-                    "asset_class": asset_class,
-                })
+                positions.append(
+                    {
+                        "instrument": pos.instrument,
+                        "direction": direction,
+                        "weight": round(pos.weight, 6),
+                        "contributing_strategy_ids": [strategy_id],
+                        "asset_class": asset_class,
+                    }
+                )
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(
-                "Strategy %s failed: %s", strategy_id, e,
+                "Strategy %s failed: %s",
+                strategy_id,
+                e,
             )
 
     return positions
@@ -131,9 +142,7 @@ def _build_risk_report() -> dict:
 
     # Compute portfolio returns from current positions
     positions_data = _build_portfolio_positions(date_type.today())
-    weights: dict[str, float] = {
-        p["instrument"]: p["weight"] for p in positions_data
-    }
+    weights: dict[str, float] = {p["instrument"]: p["weight"] for p in positions_data}
     positions: dict[str, float] = dict(weights)
     portfolio_value = 1_000_000.0
 
@@ -162,11 +171,13 @@ def _build_risk_report() -> dict:
     # Serialize stress results
     stress_data = []
     for sr in report.stress_results:
-        stress_data.append({
-            "scenario_name": sr.scenario_name,
-            "portfolio_pnl": round(sr.portfolio_pnl, 2),
-            "portfolio_pnl_pct": round(sr.portfolio_pnl_pct, 6),
-        })
+        stress_data.append(
+            {
+                "scenario_name": sr.scenario_name,
+                "portfolio_pnl": round(sr.portfolio_pnl, 2),
+                "portfolio_pnl_pct": round(sr.portfolio_pnl_pct, 6),
+            }
+        )
 
     # Limit utilization
     limit_util = {}
@@ -211,7 +222,7 @@ def _build_target_weights() -> dict:
 
     # Sample covariance (diagonal approximation with realistic Brazilian market vols)
     vols = np.array([0.25, 0.10, 0.15, 0.30, 0.28])
-    covariance = np.diag(vols ** 2)
+    covariance = np.diag(vols**2)
 
     # Market cap weights (approximate)
     market_weights = np.array([0.30, 0.20, 0.15, 0.20, 0.15])
@@ -235,13 +246,15 @@ def _build_target_weights() -> dict:
     for inst in instruments:
         tw = target_weights.get(inst, 0.0)
         direction = "LONG" if tw > 0.001 else ("SHORT" if tw < -0.001 else "NEUTRAL")
-        targets.append({
-            "instrument": inst,
-            "direction": direction,
-            "target_weight": round(tw, 6),
-            "current_weight": 0.0,  # Placeholder -- would come from live positions
-            "sizing_method": "mean_variance",
-        })
+        targets.append(
+            {
+                "instrument": inst,
+                "direction": direction,
+                "target_weight": round(tw, 6),
+                "current_weight": 0.0,  # Placeholder -- would come from live positions
+                "sizing_method": "mean_variance",
+            }
+        )
 
     return {
         "targets": targets,
@@ -319,22 +332,28 @@ def _build_rebalance_trades() -> dict:
             continue
 
         direction = "BUY" if trade_w > 0 else "SELL"
-        trades.append({
-            "instrument": inst,
-            "direction": direction,
-            "current_weight": round(current_w, 6),
-            "target_weight": round(target_w, 6),
-            "trade_weight": round(trade_w, 6),
-            "trade_notional": round(trade_w * total_notional, 2),
-        })
+        trades.append(
+            {
+                "instrument": inst,
+                "direction": direction,
+                "current_weight": round(current_w, 6),
+                "target_weight": round(target_w, 6),
+                "trade_weight": round(trade_w, 6),
+                "trade_notional": round(trade_w * total_notional, 2),
+            }
+        )
 
     trigger_reason = None
     if should_rebalance:
         # Determine reason
-        max_drift = max(
-            abs(target_weights.get(inst, 0.0) - current_weights.get(inst, 0.0))
-            for inst in all_instruments
-        ) if all_instruments else 0.0
+        max_drift = (
+            max(
+                abs(target_weights.get(inst, 0.0) - current_weights.get(inst, 0.0))
+                for inst in all_instruments
+            )
+            if all_instruments
+            else 0.0
+        )
 
         if abs(signal_change) > 0.15:
             trigger_reason = "signal_change"
@@ -415,19 +434,23 @@ def _build_attribution() -> dict:
         strategies = []
         for strategy_id, contribution_weight in strat_attr.items():
             contribution_pnl = round(pos_pnl * contribution_weight, 2)
-            strategies.append({
-                "strategy_id": strategy_id,
-                "contribution_weight": round(contribution_weight, 4),
-                "contribution_pnl": contribution_pnl,
-            })
+            strategies.append(
+                {
+                    "strategy_id": strategy_id,
+                    "contribution_weight": round(contribution_weight, 4),
+                    "contribution_pnl": contribution_pnl,
+                }
+            )
             by_strategy[strategy_id] = (
                 by_strategy.get(strategy_id, 0.0) + contribution_pnl
             )
 
-        attribution.append({
-            "instrument": instrument,
-            "strategies": strategies,
-        })
+        attribution.append(
+            {
+                "instrument": instrument,
+                "strategies": strategies,
+            }
+        )
 
     # Round by_strategy values
     by_strategy = {k: round(v, 2) for k, v in by_strategy.items()}

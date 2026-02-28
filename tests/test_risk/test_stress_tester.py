@@ -39,9 +39,9 @@ def taper_tantrum() -> StressScenario:
 def simple_positions() -> dict[str, float]:
     """Simple portfolio for deterministic P&L tests."""
     return {
-        "USDBRL": 100_000.0,   # Long USDBRL
+        "USDBRL": 100_000.0,  # Long USDBRL
         "IBOVESPA": -50_000.0,  # Short IBOVESPA
-        "DI_PRE": 200_000.0,   # Long DI
+        "DI_PRE": 200_000.0,  # Long DI
     }
 
 
@@ -101,9 +101,7 @@ class TestPrefixMatching:
         assert result.position_pnl["DI_PRE_365"] == pytest.approx(2_000.0)
         assert result.positions_impacted == 1
 
-    def test_exact_match_takes_precedence(
-        self, tester: StressTester
-    ) -> None:
+    def test_exact_match_takes_precedence(self, tester: StressTester) -> None:
         """Exact match should be preferred over prefix match."""
         scenario = StressScenario(
             name="Test",
@@ -237,9 +235,9 @@ class TestWorstPosition:
     ) -> None:
         """Correctly identifies instrument with largest loss."""
         positions = {
-            "USDBRL": 50_000.0,     # +15% -> +7.5K
+            "USDBRL": 50_000.0,  # +15% -> +7.5K
             "IBOVESPA": 100_000.0,  # -15% -> -15K (worst)
-            "DI_PRE": 50_000.0,     # +2%  -> +1K
+            "DI_PRE": 50_000.0,  # +2%  -> +1K
         }
         result = tester.run_scenario(positions, taper_tantrum)
 

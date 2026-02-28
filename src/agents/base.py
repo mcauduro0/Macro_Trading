@@ -355,9 +355,7 @@ class BaseAgent(abc.ABC):
         session = sync_session_factory()
         try:
             stmt = pg_insert_sync(Signal).values(records)
-            stmt = stmt.on_conflict_do_nothing(
-                constraint="uq_signals_natural_key"
-            )
+            stmt = stmt.on_conflict_do_nothing(constraint="uq_signals_natural_key")
             result = session.execute(stmt)
             session.commit()
             inserted = result.rowcount
@@ -409,8 +407,6 @@ class BaseAgent(abc.ABC):
         async with async_session_factory() as session:
             async with session.begin():
                 stmt = pg_insert(Signal).values(records)
-                stmt = stmt.on_conflict_do_nothing(
-                    constraint="uq_signals_natural_key"
-                )
+                stmt = stmt.on_conflict_do_nothing(constraint="uq_signals_natural_key")
                 result = await session.execute(stmt)
                 return result.rowcount

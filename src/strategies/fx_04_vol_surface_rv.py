@@ -108,7 +108,9 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
         """
         # Load USDBRL data
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=_HISTORY_LOOKBACK + 100,
+            "USDBRL",
+            as_of_date,
+            lookback_days=_HISTORY_LOOKBACK + 100,
         )
         if usdbrl_df.empty or len(usdbrl_df) < _HISTORY_LOOKBACK:
             self.log.warning(
@@ -175,7 +177,9 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
         daily_vol = float(recent_returns.std(ddof=0))
 
         # Vol-based stop-loss
-        stop_distance = _STOP_LOSS_VOL_MULT * daily_vol * math.sqrt(_HOLDING_PERIOD) * spot
+        stop_distance = (
+            _STOP_LOSS_VOL_MULT * daily_vol * math.sqrt(_HOLDING_PERIOD) * spot
+        )
         if direction == SignalDirection.LONG:
             stop_loss = spot - stop_distance
             take_profit = spot + _TAKE_PROFIT_RATIO * stop_distance
@@ -218,7 +222,8 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
     # Component 1: Implied-Realized Premium
     # ------------------------------------------------------------------
     def _compute_iv_rv_premium_z(
-        self, daily_returns: "pd.Series",
+        self,
+        daily_returns: "pd.Series",
     ) -> Optional[float]:
         """Compute implied-realized vol premium z-score.
 
@@ -229,7 +234,9 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
             return None
 
         # Build rolling realized vol (21-day)
-        rolling_rv = daily_returns.rolling(_SHORT_VOL_WINDOW).std(ddof=0) * math.sqrt(252)
+        rolling_rv = daily_returns.rolling(_SHORT_VOL_WINDOW).std(ddof=0) * math.sqrt(
+            252
+        )
 
         # Implied vol proxy: rolling mean of |returns| * sqrt(252) * sqrt(pi/2)
         # This is the volatility estimator based on mean absolute deviation
@@ -246,13 +253,16 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
 
         current_premium = float(premium.iloc[-1])
         history_list = premium.tail(_ZSCORE_LOOKBACK).tolist()
-        return self.compute_z_score(current_premium, history_list, window=_ZSCORE_LOOKBACK)
+        return self.compute_z_score(
+            current_premium, history_list, window=_ZSCORE_LOOKBACK
+        )
 
     # ------------------------------------------------------------------
     # Component 2: Term Structure Slope
     # ------------------------------------------------------------------
     def _compute_term_structure_z(
-        self, daily_returns: "pd.Series",
+        self,
+        daily_returns: "pd.Series",
     ) -> Optional[float]:
         """Compute short/long vol ratio z-score.
 
@@ -272,13 +282,16 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
 
         current_ratio = float(ratio.iloc[-1])
         history_list = ratio.tail(_ZSCORE_LOOKBACK).tolist()
-        return self.compute_z_score(current_ratio, history_list, window=_ZSCORE_LOOKBACK)
+        return self.compute_z_score(
+            current_ratio, history_list, window=_ZSCORE_LOOKBACK
+        )
 
     # ------------------------------------------------------------------
     # Component 3: Skew Proxy
     # ------------------------------------------------------------------
     def _compute_skew_z(
-        self, daily_returns: "pd.Series",
+        self,
+        daily_returns: "pd.Series",
     ) -> Optional[float]:
         """Compute rolling 63-day return skewness z-score.
 
@@ -288,22 +301,30 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
             return None
 
         # Compute rolling skewness
-        rolling_skew = daily_returns.rolling(_MOMENTS_WINDOW).apply(
-            lambda x: float(scipy_stats.skew(x, bias=False)), raw=True,
-        ).dropna()
+        rolling_skew = (
+            daily_returns.rolling(_MOMENTS_WINDOW)
+            .apply(
+                lambda x: float(scipy_stats.skew(x, bias=False)),
+                raw=True,
+            )
+            .dropna()
+        )
 
         if len(rolling_skew) < _ZSCORE_LOOKBACK:
             return None
 
         current_skew = float(rolling_skew.iloc[-1])
         history_list = rolling_skew.tail(_HISTORY_LOOKBACK).tolist()
-        return self.compute_z_score(current_skew, history_list, window=_HISTORY_LOOKBACK)
+        return self.compute_z_score(
+            current_skew, history_list, window=_HISTORY_LOOKBACK
+        )
 
     # ------------------------------------------------------------------
     # Component 4: Kurtosis Signal
     # ------------------------------------------------------------------
     def _compute_kurtosis_z(
-        self, daily_returns: "pd.Series",
+        self,
+        daily_returns: "pd.Series",
     ) -> Optional[float]:
         """Compute rolling 63-day excess kurtosis z-score.
 
@@ -313,13 +334,20 @@ class Fx04VolSurfaceRvStrategy(BaseStrategy):
             return None
 
         # Compute rolling excess kurtosis
-        rolling_kurt = daily_returns.rolling(_MOMENTS_WINDOW).apply(
-            lambda x: float(scipy_stats.kurtosis(x, bias=False)), raw=True,
-        ).dropna()
+        rolling_kurt = (
+            daily_returns.rolling(_MOMENTS_WINDOW)
+            .apply(
+                lambda x: float(scipy_stats.kurtosis(x, bias=False)),
+                raw=True,
+            )
+            .dropna()
+        )
 
         if len(rolling_kurt) < _ZSCORE_LOOKBACK:
             return None
 
         current_kurt = float(rolling_kurt.iloc[-1])
         history_list = rolling_kurt.tail(_HISTORY_LOOKBACK).tolist()
-        return self.compute_z_score(current_kurt, history_list, window=_HISTORY_LOOKBACK)
+        return self.compute_z_score(
+            current_kurt, history_list, window=_HISTORY_LOOKBACK
+        )

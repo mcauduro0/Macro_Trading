@@ -66,14 +66,14 @@ class CircuitBreakerConfig:
     All drawdown values are positive fractions (e.g., 0.03 = 3%).
     """
 
-    l1_drawdown_pct: float = 0.03       # L1 threshold: -3%
-    l1_reduction: float = 0.25          # Reduce by 25%
-    l2_drawdown_pct: float = 0.05       # L2 threshold: -5%
-    l2_reduction: float = 0.50          # Reduce by 50%
-    l3_drawdown_pct: float = 0.08       # L3 threshold: -8%
-    l3_reduction: float = 1.00          # Close all (100% reduction)
-    cooldown_days: int = 5              # Days before re-entry allowed
-    recovery_days: int = 3              # Days to ramp back to full exposure
+    l1_drawdown_pct: float = 0.03  # L1 threshold: -3%
+    l1_reduction: float = 0.25  # Reduce by 25%
+    l2_drawdown_pct: float = 0.05  # L2 threshold: -5%
+    l2_reduction: float = 0.50  # Reduce by 50%
+    l3_drawdown_pct: float = 0.08  # L3 threshold: -8%
+    l3_reduction: float = 1.00  # Close all (100% reduction)
+    cooldown_days: int = 5  # Days before re-entry allowed
+    recovery_days: int = 3  # Days to ramp back to full exposure
     recovery_threshold_pct: float = 0.03  # Drawdown must recover above -3%
 
 
@@ -239,44 +239,74 @@ class DrawdownManager:
             if dd >= cfg.l1_drawdown_pct:
                 self.state = CircuitBreakerState.L1_TRIGGERED
                 self._log_event(
-                    old_state, self.state, dd,
-                    "reduce_25%", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "reduce_25%",
+                    positions,
+                    pnl,
+                    signals,
                 )
 
         elif self.state == CircuitBreakerState.L1_TRIGGERED:
             if dd >= cfg.l2_drawdown_pct:
                 self.state = CircuitBreakerState.L2_TRIGGERED
                 self._log_event(
-                    old_state, self.state, dd,
-                    "reduce_50%", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "reduce_50%",
+                    positions,
+                    pnl,
+                    signals,
                 )
             elif dd < cfg.l1_drawdown_pct * 0.5:
                 self.state = CircuitBreakerState.NORMAL
                 self._log_event(
-                    old_state, self.state, dd,
-                    "recovery_to_normal", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "recovery_to_normal",
+                    positions,
+                    pnl,
+                    signals,
                 )
 
         elif self.state == CircuitBreakerState.L2_TRIGGERED:
             if dd >= cfg.l3_drawdown_pct:
                 self.state = CircuitBreakerState.L3_TRIGGERED
                 self._log_event(
-                    old_state, self.state, dd,
-                    "close_all", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "close_all",
+                    positions,
+                    pnl,
+                    signals,
                 )
                 # L3_TRIGGERED immediately transitions to COOLDOWN
                 l3_state = self.state
                 self.cooldown_counter = cfg.cooldown_days
                 self.state = CircuitBreakerState.COOLDOWN
                 self._log_event(
-                    l3_state, self.state, dd,
-                    "cooldown_start", positions, pnl, signals,
+                    l3_state,
+                    self.state,
+                    dd,
+                    "cooldown_start",
+                    positions,
+                    pnl,
+                    signals,
                 )
             elif dd < cfg.l1_drawdown_pct:
                 self.state = CircuitBreakerState.L1_TRIGGERED
                 self._log_event(
-                    old_state, self.state, dd,
-                    "de_escalation_to_l1", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "de_escalation_to_l1",
+                    positions,
+                    pnl,
+                    signals,
                 )
 
         elif self.state == CircuitBreakerState.L3_TRIGGERED:
@@ -285,8 +315,13 @@ class DrawdownManager:
             self.cooldown_counter = cfg.cooldown_days
             self.state = CircuitBreakerState.COOLDOWN
             self._log_event(
-                old_state, self.state, dd,
-                "cooldown_start", positions, pnl, signals,
+                old_state,
+                self.state,
+                dd,
+                "cooldown_start",
+                positions,
+                pnl,
+                signals,
             )
 
         elif self.state == CircuitBreakerState.COOLDOWN:
@@ -295,8 +330,13 @@ class DrawdownManager:
                 self.recovery_day = 0
                 self.state = CircuitBreakerState.RECOVERING
                 self._log_event(
-                    old_state, self.state, dd,
-                    "recovery_start", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "recovery_start",
+                    positions,
+                    pnl,
+                    signals,
                 )
 
         elif self.state == CircuitBreakerState.RECOVERING:
@@ -306,8 +346,13 @@ class DrawdownManager:
                 # Reset HWM to current equity on full recovery
                 self.high_water_mark = current_equity
                 self._log_event(
-                    old_state, self.state, dd,
-                    "full_recovery", positions, pnl, signals,
+                    old_state,
+                    self.state,
+                    dd,
+                    "full_recovery",
+                    positions,
+                    pnl,
+                    signals,
                 )
 
         # Return scale factor based on current state
@@ -349,7 +394,9 @@ class DrawdownManager:
             # Gradual ramp: recovery_day 1->0%, 2->50%, 3->100% (for 3-day recovery)
             # Uses (recovery_day - 1) so first day in recovery starts at 0% exposure
             if self.config.recovery_days > 1:
-                return max(0.0, (self.recovery_day - 1) / (self.config.recovery_days - 1))
+                return max(
+                    0.0, (self.recovery_day - 1) / (self.config.recovery_days - 1)
+                )
             return 1.0
         return 1.0
 

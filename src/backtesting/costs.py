@@ -15,6 +15,7 @@ Supports 12 instruments traded by the macro fund:
 Ticker prefix matching maps strategy instrument names (e.g., "DI_PRE_365")
 to cost table keys (e.g., "DI1").
 """
+
 from __future__ import annotations
 
 import logging

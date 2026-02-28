@@ -3,6 +3,7 @@
 All tests use synthetic data and mock the PointInTimeDataLoader.
 No database connection required.
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -42,7 +43,9 @@ def _flat_df(val: float = 0.5, n: int = 60) -> pd.DataFrame:
     return _monthly_df([val] * n)
 
 
-def _make_surprise_series(actual_mom: float = 0.6, focus_mom: float = 0.3, n: int = 15) -> pd.DataFrame:
+def _make_surprise_series(
+    actual_mom: float = 0.6, focus_mom: float = 0.3, n: int = 15
+) -> pd.DataFrame:
     """Build a _surprise_series DataFrame for InflationSurpriseModel."""
     idx = pd.date_range("2022-10-31", periods=n, freq="ME")
     return pd.DataFrame(
@@ -98,8 +101,15 @@ class TestInflationFeatureEngineKeys:
             "ipca_components": {
                 key: mom_df.copy()
                 for key in [
-                    "food_home", "food_away", "housing", "clothing",
-                    "health", "personal_care", "education", "transport", "communication",
+                    "food_home",
+                    "food_away",
+                    "housing",
+                    "clothing",
+                    "health",
+                    "personal_care",
+                    "education",
+                    "transport",
+                    "communication",
                 ]
             },
             "ipca_services": mom_df.copy(),
@@ -170,14 +180,16 @@ class TestPhillipsCurveModel:
 
     def test_phillips_curve_model_direction_long(self) -> None:
         """High-inflation scenario should return LONG direction."""
-        df = _make_core_series_df(val=8.0, n=120)  # core_yoy=8%, well above 3.5% threshold
+        df = _make_core_series_df(
+            val=8.0, n=120
+        )  # core_yoy=8%, well above 3.5% threshold
         features = {"_raw_ols_data": df, "_as_of_date": _AS_OF_DATE}
 
         signal = PhillipsCurveModel().run(features, _AS_OF_DATE)
 
-        assert signal.direction == SignalDirection.LONG, (
-            f"Expected LONG for high-inflation scenario, got {signal.direction}"
-        )
+        assert (
+            signal.direction == SignalDirection.LONG
+        ), f"Expected LONG for high-inflation scenario, got {signal.direction}"
         assert signal.signal_id == "INFLATION_BR_PHILLIPS"
         assert 0.0 <= signal.confidence <= 1.0
 
@@ -210,8 +222,15 @@ class TestIpcaBottomUpModel:
         comp_data = {
             key: _flat_df(0.5)
             for key in [
-                "food_home", "food_away", "housing", "clothing",
-                "health", "personal_care", "education", "transport", "communication",
+                "food_home",
+                "food_away",
+                "housing",
+                "clothing",
+                "health",
+                "personal_care",
+                "education",
+                "transport",
+                "communication",
             ]
         }
         features = {"_raw_components": comp_data, "_as_of_date": _AS_OF_DATE}
@@ -219,7 +238,9 @@ class TestIpcaBottomUpModel:
         signal = IpcaBottomUpModel().run(features, _AS_OF_DATE)
 
         # Signal should NOT be NO_SIGNAL (seasonal factors computed successfully)
-        assert signal.strength != SignalStrength.NO_SIGNAL, "Expected a non-NO_SIGNAL result"
+        assert (
+            signal.strength != SignalStrength.NO_SIGNAL
+        ), "Expected a non-NO_SIGNAL result"
         # 0.5 MoM * 12 months annualized (compounded) ~6.2%, well above 3% target
         assert signal.value > 3.0, f"Expected forecast > 3.0, got {signal.value}"
         assert isinstance(signal.value, float)
@@ -246,8 +267,8 @@ class TestInflationSurpriseModel:
         strong upside (actual=0.9, focus=0.3), creating a z-score >> 1.0.
         """
         idx = pd.date_range("2022-10-31", periods=15, freq="ME")
-        actual = [0.4] * 12 + [0.9, 0.9, 0.9]   # last 3M: strong upside
-        focus = [0.4] * 12 + [0.3, 0.3, 0.3]     # focus stays low
+        actual = [0.4] * 12 + [0.9, 0.9, 0.9]  # last 3M: strong upside
+        focus = [0.4] * 12 + [0.3, 0.3, 0.3]  # focus stays low
         surprise_df = pd.DataFrame(
             {"actual_mom": actual, "focus_mom_median": focus},
             index=idx,
@@ -261,9 +282,11 @@ class TestInflationSurpriseModel:
             f"(signal strength: {signal.strength}, z={signal.value})"
         )
         # Signal should fire (strength not NO_SIGNAL)
-        assert signal.strength in {SignalStrength.MODERATE, SignalStrength.STRONG, SignalStrength.WEAK}, (
-            f"Expected a non-NO_SIGNAL strength, got {signal.strength}"
-        )
+        assert signal.strength in {
+            SignalStrength.MODERATE,
+            SignalStrength.STRONG,
+            SignalStrength.WEAK,
+        }, f"Expected a non-NO_SIGNAL strength, got {signal.strength}"
 
     def test_inflation_surprise_model_strong_signal(self) -> None:
         """Extreme upside surprise should return STRONG strength (|z| > 2.0)."""
@@ -333,11 +356,11 @@ class TestInflationPersistenceModel:
         )
 
         features = {
-            "ipca_diffusion": 95.0,        # high diffusion: sub=95
+            "ipca_diffusion": 95.0,  # high diffusion: sub=95
             "ipca_core_smoothed": 7.0,
             "_raw_ols_data": ols_df,
-            "_services_3m_saar": 12.0,     # services SAAR: sub=80
-            "focus_ipca_12m": 3.0,          # exactly on target: anchoring_sub=100
+            "_services_3m_saar": 12.0,  # services SAAR: sub=80
+            "focus_ipca_12m": 3.0,  # exactly on target: anchoring_sub=100
             "_as_of_date": _AS_OF_DATE,
         }
 
@@ -373,11 +396,11 @@ class TestInflationPersistenceModel:
         )
 
         features = {
-            "ipca_diffusion": 5.0,          # very low diffusion: sub=5
+            "ipca_diffusion": 5.0,  # very low diffusion: sub=5
             "ipca_core_smoothed": 1.5,
             "_raw_ols_data": ols_df,
-            "_services_3m_saar": 0.5,       # very low services SAAR: sub≈3.3
-            "focus_ipca_12m": 8.0,           # far above target: anchoring_sub=0
+            "_services_3m_saar": 0.5,  # very low services SAAR: sub≈3.3
+            "focus_ipca_12m": 8.0,  # far above target: anchoring_sub=0
             "_as_of_date": _AS_OF_DATE,
         }
 
@@ -394,7 +417,13 @@ class TestInflationPersistenceModel:
             "ipca_diffusion": np.nan,
             "ipca_core_smoothed": np.nan,
             "_raw_ols_data": pd.DataFrame(
-                columns=["core_yoy", "expectations_12m", "output_gap", "usdbrl_yoy", "crb_yoy"]
+                columns=[
+                    "core_yoy",
+                    "expectations_12m",
+                    "output_gap",
+                    "usdbrl_yoy",
+                    "crb_yoy",
+                ]
             ),
             "_services_3m_saar": np.nan,
             "focus_ipca_12m": np.nan,
@@ -471,7 +500,9 @@ class TestInflationComposite:
             timestamp=datetime.utcnow(),
             as_of_date=_AS_OF_DATE,
             direction=direction,
-            strength=SignalStrength.MODERATE if confidence >= 0.5 else SignalStrength.WEAK,
+            strength=(
+                SignalStrength.MODERATE if confidence >= 0.5 else SignalStrength.WEAK
+            ),
             confidence=confidence,
             value=confidence,
             horizon_days=252,
@@ -483,7 +514,9 @@ class TestInflationComposite:
             self._make_br_signal("INFLATION_BR_PHILLIPS", SignalDirection.LONG, 0.8),
             self._make_br_signal("INFLATION_BR_BOTTOMUP", SignalDirection.LONG, 0.7),
             self._make_br_signal("INFLATION_BR_SURPRISE", SignalDirection.LONG, 0.6),
-            self._make_br_signal("INFLATION_BR_PERSISTENCE", SignalDirection.SHORT, 0.6),
+            self._make_br_signal(
+                "INFLATION_BR_PERSISTENCE", SignalDirection.SHORT, 0.6
+            ),
             # US trend is excluded from BR composite:
             self._make_br_signal("INFLATION_US_TREND", SignalDirection.SHORT, 0.9),
         ]
@@ -491,9 +524,9 @@ class TestInflationComposite:
         agent = _make_agent()
         composite = agent._build_composite(signals, _AS_OF_DATE)
 
-        assert composite.direction == SignalDirection.LONG, (
-            f"Expected LONG majority vote, got {composite.direction}"
-        )
+        assert (
+            composite.direction == SignalDirection.LONG
+        ), f"Expected LONG majority vote, got {composite.direction}"
         assert composite.signal_id == "INFLATION_BR_COMPOSITE"
         assert 0.0 < composite.confidence <= 1.0
 
@@ -503,16 +536,18 @@ class TestInflationComposite:
             self._make_br_signal("INFLATION_BR_PHILLIPS", SignalDirection.LONG, 0.8),
             self._make_br_signal("INFLATION_BR_BOTTOMUP", SignalDirection.LONG, 0.8),
             self._make_br_signal("INFLATION_BR_SURPRISE", SignalDirection.SHORT, 0.8),
-            self._make_br_signal("INFLATION_BR_PERSISTENCE", SignalDirection.SHORT, 0.8),
+            self._make_br_signal(
+                "INFLATION_BR_PERSISTENCE", SignalDirection.SHORT, 0.8
+            ),
         ]
 
         agent = _make_agent()
         composite = agent._build_composite(signals, _AS_OF_DATE)
 
         # With 2 disagreements (>= 2), dampening must be 0.70
-        assert composite.metadata["dampening"] == pytest.approx(0.70), (
-            f"Expected dampening=0.70, got {composite.metadata['dampening']}"
-        )
+        assert composite.metadata["dampening"] == pytest.approx(
+            0.70
+        ), f"Expected dampening=0.70, got {composite.metadata['dampening']}"
         # Composite confidence should be < undampened weighted confidence
         undampened_conf = 0.8  # all sigs at 0.8, weights balanced
         assert composite.confidence < undampened_conf
@@ -545,7 +580,9 @@ class TestInflationComposite:
             self._make_br_signal("INFLATION_BR_PHILLIPS", SignalDirection.LONG, 0.9),
             self._make_br_signal("INFLATION_BR_BOTTOMUP", SignalDirection.LONG, 0.8),
             self._make_br_signal("INFLATION_BR_SURPRISE", SignalDirection.LONG, 0.7),
-            self._make_br_signal("INFLATION_BR_PERSISTENCE", SignalDirection.LONG, 0.75),
+            self._make_br_signal(
+                "INFLATION_BR_PERSISTENCE", SignalDirection.LONG, 0.75
+            ),
         ]
 
         agent = _make_agent()

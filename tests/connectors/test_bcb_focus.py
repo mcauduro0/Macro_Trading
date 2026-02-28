@@ -91,12 +91,24 @@ async def test_pagination_terminates_on_partial_page():
     # Page 1: 3 items (< ODATA_PAGE_SIZE=1000) -> terminate after first page
     page_data = {
         "value": [
-            {"Indicador": "IPCA", "Data": "2025-02-14",
-             "DataReferencia": "2025", "Mediana": 5.60},
-            {"Indicador": "IPCA", "Data": "2025-02-07",
-             "DataReferencia": "2025", "Mediana": 5.57},
-            {"Indicador": "IPCA", "Data": "2025-01-31",
-             "DataReferencia": "2025", "Mediana": 5.55},
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-14",
+                "DataReferencia": "2025",
+                "Mediana": 5.60,
+            },
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-07",
+                "DataReferencia": "2025",
+                "Mediana": 5.57,
+            },
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-01-31",
+                "DataReferencia": "2025",
+                "Mediana": 5.55,
+            },
         ]
     }
 
@@ -107,8 +119,7 @@ async def test_pagination_terminates_on_partial_page():
 
         async with BcbFocusConnector() as conn:
             items = await conn._fetch_odata_paginated(
-                "ExpectativasMercadoAnuais",
-                "Indicador eq 'IPCA'"
+                "ExpectativasMercadoAnuais", "Indicador eq 'IPCA'"
             )
 
     assert len(items) == 3
@@ -124,17 +135,29 @@ async def test_pagination_multi_page():
     # Page 1: 2 items (== page_size) -> fetch next page
     page1 = {
         "value": [
-            {"Indicador": "IPCA", "Data": "2025-02-14",
-             "DataReferencia": "2025", "Mediana": 5.60},
-            {"Indicador": "IPCA", "Data": "2025-02-07",
-             "DataReferencia": "2025", "Mediana": 5.57},
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-14",
+                "DataReferencia": "2025",
+                "Mediana": 5.60,
+            },
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-07",
+                "DataReferencia": "2025",
+                "Mediana": 5.57,
+            },
         ]
     }
     # Page 2: 1 item (< page_size) -> terminate
     page2 = {
         "value": [
-            {"Indicador": "IPCA", "Data": "2025-01-31",
-             "DataReferencia": "2025", "Mediana": 5.55},
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-01-31",
+                "DataReferencia": "2025",
+                "Mediana": 5.55,
+            },
         ]
     }
 
@@ -147,8 +170,7 @@ async def test_pagination_multi_page():
 
         async with connector:
             items = await connector._fetch_odata_paginated(
-                "ExpectativasMercadoAnuais",
-                "Indicador eq 'IPCA'"
+                "ExpectativasMercadoAnuais", "Indicador eq 'IPCA'"
             )
 
     assert len(items) == 3
@@ -164,10 +186,18 @@ async def test_pagination_max_pages_safety_limit():
     # Always return full pages (2 items each)
     full_page = {
         "value": [
-            {"Indicador": "IPCA", "Data": "2025-02-14",
-             "DataReferencia": "2025", "Mediana": 5.60},
-            {"Indicador": "IPCA", "Data": "2025-02-07",
-             "DataReferencia": "2025", "Mediana": 5.57},
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-14",
+                "DataReferencia": "2025",
+                "Mediana": 5.60,
+            },
+            {
+                "Indicador": "IPCA",
+                "Data": "2025-02-07",
+                "DataReferencia": "2025",
+                "Mediana": 5.57,
+            },
         ]
     }
 
@@ -179,8 +209,7 @@ async def test_pagination_max_pages_safety_limit():
 
         async with connector:
             items = await connector._fetch_odata_paginated(
-                "ExpectativasMercadoAnuais",
-                "Indicador eq 'IPCA'"
+                "ExpectativasMercadoAnuais", "Indicador eq 'IPCA'"
             )
 
     # MAX_PAGES=3, page_size=2 -> 3*2 = 6 items max
@@ -197,8 +226,7 @@ async def test_pagination_empty_response():
 
         async with BcbFocusConnector() as conn:
             items = await conn._fetch_odata_paginated(
-                "ExpectativasMercadoAnuais",
-                "Indicador eq 'IPCA'"
+                "ExpectativasMercadoAnuais", "Indicador eq 'IPCA'"
             )
 
     assert items == []
@@ -364,9 +392,7 @@ async def test_missing_mediana_skipped():
     }
 
     with respx.mock(base_url="https://olinda.bcb.gov.br") as mock:
-        mock.get(url__regex=r"/olinda/servico/Expectativas/.*").respond(
-            200, json=data
-        )
+        mock.get(url__regex=r"/olinda/servico/Expectativas/.*").respond(200, json=data)
 
         async with BcbFocusConnector() as conn:
             records = await conn.fetch(date(2025, 2, 1), date(2025, 2, 28))

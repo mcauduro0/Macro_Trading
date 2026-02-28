@@ -26,13 +26,9 @@ from .base import Base
 class CurveData(Base):
     __tablename__ = "curves"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     curve_id: Mapped[str] = mapped_column(String(50), nullable=False)
-    curve_date: Mapped[date] = mapped_column(
-        Date, primary_key=True, nullable=False
-    )
+    curve_date: Mapped[date] = mapped_column(Date, primary_key=True, nullable=False)
     tenor_days: Mapped[int] = mapped_column(Integer, nullable=False)
     tenor_label: Mapped[str] = mapped_column(String(20), nullable=False)
     rate: Mapped[float] = mapped_column(Float, nullable=False)
@@ -41,7 +37,9 @@ class CurveData(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "curve_id", "curve_date", "tenor_days",
+            "curve_id",
+            "curve_date",
+            "tenor_days",
             name="uq_curves_natural_key",
         ),
         Index("ix_curves_curve_id", "curve_id"),

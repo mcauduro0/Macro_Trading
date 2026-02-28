@@ -22,6 +22,7 @@ from src.pms.trade_workflow import TradeWorkflowService
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def position_manager() -> PositionManager:
     """Create a PositionManager with a sample position."""
@@ -61,6 +62,7 @@ def trade_workflow(position_manager: PositionManager) -> TradeWorkflowService:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestMorningPackGeneration:
     """Test MorningPackService.generate() produces complete briefings."""
@@ -102,15 +104,14 @@ class TestMorningPackGeneration:
         # Action-first ordering: action_items should be the first content key
         # (after id, briefing_date, created_at which are metadata)
         content_keys = [
-            k for k in briefing.keys()
-            if k not in ("id", "briefing_date", "created_at")
+            k for k in briefing.keys() if k not in ("id", "briefing_date", "created_at")
         ]
-        assert content_keys[0] == "action_items", (
-            f"Expected action_items as first content key, got {content_keys[0]}"
-        )
-        assert content_keys[1] == "trade_proposals", (
-            f"Expected trade_proposals as second content key, got {content_keys[1]}"
-        )
+        assert (
+            content_keys[0] == "action_items"
+        ), f"Expected action_items as first content key, got {content_keys[0]}"
+        assert (
+            content_keys[1] == "trade_proposals"
+        ), f"Expected trade_proposals as second content key, got {content_keys[1]}"
 
         # Trade proposals should contain our pending proposal
         proposals = briefing["trade_proposals"]
@@ -127,7 +128,15 @@ class TestMorningPackGeneration:
         # Market snapshot should have the placeholder structure
         snapshot = briefing["market_snapshot"]
         assert isinstance(snapshot, dict)
-        for group in ["brazil_rates", "brazil_macro", "fx", "us_rates", "us_macro", "global_", "credit"]:
+        for group in [
+            "brazil_rates",
+            "brazil_macro",
+            "fx",
+            "us_rates",
+            "us_macro",
+            "global_",
+            "credit",
+        ]:
             assert group in snapshot
 
         # Macro narrative should be a non-empty string
@@ -186,10 +195,10 @@ class TestMorningPackGeneration:
         # Action items should include stale data warnings
         action_items = briefing["action_items"]
         assert isinstance(action_items, list)
-        stale_items = [
-            ai for ai in action_items if ai["category"] == "stale_data"
-        ]
-        assert len(stale_items) >= 1, "Expected stale data warnings for unavailable sections"
+        stale_items = [ai for ai in action_items if ai["category"] == "stale_data"]
+        assert (
+            len(stale_items) >= 1
+        ), "Expected stale data warnings for unavailable sections"
 
     def test_auto_persist(
         self,
@@ -275,9 +284,9 @@ class TestMorningPackGeneration:
         # Verify sorting: CRITICAL should come before MEDIUM/LOW
         priorities = [ai["priority"] for ai in action_items]
         # Check that the first item is CRITICAL (flip proposal)
-        assert priorities[0] == "CRITICAL", (
-            f"Expected CRITICAL as first priority, got {priorities[0]}"
-        )
+        assert (
+            priorities[0] == "CRITICAL"
+        ), f"Expected CRITICAL as first priority, got {priorities[0]}"
 
         # Verify priority ordering is non-decreasing
         priority_values = [

@@ -139,8 +139,9 @@ class TestInterpolateCurve:
         observed_rates = [0.10, 0.12]
         target = [90, 180, 365]
 
-        result = interpolate_curve(observed_tenors, observed_rates,
-                                   target_tenors_days=target, method="linear")
+        result = interpolate_curve(
+            observed_tenors, observed_rates, target_tenors_days=target, method="linear"
+        )
 
         assert abs(result[90] - 0.10) < 1e-10
         assert abs(result[365] - 0.12) < 1e-10
@@ -152,9 +153,12 @@ class TestInterpolateCurve:
         observed_tenors = [30, 90, 180, 365, 730]
         observed_rates = [0.10, 0.105, 0.11, 0.12, 0.13]
 
-        result = interpolate_curve(observed_tenors, observed_rates,
-                                   target_tenors_days=observed_tenors,
-                                   method="cubic_spline")
+        result = interpolate_curve(
+            observed_tenors,
+            observed_rates,
+            target_tenors_days=observed_tenors,
+            method="cubic_spline",
+        )
 
         for t, r in zip(observed_tenors, observed_rates):
             assert abs(result[t] - r) < 1e-8, f"Mismatch at tenor {t}"
@@ -164,10 +168,12 @@ class TestInterpolateCurve:
         observed_tenors = [30, 90, 180, 365, 730, 1825, 3650]
         observed_rates = [0.10, 0.105, 0.11, 0.115, 0.12, 0.125, 0.13]
 
-        result = interpolate_curve(observed_tenors, observed_rates,
-                                   method="nelson_siegel")
+        result = interpolate_curve(
+            observed_tenors, observed_rates, method="nelson_siegel"
+        )
 
         from src.transforms.curves import STANDARD_TENORS_DAYS
+
         assert set(result.keys()) == set(STANDARD_TENORS_DAYS)
 
     def test_invalid_method_raises(self):
@@ -331,7 +337,10 @@ class TestComputeCarryRolldown:
         """Total should equal carry + rolldown."""
         curve = {30: 0.10, 90: 0.11, 180: 0.12, 365: 0.14}
         result = compute_carry_rolldown(curve, tenor_days=365, horizon_days=21)
-        assert abs(result["total_bps"] - result["carry_bps"] - result["rolldown_bps"]) < 1e-10
+        assert (
+            abs(result["total_bps"] - result["carry_bps"] - result["rolldown_bps"])
+            < 1e-10
+        )
 
     def test_missing_tenor_raises(self):
         """Requesting a tenor not in the curve should raise ValueError."""

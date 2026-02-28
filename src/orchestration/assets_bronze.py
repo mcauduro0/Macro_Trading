@@ -67,6 +67,7 @@ async def _run_connector(connector_class: type, start: date, end: date) -> int:
 # Bronze Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="bronze",
     retry_policy=_retry_policy,

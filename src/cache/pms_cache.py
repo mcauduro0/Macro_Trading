@@ -33,10 +33,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Default TTLs (seconds) -- tiered by data volatility
 # ---------------------------------------------------------------------------
-TTL_BOOK = 30          # positions: near real-time
-TTL_RISK = 60          # risk metrics: moderate refresh
+TTL_BOOK = 30  # positions: near real-time
+TTL_RISK = 60  # risk metrics: moderate refresh
 TTL_MORNING_PACK = 300  # daily briefing: 5 min
-TTL_ATTRIBUTION = 300   # compute-heavy analytics: 5 min
+TTL_ATTRIBUTION = 300  # compute-heavy analytics: 5 min
 
 # Key prefix for all PMS cache entries
 KEY_PREFIX = "pms:"

@@ -59,8 +59,8 @@ class BeerModel:
     """
 
     SIGNAL_ID = "FX_BR_BEER"
-    MIN_OBS = 24       # minimum monthly observations to fit
-    THRESHOLD = 5.0    # % misalignment to fire signal (locked)
+    MIN_OBS = 24  # minimum monthly observations to fit
+    THRESHOLD = 5.0  # % misalignment to fire signal (locked)
     PREDICTOR_COLS = ["tot_proxy", "real_rate_diff", "nfa_proxy"]
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:  # noqa: C901
@@ -129,9 +129,13 @@ class BeerModel:
             misalignment_pct = (actual_usdbrl / fair_value - 1) * 100
 
             if misalignment_pct > self.THRESHOLD:
-                direction = SignalDirection.SHORT   # BRL undervalued → mean reversion → sell USD
+                direction = (
+                    SignalDirection.SHORT
+                )  # BRL undervalued → mean reversion → sell USD
             elif misalignment_pct < -self.THRESHOLD:
-                direction = SignalDirection.LONG    # BRL overvalued → mean reversion → buy USD
+                direction = (
+                    SignalDirection.LONG
+                )  # BRL overvalued → mean reversion → buy USD
             else:
                 direction = SignalDirection.NEUTRAL
 
@@ -177,9 +181,9 @@ class CarryToRiskModel:
     """
 
     SIGNAL_ID = "FX_BR_CARRY_RISK"
-    Z_FIRE = 1.0      # |z| threshold to fire
+    Z_FIRE = 1.0  # |z| threshold to fire
     ROLL_WINDOW = 12  # months for z-score
-    MIN_OBS = 13      # need 12M of history plus current
+    MIN_OBS = 13  # need 12M of history plus current
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
         """Generate carry-to-risk z-score signal.
@@ -228,9 +232,9 @@ class CarryToRiskModel:
         z = (current - roll_mean) / roll_std
 
         if z > self.Z_FIRE:
-            direction = SignalDirection.SHORT   # attractive carry = BRL inflows expected
+            direction = SignalDirection.SHORT  # attractive carry = BRL inflows expected
         elif z < -self.Z_FIRE:
-            direction = SignalDirection.LONG    # carry unwind risk = BRL outflows
+            direction = SignalDirection.LONG  # carry unwind risk = BRL outflows
         else:
             direction = SignalDirection.NEUTRAL
 
@@ -270,8 +274,8 @@ class FlowModel:
     """
 
     SIGNAL_ID = "FX_BR_FLOW"
-    Z_FIRE = 0.5     # composite z-score threshold to fire
-    MIN_OBS = 4      # minimum non-null observations per component
+    Z_FIRE = 0.5  # composite z-score threshold to fire
+    MIN_OBS = 4  # minimum non-null observations per component
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
         """Generate FX flow composite signal.
@@ -303,7 +307,10 @@ class FlowModel:
         if flow_df is None or not isinstance(flow_df, pd.DataFrame) or flow_df.empty:
             return _no_signal("no_flow_data")
 
-        if "bcb_flow_zscore" not in flow_df.columns or "cftc_zscore" not in flow_df.columns:
+        if (
+            "bcb_flow_zscore" not in flow_df.columns
+            or "cftc_zscore" not in flow_df.columns
+        ):
             return _no_signal("missing_columns")
 
         bcb_z = flow_df["bcb_flow_zscore"].iloc[-1]
@@ -324,9 +331,9 @@ class FlowModel:
             composite_z = (float(bcb_z) + float(cftc_z)) / 2.0
 
         if composite_z > self.Z_FIRE:
-            direction = SignalDirection.SHORT    # net BRL inflows = BRL demand = sell USD
+            direction = SignalDirection.SHORT  # net BRL inflows = BRL demand = sell USD
         elif composite_z < -self.Z_FIRE:
-            direction = SignalDirection.LONG     # net BRL outflows = buy USD
+            direction = SignalDirection.LONG  # net BRL outflows = buy USD
         else:
             direction = SignalDirection.NEUTRAL
 
@@ -364,7 +371,7 @@ class CipBasisModel:
     """
 
     SIGNAL_ID = "FX_BR_CIP_BASIS"
-    Z_FIRE = 0.75     # z-score of basis history to fire signal
+    Z_FIRE = 0.75  # z-score of basis history to fire signal
     ROLL_WINDOW = 24  # months for z-score baseline
     SIMPLE_THRESHOLD = 1.0  # % — fire on simple basis when no history
 
@@ -400,7 +407,9 @@ class CipBasisModel:
 
         # Primary: use pre-computed cip_basis
         basis_value: float
-        if cip_basis is not None and not (isinstance(cip_basis, float) and np.isnan(cip_basis)):
+        if cip_basis is not None and not (
+            isinstance(cip_basis, float) and np.isnan(cip_basis)
+        ):
             basis_value = float(cip_basis)
         elif not (isinstance(di_1y, float) and np.isnan(di_1y)) and not (
             isinstance(sofr, float) and np.isnan(sofr)
@@ -428,13 +437,19 @@ class CipBasisModel:
                     direction = SignalDirection.NEUTRAL
                 else:
                     direction = (
-                        SignalDirection.LONG if basis_value > 0 else SignalDirection.SHORT
+                        SignalDirection.LONG
+                        if basis_value > 0
+                        else SignalDirection.SHORT
                     )
             else:
-                direction = SignalDirection.LONG if basis_value > 0 else SignalDirection.SHORT
+                direction = (
+                    SignalDirection.LONG if basis_value > 0 else SignalDirection.SHORT
+                )
         else:
             # Threshold-based when no history
-            direction = SignalDirection.LONG if basis_value > 0 else SignalDirection.SHORT
+            direction = (
+                SignalDirection.LONG if basis_value > 0 else SignalDirection.SHORT
+            )
 
         confidence = min(1.0, abs(basis_value) / 5.0)
         strength = classify_strength(confidence)
@@ -612,9 +627,15 @@ class FxEquilibriumAgent(BaseAgent):
                 lookback_days=5475,
             )
             fred_ust = data.get("_fred_ust_5y")
-            if fred_ust is not None and not fred_ust.empty and "value" in fred_ust.columns:
+            if (
+                fred_ust is not None
+                and not fred_ust.empty
+                and "value" in fred_ust.columns
+            ):
                 # Reshape FRED macro series to match curve_history format (date, rate)
-                data["ust_5y_history"] = fred_ust[["value"]].rename(columns={"value": "rate"})
+                data["ust_5y_history"] = fred_ust[["value"]].rename(
+                    columns={"value": "rate"}
+                )
         # BCB FX flow commercial + financial
         _safe_load(
             "bcb_flow",
@@ -702,10 +723,14 @@ class FxEquilibriumAgent(BaseAgent):
         misalign = beer_sig.metadata.get("misalignment_pct", 0.0) if beer_sig else 0.0
 
         carry_dir = carry_sig.direction.value if carry_sig else "N/A"
-        z_carry = carry_sig.metadata.get("z_score", carry_sig.value if carry_sig else 0.0)
+        z_carry = carry_sig.metadata.get(
+            "z_score", carry_sig.value if carry_sig else 0.0
+        )
 
         flow_dir = flow_sig.direction.value if flow_sig else "N/A"
-        z_flow = flow_sig.metadata.get("composite_z", flow_sig.value if flow_sig else 0.0)
+        z_flow = flow_sig.metadata.get(
+            "composite_z", flow_sig.value if flow_sig else 0.0
+        )
 
         cip_dir = cip_sig.direction.value if cip_sig else "N/A"
         basis = cip_sig.metadata.get("basis_pct", cip_sig.value if cip_sig else 0.0)
@@ -746,10 +771,10 @@ class FxEquilibriumAgent(BaseAgent):
             AgentSignal with FX_BR_COMPOSITE signal_id.
         """
         base_weights = {
-            "FX_BR_BEER":       0.40,
+            "FX_BR_BEER": 0.40,
             "FX_BR_CARRY_RISK": 0.30,
-            "FX_BR_FLOW":       0.20,
-            "FX_BR_CIP_BASIS":  0.10,
+            "FX_BR_FLOW": 0.20,
+            "FX_BR_CIP_BASIS": 0.10,
         }
 
         # Filter to active signals (non-NO_SIGNAL and non-NEUTRAL direction)
@@ -781,14 +806,18 @@ class FxEquilibriumAgent(BaseAgent):
 
         # Plurality vote
         long_w = sum(
-            w for sig, w in zip(active_sigs, norm_weights)
+            w
+            for sig, w in zip(active_sigs, norm_weights)
             if sig.direction == SignalDirection.LONG
         )
         short_w = sum(
-            w for sig, w in zip(active_sigs, norm_weights)
+            w
+            for sig, w in zip(active_sigs, norm_weights)
             if sig.direction == SignalDirection.SHORT
         )
-        plurality_direction = SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        plurality_direction = (
+            SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        )
 
         # Conflict dampening
         disagreements = sum(

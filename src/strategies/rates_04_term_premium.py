@@ -207,9 +207,7 @@ class Rates04TermPremiumStrategy(BaseStrategy):
         Returns:
             List of term premium values (most recent last).
         """
-        combined = di_hist[["rate"]].join(
-            focus_hist[["value"]], how="outer"
-        )
+        combined = di_hist[["rate"]].join(focus_hist[["value"]], how="outer")
         combined = combined.ffill().dropna()
         if combined.empty:
             return []

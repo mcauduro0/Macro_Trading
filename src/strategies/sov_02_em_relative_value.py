@@ -64,54 +64,94 @@ _HOLDING_PERIOD = 28
 # ---------------------------------------------------------------------------
 EM_PEERS: list[dict] = [
     {
-        "name": "Brazil", "cds_approx": 180,
-        "debt_to_gdp": 78, "current_account_pct": -2.5,
-        "inflation_yoy": 4.5, "growth_yoy": 2.5, "political_stability": 45,
+        "name": "Brazil",
+        "cds_approx": 180,
+        "debt_to_gdp": 78,
+        "current_account_pct": -2.5,
+        "inflation_yoy": 4.5,
+        "growth_yoy": 2.5,
+        "political_stability": 45,
     },
     {
-        "name": "Mexico", "cds_approx": 120,
-        "debt_to_gdp": 55, "current_account_pct": -1.0,
-        "inflation_yoy": 4.0, "growth_yoy": 2.0, "political_stability": 50,
+        "name": "Mexico",
+        "cds_approx": 120,
+        "debt_to_gdp": 55,
+        "current_account_pct": -1.0,
+        "inflation_yoy": 4.0,
+        "growth_yoy": 2.0,
+        "political_stability": 50,
     },
     {
-        "name": "Colombia", "cds_approx": 160,
-        "debt_to_gdp": 60, "current_account_pct": -4.0,
-        "inflation_yoy": 6.0, "growth_yoy": 1.5, "political_stability": 40,
+        "name": "Colombia",
+        "cds_approx": 160,
+        "debt_to_gdp": 60,
+        "current_account_pct": -4.0,
+        "inflation_yoy": 6.0,
+        "growth_yoy": 1.5,
+        "political_stability": 40,
     },
     {
-        "name": "Chile", "cds_approx": 65,
-        "debt_to_gdp": 38, "current_account_pct": -3.5,
-        "inflation_yoy": 3.5, "growth_yoy": 2.0, "political_stability": 65,
+        "name": "Chile",
+        "cds_approx": 65,
+        "debt_to_gdp": 38,
+        "current_account_pct": -3.5,
+        "inflation_yoy": 3.5,
+        "growth_yoy": 2.0,
+        "political_stability": 65,
     },
     {
-        "name": "Peru", "cds_approx": 90,
-        "debt_to_gdp": 35, "current_account_pct": -2.0,
-        "inflation_yoy": 3.0, "growth_yoy": 2.5, "political_stability": 50,
+        "name": "Peru",
+        "cds_approx": 90,
+        "debt_to_gdp": 35,
+        "current_account_pct": -2.0,
+        "inflation_yoy": 3.0,
+        "growth_yoy": 2.5,
+        "political_stability": 50,
     },
     {
-        "name": "South Africa", "cds_approx": 200,
-        "debt_to_gdp": 72, "current_account_pct": -1.5,
-        "inflation_yoy": 5.5, "growth_yoy": 0.5, "political_stability": 35,
+        "name": "South Africa",
+        "cds_approx": 200,
+        "debt_to_gdp": 72,
+        "current_account_pct": -1.5,
+        "inflation_yoy": 5.5,
+        "growth_yoy": 0.5,
+        "political_stability": 35,
     },
     {
-        "name": "Turkey", "cds_approx": 320,
-        "debt_to_gdp": 40, "current_account_pct": -5.0,
-        "inflation_yoy": 50.0, "growth_yoy": 4.0, "political_stability": 30,
+        "name": "Turkey",
+        "cds_approx": 320,
+        "debt_to_gdp": 40,
+        "current_account_pct": -5.0,
+        "inflation_yoy": 50.0,
+        "growth_yoy": 4.0,
+        "political_stability": 30,
     },
     {
-        "name": "Indonesia", "cds_approx": 85,
-        "debt_to_gdp": 40, "current_account_pct": -0.5,
-        "inflation_yoy": 3.5, "growth_yoy": 5.0, "political_stability": 55,
+        "name": "Indonesia",
+        "cds_approx": 85,
+        "debt_to_gdp": 40,
+        "current_account_pct": -0.5,
+        "inflation_yoy": 3.5,
+        "growth_yoy": 5.0,
+        "political_stability": 55,
     },
     {
-        "name": "India", "cds_approx": 100,
-        "debt_to_gdp": 83, "current_account_pct": -1.5,
-        "inflation_yoy": 5.0, "growth_yoy": 6.5, "political_stability": 50,
+        "name": "India",
+        "cds_approx": 100,
+        "debt_to_gdp": 83,
+        "current_account_pct": -1.5,
+        "inflation_yoy": 5.0,
+        "growth_yoy": 6.5,
+        "political_stability": 50,
     },
     {
-        "name": "Poland", "cds_approx": 55,
-        "debt_to_gdp": 50, "current_account_pct": 1.0,
-        "inflation_yoy": 4.0, "growth_yoy": 3.0, "political_stability": 60,
+        "name": "Poland",
+        "cds_approx": 55,
+        "debt_to_gdp": 50,
+        "current_account_pct": 1.0,
+        "inflation_yoy": 4.0,
+        "growth_yoy": 3.0,
+        "political_stability": 60,
     },
 ]
 
@@ -156,7 +196,8 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
         """
         # Load actual Brazil CDS
         br_cds = self.data_loader.get_latest_macro_value(
-            "BR_CDS_5Y", as_of_date,
+            "BR_CDS_5Y",
+            as_of_date,
         )
         if br_cds is None:
             self.log.warning("sov02_missing_br_cds", as_of_date=str(as_of_date))
@@ -262,14 +303,16 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
         for peer in EM_PEERS:
             cds_val = actual_br_cds if peer["name"] == "Brazil" else peer["cds_approx"]
             y.append(cds_val)
-            X.append([
-                1.0,  # intercept
-                peer["debt_to_gdp"],
-                peer["current_account_pct"],
-                peer["inflation_yoy"],
-                peer["growth_yoy"],
-                peer["political_stability"],
-            ])
+            X.append(
+                [
+                    1.0,  # intercept
+                    peer["debt_to_gdp"],
+                    peer["current_account_pct"],
+                    peer["inflation_yoy"],
+                    peer["growth_yoy"],
+                    peer["political_stability"],
+                ]
+            )
 
         # Simple OLS: beta = (X'X)^{-1} X'y
         # Implemented without numpy to keep dependency light
@@ -309,7 +352,8 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
 
     @staticmethod
     def _solve_linear_system(
-        A: list[list[float]], b: list[float],
+        A: list[list[float]],
+        b: list[float],
     ) -> Optional[list[float]]:
         """Solve Ax = b via Gaussian elimination with partial pivoting.
 
@@ -352,7 +396,9 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
     # Residual z-score computation
     # ------------------------------------------------------------------
     def _compute_residual_z(
-        self, as_of_date: date, current_predicted: float,
+        self,
+        as_of_date: date,
+        current_predicted: float,
     ) -> Optional[float]:
         """Compute z-score of residual vs rolling 252-day history.
 
@@ -360,7 +406,9 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
         (since fundamentals are semi-static, predicted changes slowly).
         """
         cds_df = self.data_loader.get_macro_series(
-            "BR_CDS_5Y", as_of_date, lookback_days=_CDS_LOOKBACK,
+            "BR_CDS_5Y",
+            as_of_date,
+            lookback_days=_CDS_LOOKBACK,
         )
         if cds_df.empty or len(cds_df) < 60:
             return None
@@ -371,5 +419,7 @@ class Sov02EmRelativeValueStrategy(BaseStrategy):
         current_residual = residuals[-1]
 
         return self.compute_z_score(
-            current_residual, residuals, window=_ZSCORE_WINDOW,
+            current_residual,
+            residuals,
+            window=_ZSCORE_WINDOW,
         )

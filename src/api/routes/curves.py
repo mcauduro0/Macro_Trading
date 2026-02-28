@@ -67,9 +67,8 @@ async def get_curve_snapshot(
     # Determine the target date
     target_date = date
     if target_date is None:
-        latest_stmt = (
-            select(func.max(CurveData.curve_date))
-            .where(CurveData.curve_id == curve_id)
+        latest_stmt = select(func.max(CurveData.curve_date)).where(
+            CurveData.curve_id == curve_id
         )
         latest_row = (await session.execute(latest_stmt)).scalar_one_or_none()
         if latest_row is None:
@@ -118,9 +117,8 @@ async def get_curve_history(
     session: AsyncSession = Depends(get_db),
 ) -> list[CurveHistoryPoint]:
     """Return the rate time-series for a single tenor of a curve."""
-    stmt = (
-        select(CurveData.curve_date, CurveData.rate)
-        .where(CurveData.curve_id == curve_id, CurveData.tenor_label == tenor)
+    stmt = select(CurveData.curve_date, CurveData.rate).where(
+        CurveData.curve_id == curve_id, CurveData.tenor_label == tenor
     )
 
     if start:

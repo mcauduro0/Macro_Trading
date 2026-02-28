@@ -62,15 +62,15 @@ class DebtSustainabilityModel:
     """
 
     SIGNAL_ID = "FISCAL_BR_DSA"
-    HORIZON = 5       # 5-year projection
-    MIN_OBS = 12      # months of data required (graceful degradation for early backtest)
-    THRESHOLD = 5.0   # pp change in terminal debt/GDP to trigger signal
+    HORIZON = 5  # 5-year projection
+    MIN_OBS = 12  # months of data required (graceful degradation for early backtest)
+    THRESHOLD = 5.0  # pp change in terminal debt/GDP to trigger signal
 
     SCENARIOS: dict[str, dict[str, float]] = {
-        "baseline":   {"r_adj": 0.0,  "g_adj": 0.0,  "pb_adj":  0.0},
-        "stress":     {"r_adj": 2.0,  "g_adj": -1.0, "pb_adj": -0.5},
-        "adjustment": {"r_adj": 0.0,  "g_adj": 0.0,  "pb_adj":  1.5},
-        "tailwind":   {"r_adj": -1.0, "g_adj": 1.0,  "pb_adj":  0.0},
+        "baseline": {"r_adj": 0.0, "g_adj": 0.0, "pb_adj": 0.0},
+        "stress": {"r_adj": 2.0, "g_adj": -1.0, "pb_adj": -0.5},
+        "adjustment": {"r_adj": 0.0, "g_adj": 0.0, "pb_adj": 1.5},
+        "tailwind": {"r_adj": -1.0, "g_adj": 1.0, "pb_adj": 0.0},
     }
 
     # Confidence mapping: stabilizing_count -> confidence
@@ -121,7 +121,11 @@ class DebtSustainabilityModel:
 
         # Check pb_history length >= MIN_OBS
         pb_history = features.get("_pb_history")
-        if pb_history is None or not isinstance(pb_history, pd.Series) or len(pb_history) < self.MIN_OBS:
+        if (
+            pb_history is None
+            or not isinstance(pb_history, pd.Series)
+            or len(pb_history) < self.MIN_OBS
+        ):
             return _no_signal("insufficient_history")
 
         # Extract DSA inputs
@@ -137,7 +141,9 @@ class DebtSustainabilityModel:
 
         # Growth: prefer g_focus if available, else g_real
         g_baseline: float = dsa_raw.get("g_focus") or dsa_raw.get("g_real", np.nan)
-        if g_baseline is None or (isinstance(g_baseline, float) and np.isnan(g_baseline)):
+        if g_baseline is None or (
+            isinstance(g_baseline, float) and np.isnan(g_baseline)
+        ):
             g_baseline = dsa_raw.get("g_real", np.nan)
         if isinstance(g_baseline, float) and np.isnan(g_baseline):
             return _no_signal("missing_data:g_real")
@@ -249,7 +255,11 @@ class DebtSustainabilityModel:
         """
         fallback = dsa_raw.get("r_real", np.nan)
         if not di_curve:
-            return float(fallback) if not isinstance(fallback, float) or not np.isnan(fallback) else 3.0
+            return (
+                float(fallback)
+                if not isinstance(fallback, float) or not np.isnan(fallback)
+                else 3.0
+            )
 
         # Find closest tenor to 1825 days (5Y)
         target_tenor = 1825
@@ -261,7 +271,11 @@ class DebtSustainabilityModel:
             return float(di_5y) - 4.0  # rough inflation assumption if focus missing
         except Exception as exc:
             logger.debug("di_5y_lookup_failed: %s", exc)
-            return float(fallback) if not isinstance(fallback, float) or not np.isnan(fallback) else 3.0
+            return (
+                float(fallback)
+                if not isinstance(fallback, float) or not np.isnan(fallback)
+                else 3.0
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -277,9 +291,9 @@ class FiscalImpulseModel:
     """
 
     SIGNAL_ID = "FISCAL_BR_IMPULSE"
-    Z_FIRE = 1.0      # |z| threshold to fire signal
+    Z_FIRE = 1.0  # |z| threshold to fire signal
     ROLL_WINDOW = 36  # months for z-score mean/std
-    MIN_OBS = 24      # minimum pb_history length
+    MIN_OBS = 24  # minimum pb_history length
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
         """Generate fiscal impulse signal from pb history.
@@ -308,7 +322,11 @@ class FiscalImpulseModel:
             )
 
         pb_history = features.get("_pb_history")
-        if pb_history is None or not isinstance(pb_history, pd.Series) or len(pb_history) < self.MIN_OBS:
+        if (
+            pb_history is None
+            or not isinstance(pb_history, pd.Series)
+            or len(pb_history) < self.MIN_OBS
+        ):
             return _no_signal("insufficient_data")
 
         # Compute 12M diff
@@ -329,9 +347,13 @@ class FiscalImpulseModel:
         z = (pb_12m_change.iloc[-1] - latest_mean) / latest_std
 
         if z > self.Z_FIRE:
-            direction = SignalDirection.SHORT  # pb improving = fiscal contraction = BRL positive
+            direction = (
+                SignalDirection.SHORT
+            )  # pb improving = fiscal contraction = BRL positive
         elif z < -self.Z_FIRE:
-            direction = SignalDirection.LONG   # pb deteriorating = fiscal expansion = BRL bearish
+            direction = (
+                SignalDirection.LONG
+            )  # pb deteriorating = fiscal expansion = BRL bearish
         else:
             direction = SignalDirection.NEUTRAL
 
@@ -387,9 +409,9 @@ class FiscalDominanceRisk:
     SIGNAL_ID = "FISCAL_BR_DOMINANCE_RISK"
 
     WEIGHTS: dict[str, float] = {
-        "debt_level":     0.35,
-        "r_g_spread":     0.30,
-        "pb_trend":       0.20,
+        "debt_level": 0.35,
+        "r_g_spread": 0.30,
+        "pb_trend": 0.20,
         "cb_credibility": 0.15,
     }
 
@@ -441,28 +463,42 @@ class FiscalDominanceRisk:
             debt_score = np.nan
 
         try:
-            rg_score = _clamp((r_g_spread + 5) / 10 * 100, 0, 100) if not np.isnan(r_g_spread) else np.nan
+            rg_score = (
+                _clamp((r_g_spread + 5) / 10 * 100, 0, 100)
+                if not np.isnan(r_g_spread)
+                else np.nan
+            )
         except Exception:
             rg_score = np.nan
 
         try:
-            pb_score = _clamp((-pb_12m_change + 1) / 2 * 100, 0, 100) if not np.isnan(pb_12m_change) else np.nan
+            pb_score = (
+                _clamp((-pb_12m_change + 1) / 2 * 100, 0, 100)
+                if not np.isnan(pb_12m_change)
+                else np.nan
+            )
         except Exception:
             pb_score = np.nan
 
         try:
-            cred_score = _clamp(focus_abs_dev / 3.0 * 100, 0, 100) if not np.isnan(focus_abs_dev) else np.nan
+            cred_score = (
+                _clamp(focus_abs_dev / 3.0 * 100, 0, 100)
+                if not np.isnan(focus_abs_dev)
+                else np.nan
+            )
         except Exception:
             cred_score = np.nan
 
         subscores = {
-            "debt_level":     debt_score,
-            "r_g_spread":     rg_score,
-            "pb_trend":       pb_score,
+            "debt_level": debt_score,
+            "r_g_spread": rg_score,
+            "pb_trend": pb_score,
             "cb_credibility": cred_score,
         }
 
-        nan_count = sum(1 for v in subscores.values() if isinstance(v, float) and np.isnan(v))
+        nan_count = sum(
+            1 for v in subscores.values() if isinstance(v, float) and np.isnan(v)
+        )
         if nan_count >= 3:
             return _no_signal("insufficient_features")
 
@@ -481,10 +517,7 @@ class FiscalDominanceRisk:
         if total_weight < 1e-8:
             return _no_signal("zero_total_weight")
 
-        composite = sum(
-            filled_scores[k] * w
-            for k, w in self.WEIGHTS.items()
-        )
+        composite = sum(filled_scores[k] * w for k, w in self.WEIGHTS.items())
         # Since we substituted 50 for NaN rather than excluding, use full weight sum = 1.0
         # No renormalization needed when filling with neutral value
 
@@ -518,10 +551,16 @@ class FiscalDominanceRisk:
             metadata={
                 "composite_score": round(composite, 2),
                 "subscores": {
-                    "debt_level": round(debt_score, 2) if not np.isnan(debt_score) else None,
-                    "r_g_spread": round(rg_score, 2) if not np.isnan(rg_score) else None,
+                    "debt_level": (
+                        round(debt_score, 2) if not np.isnan(debt_score) else None
+                    ),
+                    "r_g_spread": (
+                        round(rg_score, 2) if not np.isnan(rg_score) else None
+                    ),
                     "pb_trend": round(pb_score, 2) if not np.isnan(pb_score) else None,
-                    "cb_credibility": round(cred_score, 2) if not np.isnan(cred_score) else None,
+                    "cb_credibility": (
+                        round(cred_score, 2) if not np.isnan(cred_score) else None
+                    ),
                 },
                 "thresholds": {"low": self.THRESHOLD_LOW, "high": self.THRESHOLD_HIGH},
             },
@@ -719,7 +758,9 @@ class FiscalAgent(BaseAgent):
         if dsa_sig:
             baseline_delta = dsa_sig.metadata.get("baseline_terminal", "N/A")
             d0 = dsa_sig.metadata.get("d0", "N/A")
-            if isinstance(baseline_delta, (int, float)) and isinstance(d0, (int, float)):
+            if isinstance(baseline_delta, (int, float)) and isinstance(
+                d0, (int, float)
+            ):
                 delta = baseline_delta - d0
                 parts.append(
                     f"DSA: {dsa_sig.direction.value} (5Y debt path {delta:+.1f}pp from {d0:.1f}% GDP)."
@@ -733,7 +774,9 @@ class FiscalAgent(BaseAgent):
 
         if dominance_sig:
             score = dominance_sig.metadata.get("composite_score", dominance_sig.value)
-            parts.append(f"Dominance Risk: {dominance_sig.direction.value} (score={score:.0f}/100).")
+            parts.append(
+                f"Dominance Risk: {dominance_sig.direction.value} (score={score:.0f}/100)."
+            )
 
         if composite_sig:
             parts.append(f"Composite: {composite_sig.direction.value}.")
@@ -791,9 +834,19 @@ class FiscalAgent(BaseAgent):
         active_sigs = [sig for sig, _ in active]
 
         # Plurality vote for direction
-        long_w = sum(w for sig, w in zip(active_sigs, norm_weights) if sig.direction == SignalDirection.LONG)
-        short_w = sum(w for sig, w in zip(active_sigs, norm_weights) if sig.direction == SignalDirection.SHORT)
-        plurality_direction = SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        long_w = sum(
+            w
+            for sig, w in zip(active_sigs, norm_weights)
+            if sig.direction == SignalDirection.LONG
+        )
+        short_w = sum(
+            w
+            for sig, w in zip(active_sigs, norm_weights)
+            if sig.direction == SignalDirection.SHORT
+        )
+        plurality_direction = (
+            SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        )
 
         # Conflict detection: dampening if any active signal disagrees
         disagreements = sum(
@@ -802,12 +855,16 @@ class FiscalAgent(BaseAgent):
         dampening = 0.70 if disagreements >= 1 else 1.0
 
         # Weighted confidence with dampening
-        weighted_conf = sum(sig.confidence * w for sig, w in zip(active_sigs, norm_weights))
+        weighted_conf = sum(
+            sig.confidence * w for sig, w in zip(active_sigs, norm_weights)
+        )
         composite_confidence = weighted_conf * dampening
         composite_strength = classify_strength(composite_confidence)
 
         # Weighted value
-        composite_value = sum(sig.value * w for sig, w in zip(active_sigs, norm_weights))
+        composite_value = sum(
+            sig.value * w for sig, w in zip(active_sigs, norm_weights)
+        )
 
         return AgentSignal(
             signal_id="FISCAL_BR_COMPOSITE",

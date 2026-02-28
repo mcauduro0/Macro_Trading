@@ -44,14 +44,15 @@ class PortfolioPosition(Base):
 
     __tablename__ = "portfolio_positions"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
     instrument: Mapped[str] = mapped_column(String(50), nullable=False)
     asset_class: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -78,9 +79,7 @@ class PortfolioPosition(Base):
     transaction_cost_brl: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, default=0.0
     )
-    is_open: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True
-    )
+    is_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     closed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -90,7 +89,9 @@ class PortfolioPosition(Base):
     entry_dv01: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     entry_delta: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     entry_convexity: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    entry_var_contribution: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    entry_var_contribution: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
     entry_spread_duration: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Strategy linkage
@@ -127,14 +128,15 @@ class TradeProposal(Base):
 
     __tablename__ = "trade_proposals"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
     instrument: Mapped[str] = mapped_column(String(50), nullable=False)
     asset_class: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -146,15 +148,15 @@ class TradeProposal(Base):
     strategy_ids: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     rationale: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     risk_impact: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="PENDING"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING")
     reviewed_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     reviewed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     execution_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    execution_notional_brl: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    execution_notional_brl: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
     position_id: Mapped[Optional[int]] = mapped_column(
         BigInteger,
         ForeignKey("portfolio_positions.id"),
@@ -163,9 +165,7 @@ class TradeProposal(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
-    __table_args__ = (
-        Index("ix_trade_proposals_status", "status"),
-    )
+    __table_args__ = (Index("ix_trade_proposals_status", "status"),)
 
     def __repr__(self) -> str:
         return (
@@ -188,9 +188,7 @@ class DecisionJournal(Base):
 
     __tablename__ = "decision_journal"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -242,9 +240,7 @@ class DailyBriefing(Base):
 
     __tablename__ = "daily_briefings"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     briefing_date: Mapped[date] = mapped_column(Date, nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -263,9 +259,7 @@ class DailyBriefing(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<DailyBriefing("
-            f"id={self.id}, "
-            f"briefing_date={self.briefing_date})>"
+            f"<DailyBriefing(" f"id={self.id}, " f"briefing_date={self.briefing_date})>"
         )
 
 
@@ -282,12 +276,8 @@ class PositionPnLHistory(Base):
 
     __tablename__ = "position_pnl_history"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
-    snapshot_date: Mapped[date] = mapped_column(
-        Date, primary_key=True, nullable=False
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    snapshot_date: Mapped[date] = mapped_column(Date, primary_key=True, nullable=False)
     position_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     instrument: Mapped[str] = mapped_column(String(50), nullable=False)
     mark_price: Mapped[float] = mapped_column(Float, nullable=False)
@@ -307,7 +297,8 @@ class PositionPnLHistory(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "snapshot_date", "position_id",
+            "snapshot_date",
+            "position_id",
             name="uq_position_pnl_history_natural_key",
         ),
         {"comment": "TimescaleDB hypertable partitioned on snapshot_date"},

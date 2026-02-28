@@ -37,6 +37,7 @@ def _partition_date(context: AssetExecutionContext) -> date:
 # Report Asset
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="report",
     retry_policy=_retry_policy,

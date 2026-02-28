@@ -78,17 +78,13 @@ class TestFractionalKellySize:
         """Half Kelly produces 50% of full Kelly."""
         # Full Kelly: f* = 0.10 / 0.04 = 2.5
         # Half Kelly: 0.5 * 2.5 = 1.25, clamped to 0.25
-        result = sizer.fractional_kelly_size(
-            expected_return=0.10, return_variance=0.04
-        )
+        result = sizer.fractional_kelly_size(expected_return=0.10, return_variance=0.04)
         assert result == 0.25  # Clamped
 
     def test_half_kelly_unclamped(self):
         """Half Kelly without clamping."""
         sizer = PositionSizer(kelly_fraction=0.5, max_position=10.0)
-        result = sizer.fractional_kelly_size(
-            expected_return=0.10, return_variance=0.04
-        )
+        result = sizer.fractional_kelly_size(expected_return=0.10, return_variance=0.04)
         # 0.5 * (0.10 / 0.04) = 0.5 * 2.5 = 1.25
         assert abs(result - 1.25) < 1e-8
 
@@ -104,17 +100,13 @@ class TestFractionalKellySize:
     def test_small_expected_return(self):
         """Small expected return stays within bounds."""
         sizer = PositionSizer(kelly_fraction=0.5, max_position=0.25)
-        result = sizer.fractional_kelly_size(
-            expected_return=0.01, return_variance=0.04
-        )
+        result = sizer.fractional_kelly_size(expected_return=0.01, return_variance=0.04)
         # 0.5 * (0.01 / 0.04) = 0.5 * 0.25 = 0.125
         assert abs(result - 0.125) < 1e-8
 
     def test_zero_variance_returns_zero(self, sizer: PositionSizer):
         """Zero variance returns 0.0 to avoid division by zero."""
-        result = sizer.fractional_kelly_size(
-            expected_return=0.10, return_variance=0.0
-        )
+        result = sizer.fractional_kelly_size(expected_return=0.10, return_variance=0.0)
         assert result == 0.0
 
 

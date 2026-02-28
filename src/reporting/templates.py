@@ -64,7 +64,10 @@ SLACK_SUMMARY_TEMPLATE = {
     "blocks": [
         {
             "type": "header",
-            "text": {"type": "plain_text", "text": "Macro Trading Daily Report - {report_date}"},
+            "text": {
+                "type": "plain_text",
+                "text": "Macro Trading Daily Report - {report_date}",
+            },
         },
         {
             "type": "section",
@@ -105,6 +108,7 @@ SLACK_SUMMARY_TEMPLATE = {
 # Rendering Functions
 # ---------------------------------------------------------------------------
 
+
 def render_html(sections: dict, charts: dict[str, str] | None = None) -> str:
     """Fill the HTML template with section data and optional base64 chart images."""
     from datetime import datetime
@@ -140,7 +144,9 @@ def render_html(sections: dict, charts: dict[str, str] | None = None) -> str:
         sections_html_parts.append(part)
 
     return HTML_REPORT_TEMPLATE.format(
-        report_date=sections.get("market_snapshot", next(iter(sections.values()))).content.get("date", "N/A"),
+        report_date=sections.get(
+            "market_snapshot", next(iter(sections.values()))
+        ).content.get("date", "N/A"),
         generation_timestamp=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
         sections_html="\n".join(sections_html_parts),
     )
@@ -197,9 +203,13 @@ def render_markdown(sections: dict) -> str:
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _render_kv_table(data: dict) -> str:
     """Render a key-value dict as a 2-column HTML table."""
-    rows = "".join(f"<tr><td><b>{k}</b></td><td>{_format_value(v)}</td></tr>\n" for k, v in data.items())
+    rows = "".join(
+        f"<tr><td><b>{k}</b></td><td>{_format_value(v)}</td></tr>\n"
+        for k, v in data.items()
+    )
     return f"<table><tbody>\n{rows}</tbody></table>\n"
 
 

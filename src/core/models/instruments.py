@@ -22,7 +22,8 @@ class Instrument(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     asset_class: Mapped[str] = mapped_column(String(50), nullable=False)
     instrument_type: Mapped[Optional[str]] = mapped_column(
-        String(20), nullable=True,
+        String(20),
+        nullable=True,
         comment="FUTURE, BOND, SWAP, OPTION, CDS, NDF, SPOT, INDEX, ETF, FRA",
     )
     country: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -30,7 +31,8 @@ class Instrument(Base):
     exchange: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     maturity_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     contract_specs: Mapped[Optional[dict]] = mapped_column(
-        JSONB, nullable=True,
+        JSONB,
+        nullable=True,
         comment="multiplier, tick_size, margin, settlement_type",
     )
     is_active: Mapped[bool] = mapped_column(default=True)

@@ -180,9 +180,7 @@ class COPOMScraper:
             r'href="([^"]*(?:ata|comunicado|copom)[^"]*)"',
             re.IGNORECASE,
         )
-        date_pattern = re.compile(
-            r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})"
-        )
+        date_pattern = re.compile(r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})")
 
         # Also try ISO date pattern
         iso_date_pattern = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
@@ -222,11 +220,13 @@ class COPOMScraper:
                         int(url_date_match.group(3)),
                     )
                     if d.year >= start_year:
-                        documents.append({
-                            "url": full_url,
-                            "date": d,
-                            "doc_type": doc_type,
-                        })
+                        documents.append(
+                            {
+                                "url": full_url,
+                                "date": d,
+                                "doc_type": doc_type,
+                            }
+                        )
                 except ValueError:
                     continue
 
@@ -237,11 +237,13 @@ class COPOMScraper:
                     full_url = (
                         link if link.startswith("http") else f"{self.BASE_URL}{link}"
                     )
-                    documents.append({
-                        "url": full_url,
-                        "date": parsed_dates[i],
-                        "doc_type": doc_type,
-                    })
+                    documents.append(
+                        {
+                            "url": full_url,
+                            "date": parsed_dates[i],
+                            "doc_type": doc_type,
+                        }
+                    )
 
         return documents
 
@@ -290,9 +292,7 @@ class COPOMScraper:
             response = client.get(index_url)
             response.raise_for_status()
         except httpx.HTTPError as exc:
-            logger.warning(
-                "Failed to fetch COPOM %s index: %s", doc_type, exc
-            )
+            logger.warning("Failed to fetch COPOM %s index: %s", doc_type, exc)
             return new_docs
 
         # Parse document links
@@ -395,9 +395,7 @@ class COPOMScraper:
 
         records = [doc.to_dict() for doc in documents]
         stmt = pg_insert(NlpDocumentRecord).values(records)
-        stmt = stmt.on_conflict_do_nothing(
-            constraint="uq_nlp_documents_natural_key"
-        )
+        stmt = stmt.on_conflict_do_nothing(constraint="uq_nlp_documents_natural_key")
         result = session.execute(stmt)
         session.flush()
         return result.rowcount

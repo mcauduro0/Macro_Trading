@@ -179,9 +179,7 @@ class DailyPipeline:
             elapsed = time.monotonic() - t0
             self._result.step_timings[name] = round(elapsed, 3)
             print(f"  \u2717 {name + ':':<14} FAILED -- {exc}")
-            raise RuntimeError(
-                f"Pipeline aborted at step '{name}': {exc}"
-            ) from exc
+            raise RuntimeError(f"Pipeline aborted at step '{name}': {exc}") from exc
 
     # ------------------------------------------------------------------
     # Pipeline steps
@@ -246,22 +244,16 @@ class DailyPipeline:
             )
             self._agent_reports = {}
 
-        total_signals = sum(
-            len(r.signals) for r in self._agent_reports.values()
-        )
+        total_signals = sum(len(r.signals) for r in self._agent_reports.values())
         self._result.signal_count = total_signals
         agent_count = len(self._agent_reports)
-        self._step_details["agents"] = (
-            f"{agent_count} agents, {total_signals} signals"
-        )
+        self._step_details["agents"] = f"{agent_count} agents, {total_signals} signals"
 
     def _step_aggregate(self) -> None:
         """Aggregate agent signals into per-asset-class consensus."""
         if self._agent_reports:
             aggregator = SignalAggregator()
-            self._aggregated_signals = aggregator.aggregate(
-                self._agent_reports
-            )
+            self._aggregated_signals = aggregator.aggregate(self._agent_reports)
         else:
             self._aggregated_signals = []
 
@@ -313,12 +305,8 @@ class DailyPipeline:
         )
 
         self._result.regime = self._portfolio_target.regime.value
-        self._result.leverage = round(
-            self._allocation_result.leverage_used, 2
-        )
-        self._step_details["portfolio"] = (
-            f"leverage: {self._result.leverage}x"
-        )
+        self._result.leverage = round(self._allocation_result.leverage_used, 2)
+        self._step_details["portfolio"] = f"leverage: {self._result.leverage}x"
 
     def _step_risk(self) -> None:
         """Compute VaR, stress tests, and check risk limits."""
@@ -336,9 +324,7 @@ class DailyPipeline:
 
         if self._allocation_result:
             weights = self._allocation_result.target_weights
-            positions = {
-                k: v * portfolio_value for k, v in weights.items()
-            }
+            positions = {k: v * portfolio_value for k, v in weights.items()}
 
         try:
             self._risk_report = monitor.generate_report(
@@ -354,9 +340,7 @@ class DailyPipeline:
             # Collect risk alerts
             alerts: list[str] = []
             if self._risk_report.overall_risk_level in ("HIGH", "CRITICAL"):
-                alerts.append(
-                    f"Risk level: {self._risk_report.overall_risk_level}"
-                )
+                alerts.append(f"Risk level: {self._risk_report.overall_risk_level}")
             for lr in self._risk_report.limit_results:
                 if lr.breached:
                     alerts.append(f"Limit breached: {lr.limit_name}")
@@ -434,9 +418,7 @@ class DailyPipeline:
             f"Positions: {r.position_count} | "
             f"Leverage: {r.leverage}x"
         )
-        lines.append(
-            f"  VaR (95%): {r.var_95}% | Regime: {r.regime}"
-        )
+        lines.append(f"  VaR (95%): {r.var_95}% | Regime: {r.regime}")
 
         if r.risk_alerts:
             alerts_str = "; ".join(r.risk_alerts)
@@ -444,9 +426,7 @@ class DailyPipeline:
         else:
             lines.append("  Risk Alerts: None")
 
-        lines.append(
-            f"  Total: {r.duration_seconds:.1f}s | Status: {r.status}"
-        )
+        lines.append(f"  Total: {r.duration_seconds:.1f}s | Status: {r.status}")
         lines.append("=" * 42)
 
         return "\n".join(lines)
@@ -459,8 +439,7 @@ def _insert_pipeline_run_sql():
     """Return a SQLAlchemy text() insert for pipeline_runs."""
     from sqlalchemy import text
 
-    return text(
-        """
+    return text("""
         INSERT INTO pipeline_runs
             (id, run_date, status, duration_seconds, step_timings,
              signal_count, position_count, regime, summary, created_at)
@@ -468,5 +447,4 @@ def _insert_pipeline_run_sql():
             (:id, :run_date, :status, :duration_seconds,
              CAST(:step_timings AS jsonb),
              :signal_count, :position_count, :regime, :summary, :created_at)
-        """
-    )
+        """)

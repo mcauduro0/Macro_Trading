@@ -32,12 +32,14 @@ async def list_daily_reports():
         # Skip weekends
         if d.weekday() >= 5:
             continue
-        reports.append({
-            "date": str(d),
-            "generation_time": f"{d}T06:30:00Z",
-            "sections": 7,
-            "status": "generated" if i > 0 else "latest",
-        })
+        reports.append(
+            {
+                "date": str(d),
+                "generation_time": f"{d}T06:30:00Z",
+                "sections": 7,
+                "status": "generated" if i > 0 else "latest",
+            }
+        )
     return {
         "status": "ok",
         "data": {"reports": reports, "total": len(reports)},

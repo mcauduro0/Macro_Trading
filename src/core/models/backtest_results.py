@@ -9,6 +9,7 @@ v3.0 additions (SFWK-04):
 - daily_returns_json: Array of daily returns for distribution analysis
 - avg_holding_days: Average trade holding period in days
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -27,6 +28,7 @@ class BacktestResultRecord(Base):
     Named BacktestResultRecord (not BacktestResult) to avoid collision
     with the BacktestResult dataclass in src.backtesting.metrics.
     """
+
     __tablename__ = "backtest_results"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

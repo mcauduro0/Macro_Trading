@@ -53,15 +53,15 @@ class B3MarketDataConnector(BaseConnector):
     # DI Swap Curve registry: name -> (SGS code, tenor_label, tenor_days)
     # -----------------------------------------------------------------------
     DI_SWAP_REGISTRY: dict[str, tuple[int, str, int]] = {
-        "DI_SWAP_30D":  (7805, "1M",  30),
-        "DI_SWAP_60D":  (7806, "2M",  60),
-        "DI_SWAP_90D":  (7807, "3M",  90),
-        "DI_SWAP_120D": (7808, "4M",  120),
-        "DI_SWAP_150D": (7809, "5M",  150),
-        "DI_SWAP_180D": (7810, "6M",  180),
-        "DI_SWAP_210D": (7811, "7M",  210),
-        "DI_SWAP_240D": (7812, "8M",  240),
-        "DI_SWAP_270D": (7813, "9M",  270),
+        "DI_SWAP_30D": (7805, "1M", 30),
+        "DI_SWAP_60D": (7806, "2M", 60),
+        "DI_SWAP_90D": (7807, "3M", 90),
+        "DI_SWAP_120D": (7808, "4M", 120),
+        "DI_SWAP_150D": (7809, "5M", 150),
+        "DI_SWAP_180D": (7810, "6M", 180),
+        "DI_SWAP_210D": (7811, "7M", 210),
+        "DI_SWAP_240D": (7812, "8M", 240),
+        "DI_SWAP_270D": (7813, "9M", 270),
         "DI_SWAP_300D": (7814, "10M", 300),
         "DI_SWAP_330D": (7815, "11M", 330),
         "DI_SWAP_360D": (7816, "12M", 360),
@@ -150,15 +150,17 @@ class B3MarketDataConnector(BaseConnector):
                     # CRITICAL: Convert percentage to decimal (13.50 -> 0.1350)
                     rate_decimal = parsed_value / 100.0
 
-                    all_records.append({
-                        "curve_id": "DI_PRE",
-                        "curve_date": obs_date,
-                        "tenor_days": tenor_days,
-                        "tenor_label": tenor_label,
-                        "rate": rate_decimal,
-                        "curve_type": "swap",
-                        "source": "BCB_SGS",
-                    })
+                    all_records.append(
+                        {
+                            "curve_id": "DI_PRE",
+                            "curve_date": obs_date,
+                            "tenor_days": tenor_days,
+                            "tenor_label": tenor_label,
+                            "rate": rate_decimal,
+                            "curve_type": "swap",
+                            "source": "BCB_SGS",
+                        }
+                    )
 
             # Rate limiting between series
             if i < total:
@@ -266,15 +268,17 @@ class B3MarketDataConnector(BaseConnector):
                 # Convert percentage to decimal
                 rate_decimal = rate_pct / 100.0
 
-                records.append({
-                    "curve_id": "NTN_B_REAL",
-                    "curve_date": as_of_date,
-                    "tenor_days": tenor_days,
-                    "tenor_label": tenor_label,
-                    "rate": rate_decimal,
-                    "curve_type": "sovereign_real",
-                    "source": "TESOURO_DIRETO",
-                })
+                records.append(
+                    {
+                        "curve_id": "NTN_B_REAL",
+                        "curve_date": as_of_date,
+                        "tenor_days": tenor_days,
+                        "tenor_label": tenor_label,
+                        "rate": rate_decimal,
+                        "curve_type": "sovereign_real",
+                        "source": "TESOURO_DIRETO",
+                    }
+                )
             except (ValueError, TypeError, KeyError) as exc:
                 self.log.warning(
                     "ntnb_parse_error",
@@ -333,6 +337,4 @@ class B3MarketDataConnector(BaseConnector):
         Returns:
             Number of rows actually inserted (excludes conflicts).
         """
-        return await self._bulk_insert(
-            CurveData, records, "uq_curves_natural_key"
-        )
+        return await self._bulk_insert(CurveData, records, "uq_curves_natural_key")

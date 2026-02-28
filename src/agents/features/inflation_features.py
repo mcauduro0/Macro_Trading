@@ -255,7 +255,11 @@ class InflationFeatureEngine:
             out["focus_ipca_12m"] = float(series.iloc[-1])
 
         # If there's a second column, use it for eoy
-        other_cols = [c for c in cols if c != val_col and c not in ("date", "release_time", "revision_number")]
+        other_cols = [
+            c
+            for c in cols
+            if c != val_col and c not in ("date", "release_time", "revision_number")
+        ]
         if other_cols:
             eoy_series = df[other_cols[0]].dropna()
             if not eoy_series.empty:
@@ -292,7 +296,9 @@ class InflationFeatureEngine:
                 level_val = out["ibc_br_level"]
                 out["ibc_br_trend"] = trend_val
                 if trend_val != 0:
-                    out["ibc_br_output_gap"] = (level_val - trend_val) / trend_val * 100.0
+                    out["ibc_br_output_gap"] = (
+                        (level_val - trend_val) / trend_val * 100.0
+                    )
 
                 # Hamilton (2018) filter as robustness check at endpoints:
                 # y_t = β0 + β1*y_{t-h} + ε_t, use h=24 months (2 years ahead)
@@ -302,14 +308,19 @@ class InflationFeatureEngine:
                     y = series.iloc[h:]
                     x = series.iloc[:-h]
                     # Align indices
-                    x_vals = x.values[-len(y):]
-                    y_vals = y.values[-len(x_vals):]
+                    x_vals = x.values[-len(y) :]
+                    y_vals = y.values[-len(x_vals) :]
                     if len(y_vals) >= 24:
                         from numpy.polynomial.polynomial import polyfit
+
                         coeffs = polyfit(x_vals, y_vals, deg=1)
-                        hamilton_trend = coeffs[0] + coeffs[1] * float(series.iloc[-1 - h])
+                        hamilton_trend = coeffs[0] + coeffs[1] * float(
+                            series.iloc[-1 - h]
+                        )
                         if hamilton_trend != 0:
-                            hamilton_gap = (level_val - hamilton_trend) / hamilton_trend * 100.0
+                            hamilton_gap = (
+                                (level_val - hamilton_trend) / hamilton_trend * 100.0
+                            )
                             out["ibc_br_hamilton_gap"] = float(hamilton_gap)
             except Exception:
                 pass
@@ -336,7 +347,11 @@ class InflationFeatureEngine:
 
         # Unemployment gap
         unemp_df = data.get("br_unemployment")
-        if unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty:
+        if (
+            unemp_df is not None
+            and isinstance(unemp_df, pd.DataFrame)
+            and not unemp_df.empty
+        ):
             val_col = self._value_col(unemp_df)
             series = unemp_df[val_col].dropna()
             if not series.empty:
@@ -354,7 +369,11 @@ class InflationFeatureEngine:
 
         # Capacity utilization gap
         nuci_df = data.get("br_capacity_util")
-        if nuci_df is not None and isinstance(nuci_df, pd.DataFrame) and not nuci_df.empty:
+        if (
+            nuci_df is not None
+            and isinstance(nuci_df, pd.DataFrame)
+            and not nuci_df.empty
+        ):
             val_col = self._value_col(nuci_df)
             series = nuci_df[val_col].dropna()
             if not series.empty:
@@ -396,8 +415,14 @@ class InflationFeatureEngine:
         # CBO NROU + UNRATE → unemployment gap
         nrou_df = data.get("us_nrou")
         unemp_df = data.get("us_unemp")
-        if (nrou_df is not None and isinstance(nrou_df, pd.DataFrame) and not nrou_df.empty
-                and unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty):
+        if (
+            nrou_df is not None
+            and isinstance(nrou_df, pd.DataFrame)
+            and not nrou_df.empty
+            and unemp_df is not None
+            and isinstance(unemp_df, pd.DataFrame)
+            and not unemp_df.empty
+        ):
             nrou_col = self._value_col(nrou_df)
             unemp_col = self._value_col(unemp_df)
             nrou_val = nrou_df[nrou_col].dropna()
@@ -405,7 +430,9 @@ class InflationFeatureEngine:
             if not nrou_val.empty and not unemp_val.empty:
                 out["us_nrou"] = float(nrou_val.iloc[-1])
                 # Gap: NROU - actual (positive = tight labor market)
-                out["us_unemployment_gap"] = float(nrou_val.iloc[-1]) - float(unemp_val.iloc[-1])
+                out["us_unemployment_gap"] = float(nrou_val.iloc[-1]) - float(
+                    unemp_val.iloc[-1]
+                )
 
         return out
 
@@ -540,7 +567,9 @@ class InflationFeatureEngine:
         col_10y = next((c for c in cols if "10" in str(c)), None)
 
         # Fallback: use positional columns
-        numeric_cols = [c for c in cols if c not in ("date", "release_time", "revision_number")]
+        numeric_cols = [
+            c for c in cols if c not in ("date", "release_time", "revision_number")
+        ]
         if col_5y is None and len(numeric_cols) >= 1:
             col_5y = numeric_cols[0]
         if col_10y is None and len(numeric_cols) >= 2:
@@ -570,9 +599,17 @@ class InflationFeatureEngine:
         if df is None or not isinstance(df, pd.DataFrame) or df.empty:
             return out
 
-        cols = [c for c in df.columns if c not in ("date", "release_time", "revision_number")]
-        col_1y = next((c for c in cols if "1" in str(c) or "1y" in str(c).lower()), None)
-        col_5y = next((c for c in cols if "5" in str(c) or "5y" in str(c).lower()), None)
+        cols = [
+            c
+            for c in df.columns
+            if c not in ("date", "release_time", "revision_number")
+        ]
+        col_1y = next(
+            (c for c in cols if "1" in str(c) or "1y" in str(c).lower()), None
+        )
+        col_5y = next(
+            (c for c in cols if "5" in str(c) or "5y" in str(c).lower()), None
+        )
 
         if col_1y is None and len(cols) >= 1:
             col_1y = cols[0]
@@ -655,7 +692,11 @@ class InflationFeatureEngine:
             if isinstance(cores, dict):
                 for core_key in ("smoothed", "trimmed", "ex_fe"):
                     core_df = cores.get(core_key)
-                    if core_df is not None and isinstance(core_df, pd.DataFrame) and not core_df.empty:
+                    if (
+                        core_df is not None
+                        and isinstance(core_df, pd.DataFrame)
+                        and not core_df.empty
+                    ):
                         val_col = self._value_col(core_df)
                         candidate = core_df[val_col].dropna()
                         if len(candidate) >= 12:
@@ -674,7 +715,11 @@ class InflationFeatureEngine:
 
             # Focus 12M expectations
             focus_df = data.get("focus")
-            if focus_df is not None and isinstance(focus_df, pd.DataFrame) and not focus_df.empty:
+            if (
+                focus_df is not None
+                and isinstance(focus_df, pd.DataFrame)
+                and not focus_df.empty
+            ):
                 val_col = self._value_col(focus_df)
                 for ts, row in focus_df.iterrows():
                     val = row.get(val_col, np.nan)
@@ -685,7 +730,11 @@ class InflationFeatureEngine:
 
             # IBC-Br output gap
             ibc_df = data.get("ibc_br")
-            if ibc_df is not None and isinstance(ibc_df, pd.DataFrame) and not ibc_df.empty:
+            if (
+                ibc_df is not None
+                and isinstance(ibc_df, pd.DataFrame)
+                and not ibc_df.empty
+            ):
                 val_col = self._value_col(ibc_df)
                 series = ibc_df[val_col].dropna()
                 if len(series) >= 13:
@@ -704,7 +753,11 @@ class InflationFeatureEngine:
 
             # Unemployment gap time series (NAIRU proxy via HP filter)
             unemp_df = data.get("br_unemployment")
-            if unemp_df is not None and isinstance(unemp_df, pd.DataFrame) and not unemp_df.empty:
+            if (
+                unemp_df is not None
+                and isinstance(unemp_df, pd.DataFrame)
+                and not unemp_df.empty
+            ):
                 val_col = self._value_col(unemp_df)
                 unemp_series = unemp_df[val_col].dropna()
                 if len(unemp_series) >= 24:
@@ -721,7 +774,11 @@ class InflationFeatureEngine:
 
             # Capacity utilization gap time series
             nuci_df = data.get("br_capacity_util")
-            if nuci_df is not None and isinstance(nuci_df, pd.DataFrame) and not nuci_df.empty:
+            if (
+                nuci_df is not None
+                and isinstance(nuci_df, pd.DataFrame)
+                and not nuci_df.empty
+            ):
                 val_col = self._value_col(nuci_df)
                 nuci_series = nuci_df[val_col].dropna()
                 if len(nuci_series) >= 24:
@@ -738,9 +795,17 @@ class InflationFeatureEngine:
 
             # USDBRL YoY (rolling, from market_data)
             usdbrl_df = data.get("usdbrl")
-            if usdbrl_df is not None and isinstance(usdbrl_df, pd.DataFrame) and not usdbrl_df.empty:
+            if (
+                usdbrl_df is not None
+                and isinstance(usdbrl_df, pd.DataFrame)
+                and not usdbrl_df.empty
+            ):
                 price_col = next(
-                    (c for c in ("adjusted_close", "close", "value") if c in usdbrl_df.columns),
+                    (
+                        c
+                        for c in ("adjusted_close", "close", "value")
+                        if c in usdbrl_df.columns
+                    ),
                     None,
                 )
                 if price_col is not None:
@@ -756,9 +821,17 @@ class InflationFeatureEngine:
 
             # CRB YoY (monthly)
             crb_df = data.get("crb")
-            if crb_df is not None and isinstance(crb_df, pd.DataFrame) and not crb_df.empty:
+            if (
+                crb_df is not None
+                and isinstance(crb_df, pd.DataFrame)
+                and not crb_df.empty
+            ):
                 price_col = next(
-                    (c for c in ("adjusted_close", "close", "value") if c in crb_df.columns),
+                    (
+                        c
+                        for c in ("adjusted_close", "close", "value")
+                        if c in crb_df.columns
+                    ),
                     None,
                 )
                 if price_col is not None:
@@ -772,9 +845,13 @@ class InflationFeatureEngine:
                                 records[ts]["crb_yoy"] = float(val)
 
             all_cols = [
-                "core_yoy", "expectations_12m", "output_gap",
-                "unemployment_gap", "capacity_gap",
-                "usdbrl_yoy", "crb_yoy",
+                "core_yoy",
+                "expectations_12m",
+                "output_gap",
+                "unemployment_gap",
+                "capacity_gap",
+                "usdbrl_yoy",
+                "crb_yoy",
             ]
 
             if not records:
@@ -818,9 +895,14 @@ class InflationFeatureEngine:
         except Exception:
             return pd.DataFrame(
                 columns=[
-                    "core_yoy", "expectations_12m", "output_gap",
-                    "unemployment_gap", "capacity_gap",
-                    "usdbrl_yoy", "crb_yoy", "composite_activity_gap",
+                    "core_yoy",
+                    "expectations_12m",
+                    "output_gap",
+                    "unemployment_gap",
+                    "capacity_gap",
+                    "usdbrl_yoy",
+                    "crb_yoy",
+                    "composite_activity_gap",
                 ]
             )
 
@@ -848,7 +930,10 @@ class InflationFeatureEngine:
 
             # Sanity check: if values look like price indices (median > 50)
             # rather than MoM percentages, convert to pct_change.
-            if not out["value"].dropna().empty and out["value"].dropna().abs().median() > 50.0:
+            if (
+                not out["value"].dropna().empty
+                and out["value"].dropna().abs().median() > 50.0
+            ):
                 out["value"] = out["value"].pct_change() * 100.0
                 out = out.dropna()
 

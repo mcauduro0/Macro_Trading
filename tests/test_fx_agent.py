@@ -158,7 +158,13 @@ def test_fx_feature_engine_keys():
         assert key in features, f"Missing scalar key: {key}"
 
     # Private model keys
-    for key in ["_beer_ols_data", "_ptax_daily", "_carry_ratio_history", "_flow_combined", "_as_of_date"]:
+    for key in [
+        "_beer_ols_data",
+        "_ptax_daily",
+        "_carry_ratio_history",
+        "_flow_combined",
+        "_as_of_date",
+    ]:
         assert key in features, f"Missing private key: {key}"
 
     # Type and value checks
@@ -182,9 +188,9 @@ def test_beer_model_undervalued_short():
     sig = model.run({"_beer_ols_data": df}, AS_OF)
 
     # USDBRL=6.0 vs fair~5.5 → +9% misalignment → SHORT
-    assert sig.direction == SignalDirection.SHORT, (
-        f"Expected SHORT (BRL undervalued), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.SHORT
+    ), f"Expected SHORT (BRL undervalued), got {sig.direction}"
     assert sig.signal_id == "FX_BR_BEER"
     assert sig.value > BeerModel.THRESHOLD  # misalignment > 5%
 
@@ -202,9 +208,9 @@ def test_beer_model_overvalued_long():
     model = BeerModel()
     sig = model.run({"_beer_ols_data": df}, AS_OF)
 
-    assert sig.direction == SignalDirection.LONG, (
-        f"Expected LONG (BRL overvalued), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.LONG
+    ), f"Expected LONG (BRL overvalued), got {sig.direction}"
 
 
 # ---------------------------------------------------------------------------
@@ -271,9 +277,9 @@ def test_carry_to_risk_short_high_carry():
 
     sig = CarryToRiskModel().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.SHORT, (
-        f"Expected SHORT (attractive carry), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.SHORT
+    ), f"Expected SHORT (attractive carry), got {sig.direction}"
     assert sig.signal_id == "FX_BR_CARRY_RISK"
     # z > 1.0 → value > 1.0
     assert sig.value > 1.0
@@ -288,12 +294,16 @@ def test_carry_to_risk_long_low_carry():
     vals = [2.0] * 23 + [0.0]  # last value much lower than rolling mean
     history = pd.Series(vals, index=idx)
 
-    features = {"_carry_ratio_history": history, "carry_raw": 8.5, "vol_30d_realized": 20.0}
+    features = {
+        "_carry_ratio_history": history,
+        "carry_raw": 8.5,
+        "vol_30d_realized": 20.0,
+    }
     sig = CarryToRiskModel().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.LONG, (
-        f"Expected LONG (carry unwind risk), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.LONG
+    ), f"Expected LONG (carry unwind risk), got {sig.direction}"
 
 
 # ---------------------------------------------------------------------------
@@ -301,7 +311,9 @@ def test_carry_to_risk_long_low_carry():
 # ---------------------------------------------------------------------------
 def test_carry_to_risk_no_signal_insufficient_data():
     """Only 5 values (< MIN_OBS=13) → NO_SIGNAL."""
-    history = pd.Series([2.0] * 5, index=pd.date_range("2023-01-31", periods=5, freq="ME"))
+    history = pd.Series(
+        [2.0] * 5, index=pd.date_range("2023-01-31", periods=5, freq="ME")
+    )
     sig = CarryToRiskModel().run({"_carry_ratio_history": history}, AS_OF)
     assert sig.strength == SignalStrength.NO_SIGNAL
 
@@ -341,9 +353,9 @@ def test_flow_model_one_component_nan():
     )
     sig = FlowModel().run({"_flow_combined": flow_df}, AS_OF)
 
-    assert sig.direction == SignalDirection.SHORT, (
-        f"Expected SHORT (CFTC-only positive), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.SHORT
+    ), f"Expected SHORT (CFTC-only positive), got {sig.direction}"
 
 
 # ---------------------------------------------------------------------------
@@ -358,9 +370,9 @@ def test_cip_basis_positive_long():
     }
     sig = CipBasisModel().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.LONG, (
-        f"Expected LONG (positive basis = BRL less attractive), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.LONG
+    ), f"Expected LONG (positive basis = BRL less attractive), got {sig.direction}"
     assert sig.signal_id == "FX_BR_CIP_BASIS"
 
 
@@ -384,10 +396,18 @@ def test_cip_basis_negative_short():
 # ---------------------------------------------------------------------------
 def test_fx_composite_locked_weights():
     """Composite with conflict: BEER+Carry=SHORT(70%), Flow+CIP=LONG(30%) → SHORT, dampening=0.70."""
-    beer_sig = make_signal("FX_BR_BEER", SignalDirection.SHORT, SignalStrength.STRONG, 0.8)
-    carry_sig = make_signal("FX_BR_CARRY_RISK", SignalDirection.SHORT, SignalStrength.STRONG, 0.7)
-    flow_sig = make_signal("FX_BR_FLOW", SignalDirection.LONG, SignalStrength.MODERATE, 0.6)
-    cip_sig = make_signal("FX_BR_CIP_BASIS", SignalDirection.LONG, SignalStrength.WEAK, 0.5)
+    beer_sig = make_signal(
+        "FX_BR_BEER", SignalDirection.SHORT, SignalStrength.STRONG, 0.8
+    )
+    carry_sig = make_signal(
+        "FX_BR_CARRY_RISK", SignalDirection.SHORT, SignalStrength.STRONG, 0.7
+    )
+    flow_sig = make_signal(
+        "FX_BR_FLOW", SignalDirection.LONG, SignalStrength.MODERATE, 0.6
+    )
+    cip_sig = make_signal(
+        "FX_BR_CIP_BASIS", SignalDirection.LONG, SignalStrength.WEAK, 0.5
+    )
 
     agent = FxEquilibriumAgent(loader=MagicMock())
     composite = agent._build_composite([beer_sig, carry_sig, flow_sig, cip_sig], AS_OF)
@@ -407,7 +427,9 @@ def test_fx_composite_unanimous_no_dampening():
     """All 4 signals SHORT → dampening=1.0 (no conflict)."""
     signals = [
         make_signal("FX_BR_BEER", SignalDirection.SHORT, SignalStrength.STRONG, 0.8),
-        make_signal("FX_BR_CARRY_RISK", SignalDirection.SHORT, SignalStrength.STRONG, 0.8),
+        make_signal(
+            "FX_BR_CARRY_RISK", SignalDirection.SHORT, SignalStrength.STRONG, 0.8
+        ),
         make_signal("FX_BR_FLOW", SignalDirection.SHORT, SignalStrength.MODERATE, 0.7),
         make_signal("FX_BR_CIP_BASIS", SignalDirection.SHORT, SignalStrength.WEAK, 0.6),
     ]
@@ -448,7 +470,9 @@ def test_flow_model_all_nan():
 # ---------------------------------------------------------------------------
 def test_cip_basis_no_data():
     """No cip_basis and no di/sofr rates → NO_SIGNAL."""
-    sig = CipBasisModel().run({"cip_basis": np.nan, "_di_1y_rate": np.nan, "_sofr_rate": np.nan}, AS_OF)
+    sig = CipBasisModel().run(
+        {"cip_basis": np.nan, "_di_1y_rate": np.nan, "_sofr_rate": np.nan}, AS_OF
+    )
     assert sig.strength == SignalStrength.NO_SIGNAL
 
 

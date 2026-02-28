@@ -311,7 +311,9 @@ class TestFxBR01RegimeAdjustment:
     def test_unfavorable_regime_scales_weight(self) -> None:
         """Regime score < -0.3 => weight scaled by 0.50."""
         # Set up for a clear signal
-        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [5.50 + 0.02 * (i % 10 - 5) for i in range(48)]
+        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
+            5.50 + 0.02 * (i % 10 - 5) for i in range(48)
+        ]
         loader = _make_mock_loader(
             br_rate=15.0,
             us_rate=3.0,
@@ -324,7 +326,8 @@ class TestFxBR01RegimeAdjustment:
 
         # With unfavorable regime
         pos_regime = strategy.generate_signals(
-            date(2025, 6, 15), regime_score=-0.5,
+            date(2025, 6, 15),
+            regime_score=-0.5,
         )
 
         assert len(pos_normal) == 1
@@ -334,7 +337,9 @@ class TestFxBR01RegimeAdjustment:
 
     def test_favorable_regime_no_scaling(self) -> None:
         """Regime score >= -0.3 => no scaling."""
-        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [5.50 + 0.02 * (i % 10 - 5) for i in range(48)]
+        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
+            5.50 + 0.02 * (i % 10 - 5) for i in range(48)
+        ]
         loader = _make_mock_loader(
             br_rate=15.0,
             us_rate=3.0,
@@ -344,7 +349,8 @@ class TestFxBR01RegimeAdjustment:
 
         pos_normal = strategy.generate_signals(date(2025, 6, 15))
         pos_favorable = strategy.generate_signals(
-            date(2025, 6, 15), regime_score=0.5,
+            date(2025, 6, 15),
+            regime_score=0.5,
         )
 
         assert len(pos_normal) == 1
@@ -353,7 +359,9 @@ class TestFxBR01RegimeAdjustment:
 
     def test_no_regime_score_no_scaling(self) -> None:
         """regime_score=None => no scaling."""
-        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [5.50 + 0.02 * (i % 10 - 5) for i in range(48)]
+        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
+            5.50 + 0.02 * (i % 10 - 5) for i in range(48)
+        ]
         loader = _make_mock_loader(
             br_rate=15.0,
             us_rate=3.0,
@@ -408,7 +416,9 @@ class TestFxBR01Bounds:
 
     def test_weight_in_bounds(self) -> None:
         """Weight must be in [-1, 1]."""
-        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [5.50 + 0.02 * (i % 10 - 5) for i in range(48)]
+        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
+            5.50 + 0.02 * (i % 10 - 5) for i in range(48)
+        ]
         loader = _make_mock_loader(
             br_rate=20.0,
             us_rate=1.0,
@@ -424,7 +434,9 @@ class TestFxBR01Bounds:
 
     def test_confidence_in_bounds(self) -> None:
         """Confidence must be in [0, 1] even with extreme inputs."""
-        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [7.0 + 0.02 * (i % 10 - 5) for i in range(48)]
+        prices = [5.0 + 0.02 * (i % 10 - 5) for i in range(252)] + [
+            7.0 + 0.02 * (i % 10 - 5) for i in range(48)
+        ]
         loader = _make_mock_loader(
             br_rate=25.0,
             us_rate=0.5,

@@ -54,7 +54,9 @@ class PositionSizer:
         size = self.target_vol / instrument_vol
         return min(size, self.max_position)
 
-    def fractional_kelly_size(self, expected_return: float, return_variance: float) -> float:
+    def fractional_kelly_size(
+        self, expected_return: float, return_variance: float
+    ) -> float:
         """Size position using fractional Kelly criterion.
 
         Full Kelly: f* = expected_return / return_variance
@@ -168,7 +170,9 @@ class PositionSizer:
                     data.get("total_var", 0.0),
                 )
             else:
-                logger.warning("unknown_sizing_method", method=method, instrument=instrument)
+                logger.warning(
+                    "unknown_sizing_method", method=method, instrument=instrument
+                )
                 raw_size = 0.0
 
             # Determine effective limit based on conviction

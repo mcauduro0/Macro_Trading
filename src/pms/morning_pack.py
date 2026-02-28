@@ -139,7 +139,9 @@ class MorningPackService:
         logger.info(
             "briefing_generated",
             briefing_date=str(briefing_date),
-            action_items_count=len(action_items) if isinstance(action_items, list) else 0,
+            action_items_count=(
+                len(action_items) if isinstance(action_items, list) else 0
+            ),
             sections=len(briefing) - 3,  # exclude id, date, created_at
         )
 
@@ -178,7 +180,9 @@ class MorningPackService:
         Returns:
             List of summary dicts (date, action count, narrative excerpt).
         """
-        recent = self._briefings[-days:] if len(self._briefings) > days else self._briefings
+        recent = (
+            self._briefings[-days:] if len(self._briefings) > days else self._briefings
+        )
         summaries = []
         for b in recent:
             action_items = b.get("action_items", [])
@@ -191,11 +195,15 @@ class MorningPackService:
             elif isinstance(narrative, dict):
                 narrative_excerpt = str(narrative.get("status", ""))
 
-            summaries.append({
-                "briefing_date": b.get("briefing_date"),
-                "action_items_count": len(action_items) if isinstance(action_items, list) else 0,
-                "narrative_excerpt": narrative_excerpt,
-            })
+            summaries.append(
+                {
+                    "briefing_date": b.get("briefing_date"),
+                    "action_items_count": (
+                        len(action_items) if isinstance(action_items, list) else 0
+                    ),
+                    "narrative_excerpt": narrative_excerpt,
+                }
+            )
         return summaries
 
     # -------------------------------------------------------------------------
@@ -205,9 +213,14 @@ class MorningPackService:
     def _collect_trade_proposals(self, briefing_date: date) -> list[dict] | dict:
         """Collect pending trade proposals from the trade workflow service."""
         if self.trade_workflow is None:
-            return {"status": "unavailable", "reason": "TradeWorkflowService not configured"}
+            return {
+                "status": "unavailable",
+                "reason": "TradeWorkflowService not configured",
+            }
         try:
-            proposals = self.trade_workflow.get_pending_proposals(as_of_date=briefing_date)
+            proposals = self.trade_workflow.get_pending_proposals(
+                as_of_date=briefing_date
+            )
             # Also include proposals without date filter
             if not proposals:
                 proposals = self.trade_workflow.get_pending_proposals()
@@ -246,27 +259,39 @@ class MorningPackService:
                     agent = AgentRegistry.get(agent_id)
                     # Try to get the latest report if available
                     report = getattr(agent, "latest_report", None)
-                    views.append({
-                        "agent_id": agent_id,
-                        "signal_direction": getattr(report, "direction", "NEUTRAL") if report else "NEUTRAL",
-                        "conviction": getattr(report, "conviction", 0.0) if report else 0.0,
-                        "key_drivers": getattr(report, "key_drivers", []) if report else [],
-                        "risks": getattr(report, "risks", []) if report else [],
-                        "narrative_excerpt": (
-                            getattr(report, "narrative", "")[:200]
-                            if report and hasattr(report, "narrative")
-                            else ""
-                        ),
-                    })
+                    views.append(
+                        {
+                            "agent_id": agent_id,
+                            "signal_direction": (
+                                getattr(report, "direction", "NEUTRAL")
+                                if report
+                                else "NEUTRAL"
+                            ),
+                            "conviction": (
+                                getattr(report, "conviction", 0.0) if report else 0.0
+                            ),
+                            "key_drivers": (
+                                getattr(report, "key_drivers", []) if report else []
+                            ),
+                            "risks": getattr(report, "risks", []) if report else [],
+                            "narrative_excerpt": (
+                                getattr(report, "narrative", "")[:200]
+                                if report and hasattr(report, "narrative")
+                                else ""
+                            ),
+                        }
+                    )
                 except (KeyError, Exception):
-                    views.append({
-                        "agent_id": agent_id,
-                        "signal_direction": "NEUTRAL",
-                        "conviction": 0.0,
-                        "key_drivers": [],
-                        "risks": [],
-                        "narrative_excerpt": "Agent not registered or unavailable.",
-                    })
+                    views.append(
+                        {
+                            "agent_id": agent_id,
+                            "signal_direction": "NEUTRAL",
+                            "conviction": 0.0,
+                            "key_drivers": [],
+                            "risks": [],
+                            "narrative_excerpt": "Agent not registered or unavailable.",
+                        }
+                    )
 
             return views
         except ImportError:
@@ -314,7 +339,10 @@ class MorningPackService:
     def _collect_top_signals(self) -> list[dict] | dict:
         """Collect top 10 signals by conviction from the signal aggregator."""
         if self.signal_aggregator is None:
-            return {"status": "unavailable", "reason": "SignalAggregatorV2 not configured"}
+            return {
+                "status": "unavailable",
+                "reason": "SignalAggregatorV2 not configured",
+            }
         try:
             # SignalAggregatorV2 stores results in _latest_results after aggregate()
             latest = getattr(self.signal_aggregator, "_latest_results", None)
@@ -333,7 +361,10 @@ class MorningPackService:
                     }
                     for s in sorted_signals
                 ]
-            return {"status": "unavailable", "reason": "No aggregated signals available"}
+            return {
+                "status": "unavailable",
+                "reason": "No aggregated signals available",
+            }
         except Exception as exc:
             logger.warning("top_signals_failed", error=str(exc))
             return {"status": "unavailable", "reason": str(exc)}
@@ -422,17 +453,19 @@ class MorningPackService:
                 else:
                     priority = "MEDIUM"
 
-                items.append({
-                    "priority": priority,
-                    "category": "trade_proposal",
-                    "description": (
-                        f"{proposal.get('direction', 'UNKNOWN')} "
-                        f"{proposal.get('instrument', 'UNKNOWN')} "
-                        f"({proposal.get('conviction', 0):.0%} conviction)"
-                        f"{' [FLIP]' if proposal.get('is_flip') else ''}"
-                    ),
-                    "urgency": "Requires review today",
-                })
+                items.append(
+                    {
+                        "priority": priority,
+                        "category": "trade_proposal",
+                        "description": (
+                            f"{proposal.get('direction', 'UNKNOWN')} "
+                            f"{proposal.get('instrument', 'UNKNOWN')} "
+                            f"({proposal.get('conviction', 0):.0%} conviction)"
+                            f"{' [FLIP]' if proposal.get('is_flip') else ''}"
+                        ),
+                        "urgency": "Requires review today",
+                    }
+                )
 
         # 2. Risk limit breaches
         if self.risk_limits_manager is not None:
@@ -441,66 +474,79 @@ class MorningPackService:
                 overall = check_result.get("overall_status", "OK")
                 if overall in ("WARNING", "BREACHED"):
                     priority = "CRITICAL" if overall == "BREACHED" else "HIGH"
-                    items.append({
-                        "priority": priority,
-                        "category": "risk_breach",
-                        "description": f"Risk limits {overall.lower()}: review portfolio exposure",
-                        "urgency": (
-                            "Immediate attention required"
-                            if overall == "BREACHED"
-                            else "Review within morning session"
-                        ),
-                    })
+                    items.append(
+                        {
+                            "priority": priority,
+                            "category": "risk_breach",
+                            "description": f"Risk limits {overall.lower()}: review portfolio exposure",
+                            "urgency": (
+                                "Immediate attention required"
+                                if overall == "BREACHED"
+                                else "Review within morning session"
+                            ),
+                        }
+                    )
             except Exception:
                 pass
 
         # 3. Signal flips and conviction surges
         if isinstance(signal_changes, dict) and "flips" in signal_changes:
             for flip in signal_changes.get("flips", []):
-                items.append({
-                    "priority": "HIGH",
-                    "category": "signal_flip",
-                    "description": (
-                        f"Signal flip on {flip.get('instrument', 'UNKNOWN')}: "
-                        f"{flip.get('previous_direction', '?')} -> {flip.get('current_direction', '?')}"
-                    ),
-                    "urgency": "Review position alignment",
-                })
+                items.append(
+                    {
+                        "priority": "HIGH",
+                        "category": "signal_flip",
+                        "description": (
+                            f"Signal flip on {flip.get('instrument', 'UNKNOWN')}: "
+                            f"{flip.get('previous_direction', '?')} -> {flip.get('current_direction', '?')}"
+                        ),
+                        "urgency": "Review position alignment",
+                    }
+                )
 
             for surge in signal_changes.get("surges", []):
-                items.append({
-                    "priority": "MEDIUM",
-                    "category": "conviction_surge",
-                    "description": (
-                        f"Conviction surge on {surge.get('instrument', 'UNKNOWN')}: "
-                        f"{surge.get('previous_conviction', 0):.2f} -> {surge.get('current_conviction', 0):.2f}"
-                    ),
-                    "urgency": "Monitor during session",
-                })
+                items.append(
+                    {
+                        "priority": "MEDIUM",
+                        "category": "conviction_surge",
+                        "description": (
+                            f"Conviction surge on {surge.get('instrument', 'UNKNOWN')}: "
+                            f"{surge.get('previous_conviction', 0):.2f} -> {surge.get('current_conviction', 0):.2f}"
+                        ),
+                        "urgency": "Monitor during session",
+                    }
+                )
 
         # 4. Stale data warnings (any section that failed to load)
         for section_name, section_data in [
             ("trade_proposals", trade_proposals),
             ("portfolio_state", portfolio_state),
         ]:
-            if isinstance(section_data, dict) and section_data.get("status") == "unavailable":
-                items.append({
-                    "priority": "LOW",
-                    "category": "stale_data",
-                    "description": f"{section_name} data unavailable: {section_data.get('reason', 'unknown')}",
-                    "urgency": "Informational",
-                })
+            if (
+                isinstance(section_data, dict)
+                and section_data.get("status") == "unavailable"
+            ):
+                items.append(
+                    {
+                        "priority": "LOW",
+                        "category": "stale_data",
+                        "description": f"{section_name} data unavailable: {section_data.get('reason', 'unknown')}",
+                        "urgency": "Informational",
+                    }
+                )
 
         # 5. Regime change warning
         regime_name = regime.get("current_regime", "Unknown")
         transition_risk = regime.get("transition_risk", 0.0)
         if transition_risk > 0.3:
-            items.append({
-                "priority": "HIGH",
-                "category": "regime_change",
-                "description": f"Elevated regime transition risk ({transition_risk:.0%}) from {regime_name}",
-                "urgency": "Review portfolio positioning",
-            })
+            items.append(
+                {
+                    "priority": "HIGH",
+                    "category": "regime_change",
+                    "description": f"Elevated regime transition risk ({transition_risk:.0%}) from {regime_name}",
+                    "urgency": "Review portfolio positioning",
+                }
+            )
 
         # Sort by priority
         items.sort(key=lambda x: _PRIORITY_ORDER.get(x.get("priority", "LOW"), 99))
@@ -607,7 +653,9 @@ class MorningPackService:
                 if llm_text.strip():
                     return llm_text.strip()
             except Exception:
-                logger.debug("llm_narrative_fallback", reason="LLM call failed, using template")
+                logger.debug(
+                    "llm_narrative_fallback", reason="LLM call failed, using template"
+                )
 
         return template_narrative
 
@@ -656,7 +704,9 @@ class MorningPackService:
             long_count = sum(1 for d in directions if d == "LONG")
             short_count = sum(1 for d in directions if d == "SHORT")
             neutral_count = sum(1 for d in directions if d == "NEUTRAL")
-            avg_conviction = sum(av.get("conviction", 0) for av in agent_views) / len(agent_views)
+            avg_conviction = sum(av.get("conviction", 0) for av in agent_views) / len(
+                agent_views
+            )
 
             paragraphs.append(
                 f"Across the analytical agent complex, the directional split is "

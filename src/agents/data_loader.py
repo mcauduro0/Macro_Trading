@@ -42,23 +42,20 @@ from src.core.models.series_metadata import SeriesMetadata
 # ---------------------------------------------------------------------------
 _SERIES_ALIASES: dict[str, str] = {
     # ── BCB SGS: non-obvious numeric code mappings ──
-    "BCB-24363": "24364",           # IBC-Br (agent convention → actual DB code)
-
+    "BCB-24363": "24364",  # IBC-Br (agent convention → actual DB code)
     # ── Human-readable BR macro → BCB numeric codes ──
-    "BR_GROSS_DEBT_GDP": "13762",   # DBGG / PIB
-    "BR_NET_DEBT_GDP": "4513",      # DLSP / PIB
-    "BR_PRIMARY_BALANCE": "5793",   # Resultado Primário Consolidado
-    "BR_GDP_QOQ": "22099",          # PIB Trimestral
-    "BR_RESERVES": "13621",         # Reservas Internacionais
-    "BR_TRADE_BALANCE": "22707",    # Balança Comercial
-    "BR_IPCA_12M": "13522",         # IPCA Acumulado 12 Meses
-    "BR_IBC_BR_YOY": "24364",       # IBC-Br proxy PIB mensal
-    "BR_SELIC_TARGET": "432",       # Meta Selic
-
+    "BR_GROSS_DEBT_GDP": "13762",  # DBGG / PIB
+    "BR_NET_DEBT_GDP": "4513",  # DLSP / PIB
+    "BR_PRIMARY_BALANCE": "5793",  # Resultado Primário Consolidado
+    "BR_GDP_QOQ": "22099",  # PIB Trimestral
+    "BR_RESERVES": "13621",  # Reservas Internacionais
+    "BR_TRADE_BALANCE": "22707",  # Balança Comercial
+    "BR_IPCA_12M": "13522",  # IPCA Acumulado 12 Meses
+    "BR_IBC_BR_YOY": "24364",  # IBC-Br proxy PIB mensal
+    "BR_SELIC_TARGET": "432",  # Meta Selic
     # ── US series: agent codes → actual FRED codes ──
-    "PCESV": "IA001260M",          # PCE Supercore (agent alias → real FRED code)
-    "MICH5YR": "EXPINF5YR",        # Michigan 5Y proxy (agent alias → Cleveland Fed 5Y)
-
+    "PCESV": "IA001260M",  # PCE Supercore (agent alias → real FRED code)
+    "MICH5YR": "EXPINF5YR",  # Michigan 5Y proxy (agent alias → Cleveland Fed 5Y)
     # ── FX Flow aliases → BCB FX Flow numeric codes ──
     "BR_FX_FLOW_COMMERCIAL": "22704",
     "BR_FX_FLOW_FINANCIAL": "22705",
@@ -90,7 +87,7 @@ def _normalize_series_code(raw_code: str) -> str:
 
     for prefix in ("BCB-", "FRED-"):
         if raw_code.startswith(prefix):
-            return raw_code[len(prefix):]
+            return raw_code[len(prefix) :]
 
     return raw_code
 
@@ -164,6 +161,7 @@ class PointInTimeDataLoader:
         #    BR_FOCUS_IPCA_NY → BR_FOCUS_IPCA_<next_year>_MEDIAN
         if resolved.startswith("BR_FOCUS_") and resolved.endswith(("_CY", "_NY")):
             from datetime import date as _date
+
             year = _date.today().year
             if resolved.endswith("_NY"):
                 year += 1
@@ -177,7 +175,7 @@ class PointInTimeDataLoader:
         # 3. Strip BCB- or FRED- prefix
         for prefix in ("BCB-", "FRED-"):
             if code.startswith(prefix):
-                return code[len(prefix):]
+                return code[len(prefix) :]
         # 4. Pass through (already in DB format)
         return code
 
@@ -217,7 +215,8 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, MacroSeries.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
+                    SeriesMetadata.series_code
+                    == self._normalize_series_code(series_code),
                     cast(MacroSeries.release_time, Date) <= as_of_date,
                     MacroSeries.observation_date >= start,
                 )
@@ -238,9 +237,13 @@ class PointInTimeDataLoader:
                 rows=0,
                 as_of=str(as_of_date),
             )
-            return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+            return pd.DataFrame(
+                columns=["date", "value", "release_time", "revision_number"]
+            )
 
-        df = pd.DataFrame(rows, columns=["date", "value", "release_time", "revision_number"])
+        df = pd.DataFrame(
+            rows, columns=["date", "value", "release_time", "revision_number"]
+        )
 
         # Keep only the highest revision per observation_date
         df = df.drop_duplicates(subset=["date"], keep="first")
@@ -278,11 +281,14 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, MacroSeries.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
+                    SeriesMetadata.series_code
+                    == self._normalize_series_code(series_code),
                     cast(MacroSeries.release_time, Date) <= as_of_date,
                 )
             )
-            .order_by(MacroSeries.observation_date.desc(), MacroSeries.revision_number.desc())
+            .order_by(
+                MacroSeries.observation_date.desc(), MacroSeries.revision_number.desc()
+            )
             .limit(1)
         )
 
@@ -320,13 +326,10 @@ class PointInTimeDataLoader:
         curve_id = _normalize_curve_id(curve_id)
 
         # Step 1: Find the most recent curve_date for this curve
-        max_date_stmt = (
-            select(func.max(CurveData.curve_date))
-            .where(
-                and_(
-                    CurveData.curve_id == curve_id,
-                    CurveData.curve_date <= as_of_date,
-                )
+        max_date_stmt = select(func.max(CurveData.curve_date)).where(
+            and_(
+                CurveData.curve_id == curve_id,
+                CurveData.curve_date <= as_of_date,
             )
         )
 
@@ -418,19 +421,17 @@ class PointInTimeDataLoader:
 
             # Fuzzy tenor fallback: find closest available tenor within 20%
             if not rows:
-                distinct_tenors_stmt = (
-                    select(func.distinct(CurveData.tenor_days))
-                    .where(
-                        and_(
-                            CurveData.curve_id == curve_id,
-                            CurveData.curve_date <= as_of_date,
-                            CurveData.curve_date >= start,
-                        )
+                distinct_tenors_stmt = select(
+                    func.distinct(CurveData.tenor_days)
+                ).where(
+                    and_(
+                        CurveData.curve_id == curve_id,
+                        CurveData.curve_date <= as_of_date,
+                        CurveData.curve_date >= start,
                     )
                 )
                 available = [
-                    int(r[0])
-                    for r in session.execute(distinct_tenors_stmt).all()
+                    int(r[0]) for r in session.execute(distinct_tenors_stmt).all()
                 ]
                 if available:
                     closest = min(available, key=lambda t: abs(t - tenor_days))
@@ -528,12 +529,28 @@ class PointInTimeDataLoader:
 
         if not rows:
             return pd.DataFrame(
-                columns=["date", "open", "high", "low", "close", "volume", "adjusted_close"]
+                columns=[
+                    "date",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "adjusted_close",
+                ]
             )
 
         df = pd.DataFrame(
             rows,
-            columns=["date", "open", "high", "low", "close", "volume", "adjusted_close"],
+            columns=[
+                "date",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "adjusted_close",
+            ],
         )
         df["date"] = pd.to_datetime(df["date"], utc=True)
         df = df.set_index("date").sort_index()
@@ -575,7 +592,8 @@ class PointInTimeDataLoader:
             .join(SeriesMetadata, FlowData.series_id == SeriesMetadata.id)
             .where(
                 and_(
-                    SeriesMetadata.series_code == self._normalize_series_code(series_code),
+                    SeriesMetadata.series_code
+                    == self._normalize_series_code(series_code),
                     FlowData.observation_date >= start,
                     # PIT: use release_time if available, else observation_date
                     func.coalesce(

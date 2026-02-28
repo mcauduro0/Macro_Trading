@@ -57,10 +57,19 @@ def make_signal(
 # ---------------------------------------------------------------------------
 # Helper: build synthetic MonetaryFeatureEngine input data dict
 # ---------------------------------------------------------------------------
-def _make_di_curve_df(tenor_1y: float = 12.5, tenor_2y: float = 12.8,
-                      tenor_5y: float = 13.0, tenor_10y: float = 13.2) -> pd.DataFrame:
+def _make_di_curve_df(
+    tenor_1y: float = 12.5,
+    tenor_2y: float = 12.8,
+    tenor_5y: float = 13.0,
+    tenor_10y: float = 13.2,
+) -> pd.DataFrame:
     rows = [
-        {"tenor_1y": tenor_1y, "tenor_2y": tenor_2y, "tenor_5y": tenor_5y, "tenor_10y": tenor_10y}
+        {
+            "tenor_1y": tenor_1y,
+            "tenor_2y": tenor_2y,
+            "tenor_5y": tenor_5y,
+            "tenor_10y": tenor_10y,
+        }
         for _ in range(5)
     ]
     return pd.DataFrame(rows)
@@ -94,17 +103,25 @@ def _make_synthetic_data(
 ) -> dict:
     """Build a complete synthetic data dict for MonetaryFeatureEngine."""
     return {
-        "di_curve": _make_di_curve_df(di_tenor_1y, di_tenor_2y, di_tenor_5y, di_tenor_10y),
+        "di_curve": _make_di_curve_df(
+            di_tenor_1y, di_tenor_2y, di_tenor_5y, di_tenor_10y
+        ),
         "selic": _make_selic_df(selic_value),
         "focus": _make_focus_df(focus_value),
         "ibc_br": _make_ibc_df(ibc_n),
-        "fed_funds": pd.DataFrame({"value": [5.25]}, index=pd.date_range("2024-01-01", periods=1)),
-        "ust_curve": pd.DataFrame(
-            [{"ust_2y": 4.8, "ust_5y": 4.6, "ust_10y": 4.5}]
+        "fed_funds": pd.DataFrame(
+            {"value": [5.25]}, index=pd.date_range("2024-01-01", periods=1)
         ),
-        "nfci": pd.DataFrame({"value": [-0.1]}, index=pd.date_range("2024-01-01", periods=1)),
-        "pce_core": pd.DataFrame({"value": [3.2]}, index=pd.date_range("2024-01-01", periods=1)),
-        "us_breakeven": pd.DataFrame({"value": [2.3]}, index=pd.date_range("2024-01-01", periods=1)),
+        "ust_curve": pd.DataFrame([{"ust_2y": 4.8, "ust_5y": 4.6, "ust_10y": 4.5}]),
+        "nfci": pd.DataFrame(
+            {"value": [-0.1]}, index=pd.date_range("2024-01-01", periods=1)
+        ),
+        "pce_core": pd.DataFrame(
+            {"value": [3.2]}, index=pd.date_range("2024-01-01", periods=1)
+        ),
+        "us_breakeven": pd.DataFrame(
+            {"value": [2.3]}, index=pd.date_range("2024-01-01", periods=1)
+        ),
     }
 
 
@@ -435,9 +452,21 @@ class TestMonetaryComposite:
         agent = self._get_agent()
 
         signals = [
-            make_signal("MONETARY_BR_TAYLOR", SignalDirection.SHORT, SignalStrength.STRONG, 0.85),
-            make_signal("MONETARY_BR_SELIC_PATH", SignalDirection.SHORT, SignalStrength.MODERATE, 0.65),
-            make_signal("MONETARY_BR_TERM_PREMIUM", SignalDirection.LONG, SignalStrength.MODERATE, 0.65),
+            make_signal(
+                "MONETARY_BR_TAYLOR", SignalDirection.SHORT, SignalStrength.STRONG, 0.85
+            ),
+            make_signal(
+                "MONETARY_BR_SELIC_PATH",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
+            make_signal(
+                "MONETARY_BR_TERM_PREMIUM",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
         ]
 
         composite = agent._build_composite(signals, date(2024, 1, 31))
@@ -451,9 +480,21 @@ class TestMonetaryComposite:
         agent = self._get_agent()
 
         signals = [
-            make_signal("MONETARY_BR_TAYLOR", SignalDirection.SHORT, SignalStrength.STRONG, 0.85),
-            make_signal("MONETARY_BR_SELIC_PATH", SignalDirection.SHORT, SignalStrength.MODERATE, 0.65),
-            make_signal("MONETARY_BR_TERM_PREMIUM", SignalDirection.SHORT, SignalStrength.MODERATE, 0.65),
+            make_signal(
+                "MONETARY_BR_TAYLOR", SignalDirection.SHORT, SignalStrength.STRONG, 0.85
+            ),
+            make_signal(
+                "MONETARY_BR_SELIC_PATH",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
+            make_signal(
+                "MONETARY_BR_TERM_PREMIUM",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
         ]
 
         composite = agent._build_composite(signals, date(2024, 1, 31))
@@ -467,9 +508,24 @@ class TestMonetaryComposite:
         agent = self._get_agent()
 
         signals = [
-            make_signal("MONETARY_BR_TAYLOR", SignalDirection.NEUTRAL, SignalStrength.NO_SIGNAL, 0.0),
-            make_signal("MONETARY_BR_SELIC_PATH", SignalDirection.NEUTRAL, SignalStrength.NO_SIGNAL, 0.0),
-            make_signal("MONETARY_BR_TERM_PREMIUM", SignalDirection.NEUTRAL, SignalStrength.NO_SIGNAL, 0.0),
+            make_signal(
+                "MONETARY_BR_TAYLOR",
+                SignalDirection.NEUTRAL,
+                SignalStrength.NO_SIGNAL,
+                0.0,
+            ),
+            make_signal(
+                "MONETARY_BR_SELIC_PATH",
+                SignalDirection.NEUTRAL,
+                SignalStrength.NO_SIGNAL,
+                0.0,
+            ),
+            make_signal(
+                "MONETARY_BR_TERM_PREMIUM",
+                SignalDirection.NEUTRAL,
+                SignalStrength.NO_SIGNAL,
+                0.0,
+            ),
         ]
 
         composite = agent._build_composite(signals, date(2024, 1, 31))
@@ -482,9 +538,21 @@ class TestMonetaryComposite:
         agent = self._get_agent()
 
         signals = [
-            make_signal("MONETARY_BR_TAYLOR", SignalDirection.LONG, SignalStrength.STRONG, 0.85),
-            make_signal("MONETARY_BR_SELIC_PATH", SignalDirection.LONG, SignalStrength.MODERATE, 0.65),
-            make_signal("MONETARY_BR_TERM_PREMIUM", SignalDirection.LONG, SignalStrength.MODERATE, 0.65),
+            make_signal(
+                "MONETARY_BR_TAYLOR", SignalDirection.LONG, SignalStrength.STRONG, 0.85
+            ),
+            make_signal(
+                "MONETARY_BR_SELIC_PATH",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
+            make_signal(
+                "MONETARY_BR_TERM_PREMIUM",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.65,
+            ),
         ]
 
         composite = agent._build_composite(signals, date(2024, 1, 31))

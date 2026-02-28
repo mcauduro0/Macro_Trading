@@ -4,6 +4,7 @@ All metrics computed using numpy and pandas only -- no external library.
 BacktestResult is a dataclass (NOT frozen -- allows optional field population).
 Persistence uses the same sync session pattern as AgentReportRecord.
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,6 +25,7 @@ class BacktestResult:
     All percentage values stored as % (e.g., 12.5 means 12.5%, not 0.125).
     max_drawdown is a negative % (e.g., -15.3 means -15.3% drawdown).
     """
+
     strategy_id: str
     start_date: date
     end_date: date
@@ -31,9 +33,9 @@ class BacktestResult:
     final_equity: float
 
     # Return metrics
-    total_return: float          # %
-    annualized_return: float     # %
-    annualized_volatility: float # %
+    total_return: float  # %
+    annualized_return: float  # %
+    annualized_volatility: float  # %
 
     # Risk-adjusted metrics
     sharpe_ratio: float
@@ -41,15 +43,15 @@ class BacktestResult:
     calmar_ratio: float
 
     # Drawdown
-    max_drawdown: float          # negative % (e.g., -15.3)
+    max_drawdown: float  # negative % (e.g., -15.3)
 
     # Trade statistics
-    win_rate: float              # fraction [0, 1]
-    profit_factor: float         # gross_profit / abs(gross_loss); 0.0 if no losses
+    win_rate: float  # fraction [0, 1]
+    profit_factor: float  # gross_profit / abs(gross_loss); 0.0 if no losses
     total_trades: int
 
     # Time series
-    monthly_returns: dict        # {"YYYY-MM": return_pct}
+    monthly_returns: dict  # {"YYYY-MM": return_pct}
     equity_curve: list[tuple[date, float]]  # [(date, equity)]
 
 
@@ -98,9 +100,7 @@ def compute_metrics(portfolio: Any, config: Any, strategy_id: str) -> BacktestRe
         return _empty_result(strategy_id, config, equity_data)
 
     # --- Core return metrics ---
-    n_years = max(
-        (config.end_date - config.start_date).days / 365.25, 1 / 365.25
-    )
+    n_years = max((config.end_date - config.start_date).days / 365.25, 1 / 365.25)
     total_return_pct = (equity.iloc[-1] / equity.iloc[0] - 1) * 100
     ann_return_pct = ((1 + total_return_pct / 100) ** (1 / n_years) - 1) * 100
 
@@ -114,7 +114,9 @@ def compute_metrics(portfolio: Any, config: Any, strategy_id: str) -> BacktestRe
     else:  # monthly
         ann_factor = 12
 
-    ann_vol_pct = float(returns.std() * np.sqrt(ann_factor) * 100) if len(returns) > 1 else 0.0
+    ann_vol_pct = (
+        float(returns.std() * np.sqrt(ann_factor) * 100) if len(returns) > 1 else 0.0
+    )
 
     # --- Sharpe (risk-free = 0 for simplicity) ---
     # When volatility is zero: positive returns -> large positive Sharpe (capped);
@@ -153,8 +155,7 @@ def compute_metrics(portfolio: Any, config: Any, strategy_id: str) -> BacktestRe
             monthly_dict: dict = {}
         else:
             monthly_dict = {
-                str(d.date())[:7]: round(float(v) * 100, 4)
-                for d, v in monthly.items()
+                str(d.date())[:7]: round(float(v) * 100, 4) for d, v in monthly.items()
             }
     except Exception:
         monthly_dict = {}
@@ -196,10 +197,18 @@ def _empty_result(strategy_id: str, config: Any, equity_data: list) -> BacktestR
         end_date=config.end_date,
         initial_capital=config.initial_capital,
         final_equity=config.initial_capital,
-        total_return=0.0, annualized_return=0.0, annualized_volatility=0.0,
-        sharpe_ratio=0.0, sortino_ratio=0.0, calmar_ratio=0.0,
-        max_drawdown=0.0, win_rate=0.0, profit_factor=0.0,
-        total_trades=0, monthly_returns={}, equity_curve=equity_data,
+        total_return=0.0,
+        annualized_return=0.0,
+        annualized_volatility=0.0,
+        sharpe_ratio=0.0,
+        sortino_ratio=0.0,
+        calmar_ratio=0.0,
+        max_drawdown=0.0,
+        win_rate=0.0,
+        profit_factor=0.0,
+        total_trades=0,
+        monthly_returns={},
+        equity_curve=equity_data,
     )
 
 
@@ -217,9 +226,7 @@ def persist_result(result: BacktestResult, sync_session_factory: Any) -> None:
     from src.core.models.backtest_results import BacktestResultRecord
 
     # Serialize equity curve to JSON-safe list of [date_str, equity] pairs
-    equity_curve_json = [
-        [str(d), round(e, 2)] for d, e in result.equity_curve
-    ]
+    equity_curve_json = [[str(d), round(e, 2)] for d, e in result.equity_curve]
     config_json = {
         "start_date": str(result.start_date),
         "end_date": str(result.end_date),

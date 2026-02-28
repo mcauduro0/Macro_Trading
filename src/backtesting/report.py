@@ -3,6 +3,7 @@
 Uses matplotlib Agg backend for headless PNG generation.
 matplotlib.use("Agg") MUST be called before importing pyplot.
 """
+
 from __future__ import annotations
 
 import logging
@@ -102,21 +103,34 @@ def generate_equity_chart(
         return output_path
 
     import pandas as pd
+
     dates = [pd.Timestamp(d) for d, _ in result.equity_curve]
     equities = [e for _, e in result.equity_curve]
     equity_series = pd.Series(equities, index=dates)
 
     if show_drawdown and len(equity_series) > 1:
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={"height_ratios": [3, 1]})
+        fig, (ax1, ax2) = plt.subplots(
+            2, 1, figsize=(12, 8), gridspec_kw={"height_ratios": [3, 1]}
+        )
     else:
         fig, ax1 = plt.subplots(1, 1, figsize=(12, 5))
         ax2 = None
 
     # Equity curve
-    ax1.plot(equity_series.index, equity_series.values, color="#2196F3", linewidth=1.5, label="Portfolio Equity")
+    ax1.plot(
+        equity_series.index,
+        equity_series.values,
+        color="#2196F3",
+        linewidth=1.5,
+        label="Portfolio Equity",
+    )
     ax1.axhline(
-        y=result.initial_capital, color="#9E9E9E", linestyle="--",
-        linewidth=0.8, alpha=0.7, label="Initial Capital",
+        y=result.initial_capital,
+        color="#9E9E9E",
+        linestyle="--",
+        linewidth=0.8,
+        alpha=0.7,
+        label="Initial Capital",
     )
     ax1.set_title(
         f"{result.strategy_id} -- Equity Curve\n"
@@ -136,7 +150,14 @@ def generate_equity_chart(
     if ax2 is not None:
         rolling_max = equity_series.expanding().max()
         drawdown = (equity_series / rolling_max - 1) * 100
-        ax2.fill_between(drawdown.index, drawdown.values, 0, color="#F44336", alpha=0.4, label="Drawdown")
+        ax2.fill_between(
+            drawdown.index,
+            drawdown.values,
+            0,
+            color="#F44336",
+            alpha=0.4,
+            label="Drawdown",
+        )
         ax2.plot(drawdown.index, drawdown.values, color="#F44336", linewidth=0.8)
         ax2.set_ylabel("Drawdown %")
         ax2.set_xlabel("Date")

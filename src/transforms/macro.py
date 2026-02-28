@@ -17,15 +17,19 @@ def compute_diffusion_index(components_df: pd.DataFrame) -> pd.Series:
     return (positive / total * 100).replace([np.inf, -np.inf], np.nan)
 
 
-def compute_trimmed_mean(components_df: pd.DataFrame, trim_pct: float = 0.20) -> pd.Series:
+def compute_trimmed_mean(
+    components_df: pd.DataFrame, trim_pct: float = 0.20
+) -> pd.Series:
     """Trimmed mean: drop top and bottom trim_pct of observations per period."""
+
     def _trimmed(row):
         vals = row.dropna().sort_values()
         n = len(vals)
         if n < 3:
             return vals.mean()
         k = int(np.floor(n * trim_pct))
-        return vals.iloc[k:n - k].mean()
+        return vals.iloc[k : n - k].mean()
+
     return components_df.apply(_trimmed, axis=1)
 
 
@@ -34,7 +38,9 @@ def compute_surprise_index(actual: pd.Series, expected: pd.Series) -> pd.Series:
     return actual - expected
 
 
-def compute_momentum(series: pd.Series, periods: list[int] | None = None) -> pd.DataFrame:
+def compute_momentum(
+    series: pd.Series, periods: list[int] | None = None
+) -> pd.DataFrame:
     """Compute momentum (change) over multiple periods."""
     if periods is None:
         periods = [1, 3, 6, 12]

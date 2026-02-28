@@ -183,7 +183,9 @@ class TestRiskBudget:
 
         # RATES total = 0.45, exceeds 0.40 limit
         assert report.asset_class_budgets["RATES"]["breached"] is True
-        assert report.asset_class_budgets["RATES"]["allocated"] == pytest.approx(0.45, abs=1e-10)
+        assert report.asset_class_budgets["RATES"]["allocated"] == pytest.approx(
+            0.45, abs=1e-10
+        )
 
     def test_cannot_add_risk_when_full(self):
         """When available budget < 5%, can_add_risk is False."""

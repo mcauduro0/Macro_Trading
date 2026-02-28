@@ -27,9 +27,7 @@ from .base import Base
 class FiscalData(Base):
     __tablename__ = "fiscal_data"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     series_id: Mapped[int] = mapped_column(
         ForeignKey("series_metadata.id"), nullable=False
     )
@@ -45,7 +43,9 @@ class FiscalData(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "series_id", "observation_date", "fiscal_metric",
+            "series_id",
+            "observation_date",
+            "fiscal_metric",
             name="uq_fiscal_data_natural_key",
         ),
         Index("ix_fiscal_data_series_id", "series_id"),

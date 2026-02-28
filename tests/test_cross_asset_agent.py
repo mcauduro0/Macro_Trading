@@ -97,19 +97,31 @@ def test_feature_engine_returns_all_keys():
 
     # Scalar keys
     for key in [
-        "vix_level", "vix_zscore_252d",
-        "hy_oas_bps", "hy_oas_zscore_252d",
-        "dxy_level", "dxy_zscore_252d",
-        "ust_slope_bps", "ust_slope_zscore_252d",
-        "cftc_brl_net", "cftc_brl_zscore",
-        "bcb_flow_net", "bcb_flow_zscore",
-        "di_5y_rate", "ust_5y_rate",
+        "vix_level",
+        "vix_zscore_252d",
+        "hy_oas_bps",
+        "hy_oas_zscore_252d",
+        "dxy_level",
+        "dxy_zscore_252d",
+        "ust_slope_bps",
+        "ust_slope_zscore_252d",
+        "cftc_brl_net",
+        "cftc_brl_zscore",
+        "bcb_flow_net",
+        "bcb_flow_zscore",
+        "di_5y_rate",
+        "ust_5y_rate",
         "credit_proxy_bps",
     ]:
         assert key in features, f"Missing scalar key: {key}"
 
     # Private model keys
-    for key in ["_regime_components", "_correlation_pairs", "_sentiment_components", "_as_of_date"]:
+    for key in [
+        "_regime_components",
+        "_correlation_pairs",
+        "_sentiment_components",
+        "_as_of_date",
+    ]:
         assert key in features, f"Missing private key: {key}"
 
     assert features["_as_of_date"] == AS_OF
@@ -158,9 +170,9 @@ def test_regime_model_risk_off_direction():
 
     sig = RegimeDetectionModel().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.SHORT, (
-        f"Expected SHORT (risk-off), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.SHORT
+    ), f"Expected SHORT (risk-off), got {sig.direction}"
     assert sig.signal_id == "CROSSASSET_REGIME"
     assert -1.0 <= sig.value <= 1.0
 
@@ -171,15 +183,20 @@ def test_regime_model_risk_off_direction():
 def test_regime_model_risk_on_direction():
     """Large negative z-scores -> LONG direction (risk-on)."""
     components = make_regime_components(
-        vix_z=-2.5, hy_z=-2.0, dxy_z=-1.5, em_flows_z=-1.0, ust_slope_z=-1.0, br_fiscal_z=-0.5
+        vix_z=-2.5,
+        hy_z=-2.0,
+        dxy_z=-1.5,
+        em_flows_z=-1.0,
+        ust_slope_z=-1.0,
+        br_fiscal_z=-0.5,
     )
     features = {"_regime_components": components, "_as_of_date": AS_OF}
 
     sig = RegimeDetectionModel().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.LONG, (
-        f"Expected LONG (risk-on), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.LONG
+    ), f"Expected LONG (risk-on), got {sig.direction}"
     assert sig.value < -0.2
 
 
@@ -189,7 +206,12 @@ def test_regime_model_risk_on_direction():
 def test_regime_model_neutral_zone():
     """Z-scores near zero -> NEUTRAL."""
     components = make_regime_components(
-        vix_z=0.1, hy_z=-0.1, dxy_z=0.05, em_flows_z=-0.05, ust_slope_z=0.0, br_fiscal_z=0.0
+        vix_z=0.1,
+        hy_z=-0.1,
+        dxy_z=0.05,
+        em_flows_z=-0.05,
+        ust_slope_z=0.0,
+        br_fiscal_z=0.0,
     )
     features = {"_regime_components": components, "_as_of_date": AS_OF}
 
@@ -214,7 +236,12 @@ def test_regime_model_no_signal_empty_components():
 def test_regime_model_value_clipped_to_bounds():
     """Extreme components -> score in [-1, 1]."""
     components = make_regime_components(
-        vix_z=10.0, hy_z=10.0, dxy_z=10.0, em_flows_z=10.0, ust_slope_z=10.0, br_fiscal_z=10.0
+        vix_z=10.0,
+        hy_z=10.0,
+        dxy_z=10.0,
+        em_flows_z=10.0,
+        ust_slope_z=10.0,
+        br_fiscal_z=10.0,
     )
     features = {"_regime_components": components, "_as_of_date": AS_OF}
 
@@ -281,9 +308,9 @@ def test_correlation_break_detected():
     # The current correlation should be strongly negative
     assert current < -0.5, f"Expected negative correlation, got {current}"
     # Signal should detect something (at minimum WEAK)
-    assert sig.strength != SignalStrength.NO_SIGNAL, (
-        f"Expected signal, got NO_SIGNAL, max_z={sig.metadata.get('max_z')}"
-    )
+    assert (
+        sig.strength != SignalStrength.NO_SIGNAL
+    ), f"Expected signal, got NO_SIGNAL, max_z={sig.metadata.get('max_z')}"
     assert sig.direction == SignalDirection.NEUTRAL  # always NEUTRAL
     # Value should be the max |z| which should be meaningfully positive
     assert sig.value > 1.0
@@ -311,9 +338,10 @@ def test_correlation_no_break_stable_pairs():
     sig = CorrelationAnalysis().run(features, AS_OF)
 
     # Should not detect a strong break
-    assert sig.strength in (SignalStrength.NO_SIGNAL, SignalStrength.WEAK), (
-        f"Expected no break, got strength={sig.strength}"
-    )
+    assert sig.strength in (
+        SignalStrength.NO_SIGNAL,
+        SignalStrength.WEAK,
+    ), f"Expected no break, got strength={sig.strength}"
     assert len(sig.metadata.get("breaks_detected", [])) == 0
 
 
@@ -334,9 +362,9 @@ def test_sentiment_fear_extreme():
 
     sig = RiskSentimentIndex().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.SHORT, (
-        f"Expected SHORT (fear), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.SHORT
+    ), f"Expected SHORT (fear), got {sig.direction}"
     assert sig.signal_id == "CROSSASSET_SENTIMENT"
     assert 0 <= sig.value <= 100
     assert sig.value < 30
@@ -359,9 +387,9 @@ def test_sentiment_greed_extreme():
 
     sig = RiskSentimentIndex().run(features, AS_OF)
 
-    assert sig.direction == SignalDirection.LONG, (
-        f"Expected LONG (greed), got {sig.direction}"
-    )
+    assert (
+        sig.direction == SignalDirection.LONG
+    ), f"Expected LONG (greed), got {sig.direction}"
     assert sig.value > 70
 
 
@@ -443,7 +471,10 @@ def test_cross_asset_agent_id():
 # ---------------------------------------------------------------------------
 def test_regime_model_all_nan_no_signal():
     """All NaN z-scores -> NO_SIGNAL."""
-    components = {k: np.nan for k in ["vix", "hy_oas", "dxy", "em_flows", "ust_slope", "br_fiscal"]}
+    components = {
+        k: np.nan
+        for k in ["vix", "hy_oas", "dxy", "em_flows", "ust_slope", "br_fiscal"]
+    }
     features = {"_regime_components": components, "_as_of_date": AS_OF}
 
     sig = RegimeDetectionModel().run(features, AS_OF)

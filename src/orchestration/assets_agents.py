@@ -49,6 +49,7 @@ def _ensure_agents_registered() -> None:
         return
 
     from src.agents.data_loader import PointInTimeDataLoader
+
     loader = PointInTimeDataLoader()
     AgentRegistry.clear()
 
@@ -94,6 +95,7 @@ def _run_agent(agent_id: str, as_of: date) -> dict:
 # Agent Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="agents",
     retry_policy=_retry_policy,
@@ -133,7 +135,9 @@ def agent_monetary_policy(context: AssetExecutionContext) -> dict:
     context.log.info(f"Running Monetary Policy Agent for {as_of}")
     try:
         result = _run_agent("monetary_agent", as_of)
-        context.log.info(f"Monetary Policy Agent complete: {result['signal_count']} signals")
+        context.log.info(
+            f"Monetary Policy Agent complete: {result['signal_count']} signals"
+        )
         return result
     except Exception as exc:
         context.log.error(f"Monetary Policy Agent failed: {exc}")
@@ -179,7 +183,9 @@ def agent_fx_equilibrium(context: AssetExecutionContext) -> dict:
     context.log.info(f"Running FX Equilibrium Agent for {as_of}")
     try:
         result = _run_agent("fx_agent", as_of)
-        context.log.info(f"FX Equilibrium Agent complete: {result['signal_count']} signals")
+        context.log.info(
+            f"FX Equilibrium Agent complete: {result['signal_count']} signals"
+        )
         return result
     except Exception as exc:
         context.log.error(f"FX Equilibrium Agent failed: {exc}")
@@ -190,7 +196,13 @@ def agent_fx_equilibrium(context: AssetExecutionContext) -> dict:
     group_name="agents",
     retry_policy=_retry_policy,
     partitions_def=_daily_partitions,
-    deps=_silver_deps + ["agent_inflation", "agent_monetary_policy", "agent_fiscal", "agent_fx_equilibrium"],
+    deps=_silver_deps
+    + [
+        "agent_inflation",
+        "agent_monetary_policy",
+        "agent_fiscal",
+        "agent_fx_equilibrium",
+    ],
     description="Run Cross-Asset Agent: regime detection, cross-market signals, risk-on/off",
 )
 def agent_cross_asset(context: AssetExecutionContext) -> dict:
@@ -203,7 +215,9 @@ def agent_cross_asset(context: AssetExecutionContext) -> dict:
     context.log.info(f"Running Cross-Asset Agent for {as_of}")
     try:
         result = _run_agent("cross_asset_agent", as_of)
-        context.log.info(f"Cross-Asset Agent complete: {result['signal_count']} signals")
+        context.log.info(
+            f"Cross-Asset Agent complete: {result['signal_count']} signals"
+        )
         return result
     except Exception as exc:
         context.log.error(f"Cross-Asset Agent failed: {exc}")

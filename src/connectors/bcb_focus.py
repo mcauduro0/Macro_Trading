@@ -226,19 +226,24 @@ class BcbFocusConnector(BaseConnector):
 
                 # release_time is the survey publication date with SP timezone
                 release_time = datetime(
-                    obs_date.year, obs_date.month, obs_date.day,
-                    8, 30,  # Focus is published ~8:30 AM Brasilia time
+                    obs_date.year,
+                    obs_date.month,
+                    obs_date.day,
+                    8,
+                    30,  # Focus is published ~8:30 AM Brasilia time
                     tzinfo=_SP_TZ,
                 )
 
-                all_records.append({
-                    "_series_key": series_key,
-                    "observation_date": obs_date,
-                    "value": value,
-                    "release_time": release_time,
-                    "revision_number": 0,
-                    "source": self.SOURCE_NAME,
-                })
+                all_records.append(
+                    {
+                        "_series_key": series_key,
+                        "observation_date": obs_date,
+                        "value": value,
+                        "release_time": release_time,
+                        "revision_number": 0,
+                        "source": self.SOURCE_NAME,
+                    }
+                )
 
             # Rate limit between indicators
             if indicator != list(self.INDICATORS.keys())[-1]:
@@ -252,26 +257,28 @@ class BcbFocusConnector(BaseConnector):
         )
         return all_records
 
-    async def _ensure_series_metadata(
-        self, series_key: str, source_id: int
-    ) -> int:
+    async def _ensure_series_metadata(self, series_key: str, source_id: int) -> int:
         """Ensure a series_metadata row exists for the given series. Returns its id."""
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=series_key,
-                    name=series_key,
-                    frequency="W",
-                    country="BR",
-                    unit="percent",
-                    decimal_separator=".",
-                    date_format="YYYY-MM-DD",
-                    is_revisable=False,
-                    release_timezone="America/Sao_Paulo",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=series_key,
+                        name=series_key,
+                        frequency="W",
+                        country="BR",
+                        unit="percent",
+                        decimal_separator=".",
+                        date_format="YYYY-MM-DD",
+                        is_revisable=False,
+                        release_timezone="America/Sao_Paulo",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

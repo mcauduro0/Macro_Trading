@@ -135,14 +135,16 @@ class StnFiscalConnector(BaseConnector):
                 if parsed_value is None:
                     continue
 
-                all_records.append({
-                    "observation_date": obs_date,
-                    "value": parsed_value,
-                    "fiscal_metric": fiscal_metric,
-                    "unit": unit,
-                    "release_time": datetime.now(tz=_SP_TZ),
-                    "_series_key": series_key,
-                })
+                all_records.append(
+                    {
+                        "observation_date": obs_date,
+                        "value": parsed_value,
+                        "fiscal_metric": fiscal_metric,
+                        "unit": unit,
+                        "release_time": datetime.now(tz=_SP_TZ),
+                        "_series_key": series_key,
+                    }
+                )
 
         return all_records
 
@@ -193,8 +195,12 @@ class StnFiscalConnector(BaseConnector):
 
             try:
                 records = await self._fetch_series(
-                    series_key, bcb_code, fiscal_metric, unit,
-                    start_date, end_date,
+                    series_key,
+                    bcb_code,
+                    fiscal_metric,
+                    unit,
+                    start_date,
+                    end_date,
                 )
                 all_records.extend(records)
             except Exception as exc:
@@ -222,20 +228,24 @@ class StnFiscalConnector(BaseConnector):
         """Ensure a series_metadata row exists for the given series. Returns its id."""
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=str(bcb_code),
-                    name=series_key,
-                    frequency="M",
-                    country="BR",
-                    unit=unit,
-                    decimal_separator=".",
-                    date_format="DD/MM/YYYY",
-                    is_revisable=False,
-                    release_timezone="America/Sao_Paulo",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=str(bcb_code),
+                        name=series_key,
+                        frequency="M",
+                        country="BR",
+                        unit=unit,
+                        decimal_separator=".",
+                        date_format="DD/MM/YYYY",
+                        is_revisable=False,
+                        release_timezone="America/Sao_Paulo",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

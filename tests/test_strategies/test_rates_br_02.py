@@ -201,9 +201,7 @@ class TestRatesBR02CustomThreshold:
         # taylor=12.5, market=11.0 -> gap=1.5%=150bps
         # With 200bps threshold -> no position (150 < 200)
         loader = _make_mock_loader(focus_ipca=5.0, curve={252: 11.0})
-        strategy = RatesBR02TaylorStrategy(
-            data_loader=loader, gap_threshold_bps=200.0
-        )
+        strategy = RatesBR02TaylorStrategy(data_loader=loader, gap_threshold_bps=200.0)
         positions = strategy.generate_signals(date(2025, 6, 15))
         assert positions == []
 
@@ -213,9 +211,7 @@ class TestRatesBR02CustomThreshold:
         # Actually abs(50) <= 50, so it should NOT trigger (plan says "exceeds")
         # Let's use market=11.9 -> gap=0.6%=60bps > 50bps
         loader = _make_mock_loader(focus_ipca=5.0, curve={252: 11.9})
-        strategy = RatesBR02TaylorStrategy(
-            data_loader=loader, gap_threshold_bps=50.0
-        )
+        strategy = RatesBR02TaylorStrategy(data_loader=loader, gap_threshold_bps=50.0)
         positions = strategy.generate_signals(date(2025, 6, 15))
         assert len(positions) == 1
 

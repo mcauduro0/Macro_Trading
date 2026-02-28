@@ -1,4 +1,5 @@
 """Backtesting engine for strategy validation with point-in-time correctness."""
+
 from src.backtesting.analytics import (
     compute_information_ratio,
     compute_rolling_sharpe,

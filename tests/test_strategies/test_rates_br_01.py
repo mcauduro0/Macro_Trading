@@ -21,7 +21,9 @@ def _make_mock_loader() -> MagicMock:
     return MagicMock()
 
 
-def _make_curve_history(rates: list[float], base_date: str = "2025-01-01") -> pd.DataFrame:
+def _make_curve_history(
+    rates: list[float], base_date: str = "2025-01-01"
+) -> pd.DataFrame:
     """Create a mock curve history DataFrame.
 
     Args:

@@ -199,7 +199,14 @@ def test_portfolio_current_has_positions(mock_build, client):
 def test_portfolio_risk_has_var(mock_risk, client):
     """Verify var_95 field equivalent in response."""
     mock_risk.return_value = {
-        "var": {"historical": {"var_95": -0.02, "cvar_95": -0.03, "var_99": -0.04, "cvar_99": -0.05}},
+        "var": {
+            "historical": {
+                "var_95": -0.02,
+                "cvar_95": -0.03,
+                "var_99": -0.04,
+                "cvar_99": -0.05,
+            }
+        },
         "stress_tests": [],
         "limit_utilization": {},
         "circuit_breaker_status": "NORMAL",

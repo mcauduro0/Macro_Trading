@@ -70,7 +70,11 @@ class FxFeatureEngine:
         try:
             selic_df = data.get("selic")
             selic_rate = np.nan
-            if selic_df is not None and not selic_df.empty and "value" in selic_df.columns:
+            if (
+                selic_df is not None
+                and not selic_df.empty
+                and "value" in selic_df.columns
+            ):
                 selic_rate = float(selic_df["value"].dropna().iloc[-1])
             features["selic_rate"] = selic_rate
         except Exception:
@@ -87,8 +91,12 @@ class FxFeatureEngine:
 
         # Raw carry differential
         try:
-            if not np.isnan(features["selic_rate"]) and not np.isnan(features["fed_funds_rate"]):
-                features["carry_raw"] = features["selic_rate"] - features["fed_funds_rate"]
+            if not np.isnan(features["selic_rate"]) and not np.isnan(
+                features["fed_funds_rate"]
+            ):
+                features["carry_raw"] = (
+                    features["selic_rate"] - features["fed_funds_rate"]
+                )
             else:
                 features["carry_raw"] = np.nan
         except Exception:
@@ -99,7 +107,9 @@ class FxFeatureEngine:
             vol_30d = np.nan
             if ptax_close is not None and len(ptax_close) >= 31:
                 daily_returns = ptax_close.pct_change().dropna()
-                vol_30d = float(daily_returns.rolling(30).std().iloc[-1] * np.sqrt(252) * 100)
+                vol_30d = float(
+                    daily_returns.rolling(30).std().iloc[-1] * np.sqrt(252) * 100
+                )
             features["vol_30d_realized"] = vol_30d
         except Exception:
             features["vol_30d_realized"] = np.nan
@@ -111,7 +121,9 @@ class FxFeatureEngine:
                 and not np.isnan(features["vol_30d_realized"])
                 and features["vol_30d_realized"] != 0
             ):
-                features["carry_to_risk_ratio"] = features["carry_raw"] / features["vol_30d_realized"]
+                features["carry_to_risk_ratio"] = (
+                    features["carry_raw"] / features["vol_30d_realized"]
+                )
             else:
                 features["carry_to_risk_ratio"] = np.nan
         except Exception:
@@ -127,31 +139,53 @@ class FxFeatureEngine:
             focus_ipca_df = data.get("focus_ipca")
 
             di_5y_series: pd.Series | None = None
-            if di_curve_hist is not None and not di_curve_hist.empty and "rate" in di_curve_hist.columns:
+            if (
+                di_curve_hist is not None
+                and not di_curve_hist.empty
+                and "rate" in di_curve_hist.columns
+            ):
                 _s = di_curve_hist["rate"].copy()
                 _s.index = self._tz_naive(_s.index)
                 raw = _s.resample("ME").last()
                 # Curve rates may be decimal (0.135) — convert to pct if needed
-                di_5y_series = raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+                di_5y_series = (
+                    raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+                )
 
             ust_5y_series: pd.Series | None = None
-            if ust_5y_hist is not None and not ust_5y_hist.empty and "rate" in ust_5y_hist.columns:
+            if (
+                ust_5y_hist is not None
+                and not ust_5y_hist.empty
+                and "rate" in ust_5y_hist.columns
+            ):
                 _s = ust_5y_hist["rate"].copy()
                 _s.index = self._tz_naive(_s.index)
                 raw = _s.resample("ME").last()
-                ust_5y_series = raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+                ust_5y_series = (
+                    raw * 100.0 if (len(raw) > 0 and raw.max() < 1.0) else raw
+                )
 
             focus_ipca_series: pd.Series | None = None
-            if focus_ipca_df is not None and not focus_ipca_df.empty and "value" in focus_ipca_df.columns:
+            if (
+                focus_ipca_df is not None
+                and not focus_ipca_df.empty
+                and "value" in focus_ipca_df.columns
+            ):
                 _s = focus_ipca_df["value"].copy()
                 _s.index = self._tz_naive(_s.index)
                 focus_ipca_series = _s.resample("ME").last()
 
-            if di_5y_series is not None and ust_5y_series is not None and focus_ipca_series is not None:
+            if (
+                di_5y_series is not None
+                and ust_5y_series is not None
+                and focus_ipca_series is not None
+            ):
                 real_br = di_5y_series - focus_ipca_series
                 real_us = ust_5y_series - focus_ipca_series * 0.4  # rough US PCE proxy
                 real_rate_diff = (real_br - real_us).dropna()
-                features["real_rate_diff"] = float(real_rate_diff.iloc[-1]) if len(real_rate_diff) else np.nan
+                features["real_rate_diff"] = (
+                    float(real_rate_diff.iloc[-1]) if len(real_rate_diff) else np.nan
+                )
             else:
                 features["real_rate_diff"] = np.nan
         except Exception:
@@ -160,7 +194,11 @@ class FxFeatureEngine:
         try:
             fx_res_df = data.get("fx_reserves")
             nfa_proxy = np.nan
-            if fx_res_df is not None and not fx_res_df.empty and "value" in fx_res_df.columns:
+            if (
+                fx_res_df is not None
+                and not fx_res_df.empty
+                and "value" in fx_res_df.columns
+            ):
                 latest_res = float(fx_res_df["value"].dropna().iloc[-1])
                 if latest_res > 0:
                     nfa_proxy = float(np.log(latest_res))
@@ -218,7 +256,11 @@ class FxFeatureEngine:
 
             # CIP basis: di_1y - (fed_funds + expected_dep)
             fed_funds_rate = features.get("fed_funds_rate", np.nan)
-            if not np.isnan(di_1y) and not np.isnan(fed_funds_rate) and not np.isnan(expected_dep):
+            if (
+                not np.isnan(di_1y)
+                and not np.isnan(fed_funds_rate)
+                and not np.isnan(expected_dep)
+            ):
                 features["cip_basis"] = di_1y - (fed_funds_rate + expected_dep)
             else:
                 features["cip_basis"] = np.nan
@@ -310,9 +352,15 @@ class FxFeatureEngine:
         ust_hist = data.get("ust_5y_history")
         focus_ipca_df = data.get("focus_ipca")
         if (
-            di_hist is not None and not di_hist.empty and "rate" in di_hist.columns
-            and ust_hist is not None and not ust_hist.empty and "rate" in ust_hist.columns
-            and focus_ipca_df is not None and not focus_ipca_df.empty and "value" in focus_ipca_df.columns
+            di_hist is not None
+            and not di_hist.empty
+            and "rate" in di_hist.columns
+            and ust_hist is not None
+            and not ust_hist.empty
+            and "rate" in ust_hist.columns
+            and focus_ipca_df is not None
+            and not focus_ipca_df.empty
+            and "value" in focus_ipca_df.columns
         ):
             di_s = di_hist["rate"].copy()
             di_s.index = self._tz_naive(di_s.index)
@@ -328,7 +376,11 @@ class FxFeatureEngine:
 
         # nfa_proxy: log(fx_reserves)
         fx_res_df = data.get("fx_reserves")
-        if fx_res_df is not None and not fx_res_df.empty and "value" in fx_res_df.columns:
+        if (
+            fx_res_df is not None
+            and not fx_res_df.empty
+            and "value" in fx_res_df.columns
+        ):
             res_val = fx_res_df["value"].copy()
             res_val.index = self._tz_naive(res_val.index)
             res_m = res_val.resample("ME").last()
@@ -418,7 +470,5 @@ class FxFeatureEngine:
         else:
             idx = pd.DatetimeIndex([pd.Timestamp.now().normalize()])
             cftc_z = pd.Series([np.nan], index=idx)
-        combined = pd.DataFrame(
-            {"bcb_flow_zscore": bcb_z, "cftc_zscore": cftc_z}
-        )
+        combined = pd.DataFrame({"bcb_flow_zscore": bcb_z, "cftc_zscore": cftc_z})
         return combined

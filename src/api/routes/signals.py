@@ -52,11 +52,13 @@ async def signals_latest(
         # Compute consensus per asset class
         consensus = _compute_consensus(all_signals)
 
-        return _envelope({
-            "signals": all_signals,
-            "consensus": consensus,
-            "as_of_date": str(as_of),
-        })
+        return _envelope(
+            {
+                "signals": all_signals,
+                "consensus": consensus,
+                "as_of_date": str(as_of),
+            }
+        )
     except Exception as exc:
         logger.error("signals error: %s", exc)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -75,18 +77,28 @@ async def _collect_all_signals(as_of: date) -> list[dict]:
                 continue
             report = await asyncio.to_thread(agent.backtest_run, as_of)
             for sig in report.signals:
-                direction = sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction)
-                strength = sig.strength.value if hasattr(sig.strength, "value") else str(sig.strength)
-                all_signals.append({
-                    "signal_id": sig.signal_id,
-                    "agent_id": sig.agent_id,
-                    "direction": direction,
-                    "strength": strength,
-                    "confidence": sig.confidence,
-                    "value": sig.value,
-                    "horizon_days": sig.horizon_days,
-                    "metadata": sig.metadata,
-                })
+                direction = (
+                    sig.direction.value
+                    if hasattr(sig.direction, "value")
+                    else str(sig.direction)
+                )
+                strength = (
+                    sig.strength.value
+                    if hasattr(sig.strength, "value")
+                    else str(sig.strength)
+                )
+                all_signals.append(
+                    {
+                        "signal_id": sig.signal_id,
+                        "agent_id": sig.agent_id,
+                        "direction": direction,
+                        "strength": strength,
+                        "confidence": sig.confidence,
+                        "value": sig.value,
+                        "horizon_days": sig.horizon_days,
+                        "metadata": sig.metadata,
+                    }
+                )
         except Exception:
             # Skip agents that fail
             pass
@@ -104,7 +116,9 @@ def _compute_consensus(signals: list[dict]) -> dict:
     total = len(signals) if signals else 1
     consensus = {}
     for direction, group in direction_groups.items():
-        avg_confidence = sum(s["confidence"] for s in group) / len(group) if group else 0.0
+        avg_confidence = (
+            sum(s["confidence"] for s in group) / len(group) if group else 0.0
+        )
         agreement_ratio = len(group) / total
         consensus[direction] = {
             "direction": direction,

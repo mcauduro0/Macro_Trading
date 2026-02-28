@@ -63,7 +63,9 @@ def sample_zip_bytes(sample_csv_text: str) -> bytes:
 # ---------------------------------------------------------------------------
 # Net Position Computation
 # ---------------------------------------------------------------------------
-def test_compute_net_positions_basic(connector: CftcCotConnector, sample_df: pd.DataFrame):
+def test_compute_net_positions_basic(
+    connector: CftcCotConnector, sample_df: pd.DataFrame
+):
     """Verify net = long - short for each category and contract."""
     records = connector.compute_net_positions(sample_df)
 
@@ -73,7 +75,8 @@ def test_compute_net_positions_basic(connector: CftcCotConnector, sample_df: pd.
 
     # ES DEALER_NET on 2025-01-07: 120000 - 95000 = 25000
     es_dealer = [
-        r for r in records
+        r
+        for r in records
         if r["_series_key"] == "CFTC_ES_DEALER_NET"
         and r["observation_date"] == date(2025, 1, 7)
     ]
@@ -84,7 +87,8 @@ def test_compute_net_positions_basic(connector: CftcCotConnector, sample_df: pd.
 
     # TY LEVERAGED_NET on 2025-01-07: 350000 - 420000 = -70000
     ty_lev = [
-        r for r in records
+        r
+        for r in records
         if r["_series_key"] == "CFTC_TY_LEVERAGED_NET"
         and r["observation_date"] == date(2025, 1, 7)
     ]
@@ -93,7 +97,8 @@ def test_compute_net_positions_basic(connector: CftcCotConnector, sample_df: pd.
 
     # ES ASSETMGR_NET on 2025-01-14: 460000 - 390000 = 70000
     es_am = [
-        r for r in records
+        r
+        for r in records
         if r["_series_key"] == "CFTC_ES_ASSETMGR_NET"
         and r["observation_date"] == date(2025, 1, 14)
     ]
@@ -101,13 +106,16 @@ def test_compute_net_positions_basic(connector: CftcCotConnector, sample_df: pd.
     assert es_am[0]["value"] == pytest.approx(70000.0)
 
 
-def test_compute_net_positions_all_categories(connector: CftcCotConnector, sample_df: pd.DataFrame):
+def test_compute_net_positions_all_categories(
+    connector: CftcCotConnector, sample_df: pd.DataFrame
+):
     """Verify all 4 categories are computed for each contract."""
     records = connector.compute_net_positions(sample_df)
 
     # Check we get all 4 categories for ES on 2025-01-07
     es_d1 = [
-        r for r in records
+        r
+        for r in records
         if r["_series_key"].startswith("CFTC_ES_")
         and r["observation_date"] == date(2025, 1, 7)
     ]
@@ -115,7 +123,9 @@ def test_compute_net_positions_all_categories(connector: CftcCotConnector, sampl
     assert categories == {"DEALER", "ASSETMGR", "LEVERAGED", "OTHER"}
 
 
-def test_compute_net_positions_contract_filtering(connector: CftcCotConnector, sample_df: pd.DataFrame):
+def test_compute_net_positions_contract_filtering(
+    connector: CftcCotConnector, sample_df: pd.DataFrame
+):
     """Verify untracked contracts (code 999999) are filtered out."""
     records = connector.compute_net_positions(sample_df)
 
@@ -126,7 +136,9 @@ def test_compute_net_positions_contract_filtering(connector: CftcCotConnector, s
         assert "UNTRACKED" not in key
 
 
-def test_compute_net_positions_series_key_format(connector: CftcCotConnector, sample_df: pd.DataFrame):
+def test_compute_net_positions_series_key_format(
+    connector: CftcCotConnector, sample_df: pd.DataFrame
+):
     """Verify series_key follows CFTC_{CONTRACT}_{CATEGORY}_NET pattern."""
     records = connector.compute_net_positions(sample_df)
 
@@ -149,16 +161,18 @@ def test_compute_net_positions_empty_df(connector: CftcCotConnector):
 def test_compute_net_positions_missing_columns(connector: CftcCotConnector):
     """Verify missing category columns log warning but do not crash."""
     # DataFrame with correct structure but missing DEALER columns
-    df = pd.DataFrame({
-        "Report_Date_as_YYYY-MM-DD": ["2025-01-07"],
-        "CFTC_Contract_Market_Code": ["13874A"],
-        "Asset_Mgr_Positions_Long_All": [100],
-        "Asset_Mgr_Positions_Short_All": [50],
-        "Lev_Money_Positions_Long_All": [200],
-        "Lev_Money_Positions_Short_All": [150],
-        "Other_Rept_Positions_Long_All": [30],
-        "Other_Rept_Positions_Short_All": [20],
-    })
+    df = pd.DataFrame(
+        {
+            "Report_Date_as_YYYY-MM-DD": ["2025-01-07"],
+            "CFTC_Contract_Market_Code": ["13874A"],
+            "Asset_Mgr_Positions_Long_All": [100],
+            "Asset_Mgr_Positions_Short_All": [50],
+            "Lev_Money_Positions_Long_All": [200],
+            "Lev_Money_Positions_Short_All": [150],
+            "Other_Rept_Positions_Long_All": [30],
+            "Other_Rept_Positions_Short_All": [20],
+        }
+    )
 
     records = connector.compute_net_positions(df)
 
@@ -173,11 +187,13 @@ def test_compute_net_positions_missing_columns(connector: CftcCotConnector):
 
 def test_compute_net_positions_missing_date_column(connector: CftcCotConnector):
     """Verify missing date column returns empty records."""
-    df = pd.DataFrame({
-        "CFTC_Contract_Market_Code": ["13874A"],
-        "Dealer_Positions_Long_All": [100],
-        "Dealer_Positions_Short_All": [50],
-    })
+    df = pd.DataFrame(
+        {
+            "CFTC_Contract_Market_Code": ["13874A"],
+            "Dealer_Positions_Long_All": [100],
+            "Dealer_Positions_Short_All": [50],
+        }
+    )
 
     records = connector.compute_net_positions(df)
     assert records == []
@@ -276,7 +292,9 @@ async def test_fetch_current_week_socrata_empty():
 # Fetch Integration (ZIP + Socrata combined)
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_fetch_combines_historical_and_current(sample_zip_bytes: bytes, sample_csv_text: str):
+async def test_fetch_combines_historical_and_current(
+    sample_zip_bytes: bytes, sample_csv_text: str
+):
     """Verify fetch() combines ZIP historical data with Socrata current data."""
     with respx.mock(base_url="https://www.cftc.gov") as cftc_mock:
         cftc_mock.get("/files/dea/history/fut_disagg_txt_2024.zip").respond(
@@ -284,7 +302,9 @@ async def test_fetch_combines_historical_and_current(sample_zip_bytes: bytes, sa
         )
 
         with respx.mock(base_url="https://publicreporting.cftc.gov") as socrata_mock:
-            socrata_mock.get("/resource/72hh-3qpy.csv").respond(200, text=sample_csv_text)
+            socrata_mock.get("/resource/72hh-3qpy.csv").respond(
+                200, text=sample_csv_text
+            )
 
             async with CftcCotConnector() as conn:
                 records = await conn.fetch(date(2024, 1, 1), date(2026, 12, 31))

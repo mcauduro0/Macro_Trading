@@ -240,15 +240,19 @@ class PerformanceAttributionEngine:
             return_cumulative = (cumulative_pnl / aum * 100) if aum > 0 else 0.0
 
             peak_equity = max(peak_equity, equity)
-            drawdown = ((equity - peak_equity) / peak_equity * 100) if peak_equity > 0 else 0.0
+            drawdown = (
+                ((equity - peak_equity) / peak_equity * 100) if peak_equity > 0 else 0.0
+            )
 
-            curve.append({
-                "date": snap_date,
-                "equity_brl": equity,
-                "return_pct_daily": return_daily,
-                "return_pct_cumulative": return_cumulative,
-                "drawdown_pct": drawdown,
-            })
+            curve.append(
+                {
+                    "date": snap_date,
+                    "equity_brl": equity,
+                    "return_pct_daily": return_daily,
+                    "return_pct_cumulative": return_cumulative,
+                    "drawdown_pct": drawdown,
+                }
+            )
 
         return curve
 
@@ -303,7 +307,11 @@ class PerformanceAttributionEngine:
             if not pos["is_open"]:
                 closed_at = pos.get("closed_at")
                 if closed_at is not None:
-                    close_date = closed_at.date() if isinstance(closed_at, datetime) else closed_at
+                    close_date = (
+                        closed_at.date()
+                        if isinstance(closed_at, datetime)
+                        else closed_at
+                    )
                     if close_date < start_date:
                         continue
 
@@ -359,13 +367,17 @@ class PerformanceAttributionEngine:
         for sid, data in sorted(strategy_data.items()):
             wins = data["wins"]
             total = data["trades"]
-            result.append({
-                "strategy_id": sid,
-                "pnl_brl": data["pnl"],
-                "return_contribution_pct": (data["pnl"] / aum * 100) if aum > 0 else 0.0,
-                "trades_count": total,
-                "win_rate_pct": (wins / total * 100) if total > 0 else 0.0,
-            })
+            result.append(
+                {
+                    "strategy_id": sid,
+                    "pnl_brl": data["pnl"],
+                    "return_contribution_pct": (
+                        (data["pnl"] / aum * 100) if aum > 0 else 0.0
+                    ),
+                    "trades_count": total,
+                    "win_rate_pct": (wins / total * 100) if total > 0 else 0.0,
+                }
+            )
 
         return result
 
@@ -380,7 +392,9 @@ class PerformanceAttributionEngine:
         if pnl_share > 0:
             data[sid]["wins"] += 1
 
-    def _attribute_by_asset_class(self, positions: list[dict], aum: float) -> list[dict]:
+    def _attribute_by_asset_class(
+        self, positions: list[dict], aum: float
+    ) -> list[dict]:
         """Group P&L by asset class. Additive: sums to total."""
         ac_data: dict[str, dict] = {}
 
@@ -397,12 +411,20 @@ class PerformanceAttributionEngine:
 
         result = []
         for ac, data in sorted(ac_data.items()):
-            result.append({
-                "asset_class": ac,
-                "pnl_brl": data["pnl"],
-                "return_contribution_pct": (data["pnl"] / aum * 100) if aum > 0 else 0.0,
-                "avg_notional_brl": data["notional_sum"] / data["count"] if data["count"] > 0 else 0.0,
-            })
+            result.append(
+                {
+                    "asset_class": ac,
+                    "pnl_brl": data["pnl"],
+                    "return_contribution_pct": (
+                        (data["pnl"] / aum * 100) if aum > 0 else 0.0
+                    ),
+                    "avg_notional_brl": (
+                        data["notional_sum"] / data["count"]
+                        if data["count"] > 0
+                        else 0.0
+                    ),
+                }
+            )
 
         return result
 
@@ -421,7 +443,11 @@ class PerformanceAttributionEngine:
             else:
                 closed_at = pos.get("closed_at")
                 if closed_at is not None:
-                    close_date = closed_at.date() if isinstance(closed_at, datetime) else closed_at
+                    close_date = (
+                        closed_at.date()
+                        if isinstance(closed_at, datetime)
+                        else closed_at
+                    )
                     holding_days = (close_date - entry_date).days
                 else:
                     holding_days = 0
@@ -429,14 +455,16 @@ class PerformanceAttributionEngine:
             notional = abs(pos.get("notional_brl") or 1.0)
             return_pct = (pnl / notional * 100) if notional > 0 else 0.0
 
-            result.append({
-                "position_id": pos["id"],
-                "instrument": pos.get("instrument", "UNKNOWN"),
-                "direction": pos.get("direction", "UNKNOWN"),
-                "pnl_brl": pnl,
-                "return_pct": return_pct,
-                "holding_days": holding_days,
-            })
+            result.append(
+                {
+                    "position_id": pos["id"],
+                    "instrument": pos.get("instrument", "UNKNOWN"),
+                    "direction": pos.get("direction", "UNKNOWN"),
+                    "pnl_brl": pnl,
+                    "return_pct": return_pct,
+                    "holding_days": holding_days,
+                }
+            )
 
         return result
 
@@ -469,12 +497,16 @@ class PerformanceAttributionEngine:
 
         result = []
         for factor, data in sorted(factor_data.items()):
-            result.append({
-                "factor": factor,
-                "pnl_brl": data["pnl"],
-                "return_contribution_pct": (data["pnl"] / aum * 100) if aum > 0 else 0.0,
-                "strategies_count": len(data["strategies"]),
-            })
+            result.append(
+                {
+                    "factor": factor,
+                    "pnl_brl": data["pnl"],
+                    "return_contribution_pct": (
+                        (data["pnl"] / aum * 100) if aum > 0 else 0.0
+                    ),
+                    "strategies_count": len(data["strategies"]),
+                }
+            )
 
         return result
 
@@ -517,14 +549,16 @@ class PerformanceAttributionEngine:
         week_num = 1
         while current <= end_date:
             week_end = min(current + timedelta(days=6), end_date)
-            buckets.append({
-                "period_start": current,
-                "period_end": week_end,
-                "label": f"Week {week_num}",
-                "pnl_brl": 0.0,
-                "return_pct": 0.0,
-                "cumulative_pnl_brl": 0.0,
-            })
+            buckets.append(
+                {
+                    "period_start": current,
+                    "period_end": week_end,
+                    "label": f"Week {week_num}",
+                    "pnl_brl": 0.0,
+                    "return_pct": 0.0,
+                    "cumulative_pnl_brl": 0.0,
+                }
+            )
             current = week_end + timedelta(days=1)
             week_num += 1
         return buckets
@@ -542,19 +576,32 @@ class PerformanceAttributionEngine:
             month_end = min(month_end, end_date)
 
             month_names = [
-                "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                "",
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
             ]
             label = f"{month_names[current.month]} {current.year}"
 
-            buckets.append({
-                "period_start": current,
-                "period_end": month_end,
-                "label": label,
-                "pnl_brl": 0.0,
-                "return_pct": 0.0,
-                "cumulative_pnl_brl": 0.0,
-            })
+            buckets.append(
+                {
+                    "period_start": current,
+                    "period_end": month_end,
+                    "label": label,
+                    "pnl_brl": 0.0,
+                    "return_pct": 0.0,
+                    "cumulative_pnl_brl": 0.0,
+                }
+            )
 
             # Move to first of next month
             if current.month == 12:
@@ -588,7 +635,10 @@ class PerformanceAttributionEngine:
 
         return {
             "systematic": {"pnl_brl": systematic_pnl, "count": systematic_count},
-            "discretionary": {"pnl_brl": discretionary_pnl, "count": discretionary_count},
+            "discretionary": {
+                "pnl_brl": discretionary_pnl,
+                "count": discretionary_count,
+            },
         }
 
     # -------------------------------------------------------------------------
@@ -632,15 +682,17 @@ class PerformanceAttributionEngine:
 
         # Mean and std
         mean_return = sum(daily_returns) / n_days
-        variance = sum((r - mean_return) ** 2 for r in daily_returns) / n_days if n_days > 0 else 0.0
+        variance = (
+            sum((r - mean_return) ** 2 for r in daily_returns) / n_days
+            if n_days > 0
+            else 0.0
+        )
         std_return = math.sqrt(variance) if variance > 0 else 0.0
 
         # Downside deviation (for Sortino)
         downside_returns = [r for r in daily_returns if r < 0]
         downside_var = (
-            sum(r ** 2 for r in downside_returns) / n_days
-            if n_days > 0
-            else 0.0
+            sum(r**2 for r in downside_returns) / n_days if n_days > 0 else 0.0
         )
         downside_std = math.sqrt(downside_var)
 
@@ -650,8 +702,16 @@ class PerformanceAttributionEngine:
         annualized_return = mean_return * ann_factor * 100
         annualized_vol = std_return * math.sqrt(ann_factor) * 100
 
-        sharpe = (mean_return / std_return * math.sqrt(ann_factor)) if std_return > 0 else 0.0
-        sortino = (mean_return / downside_std * math.sqrt(ann_factor)) if downside_std > 0 else 0.0
+        sharpe = (
+            (mean_return / std_return * math.sqrt(ann_factor))
+            if std_return > 0
+            else 0.0
+        )
+        sortino = (
+            (mean_return / downside_std * math.sqrt(ann_factor))
+            if downside_std > 0
+            else 0.0
+        )
 
         # Max drawdown
         cumulative = 0.0

@@ -148,9 +148,7 @@ class RiskMonitor:
         # Step 4: Circuit breaker
         cb_scale = 1.0
         if current_equity is not None:
-            cb_scale = self.drawdown_manager.update(
-                current_equity, positions
-            )
+            cb_scale = self.drawdown_manager.update(current_equity, positions)
 
         cb_state = self.drawdown_manager.state
         drawdown_pct = self.drawdown_manager.current_drawdown()
@@ -246,9 +244,7 @@ class RiskMonitor:
         lines.append("")
         lines.append("  Limit Utilization")
         lines.append("  " + "-" * 68)
-        lines.append(
-            f"  {'Limit':<36} {'Utilization':>12} {'Status':>12}"
-        )
+        lines.append(f"  {'Limit':<36} {'Utilization':>12} {'Status':>12}")
         lines.append("  " + "-" * 68)
         for lr in report.limit_results:
             status = "BREACHED" if lr.breached else "OK"

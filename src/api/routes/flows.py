@@ -101,14 +101,11 @@ async def get_flow_data(
             status_code=404, detail=f"Flow series '{series_code}' not found"
         )
 
-    stmt = (
-        select(
-            FlowData.observation_date,
-            FlowData.value,
-            FlowData.flow_type,
-        )
-        .where(FlowData.series_id == meta_row)
-    )
+    stmt = select(
+        FlowData.observation_date,
+        FlowData.value,
+        FlowData.flow_type,
+    ).where(FlowData.series_id == meta_row)
 
     if start:
         stmt = stmt.where(FlowData.observation_date >= start)

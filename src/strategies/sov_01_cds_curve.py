@@ -205,7 +205,9 @@ class Sov01CdsCurveStrategy(BaseStrategy):
         Returns None if CDS data is missing.
         """
         cds_df = self.data_loader.get_macro_series(
-            "BR_CDS_5Y", as_of_date, lookback_days=_CDS_LOOKBACK,
+            "BR_CDS_5Y",
+            as_of_date,
+            lookback_days=_CDS_LOOKBACK,
         )
         if cds_df.empty or len(cds_df) < 20:
             self.log.warning("sov01_missing_cds_5y", as_of_date=str(as_of_date))
@@ -224,10 +226,14 @@ class Sov01CdsCurveStrategy(BaseStrategy):
         Returns None if 1Y CDS data is not available.
         """
         cds_5y_df = self.data_loader.get_macro_series(
-            "BR_CDS_5Y", as_of_date, lookback_days=_CDS_LOOKBACK,
+            "BR_CDS_5Y",
+            as_of_date,
+            lookback_days=_CDS_LOOKBACK,
         )
         cds_1y_df = self.data_loader.get_macro_series(
-            "BR_CDS_1Y", as_of_date, lookback_days=_CDS_LOOKBACK,
+            "BR_CDS_1Y",
+            as_of_date,
+            lookback_days=_CDS_LOOKBACK,
         )
 
         if cds_5y_df.empty or cds_1y_df.empty:
@@ -260,12 +266,14 @@ class Sov01CdsCurveStrategy(BaseStrategy):
         Returns None if debt data is missing.
         """
         debt_pct = self.data_loader.get_latest_macro_value(
-            "BR_GROSS_DEBT_PCT_GDP", as_of_date,
+            "BR_GROSS_DEBT_PCT_GDP",
+            as_of_date,
         )
         if debt_pct is None:
             # Try alternative series
             debt_pct = self.data_loader.get_latest_macro_value(
-                "BR_GROSS_DEBT_GDP", as_of_date,
+                "BR_GROSS_DEBT_GDP",
+                as_of_date,
             )
         if debt_pct is None:
             return None
@@ -279,5 +287,6 @@ class Sov01CdsCurveStrategy(BaseStrategy):
     def _get_cds_level(self, as_of_date: date) -> Optional[float]:
         """Get the latest 5Y CDS level value."""
         return self.data_loader.get_latest_macro_value(
-            "BR_CDS_5Y", as_of_date,
+            "BR_CDS_5Y",
+            as_of_date,
         )

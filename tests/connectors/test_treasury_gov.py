@@ -79,7 +79,8 @@ async def test_nominal_curve_parsing(treasury_csv_nominal):
 
     # Check rate division: 4.35 -> 0.0435
     rec_1mo_d1 = [
-        r for r in records
+        r
+        for r in records
         if r["tenor_label"] == "1M" and r["curve_date"] == date(2025, 1, 2)
     ]
     assert len(rec_1mo_d1) == 1
@@ -100,14 +101,16 @@ async def test_nominal_skips_na_and_empty(treasury_csv_nominal):
 
     # Row 1 (01/02/2025): 4 Mo is empty, so no 4M record for that date
     d1_4m = [
-        r for r in records
+        r
+        for r in records
         if r["curve_date"] == date(2025, 1, 2) and r["tenor_label"] == "4M"
     ]
     assert len(d1_4m) == 0
 
     # Row 2 (01/03/2025): 20 Yr is "N/A", so no 20Y record for that date
     d2_20y = [
-        r for r in records
+        r
+        for r in records
         if r["curve_date"] == date(2025, 1, 3) and r["tenor_label"] == "20Y"
     ]
     assert len(d2_20y) == 0
@@ -152,7 +155,8 @@ async def test_breakeven_computation(treasury_csv_nominal, treasury_csv_real):
     # nominal 10Y = 4.60% = 0.0460, real 10Y = 2.12% = 0.0212
     # BEI = 0.0460 - 0.0212 = 0.0248
     bei_10y_d1 = [
-        r for r in bei_records
+        r
+        for r in bei_records
         if r["curve_date"] == date(2025, 1, 2) and r["tenor_label"] == "10Y"
     ]
     assert len(bei_10y_d1) == 1
@@ -163,7 +167,9 @@ async def test_breakeven_computation(treasury_csv_nominal, treasury_csv_real):
 
 
 @pytest.mark.asyncio
-async def test_breakeven_skips_unmatched_tenors(treasury_csv_nominal, treasury_csv_real):
+async def test_breakeven_skips_unmatched_tenors(
+    treasury_csv_nominal, treasury_csv_real
+):
     """Verify breakeven only computed where both nominal and real exist."""
     with respx.mock(base_url="https://home.treasury.gov") as mock:
         mock.get(_nominal_path(2025)).respond(200, text=treasury_csv_nominal)
@@ -206,20 +212,44 @@ async def test_date_filtering(treasury_csv_nominal, treasury_csv_real):
 def test_compute_breakeven_static():
     """Verify _compute_breakeven with known inputs."""
     nominal = [
-        {"curve_id": "UST_NOM", "curve_date": date(2025, 1, 2),
-         "tenor_days": 1825, "tenor_label": "5Y", "rate": 0.0442,
-         "curve_type": "sovereign_nominal", "source": "TREASURY_GOV"},
-        {"curve_id": "UST_NOM", "curve_date": date(2025, 1, 2),
-         "tenor_days": 3650, "tenor_label": "10Y", "rate": 0.0460,
-         "curve_type": "sovereign_nominal", "source": "TREASURY_GOV"},
+        {
+            "curve_id": "UST_NOM",
+            "curve_date": date(2025, 1, 2),
+            "tenor_days": 1825,
+            "tenor_label": "5Y",
+            "rate": 0.0442,
+            "curve_type": "sovereign_nominal",
+            "source": "TREASURY_GOV",
+        },
+        {
+            "curve_id": "UST_NOM",
+            "curve_date": date(2025, 1, 2),
+            "tenor_days": 3650,
+            "tenor_label": "10Y",
+            "rate": 0.0460,
+            "curve_type": "sovereign_nominal",
+            "source": "TREASURY_GOV",
+        },
     ]
     real = [
-        {"curve_id": "UST_REAL", "curve_date": date(2025, 1, 2),
-         "tenor_days": 1825, "tenor_label": "5Y", "rate": 0.0192,
-         "curve_type": "sovereign_real", "source": "TREASURY_GOV"},
-        {"curve_id": "UST_REAL", "curve_date": date(2025, 1, 2),
-         "tenor_days": 3650, "tenor_label": "10Y", "rate": 0.0212,
-         "curve_type": "sovereign_real", "source": "TREASURY_GOV"},
+        {
+            "curve_id": "UST_REAL",
+            "curve_date": date(2025, 1, 2),
+            "tenor_days": 1825,
+            "tenor_label": "5Y",
+            "rate": 0.0192,
+            "curve_type": "sovereign_real",
+            "source": "TREASURY_GOV",
+        },
+        {
+            "curve_id": "UST_REAL",
+            "curve_date": date(2025, 1, 2),
+            "tenor_days": 3650,
+            "tenor_label": "10Y",
+            "rate": 0.0212,
+            "curve_type": "sovereign_real",
+            "source": "TREASURY_GOV",
+        },
     ]
 
     bei = TreasuryGovConnector._compute_breakeven(nominal, real)

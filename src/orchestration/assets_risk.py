@@ -40,6 +40,7 @@ def _partition_date(context: AssetExecutionContext) -> date:
 # Risk Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="risk",
     retry_policy=_retry_policy,
@@ -64,7 +65,9 @@ def risk_var(
 
     from src.risk.var_calculator import VaRCalculator
 
-    VaRCalculator(min_historical_obs=756, mc_simulations=10_000, lookback_days=756)  # validate import
+    VaRCalculator(
+        min_historical_obs=756, mc_simulations=10_000, lookback_days=756
+    )  # validate import
 
     sized_positions = portfolio_sizing.get("sized_positions", {})
     n_positions = len(sized_positions)
@@ -84,9 +87,7 @@ def risk_var(
 
     # In production, portfolio returns would come from Silver layer
     # For now, report VaR calculation readiness
-    context.log.info(
-        f"VaR calculation complete: {n_positions} positions evaluated"
-    )
+    context.log.info(f"VaR calculation complete: {n_positions} positions evaluated")
 
     return {
         "status": "success",

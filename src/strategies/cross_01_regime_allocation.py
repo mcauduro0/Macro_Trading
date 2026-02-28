@@ -65,6 +65,7 @@ _REGIME_MISALIGN_MULTIPLIER = 0.5
 # ---------------------------------------------------------------------------
 class MacroRegime(str, Enum):
     """4-state macro regime classification."""
+
     GOLDILOCKS = "Goldilocks"
     REFLATION = "Reflation"
     STAGFLATION = "Stagflation"
@@ -78,24 +79,24 @@ class MacroRegime(str, Enum):
 REGIME_ALLOCATION: dict[MacroRegime, list[tuple[str, SignalDirection]]] = {
     MacroRegime.GOLDILOCKS: [
         ("IBOV_FUT", SignalDirection.LONG),
-        ("DI_PRE", SignalDirection.LONG),      # receive rates
+        ("DI_PRE", SignalDirection.LONG),  # receive rates
         ("USDBRL", SignalDirection.SHORT),
         ("NTN_B_REAL", SignalDirection.LONG),
     ],
     MacroRegime.REFLATION: [
         ("IBOV_FUT", SignalDirection.LONG),
-        ("DI_PRE", SignalDirection.SHORT),     # pay rates
+        ("DI_PRE", SignalDirection.SHORT),  # pay rates
         ("USDBRL", SignalDirection.LONG),
         ("NTN_B_REAL", SignalDirection.SHORT),
     ],
     MacroRegime.STAGFLATION: [
         ("IBOV_FUT", SignalDirection.SHORT),
-        ("DI_PRE", SignalDirection.SHORT),     # pay rates
+        ("DI_PRE", SignalDirection.SHORT),  # pay rates
         ("USDBRL", SignalDirection.LONG),
     ],
     MacroRegime.DEFLATION: [
         ("IBOV_FUT", SignalDirection.NEUTRAL),
-        ("DI_PRE", SignalDirection.LONG),      # receive rates
+        ("DI_PRE", SignalDirection.LONG),  # receive rates
         ("USDBRL", SignalDirection.SHORT),
         ("NTN_B_REAL", SignalDirection.LONG),
     ],
@@ -217,7 +218,9 @@ class Cross01RegimeAllocationStrategy(BaseStrategy):
     # Regime classification
     # ------------------------------------------------------------------
     def _classify_regime(
-        self, growth_z: float, inflation_z: float,
+        self,
+        growth_z: float,
+        inflation_z: float,
     ) -> MacroRegime:
         """Classify macro regime from growth and inflation z-scores.
 
@@ -257,22 +260,28 @@ class Cross01RegimeAllocationStrategy(BaseStrategy):
     def _compute_growth_z(self, as_of_date: date) -> Optional[float]:
         """Compute GDP growth z-score from IBC-Br or GDP YOY."""
         gdp = self.data_loader.get_latest_macro_value(
-            "BR_GDP_GROWTH_YOY", as_of_date,
+            "BR_GDP_GROWTH_YOY",
+            as_of_date,
         )
         if gdp is None:
             gdp = self.data_loader.get_latest_macro_value(
-                "BR_IBC_BR_YOY", as_of_date,
+                "BR_IBC_BR_YOY",
+                as_of_date,
             )
         if gdp is None:
             return None
 
         # Load growth history for z-score
         growth_df = self.data_loader.get_macro_series(
-            "BR_GDP_GROWTH_YOY", as_of_date, lookback_days=1260,
+            "BR_GDP_GROWTH_YOY",
+            as_of_date,
+            lookback_days=1260,
         )
         if growth_df.empty:
             growth_df = self.data_loader.get_macro_series(
-                "BR_IBC_BR_YOY", as_of_date, lookback_days=1260,
+                "BR_IBC_BR_YOY",
+                as_of_date,
+                lookback_days=1260,
             )
         if growth_df.empty or len(growth_df) < 10:
             # Fallback: simple normalization around 2% neutral
@@ -287,14 +296,17 @@ class Cross01RegimeAllocationStrategy(BaseStrategy):
     def _compute_inflation_z(self, as_of_date: date) -> Optional[float]:
         """Compute inflation z-score from trailing 12M IPCA."""
         ipca = self.data_loader.get_latest_macro_value(
-            "BR_IPCA_12M", as_of_date,
+            "BR_IPCA_12M",
+            as_of_date,
         )
         if ipca is None:
             return None
 
         # Load inflation history for z-score
         infl_df = self.data_loader.get_macro_series(
-            "BR_IPCA_12M", as_of_date, lookback_days=1260,
+            "BR_IPCA_12M",
+            as_of_date,
+            lookback_days=1260,
         )
         if infl_df.empty or len(infl_df) < 10:
             # Fallback: simple normalization around 4.5% target

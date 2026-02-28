@@ -47,13 +47,15 @@ async def daily_brief(
 
     try:
         brief = await asyncio.to_thread(_generate_brief, as_of)
-        return _envelope({
-            "content": brief.content,
-            "source": brief.source,
-            "word_count": brief.word_count,
-            "generated_at": brief.generated_at.isoformat(),
-            "as_of_date": str(brief.as_of_date),
-        })
+        return _envelope(
+            {
+                "content": brief.content,
+                "source": brief.source,
+                "word_count": brief.word_count,
+                "generated_at": brief.generated_at.isoformat(),
+                "as_of_date": str(brief.as_of_date),
+            }
+        )
     except Exception as exc:
         logger.error("reports error: %s", exc)
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -47,7 +47,11 @@ class ConnectionManager:
         if channel not in self.active:
             self.active[channel] = set()
         self.active[channel].add(websocket)
-        logger.info("websocket_connected channel=%s total=%d", channel, len(self.active[channel]))
+        logger.info(
+            "websocket_connected channel=%s total=%d",
+            channel,
+            len(self.active[channel]),
+        )
 
     def disconnect(self, websocket: WebSocket, channel: str) -> None:
         """Remove a WebSocket connection from a channel.

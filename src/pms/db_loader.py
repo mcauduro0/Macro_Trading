@@ -35,8 +35,11 @@ def _get_connection():
     password = os.environ.get("POSTGRES_PASSWORD", "macro_pass")
 
     return psycopg2.connect(
-        host=host, port=port, dbname=dbname,
-        user=user, password=password,
+        host=host,
+        port=port,
+        dbname=dbname,
+        user=user,
+        password=password,
     )
 
 
@@ -48,6 +51,7 @@ def load_positions() -> list[dict]:
     """
     try:
         import psycopg2.extras
+
         conn = _get_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
@@ -103,6 +107,7 @@ def load_trade_proposals() -> list[dict]:
     """
     try:
         import psycopg2.extras
+
         conn = _get_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
@@ -129,9 +134,14 @@ def load_trade_proposals() -> list[dict]:
                     except Exception:
                         pass
             # Ensure compatibility with TradeWorkflowService expected fields
-            prop.setdefault("as_of_date", prop.get("created_at", datetime.utcnow()).date()
-                            if isinstance(prop.get("created_at"), datetime)
-                            else date.today())
+            prop.setdefault(
+                "as_of_date",
+                (
+                    prop.get("created_at", datetime.utcnow()).date()
+                    if isinstance(prop.get("created_at"), datetime)
+                    else date.today()
+                ),
+            )
             # Add agent_id and agent fields for frontend compatibility
             if prop.get("signal_source") and not prop.get("agent_id"):
                 prop["agent_id"] = prop["signal_source"]
@@ -157,14 +167,18 @@ def load_daily_briefing(briefing_date: date | None = None) -> dict | None:
     """
     try:
         import psycopg2.extras
+
         conn = _get_connection()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             if briefing_date:
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT * FROM daily_briefings
                     WHERE briefing_date = %s
                     LIMIT 1
-                """, (briefing_date,))
+                """,
+                    (briefing_date,),
+                )
             else:
                 cur.execute("""
                     SELECT * FROM daily_briefings
@@ -179,9 +193,17 @@ def load_daily_briefing(briefing_date: date | None = None) -> dict | None:
 
         briefing = dict(row)
         # Parse JSONB fields
-        for field in ("market_snapshot", "regime_assessment", "agent_views",
-                      "top_signals", "signal_changes", "portfolio_state",
-                      "trade_proposals", "action_items", "metadata_json"):
+        for field in (
+            "market_snapshot",
+            "regime_assessment",
+            "agent_views",
+            "top_signals",
+            "signal_changes",
+            "portfolio_state",
+            "trade_proposals",
+            "action_items",
+            "metadata_json",
+        ):
             val = briefing.get(field)
             if isinstance(val, str):
                 try:

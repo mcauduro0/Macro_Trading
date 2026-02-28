@@ -8,6 +8,7 @@ Covers:
 
 Uses mock strategies and loaders to keep tests fast and self-contained.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -81,8 +82,18 @@ class TestTransactionCostModel:
     def test_cost_table_has_12_instruments(self, cost_model):
         assert len(TransactionCostModel.COST_TABLE) == 12
         expected_keys = {
-            "DI1", "DDI", "DOL", "NDF", "NTN_B", "LTN",
-            "UST", "ZN", "ZF", "ES", "CDS_BR", "IBOV_FUT",
+            "DI1",
+            "DDI",
+            "DOL",
+            "NDF",
+            "NTN_B",
+            "LTN",
+            "UST",
+            "ZN",
+            "ZF",
+            "ES",
+            "CDS_BR",
+            "IBOV_FUT",
         }
         assert set(TransactionCostModel.COST_TABLE.keys()) == expected_keys
 

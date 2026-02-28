@@ -7,7 +7,15 @@ flow_data, fiscal_data, and signals via foreign keys.
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -40,5 +48,7 @@ class SeriesMetadata(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("source_id", "series_code", name="uq_series_metadata_source_series"),
+        UniqueConstraint(
+            "source_id", "series_code", name="uq_series_metadata_source_series"
+        ),
     )

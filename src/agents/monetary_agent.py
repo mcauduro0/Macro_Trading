@@ -52,23 +52,21 @@ class TaylorRuleModel:
     """
 
     SIGNAL_ID = "MONETARY_BR_TAYLOR"
-    ALPHA = 1.5    # Inflation gap coefficient (BCB empirical estimate)
-    BETA = 0.5     # Output gap coefficient
-    GAMMA = 0.5    # Inertia coefficient
+    ALPHA = 1.5  # Inflation gap coefficient (BCB empirical estimate)
+    BETA = 0.5  # Output gap coefficient
+    GAMMA = 0.5  # Inertia coefficient
     PI_STAR = 3.0  # BCB inflation target (%)
-    GAP_FLOOR = 1.0     # 100bps floor — locked per CONTEXT.md
+    GAP_FLOOR = 1.0  # 100bps floor — locked per CONTEXT.md
     MODERATE_BAND = 1.5  # 150bps — above this → STRONG
 
     @staticmethod
     def _classify_gap_source(composite_gap: Any, ibc_gap: Any) -> str:
         """Return a label for which gap measure was used."""
-        _is_valid_composite = (
-            composite_gap is not None
-            and not (isinstance(composite_gap, float) and np.isnan(composite_gap))
+        _is_valid_composite = composite_gap is not None and not (
+            isinstance(composite_gap, float) and np.isnan(composite_gap)
         )
-        _is_valid_ibc = (
-            ibc_gap is not None
-            and not (isinstance(ibc_gap, float) and np.isnan(ibc_gap))
+        _is_valid_ibc = ibc_gap is not None and not (
+            isinstance(ibc_gap, float) and np.isnan(ibc_gap)
         )
         if _is_valid_composite:
             return "composite"
@@ -87,6 +85,7 @@ class TaylorRuleModel:
         Returns:
             AgentSignal with MONETARY_BR_TAYLOR signal_id.
         """
+
         def _no_signal(reason: str = "") -> AgentSignal:
             logger.debug("taylor_no_signal: %s", reason)
             return AgentSignal(
@@ -118,9 +117,13 @@ class TaylorRuleModel:
         # Fall back to IBC-Br output_gap alone, then 0.0 (neutral)
         composite_gap = features.get("composite_activity_gap")
         ibc_gap = features.get("ibc_br_output_gap")
-        if composite_gap is not None and not (isinstance(composite_gap, float) and np.isnan(composite_gap)):
+        if composite_gap is not None and not (
+            isinstance(composite_gap, float) and np.isnan(composite_gap)
+        ):
             output_gap = composite_gap
-        elif ibc_gap is not None and not (isinstance(ibc_gap, float) and np.isnan(ibc_gap)):
+        elif ibc_gap is not None and not (
+            isinstance(ibc_gap, float) and np.isnan(ibc_gap)
+        ):
             output_gap = ibc_gap
         else:
             output_gap = 0.0
@@ -128,7 +131,9 @@ class TaylorRuleModel:
 
         # Policy inertia: default 0.0 when unavailable
         raw_inertia = features.get("policy_inertia")
-        is_valid = raw_inertia is not None and not (isinstance(raw_inertia, float) and np.isnan(raw_inertia))
+        is_valid = raw_inertia is not None and not (
+            isinstance(raw_inertia, float) and np.isnan(raw_inertia)
+        )
         inertia = raw_inertia if is_valid else 0.0
 
         # Taylor Rule: i* = r* + π_e + α(π_e − π*) + β(y_gap) + γ(inertia)
@@ -174,7 +179,8 @@ class TaylorRuleModel:
                 "r_star": r_star,
                 "output_gap": round(output_gap, 4),
                 "gap_source": self._classify_gap_source(
-                    composite_gap, ibc_gap,
+                    composite_gap,
+                    ibc_gap,
                 ),
                 "policy_gap_bps": round(policy_gap * 100, 1),
             },
@@ -204,7 +210,7 @@ class KalmanFilterRStar:
     Implemented directly with numpy — no external Kalman library required.
     """
 
-    MIN_OBS = 24       # Minimum observations before running filter
+    MIN_OBS = 24  # Minimum observations before running filter
     DEFAULT_R_STAR = 3.0  # % — returned when insufficient data
 
     def estimate(
@@ -253,10 +259,10 @@ class KalmanFilterRStar:
     def _estimate_simple(self, obs_series: pd.Series) -> tuple[float, float]:
         """Simple random-walk Kalman (fallback when gap data unavailable)."""
         Q = 0.01  # State noise (r* changes slowly)
-        R = 1.0   # Observation noise
+        R = 1.0  # Observation noise
 
-        x = 3.0   # Initial r* estimate
-        P = 1.0   # Initial uncertainty
+        x = 3.0  # Initial r* estimate
+        P = 1.0  # Initial uncertainty
 
         for y in obs_series:
             if np.isnan(y):
@@ -269,7 +275,9 @@ class KalmanFilterRStar:
         return float(x), float(P)
 
     def _estimate_lw(
-        self, obs_series: pd.Series, gap_series: pd.Series,
+        self,
+        obs_series: pd.Series,
+        gap_series: pd.Series,
     ) -> tuple[float, float]:
         """Laubach-Williams 2-state Kalman filter.
 
@@ -304,12 +312,12 @@ class KalmanFilterRStar:
         H = np.array([[1.0, 0.5]])
 
         # Noise covariances
-        Q = np.diag([0.01, 0.005])   # r* varies more than g*
-        R = np.array([[1.0]])         # Observation noise
+        Q = np.diag([0.01, 0.005])  # r* varies more than g*
+        R = np.array([[1.0]])  # Observation noise
 
         # Initial state
-        x = np.array([3.0, 2.0])     # r*=3%, g*=2% (historical BR priors)
-        P = np.eye(n_states) * 2.0   # Moderate initial uncertainty
+        x = np.array([3.0, 2.0])  # r*=3%, g*=2% (historical BR priors)
+        P = np.eye(n_states) * 2.0  # Moderate initial uncertainty
 
         for i, idx in enumerate(common_idx):
             y = obs_aligned.get(idx, np.nan)
@@ -387,6 +395,7 @@ class SelicPathModel:
         Returns:
             AgentSignal with MONETARY_BR_SELIC_PATH signal_id.
         """
+
         def _no_signal(reason: str = "") -> AgentSignal:
             logger.debug("selic_path_no_signal: %s", reason)
             return AgentSignal(
@@ -414,7 +423,9 @@ class SelicPathModel:
             return _no_signal(f"deviation_below_threshold:{market_vs_model:.2f}")
 
         # Direction: market above model → SHORT (fade hike pricing)
-        direction = SignalDirection.SHORT if market_vs_model > 0 else SignalDirection.LONG
+        direction = (
+            SignalDirection.SHORT if market_vs_model > 0 else SignalDirection.LONG
+        )
 
         confidence = min(1.0, abs(market_vs_model) / 2.0)
         strength = classify_strength(confidence)
@@ -452,8 +463,8 @@ class TermPremiumModel:
     """
 
     SIGNAL_ID = "MONETARY_BR_TERM_PREMIUM"
-    Z_HIGH = 1.5    # z > 1.5 → LONG
-    Z_LOW = -1.5    # z < -1.5 → SHORT
+    Z_HIGH = 1.5  # z > 1.5 → LONG
+    Z_LOW = -1.5  # z < -1.5 → SHORT
     MIN_HISTORY = 12  # months minimum for z-score
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
@@ -467,6 +478,7 @@ class TermPremiumModel:
         Returns:
             AgentSignal with MONETARY_BR_TERM_PREMIUM signal_id.
         """
+
         def _no_signal(reason: str = "") -> AgentSignal:
             logger.debug("term_premium_no_signal: %s", reason)
             return AgentSignal(
@@ -488,11 +500,19 @@ class TermPremiumModel:
         tp_history = features.get("_tp_history")
 
         # Validate inputs
-        for val, name in ((di_10y, "di_10y"), (focus_ipca, "focus_ipca_12m"), (r_star, "_r_star_estimate")):
+        for val, name in (
+            (di_10y, "di_10y"),
+            (focus_ipca, "focus_ipca_12m"),
+            (r_star, "_r_star_estimate"),
+        ):
             if val is None or (isinstance(val, float) and np.isnan(val)):
                 return _no_signal(f"missing:{name}")
 
-        if tp_history is None or not isinstance(tp_history, pd.Series) or len(tp_history) < self.MIN_HISTORY:
+        if (
+            tp_history is None
+            or not isinstance(tp_history, pd.Series)
+            or len(tp_history) < self.MIN_HISTORY
+        ):
             return _no_signal("insufficient_tp_history")
 
         # Current term premium
@@ -582,6 +602,7 @@ class UsFedAnalysis:
         Returns:
             AgentSignal with MONETARY_US_FED_STANCE signal_id.
         """
+
         def _no_signal(reason: str = "") -> AgentSignal:
             logger.debug("us_fed_no_signal: %s", reason)
             return AgentSignal(
@@ -606,7 +627,11 @@ class UsFedAnalysis:
                 return _no_signal(f"missing:{name}")
 
         # US output gap proxy from yield curve slope
-        us_output_gap_proxy = ust_slope * 0.5 if (ust_slope is not None and not np.isnan(ust_slope)) else 0.0
+        us_output_gap_proxy = (
+            ust_slope * 0.5
+            if (ust_slope is not None and not np.isnan(ust_slope))
+            else 0.0
+        )
 
         us_i_star = (
             self.NEUTRAL_RATE
@@ -723,7 +748,10 @@ class MonetaryPolicyAgent(BaseAgent):
         # DI 10Y history (for term premium z-score)
         try:
             di_10y_hist = self.loader.get_curve_history(
-                "DI", tenor_days=2520, as_of_date=as_of_date, lookback_days=756,
+                "DI",
+                tenor_days=2520,
+                as_of_date=as_of_date,
+                lookback_days=756,
             )
             data["di_10y_history"] = di_10y_hist
         except Exception as exc:
@@ -751,7 +779,12 @@ class MonetaryPolicyAgent(BaseAgent):
             di_raw = self.loader.get_curve("DI", as_of_date)
             if di_raw:
                 # Map tenor_days to named columns (approx: 252=1Y, 504=2Y, 1260=5Y, 2520=10Y)
-                tenor_map = {252: "tenor_1y", 504: "tenor_2y", 1260: "tenor_5y", 2520: "tenor_10y"}
+                tenor_map = {
+                    252: "tenor_1y",
+                    504: "tenor_2y",
+                    1260: "tenor_5y",
+                    2520: "tenor_10y",
+                }
                 row_data = {}
                 for tenor_days, rate in di_raw.items():
                     col = tenor_map.get(tenor_days)
@@ -778,9 +811,13 @@ class MonetaryPolicyAgent(BaseAgent):
                             focus_ipca = np.nan
                             if focus_df is not None and not focus_df.empty:
                                 if "focus_ipca_12m" in focus_df.columns:
-                                    focus_ipca = float(focus_df["focus_ipca_12m"].dropna().iloc[-1])
+                                    focus_ipca = float(
+                                        focus_df["focus_ipca_12m"].dropna().iloc[-1]
+                                    )
                                 elif "value" in focus_df.columns:
-                                    focus_ipca = float(focus_df["value"].dropna().iloc[-1])
+                                    focus_ipca = float(
+                                        focus_df["value"].dropna().iloc[-1]
+                                    )
 
                             if not np.isnan(focus_ipca):
                                 ipca_decimal = focus_ipca / 100.0
@@ -792,10 +829,15 @@ class MonetaryPolicyAgent(BaseAgent):
                                             ntnb_raw.keys(),
                                             key=lambda t: abs(t - target_days),
                                         )
-                                        if abs(closest_tenor - target_days) < target_days * 0.30:
+                                        if (
+                                            abs(closest_tenor - target_days)
+                                            < target_days * 0.30
+                                        ):
                                             real_rate = ntnb_raw[closest_tenor]
                                             # Fisher: (1+nom) = (1+real)*(1+infl)
-                                            nominal = (1 + real_rate) * (1 + ipca_decimal) - 1
+                                            nominal = (1 + real_rate) * (
+                                                1 + ipca_decimal
+                                            ) - 1
                                             row_data[col_name] = nominal
                                             self.log.info(
                                                 "synthetic_di_from_ntnb",
@@ -807,7 +849,9 @@ class MonetaryPolicyAgent(BaseAgent):
                     except Exception as ntnb_exc:
                         self.log.warning("ntnb_fallback_failed", error=str(ntnb_exc))
 
-                data["di_curve"] = pd.DataFrame([row_data]) if row_data else pd.DataFrame()
+                data["di_curve"] = (
+                    pd.DataFrame([row_data]) if row_data else pd.DataFrame()
+                )
             else:
                 data["di_curve"] = pd.DataFrame()
         except Exception as exc:
@@ -815,10 +859,34 @@ class MonetaryPolicyAgent(BaseAgent):
             data["di_curve"] = pd.DataFrame()
 
         # US series
-        _safe_load("fed_funds", self.loader.get_macro_series, "FRED-DFF", as_of_date, lookback_days=3650)
-        _safe_load("nfci", self.loader.get_macro_series, "FRED-NFCI", as_of_date, lookback_days=1825)
-        _safe_load("pce_core", self.loader.get_macro_series, "FRED-PCEPILFE", as_of_date, lookback_days=1825)
-        _safe_load("us_breakeven", self.loader.get_macro_series, "FRED-T10YIE", as_of_date, lookback_days=1825)
+        _safe_load(
+            "fed_funds",
+            self.loader.get_macro_series,
+            "FRED-DFF",
+            as_of_date,
+            lookback_days=3650,
+        )
+        _safe_load(
+            "nfci",
+            self.loader.get_macro_series,
+            "FRED-NFCI",
+            as_of_date,
+            lookback_days=1825,
+        )
+        _safe_load(
+            "pce_core",
+            self.loader.get_macro_series,
+            "FRED-PCEPILFE",
+            as_of_date,
+            lookback_days=1825,
+        )
+        _safe_load(
+            "us_breakeven",
+            self.loader.get_macro_series,
+            "FRED-T10YIE",
+            as_of_date,
+            lookback_days=1825,
+        )
 
         # UST curve — primary: Treasury.gov curve data
         try:
@@ -835,7 +903,9 @@ class MonetaryPolicyAgent(BaseAgent):
                             if abs(tenor_days - t_days) < 30:
                                 ust_row[col_name] = rate
                                 break
-                data["ust_curve"] = pd.DataFrame([ust_row]) if ust_row else pd.DataFrame()
+                data["ust_curve"] = (
+                    pd.DataFrame([ust_row]) if ust_row else pd.DataFrame()
+                )
             else:
                 data["ust_curve"] = pd.DataFrame()
         except Exception as exc:
@@ -854,8 +924,14 @@ class MonetaryPolicyAgent(BaseAgent):
             ust_row = {}
             for col_name, fred_code in fred_map.items():
                 try:
-                    fred_df = self.loader.get_macro_series(fred_code, as_of_date, lookback_days=30)
-                    if fred_df is not None and not fred_df.empty and "value" in fred_df.columns:
+                    fred_df = self.loader.get_macro_series(
+                        fred_code, as_of_date, lookback_days=30
+                    )
+                    if (
+                        fred_df is not None
+                        and not fred_df.empty
+                        and "value" in fred_df.columns
+                    ):
                         # FRED DGS series are in percentage (e.g. 4.35);
                         # store as-is — feature engine normalizes to pct
                         ust_row[col_name] = float(fred_df["value"].dropna().iloc[-1])
@@ -908,7 +984,11 @@ class MonetaryPolicyAgent(BaseAgent):
         features["_r_star_estimate"] = r_star
         features["_r_star_uncertainty"] = r_star_uncertainty
 
-        self.log.debug("kalman_rstar", r_star=round(r_star, 3), uncertainty=round(r_star_uncertainty, 4))
+        self.log.debug(
+            "kalman_rstar",
+            r_star=round(r_star, 3),
+            uncertainty=round(r_star_uncertainty, 4),
+        )
 
         signals = []
 
@@ -965,7 +1045,9 @@ class MonetaryPolicyAgent(BaseAgent):
                 f"| conf={sig.confidence:.2f} | val={sig.value:.4f}"
             )
             if sig.metadata and "reason" not in sig.metadata:
-                meta_str = ", ".join(f"{k}={v}" for k, v in list(sig.metadata.items())[:3])
+                meta_str = ", ".join(
+                    f"{k}={v}" for k, v in list(sig.metadata.items())[:3]
+                )
                 lines.append(f"    -> {meta_str}")
 
         # Macro context
@@ -975,13 +1057,15 @@ class MonetaryPolicyAgent(BaseAgent):
         real_rate = features.get("real_rate_gap", float("nan"))
         fed_funds = features.get("fed_funds_rate", float("nan"))
 
-        lines.extend([
-            "",
-            "--- Key Indicators ---",
-            f"  Selic Target: {selic:.2f}% | Focus IPCA 12M: {focus:.2f}% | "
-            f"Real Rate Gap: {real_rate:.2f}%",
-            f"  Kalman r*: {r_star:.2f}% | Fed Funds: {fed_funds:.2f}%",
-        ])
+        lines.extend(
+            [
+                "",
+                "--- Key Indicators ---",
+                f"  Selic Target: {selic:.2f}% | Focus IPCA 12M: {focus:.2f}% | "
+                f"Real Rate Gap: {real_rate:.2f}%",
+                f"  Kalman r*: {r_star:.2f}% | Fed Funds: {fed_funds:.2f}%",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -1012,7 +1096,11 @@ class MonetaryPolicyAgent(BaseAgent):
         """
         # Base weights aligned with signal order: [Taylor, SelicPath, TermPremium]
         base_weights = [0.50, 0.30, 0.20]
-        signal_ids = ["MONETARY_BR_TAYLOR", "MONETARY_BR_SELIC_PATH", "MONETARY_BR_TERM_PREMIUM"]
+        signal_ids = [
+            "MONETARY_BR_TAYLOR",
+            "MONETARY_BR_SELIC_PATH",
+            "MONETARY_BR_TERM_PREMIUM",
+        ]
 
         # Filter to active signals
         active = [
@@ -1042,29 +1130,40 @@ class MonetaryPolicyAgent(BaseAgent):
         active_sigs = [sig for sig, _, _ in active]
 
         # Plurality vote for direction
-        long_w = sum(w for sig, w in zip(active_sigs, norm_weights) if sig.direction == SignalDirection.LONG)
-        short_w = sum(w for sig, w in zip(active_sigs, norm_weights) if sig.direction == SignalDirection.SHORT)
-        plurality_direction = SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        long_w = sum(
+            w
+            for sig, w in zip(active_sigs, norm_weights)
+            if sig.direction == SignalDirection.LONG
+        )
+        short_w = sum(
+            w
+            for sig, w in zip(active_sigs, norm_weights)
+            if sig.direction == SignalDirection.SHORT
+        )
+        plurality_direction = (
+            SignalDirection.LONG if long_w >= short_w else SignalDirection.SHORT
+        )
 
         # Conflict detection: if any signal disagrees with plurality → dampen
         disagreements = sum(
-            1
-            for sig in active_sigs
-            if sig.direction != plurality_direction
+            1 for sig in active_sigs if sig.direction != plurality_direction
         )
         dampening = 0.70 if disagreements >= 1 else 1.0
 
         # Weighted confidence
-        weighted_conf = sum(sig.confidence * w for sig, w in zip(active_sigs, norm_weights))
+        weighted_conf = sum(
+            sig.confidence * w for sig, w in zip(active_sigs, norm_weights)
+        )
         composite_confidence = weighted_conf * dampening
         composite_strength = classify_strength(composite_confidence)
 
         # Weighted value
-        composite_value = sum(sig.value * w for sig, w in zip(active_sigs, norm_weights))
+        composite_value = sum(
+            sig.value * w for sig, w in zip(active_sigs, norm_weights)
+        )
 
         effective_weights = {
-            sig.signal_id: round(w, 4)
-            for sig, w in zip(active_sigs, norm_weights)
+            sig.signal_id: round(w, 4) for sig, w in zip(active_sigs, norm_weights)
         }
 
         return AgentSignal(

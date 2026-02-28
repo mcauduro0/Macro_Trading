@@ -41,9 +41,7 @@ async def test_fetch_parses_dates_and_values():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.22704/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.22704/dados").respond(200, json=mock_data)
 
         async with BcbFxFlowConnector() as conn:
             records = await conn._fetch_series(
@@ -76,9 +74,7 @@ async def test_fetch_parses_dates_and_values():
 async def test_fetch_with_empty_response():
     """Verify connector returns empty list for empty API response."""
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.22704/dados").respond(
-            200, json=[]
-        )
+        mock.get("/dados/serie/bcdata.sgs.22704/dados").respond(200, json=[])
 
         async with BcbFxFlowConnector() as conn:
             records = await conn._fetch_series(
@@ -103,9 +99,7 @@ async def test_fetch_skips_invalid_entries():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.22705/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.22705/dados").respond(200, json=mock_data)
 
         async with BcbFxFlowConnector() as conn:
             records = await conn._fetch_series(
@@ -285,9 +279,9 @@ def test_series_registry_keys():
 def test_flow_type_map_covers_all_series():
     """Verify every series key has a corresponding flow_type mapping."""
     for key in BcbFxFlowConnector.SERIES_REGISTRY:
-        assert key in BcbFxFlowConnector.FLOW_TYPE_MAP, (
-            f"Missing FLOW_TYPE_MAP entry for {key}"
-        )
+        assert (
+            key in BcbFxFlowConnector.FLOW_TYPE_MAP
+        ), f"Missing FLOW_TYPE_MAP entry for {key}"
 
 
 def test_connector_constants():

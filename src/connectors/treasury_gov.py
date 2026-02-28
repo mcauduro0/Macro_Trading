@@ -60,16 +60,16 @@ class TreasuryGovConnector(BaseConnector):
 
     # Tenor mapping: CSV column name -> (tenor_label, tenor_days)
     TENOR_MAP: dict[str, tuple[str, int]] = {
-        "1 Mo":  ("1M",  30),
-        "2 Mo":  ("2M",  60),
-        "3 Mo":  ("3M",  90),
-        "4 Mo":  ("4M",  120),
-        "6 Mo":  ("6M",  180),
-        "1 Yr":  ("1Y",  365),
-        "2 Yr":  ("2Y",  730),
-        "3 Yr":  ("3Y",  1095),
-        "5 Yr":  ("5Y",  1825),
-        "7 Yr":  ("7Y",  2555),
+        "1 Mo": ("1M", 30),
+        "2 Mo": ("2M", 60),
+        "3 Mo": ("3M", 90),
+        "4 Mo": ("4M", 120),
+        "6 Mo": ("6M", 180),
+        "1 Yr": ("1Y", 365),
+        "2 Yr": ("2Y", 730),
+        "3 Yr": ("3Y", 1095),
+        "5 Yr": ("5Y", 1825),
+        "7 Yr": ("7Y", 2555),
         "10 Yr": ("10Y", 3650),
         "20 Yr": ("20Y", 7300),
         "30 Yr": ("30Y", 10950),
@@ -123,14 +123,14 @@ class TreasuryGovConnector(BaseConnector):
             return []
 
         if not csv_text.strip():
-            self.log.warning("treasury_csv_empty_response", curve_id=curve_id, year=year)
+            self.log.warning(
+                "treasury_csv_empty_response", curve_id=curve_id, year=year
+            )
             return []
 
         # Parse CSV in a thread to avoid blocking the event loop
         try:
-            df = await asyncio.to_thread(
-                pd.read_csv, io.StringIO(csv_text)
-            )
+            df = await asyncio.to_thread(pd.read_csv, io.StringIO(csv_text))
         except Exception as exc:
             self.log.warning(
                 "treasury_csv_parse_error",
@@ -183,15 +183,17 @@ class TreasuryGovConnector(BaseConnector):
                 # Convert percentage to decimal (4.52 -> 0.0452)
                 rate_decimal = rate_pct / 100.0
 
-                records.append({
-                    "curve_id": curve_id,
-                    "curve_date": curve_date,
-                    "tenor_days": tenor_days,
-                    "tenor_label": tenor_label,
-                    "rate": rate_decimal,
-                    "curve_type": curve_type,
-                    "source": "TREASURY_GOV",
-                })
+                records.append(
+                    {
+                        "curve_id": curve_id,
+                        "curve_date": curve_date,
+                        "tenor_days": tenor_days,
+                        "tenor_label": tenor_label,
+                        "rate": rate_decimal,
+                        "curve_type": curve_type,
+                        "source": "TREASURY_GOV",
+                    }
+                )
 
         self.log.info(
             "treasury_csv_parsed",
@@ -236,15 +238,17 @@ class TreasuryGovConnector(BaseConnector):
 
             bei_rate = nom_rec["rate"] - real_rec["rate"]
 
-            breakeven_records.append({
-                "curve_id": "UST_BEI",
-                "curve_date": nom_rec["curve_date"],
-                "tenor_days": nom_rec["tenor_days"],
-                "tenor_label": nom_rec["tenor_label"],
-                "rate": bei_rate,
-                "curve_type": "breakeven",
-                "source": "TREASURY_GOV",
-            })
+            breakeven_records.append(
+                {
+                    "curve_id": "UST_BEI",
+                    "curve_date": nom_rec["curve_date"],
+                    "tenor_days": nom_rec["tenor_days"],
+                    "tenor_label": nom_rec["tenor_label"],
+                    "rate": bei_rate,
+                    "curve_type": "breakeven",
+                    "source": "TREASURY_GOV",
+                }
+            )
 
         return breakeven_records
 
@@ -289,13 +293,9 @@ class TreasuryGovConnector(BaseConnector):
 
         # Filter to requested date range
         all_nominal = [
-            r for r in all_nominal
-            if start_date <= r["curve_date"] <= end_date
+            r for r in all_nominal if start_date <= r["curve_date"] <= end_date
         ]
-        all_real = [
-            r for r in all_real
-            if start_date <= r["curve_date"] <= end_date
-        ]
+        all_real = [r for r in all_real if start_date <= r["curve_date"] <= end_date]
 
         # Compute breakeven
         breakeven = self._compute_breakeven(all_nominal, all_real)
@@ -322,6 +322,4 @@ class TreasuryGovConnector(BaseConnector):
         Returns:
             Number of rows actually inserted (excludes conflicts).
         """
-        return await self._bulk_insert(
-            CurveData, records, "uq_curves_natural_key"
-        )
+        return await self._bulk_insert(CurveData, records, "uq_curves_natural_key")

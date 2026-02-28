@@ -20,6 +20,7 @@ from src.pms.position_manager import PositionManager
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def populated_pm() -> PositionManager:
     """Create a PositionManager with 3 positions across 2 asset classes, MTM snapshots, and one closed."""
@@ -101,6 +102,7 @@ def populated_pm() -> PositionManager:
 # Tests
 # ---------------------------------------------------------------------------
 
+
 class TestAttribution:
     """Tests for PerformanceAttributionEngine."""
 
@@ -117,36 +119,36 @@ class TestAttribution:
 
         # by_strategy sums to total
         strategy_sum = sum(s["pnl_brl"] for s in result["by_strategy"])
-        assert abs(strategy_sum - total) < 0.01, (
-            f"by_strategy sum {strategy_sum:.2f} != total {total:.2f}"
-        )
+        assert (
+            abs(strategy_sum - total) < 0.01
+        ), f"by_strategy sum {strategy_sum:.2f} != total {total:.2f}"
 
         # by_asset_class sums to total
         ac_sum = sum(ac["pnl_brl"] for ac in result["by_asset_class"])
-        assert abs(ac_sum - total) < 0.01, (
-            f"by_asset_class sum {ac_sum:.2f} != total {total:.2f}"
-        )
+        assert (
+            abs(ac_sum - total) < 0.01
+        ), f"by_asset_class sum {ac_sum:.2f} != total {total:.2f}"
 
         # by_instrument sums to total
         inst_sum = sum(i["pnl_brl"] for i in result["by_instrument"])
-        assert abs(inst_sum - total) < 0.01, (
-            f"by_instrument sum {inst_sum:.2f} != total {total:.2f}"
-        )
+        assert (
+            abs(inst_sum - total) < 0.01
+        ), f"by_instrument sum {inst_sum:.2f} != total {total:.2f}"
 
         # by_factor sums to total
         factor_sum = sum(f["pnl_brl"] for f in result["by_factor"])
-        assert abs(factor_sum - total) < 0.01, (
-            f"by_factor sum {factor_sum:.2f} != total {total:.2f}"
-        )
+        assert (
+            abs(factor_sum - total) < 0.01
+        ), f"by_factor sum {factor_sum:.2f} != total {total:.2f}"
 
         # by_trade_type sums to total
         trade_type_sum = (
             result["by_trade_type"]["systematic"]["pnl_brl"]
             + result["by_trade_type"]["discretionary"]["pnl_brl"]
         )
-        assert abs(trade_type_sum - total) < 0.01, (
-            f"by_trade_type sum {trade_type_sum:.2f} != total {total:.2f}"
-        )
+        assert (
+            abs(trade_type_sum - total) < 0.01
+        ), f"by_trade_type sum {trade_type_sum:.2f} != total {total:.2f}"
 
         # Verify we have results in each dimension
         assert len(result["by_strategy"]) >= 2  # At least 2 strategies
@@ -257,7 +259,9 @@ class TestAttribution:
 
         # Cumulative return at each point should accumulate from the start
         # First point cumulative == first point daily
-        assert abs(curve[0]["return_pct_cumulative"] - curve[0]["return_pct_daily"]) < 0.01
+        assert (
+            abs(curve[0]["return_pct_cumulative"] - curve[0]["return_pct_daily"]) < 0.01
+        )
 
         # Equity should be AUM + cumulative P&L
         aum = populated_pm.aum
@@ -270,6 +274,6 @@ class TestAttribution:
 
         # Drawdown should be <= 0
         for point in curve:
-            assert point["drawdown_pct"] <= 0.0001, (
-                f"Drawdown should be <= 0, got {point['drawdown_pct']} on {point['date']}"
-            )
+            assert (
+                point["drawdown_pct"] <= 0.0001
+            ), f"Drawdown should be <= 0, got {point['drawdown_pct']} on {point['date']}"

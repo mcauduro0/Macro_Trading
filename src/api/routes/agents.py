@@ -107,26 +107,31 @@ def _get_agent_instance(agent_id: str):
     agent_map = {}
     try:
         from src.agents.inflation_agent import InflationAgent
+
         agent_map["inflation_agent"] = lambda: InflationAgent(loader)
     except ImportError:
         pass
     try:
         from src.agents.monetary_agent import MonetaryPolicyAgent
+
         agent_map["monetary_agent"] = lambda: MonetaryPolicyAgent(loader)
     except ImportError:
         pass
     try:
         from src.agents.fiscal_agent import FiscalAgent
+
         agent_map["fiscal_agent"] = lambda: FiscalAgent(loader)
     except ImportError:
         pass
     try:
         from src.agents.fx_agent import FxEquilibriumAgent
+
         agent_map["fx_agent"] = lambda: FxEquilibriumAgent(loader)
     except ImportError:
         pass
     try:
         from src.agents.cross_asset_agent import CrossAssetAgent
+
         agent_map["cross_asset_agent"] = lambda: CrossAssetAgent(loader)
     except ImportError:
         pass
@@ -153,21 +158,33 @@ def _report_to_dict(report) -> dict:
     """Serialize an AgentReport to JSON-safe dict."""
     signals = []
     for sig in report.signals:
-        signals.append({
-            "signal_id": sig.signal_id,
-            "direction": sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction),
-            "strength": sig.strength.value if hasattr(sig.strength, "value") else str(sig.strength),
-            "confidence": sig.confidence,
-            "value": sig.value,
-            "horizon_days": sig.horizon_days,
-            "metadata": sig.metadata,
-        })
-    return _sanitize_floats({
-        "agent_id": report.agent_id,
-        "as_of_date": str(report.as_of_date),
-        "narrative": report.narrative,
-        "signals": signals,
-    })
+        signals.append(
+            {
+                "signal_id": sig.signal_id,
+                "direction": (
+                    sig.direction.value
+                    if hasattr(sig.direction, "value")
+                    else str(sig.direction)
+                ),
+                "strength": (
+                    sig.strength.value
+                    if hasattr(sig.strength, "value")
+                    else str(sig.strength)
+                ),
+                "confidence": sig.confidence,
+                "value": sig.value,
+                "horizon_days": sig.horizon_days,
+                "metadata": sig.metadata,
+            }
+        )
+    return _sanitize_floats(
+        {
+            "agent_id": report.agent_id,
+            "as_of_date": str(report.as_of_date),
+            "narrative": report.narrative,
+            "signals": signals,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -178,11 +195,13 @@ async def list_agents():
     """Return list of all 5 registered agents with metadata."""
     agents_data = []
     for defn in AGENT_DEFINITIONS:
-        agents_data.append({
-            **defn,
-            "last_run": None,
-            "signal_count": 0,
-        })
+        agents_data.append(
+            {
+                **defn,
+                "last_run": None,
+                "signal_count": 0,
+            }
+        )
     return _envelope(agents_data)
 
 
@@ -241,12 +260,16 @@ async def agent_run(
         try:
             as_of = date_type.fromisoformat(body.date)
         except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid date format: {body.date}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid date format: {body.date}"
+            )
 
     try:
         agent = _get_agent_instance(agent_id)
         if agent is None:
-            raise HTTPException(status_code=500, detail=f"Agent '{agent_id}' could not be instantiated")
+            raise HTTPException(
+                status_code=500, detail=f"Agent '{agent_id}' could not be instantiated"
+            )
         report = await asyncio.to_thread(agent.run, as_of)
         return _envelope(_report_to_dict(report))
     except HTTPException:

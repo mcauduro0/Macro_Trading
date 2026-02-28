@@ -266,13 +266,15 @@ async def test_fetch_combines_di_and_ntnb():
     di_data = [{"data": "02/01/2025", "valor": "13.50"}]
     td_data = {
         "response": {
-            "TrsrBdTradgList": [{
-                "TrsrBd": {
-                    "nm": "Tesouro IPCA+ 2029",
-                    "mtrtyDt": "2029-05-15T00:00:00",
-                    "anulInvstmtRate": 6.85,
+            "TrsrBdTradgList": [
+                {
+                    "TrsrBd": {
+                        "nm": "Tesouro IPCA+ 2029",
+                        "mtrtyDt": "2029-05-15T00:00:00",
+                        "anulInvstmtRate": 6.85,
+                    }
                 }
-            }]
+            ]
         }
     }
 

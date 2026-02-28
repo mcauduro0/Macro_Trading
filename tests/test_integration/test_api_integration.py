@@ -107,12 +107,20 @@ class TestV2EndpointsReturn200:
         resp = client.get("/api/v1/signals/latest")
         assert resp.status_code == 200
 
-    @patch("src.api.routes.strategies_api._fetch_backtest_result", new_callable=AsyncMock, return_value=None)
+    @patch(
+        "src.api.routes.strategies_api._fetch_backtest_result",
+        new_callable=AsyncMock,
+        return_value=None,
+    )
     def test_strategies_list(self, mock_fetch, client):
         resp = client.get("/api/v1/strategies")
         assert resp.status_code == 200
 
-    @patch("src.api.routes.strategies_api._fetch_backtest_result", new_callable=AsyncMock, return_value=None)
+    @patch(
+        "src.api.routes.strategies_api._fetch_backtest_result",
+        new_callable=AsyncMock,
+        return_value=None,
+    )
     def test_strategy_backtest(self, mock_fetch, client):
         resp = client.get("/api/v1/strategies/RATES_BR_01/backtest")
         assert resp.status_code == 200
@@ -125,7 +133,14 @@ class TestV2EndpointsReturn200:
     @patch("src.api.routes.portfolio_api._build_risk_report")
     def test_portfolio_risk(self, mock_risk, client):
         mock_risk.return_value = {
-            "var": {"historical": {"var_95": -0.02, "cvar_95": -0.03, "var_99": -0.04, "cvar_99": -0.05}},
+            "var": {
+                "historical": {
+                    "var_95": -0.02,
+                    "cvar_95": -0.03,
+                    "var_99": -0.04,
+                    "cvar_99": -0.05,
+                }
+            },
             "stress_tests": [],
             "limit_utilization": {},
             "circuit_breaker_status": "NORMAL",
@@ -207,7 +222,11 @@ class TestResponseEnvelopeFormat:
         assert "meta" in body
         assert "timestamp" in body["meta"]
 
-    @patch("src.api.routes.strategies_api._fetch_backtest_result", new_callable=AsyncMock, return_value=None)
+    @patch(
+        "src.api.routes.strategies_api._fetch_backtest_result",
+        new_callable=AsyncMock,
+        return_value=None,
+    )
     def test_strategies_list_envelope(self, mock_fetch, client):
         resp = client.get("/api/v1/strategies")
         body = resp.json()

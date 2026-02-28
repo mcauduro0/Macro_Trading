@@ -161,7 +161,9 @@ class DailyReportGenerator:
                 "SPX": market.get("spx", "5,220"),
                 "UST 10Y": market.get("ust_10y", "4.28%"),
             },
-            commentary=market.get("commentary", "Markets traded higher on dovish BCB minutes."),
+            commentary=market.get(
+                "commentary", "Markets traded higher on dovish BCB minutes."
+            ),
         )
 
     def _build_regime(self, ctx: dict) -> ReportSection:
@@ -175,8 +177,12 @@ class DailyReportGenerator:
                     "probabilities",
                     "Goldilocks 45% | Reflation 30% | Stagflation 15% | Deflation 10%",
                 ),
-                "Key Drivers": regime.get("drivers", "Declining inflation, stable growth, dovish BCB guidance"),
-                "Transition Risk": regime.get("transition_risk", "Moderate — watch for IPCA acceleration"),
+                "Key Drivers": regime.get(
+                    "drivers", "Declining inflation, stable growth, dovish BCB guidance"
+                ),
+                "Transition Risk": regime.get(
+                    "transition_risk", "Moderate — watch for IPCA acceleration"
+                ),
             },
             commentary=regime.get(
                 "commentary",
@@ -187,7 +193,13 @@ class DailyReportGenerator:
     def _build_agent_views(self, ctx: dict) -> ReportSection:
         agents = ctx.get("agent_views", {})
         default_agents = {
-            "Agent": ["Inflation", "Monetary Policy", "Fiscal", "FX Equilibrium", "Cross-Asset"],
+            "Agent": [
+                "Inflation",
+                "Monetary Policy",
+                "Fiscal",
+                "FX Equilibrium",
+                "Cross-Asset",
+            ],
             "Signal": ["Bullish", "Bullish", "Neutral", "Bearish", "Bullish"],
             "Strength": [0.65, 0.72, 0.12, -0.45, 0.58],
             "Confidence": [0.78, 0.85, 0.42, 0.68, 0.73],
@@ -219,9 +231,13 @@ class DailyReportGenerator:
                 "Neutral": signals.get("neutral", 4),
                 "Signal Flips (24h)": signals.get("flips", 2),
                 "Crowding Warnings": signals.get("crowding_warnings", 1),
-                "Top Signal": signals.get("top_signal", "DI1F25 — Bullish 0.82 conviction"),
+                "Top Signal": signals.get(
+                    "top_signal", "DI1F25 — Bullish 0.82 conviction"
+                ),
             },
-            commentary=signals.get("commentary", "Bullish bias in rates space; 2 signal flips in equities."),
+            commentary=signals.get(
+                "commentary", "Bullish bias in rates space; 2 signal flips in equities."
+            ),
         )
 
     def _build_portfolio(self, ctx: dict) -> ReportSection:
@@ -236,9 +252,14 @@ class DailyReportGenerator:
                 "Positions": portfolio.get("n_positions", 12),
                 "Gross Leverage": portfolio.get("gross_leverage", "1.85x"),
                 "Net Leverage": portfolio.get("net_leverage", "0.62x"),
-                "Rebalance Needed": portfolio.get("rebalance_needed", "Yes — 3 positions exceed target by >5%"),
+                "Rebalance Needed": portfolio.get(
+                    "rebalance_needed", "Yes — 3 positions exceed target by >5%"
+                ),
             },
-            commentary=portfolio.get("commentary", "Portfolio performing within targets; minor rebalance recommended."),
+            commentary=portfolio.get(
+                "commentary",
+                "Portfolio performing within targets; minor rebalance recommended.",
+            ),
         )
 
     def _build_risk(self, ctx: dict) -> ReportSection:
@@ -255,7 +276,9 @@ class DailyReportGenerator:
                 "Circuit Breaker": risk.get("circuit_breaker", "Inactive"),
                 "Risk Budget Remaining": risk.get("risk_budget", "32%"),
             },
-            commentary=risk.get("commentary", "Risk within acceptable bounds. No limit breaches."),
+            commentary=risk.get(
+                "commentary", "Risk within acceptable bounds. No limit breaches."
+            ),
         )
 
     def _build_actions(self, ctx: dict) -> ReportSection:
@@ -264,7 +287,13 @@ class DailyReportGenerator:
             "Priority": ["High", "High", "Medium", "Medium", "Low"],
             "Instrument": ["DI1F25", "PETR4", "VALE3", "USDBRL Fwd", "IBOV Put"],
             "Direction": ["Short", "Long", "Reduce Long", "Sell Forward", "Buy"],
-            "Size": ["+20 contracts", "+15,000 shares", "-8,000 shares", "USD 2M notional", "100 contracts"],
+            "Size": [
+                "+20 contracts",
+                "+15,000 shares",
+                "-8,000 shares",
+                "USD 2M notional",
+                "100 contracts",
+            ],
             "Rationale": [
                 "Strong bearish DI signal (0.82 conviction), Selic cut cycle",
                 "Underweight vs target; oil price supportive",
@@ -309,8 +338,8 @@ class DailyReportGenerator:
         top_signals_list = []
         if signals:
             top_signals_list.append(f"Top: {signals.content.get('Top Signal', 'N/A')}")
-            bullish = signals.content.get('Bullish', 0)
-            bearish = signals.content.get('Bearish', 0)
+            bullish = signals.content.get("Bullish", 0)
+            bearish = signals.content.get("Bearish", 0)
             top_signals_list.append(f"Bullish: {bullish} | Bearish: {bearish}")
 
         action_count = 0
@@ -319,13 +348,19 @@ class DailyReportGenerator:
 
         return {
             "report_date": str(self.as_of_date),
-            "portfolio_return": portfolio.content.get("Daily P&L", "N/A") if portfolio else "N/A",
+            "portfolio_return": (
+                portfolio.content.get("Daily P&L", "N/A") if portfolio else "N/A"
+            ),
             "var_95": risk.content.get("VaR 95%", "N/A") if risk else "N/A",
             "regime": regime.content.get("Current Regime", "N/A") if regime else "N/A",
-            "risk_status": risk.content.get("Circuit Breaker", "N/A") if risk else "N/A",
+            "risk_status": (
+                risk.content.get("Circuit Breaker", "N/A") if risk else "N/A"
+            ),
             "top_signals": "\n".join(top_signals_list) if top_signals_list else "N/A",
             "action_count": action_count,
-            "report_url": os.environ.get("REPORT_BASE_URL", "http://localhost:8000/api/v1/reports/daily/latest"),
+            "report_url": os.environ.get(
+                "REPORT_BASE_URL", "http://localhost:8000/api/v1/reports/daily/latest"
+            ),
         }
 
     def _generate_charts(self) -> dict[str, str]:
@@ -334,6 +369,7 @@ class DailyReportGenerator:
         import io
 
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import numpy as np

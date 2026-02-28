@@ -267,9 +267,9 @@ class TestVaRCalculator:
         calc = VaRCalculator(min_historical_obs=252)
         result = calc.calculate(large_returns, method="historical")
 
-        assert abs(result.var_99) > abs(result.var_95), (
-            f"|VaR_99| ({abs(result.var_99)}) should > |VaR_95| ({abs(result.var_95)})"
-        )
+        assert abs(result.var_99) > abs(
+            result.var_95
+        ), f"|VaR_99| ({abs(result.var_99)}) should > |VaR_95| ({abs(result.var_95)})"
 
     def test_cvar_more_extreme_than_var_all_methods(
         self, large_returns: np.ndarray
@@ -279,12 +279,12 @@ class TestVaRCalculator:
 
         for method in ["historical", "parametric"]:
             result = calc.calculate(large_returns, method=method)
-            assert result.cvar_95 <= result.var_95, (
-                f"{method}: CVaR_95 ({result.cvar_95}) should be <= VaR_95 ({result.var_95})"
-            )
-            assert result.cvar_99 <= result.var_99, (
-                f"{method}: CVaR_99 ({result.cvar_99}) should be <= VaR_99 ({result.var_99})"
-            )
+            assert (
+                result.cvar_95 <= result.var_95
+            ), f"{method}: CVaR_95 ({result.cvar_95}) should be <= VaR_95 ({result.var_95})"
+            assert (
+                result.cvar_99 <= result.var_99
+            ), f"{method}: CVaR_99 ({result.cvar_99}) should be <= VaR_99 ({result.var_99})"
 
     def test_var_result_fields(self, large_returns: np.ndarray) -> None:
         """VaRResult should have all expected fields populated.

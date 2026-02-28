@@ -46,12 +46,14 @@ def _make_agg_signal(
         conviction=conviction,
         confidence=confidence,
         method=method,
-        contributing_strategies=[{
-            "strategy_id": strategy_id,
-            "raw_signal": conviction,
-            "weight": confidence,
-            "staleness_days": 0,
-        }],
+        contributing_strategies=[
+            {
+                "strategy_id": strategy_id,
+                "raw_signal": conviction,
+                "weight": confidence,
+                "staleness_days": 0,
+            }
+        ],
     )
 
 
@@ -66,14 +68,21 @@ def _make_strategy_signal(
     if instruments is None:
         instruments = ["DI_PRE"]
 
-    direction = SignalDirection.LONG if z_score > 0 else (
-        SignalDirection.SHORT if z_score < 0 else SignalDirection.NEUTRAL
+    direction = (
+        SignalDirection.LONG
+        if z_score > 0
+        else (SignalDirection.SHORT if z_score < 0 else SignalDirection.NEUTRAL)
     )
     strength = (
-        SignalStrength.STRONG if abs(z_score) >= 2.0
-        else SignalStrength.MODERATE if abs(z_score) >= 1.0
-        else SignalStrength.WEAK if abs(z_score) >= 0.5
-        else SignalStrength.NO_SIGNAL
+        SignalStrength.STRONG
+        if abs(z_score) >= 2.0
+        else (
+            SignalStrength.MODERATE
+            if abs(z_score) >= 1.0
+            else (
+                SignalStrength.WEAK if abs(z_score) >= 0.5 else SignalStrength.NO_SIGNAL
+            )
+        )
     )
 
     return StrategySignal(
@@ -255,7 +264,9 @@ class TestDailySummary:
         ]
 
         summary = monitor.generate_daily_summary(
-            current, raw, regime="Goldilocks",
+            current,
+            raw,
+            regime="Goldilocks",
         )
 
         assert summary.date == date.today()
@@ -295,7 +306,10 @@ class TestDailySummary:
         raw = []
 
         summary = monitor.generate_daily_summary(
-            curr, raw, regime="Stagflation", previous_signals=prev,
+            curr,
+            raw,
+            regime="Stagflation",
+            previous_signals=prev,
         )
 
         assert summary.alert_count >= 1

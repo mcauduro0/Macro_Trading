@@ -53,9 +53,9 @@ class TestScenarioCount:
 
     def test_default_scenarios_has_6(self) -> None:
         """DEFAULT_SCENARIOS should contain exactly 6 scenarios."""
-        assert len(DEFAULT_SCENARIOS) >= 6, (
-            f"Expected at least 6 scenarios, got {len(DEFAULT_SCENARIOS)}"
-        )
+        assert (
+            len(DEFAULT_SCENARIOS) >= 6
+        ), f"Expected at least 6 scenarios, got {len(DEFAULT_SCENARIOS)}"
 
     def test_scenario_names(self) -> None:
         """All expected scenario names should be present."""
@@ -83,9 +83,7 @@ class TestBRFiscalCrisis:
         self, tester: StressTester, sample_positions: dict[str, float]
     ) -> None:
         """BR Fiscal Crisis should apply DI_PRE shock to DI positions."""
-        fiscal_scenario = next(
-            s for s in tester.scenarios if "Fiscal" in s.name
-        )
+        fiscal_scenario = next(s for s in tester.scenarios if "Fiscal" in s.name)
         result = tester.run_scenario(sample_positions, fiscal_scenario, 3_500_000.0)
 
         # DI_PRE_365 matches DI_PRE via prefix matching
@@ -99,9 +97,7 @@ class TestBRFiscalCrisis:
         self, tester: StressTester, sample_positions: dict[str, float]
     ) -> None:
         """BR Fiscal Crisis should apply USDBRL shock."""
-        fiscal_scenario = next(
-            s for s in tester.scenarios if "Fiscal" in s.name
-        )
+        fiscal_scenario = next(s for s in tester.scenarios if "Fiscal" in s.name)
         result = tester.run_scenario(sample_positions, fiscal_scenario, 3_500_000.0)
 
         # USDBRL shock = +0.25, short position = -500,000 => PnL = -125,000
@@ -111,9 +107,7 @@ class TestBRFiscalCrisis:
 
     def test_fiscal_crisis_has_cds_shock(self) -> None:
         """BR Fiscal Crisis should include CDS_BR shock."""
-        fiscal_scenario = next(
-            s for s in DEFAULT_SCENARIOS if "Fiscal" in s.name
-        )
+        fiscal_scenario = next(s for s in DEFAULT_SCENARIOS if "Fiscal" in s.name)
         assert "CDS_BR" in fiscal_scenario.shocks
         assert fiscal_scenario.shocks["CDS_BR"] == 0.40
 
@@ -130,9 +124,7 @@ class TestGlobalRiskOff:
         self, tester: StressTester, sample_positions: dict[str, float]
     ) -> None:
         """Global Risk-Off should apply IBOVESPA shock."""
-        risk_off = next(
-            s for s in tester.scenarios if "Risk-Off" in s.name
-        )
+        risk_off = next(s for s in tester.scenarios if "Risk-Off" in s.name)
         result = tester.run_scenario(sample_positions, risk_off, 3_500_000.0)
 
         # IBOVESPA shock = -0.30, long 800,000 => PnL = -240,000
@@ -144,9 +136,7 @@ class TestGlobalRiskOff:
         self, tester: StressTester, sample_positions: dict[str, float]
     ) -> None:
         """Global Risk-Off should apply SP500 shock."""
-        risk_off = next(
-            s for s in tester.scenarios if "Risk-Off" in s.name
-        )
+        risk_off = next(s for s in tester.scenarios if "Risk-Off" in s.name)
         result = tester.run_scenario(sample_positions, risk_off, 3_500_000.0)
 
         # SP500 shock = -0.25, long 300,000 => PnL = -75,000
@@ -156,9 +146,7 @@ class TestGlobalRiskOff:
 
     def test_risk_off_has_oil_shock(self) -> None:
         """Global Risk-Off should include OIL shock."""
-        risk_off = next(
-            s for s in DEFAULT_SCENARIOS if "Risk-Off" in s.name
-        )
+        risk_off = next(s for s in DEFAULT_SCENARIOS if "Risk-Off" in s.name)
         assert "OIL" in risk_off.shocks
         assert risk_off.shocks["OIL"] == -0.40
 
@@ -209,9 +197,9 @@ class TestReverseStressTest:
         )
 
         for name, result in results.items():
-            assert result["feasible"] is False, (
-                f"Scenario '{name}' should be infeasible for unexposed positions"
-            )
+            assert (
+                result["feasible"] is False
+            ), f"Scenario '{name}' should be infeasible for unexposed positions"
 
     def test_returns_all_scenarios(self, tester: StressTester) -> None:
         """Reverse stress test should return results for all 6 scenarios."""
@@ -229,9 +217,9 @@ class TestReverseStressTest:
                 scenario = next(s for s in tester.scenarios if s.name == name)
                 for key, shock in result["required_shocks"].items():
                     expected = scenario.shocks[key] * result["multiplier"]
-                    assert abs(shock - expected) < 1e-4, (
-                        f"Shock for {key} should be {expected:.6f}, got {shock:.6f}"
-                    )
+                    assert (
+                        abs(shock - expected) < 1e-4
+                    ), f"Shock for {key} should be {expected:.6f}, got {shock:.6f}"
 
 
 # ---------------------------------------------------------------------------
@@ -275,7 +263,9 @@ class TestHistoricalReplay:
         # SP500: cum day-by-day: -10K, -25K, -20K, -15K
         # Total: -20K, -85K, -60K, -65K => worst at day 2 (index 1): -85K
         assert result.portfolio_pnl == pytest.approx(-85_000.0, rel=1e-6)
-        assert result.portfolio_pnl_pct == pytest.approx(-85_000.0 / 1_500_000.0, rel=1e-6)
+        assert result.portfolio_pnl_pct == pytest.approx(
+            -85_000.0 / 1_500_000.0, rel=1e-6
+        )
 
     def test_pnl_pct_is_relative_to_portfolio_value(self, tester: StressTester) -> None:
         """Portfolio P&L percentage should be relative to portfolio_value."""
@@ -284,9 +274,7 @@ class TestHistoricalReplay:
             "IBOVESPA": np.array([-0.10]),  # -10% in one day
         }
 
-        result = tester.historical_replay(
-            positions, historical_returns, 2_000_000.0
-        )
+        result = tester.historical_replay(positions, historical_returns, 2_000_000.0)
 
         # P&L: -100K, pct: -100K / 2M = -5%
         assert result.portfolio_pnl == pytest.approx(-100_000.0, rel=1e-6)
@@ -302,9 +290,7 @@ class TestHistoricalReplay:
             "IBOVESPA": np.array([-0.05, -0.03]),
         }
 
-        result = tester.historical_replay(
-            positions, historical_returns, 1_500_000.0
-        )
+        result = tester.historical_replay(positions, historical_returns, 1_500_000.0)
 
         assert result.positions_impacted == 1
         assert result.positions_unaffected == 1

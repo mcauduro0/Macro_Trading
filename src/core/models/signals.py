@@ -27,13 +27,9 @@ from .base import Base
 class Signal(Base):
     __tablename__ = "signals"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     signal_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    signal_date: Mapped[date] = mapped_column(
-        Date, primary_key=True, nullable=False
-    )
+    signal_date: Mapped[date] = mapped_column(Date, primary_key=True, nullable=False)
     instrument_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("instruments.id"), nullable=True
     )
@@ -46,7 +42,9 @@ class Signal(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "signal_type", "signal_date", "instrument_id",
+            "signal_type",
+            "signal_date",
+            "instrument_id",
             name="uq_signals_natural_key",
         ),
         Index("ix_signals_signal_type", "signal_type"),

@@ -138,7 +138,8 @@ class Inf03InflationCarryStrategy(BaseStrategy):
 
         # b. Current IPCA 12M
         ipca_12m = self.data_loader.get_latest_macro_value(
-            "BR_IPCA_12M", as_of_date,
+            "BR_IPCA_12M",
+            as_of_date,
         )
         if ipca_12m is None:
             self.log.warning("missing_ipca_12m", as_of_date=str(as_of_date))
@@ -153,10 +154,16 @@ class Inf03InflationCarryStrategy(BaseStrategy):
 
         # 6. Load breakeven history for z-score computation
         di_history = self.data_loader.get_curve_history(
-            "DI_PRE", di_tenor, as_of_date, lookback_days=756,
+            "DI_PRE",
+            di_tenor,
+            as_of_date,
+            lookback_days=756,
         )
         ntnb_history = self.data_loader.get_curve_history(
-            "NTN_B_REAL", ntnb_tenor, as_of_date, lookback_days=756,
+            "NTN_B_REAL",
+            ntnb_tenor,
+            as_of_date,
+            lookback_days=756,
         )
 
         if di_history.empty or ntnb_history.empty:
@@ -164,9 +171,13 @@ class Inf03InflationCarryStrategy(BaseStrategy):
             return []
 
         # Compute historical breakeven series
-        combined = di_history[["rate"]].rename(columns={"rate": "di_rate"}).join(
-            ntnb_history[["rate"]].rename(columns={"rate": "ntnb_rate"}),
-            how="inner",
+        combined = (
+            di_history[["rate"]]
+            .rename(columns={"rate": "di_rate"})
+            .join(
+                ntnb_history[["rate"]].rename(columns={"rate": "ntnb_rate"}),
+                how="inner",
+            )
         )
 
         if len(combined) < 60:
@@ -260,4 +271,3 @@ class Inf03InflationCarryStrategy(BaseStrategy):
         )
 
         return [signal]
-

@@ -128,7 +128,8 @@ class CapitalAllocator:
 
         # Step 2: Asset class concentration
         weights, ac_violations = self._apply_asset_class_concentration(
-            weights, instrument_to_asset_class,
+            weights,
+            instrument_to_asset_class,
         )
         violations.extend(ac_violations)
 
@@ -144,7 +145,8 @@ class CapitalAllocator:
             # No rebalance needed -- return current weights
             leverage_used = sum(abs(v) for v in current_weights.values())
             ac_exposure = self._compute_asset_class_exposure(
-                current_weights, instrument_to_asset_class,
+                current_weights,
+                instrument_to_asset_class,
             )
             log.info(
                 "rebalance_skipped",
@@ -165,7 +167,8 @@ class CapitalAllocator:
 
         leverage_used = sum(abs(v) for v in weights.values())
         ac_exposure = self._compute_asset_class_exposure(
-            weights, instrument_to_asset_class,
+            weights,
+            instrument_to_asset_class,
         )
 
         log.info(
@@ -238,7 +241,8 @@ class CapitalAllocator:
     # Internal: Constraint enforcement
     # ------------------------------------------------------------------
     def _apply_single_position_limit(
-        self, weights: dict[str, float],
+        self,
+        weights: dict[str, float],
     ) -> tuple[dict[str, float], list[str]]:
         """Clamp each weight to [-max_single_position, +max_single_position]."""
         violations: list[str] = []
@@ -289,7 +293,8 @@ class CapitalAllocator:
         return result, violations
 
     def _apply_leverage_limit(
-        self, weights: dict[str, float],
+        self,
+        weights: dict[str, float],
     ) -> tuple[dict[str, float], list[str]]:
         """Scale all weights proportionally if leverage exceeds limit."""
         violations: list[str] = []

@@ -95,6 +95,7 @@ class TestTenorToDate:
     def test_with_calendar_business_day_adjustment(self) -> None:
         """When a calendar is provided, non-business days roll to next BD."""
         from bizdays import Calendar
+
         cal = Calendar.load("ANBIMA")
 
         # 1M from Dec 31, 2024 -> Jan 31, 2025 is a Friday (business day)
@@ -105,6 +106,7 @@ class TestTenorToDate:
     def test_with_calendar_rolls_to_next_bd(self) -> None:
         """When target falls on holiday, roll forward."""
         from bizdays import Calendar
+
         cal = Calendar.load("ANBIMA")
 
         # Find a case where the result lands on a non-BD
@@ -119,6 +121,7 @@ class TestTenorToBusinessDays:
 
     def test_counts_business_days_for_tenor(self) -> None:
         from bizdays import Calendar
+
         cal = Calendar.load("ANBIMA")
 
         # 1M from Jan 2, 2025 -> Feb 2, 2025 (Sunday, rolls to Feb 3)

@@ -39,6 +39,7 @@ def _partition_date(context: AssetExecutionContext) -> date:
 # Signal Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="signals",
     retry_policy=_retry_policy,
@@ -75,17 +76,24 @@ def signal_aggregation(
     # Collect strategy signals from the strategy registry
     from src.agents.data_loader import PointInTimeDataLoader
     from src.strategies import ALL_STRATEGIES
+
     _loader = PointInTimeDataLoader()
     strategy_signals = []
     for strategy_id, strategy_cls in ALL_STRATEGIES.items():
         try:
-            strategy = strategy_cls(data_loader=_loader) if isinstance(strategy_cls, type) else strategy_cls
+            strategy = (
+                strategy_cls(data_loader=_loader)
+                if isinstance(strategy_cls, type)
+                else strategy_cls
+            )
             if hasattr(strategy, "generate_signals"):
                 sigs = strategy.generate_signals(as_of)
                 if sigs:
                     strategy_signals.extend(sigs if isinstance(sigs, list) else [sigs])
         except Exception:
-            context.log.warning(f"Strategy {strategy_id} signal generation failed, skipping")
+            context.log.warning(
+                f"Strategy {strategy_id} signal generation failed, skipping"
+            )
 
     # Extract regime probabilities from cross-asset agent if available
     regime_probs = None
@@ -144,9 +152,7 @@ def signal_monitor(
     # For now, report the monitoring status based on current aggregation
     n_signals = signal_aggregation.get("signal_count", 0)
 
-    context.log.info(
-        f"Signal monitor complete for {n_signals} aggregated signals"
-    )
+    context.log.info(f"Signal monitor complete for {n_signals} aggregated signals")
 
     return {
         "status": "success",

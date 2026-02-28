@@ -156,7 +156,9 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
 
         # --- USDBRL spot for stop/take-profit ---
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=30,
+            "USDBRL",
+            as_of_date,
+            lookback_days=30,
         )
         if usdbrl_df.empty:
             return []
@@ -211,10 +213,14 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
         Returns None if insufficient data.
         """
         flow_df = self.data_loader.get_flow_data(
-            "BR_FX_FLOW_NET", as_of_date, lookback_days=_BCB_LOOKBACK,
+            "BR_FX_FLOW_NET",
+            as_of_date,
+            lookback_days=_BCB_LOOKBACK,
         )
         if flow_df.empty or len(flow_df) < _ROLLING_SUM_WINDOW + 10:
-            self.log.warning("fx03_missing_bcb_flow", rows=len(flow_df) if not flow_df.empty else 0)
+            self.log.warning(
+                "fx03_missing_bcb_flow", rows=len(flow_df) if not flow_df.empty else 0
+            )
             return None
 
         rolling_sums = flow_df["value"].rolling(_ROLLING_SUM_WINDOW).sum().dropna()
@@ -223,7 +229,9 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
 
         current_sum = float(rolling_sums.iloc[-1])
         history_list = rolling_sums.tail(_BCB_ZSCORE_WINDOW).tolist()
-        return self.compute_z_score(current_sum, history_list, window=_BCB_ZSCORE_WINDOW)
+        return self.compute_z_score(
+            current_sum, history_list, window=_BCB_ZSCORE_WINDOW
+        )
 
     # ------------------------------------------------------------------
     # Component 2: CFTC BRL positioning
@@ -234,15 +242,21 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
         Returns None if insufficient data.
         """
         cftc_df = self.data_loader.get_flow_data(
-            "CFTC_6L_LEVERAGED_NET", as_of_date, lookback_days=_CFTC_LOOKBACK,
+            "CFTC_6L_LEVERAGED_NET",
+            as_of_date,
+            lookback_days=_CFTC_LOOKBACK,
         )
         if cftc_df.empty or len(cftc_df) < 20:
-            self.log.warning("fx03_missing_cftc_data", rows=len(cftc_df) if not cftc_df.empty else 0)
+            self.log.warning(
+                "fx03_missing_cftc_data", rows=len(cftc_df) if not cftc_df.empty else 0
+            )
             return None
 
         current_position = float(cftc_df["value"].iloc[-1])
         history_list = cftc_df["value"].tail(_CFTC_ZSCORE_WINDOW).tolist()
-        return self.compute_z_score(current_position, history_list, window=_CFTC_ZSCORE_WINDOW)
+        return self.compute_z_score(
+            current_position, history_list, window=_CFTC_ZSCORE_WINDOW
+        )
 
     # ------------------------------------------------------------------
     # Component 3: B3 foreign equity flow
@@ -254,10 +268,14 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
         Returns None if insufficient data.
         """
         b3_df = self.data_loader.get_flow_data(
-            "BR_FX_FLOW_FINANCIAL", as_of_date, lookback_days=_B3_LOOKBACK,
+            "BR_FX_FLOW_FINANCIAL",
+            as_of_date,
+            lookback_days=_B3_LOOKBACK,
         )
         if b3_df.empty or len(b3_df) < _ROLLING_SUM_WINDOW + 10:
-            self.log.warning("fx03_missing_b3_flow", rows=len(b3_df) if not b3_df.empty else 0)
+            self.log.warning(
+                "fx03_missing_b3_flow", rows=len(b3_df) if not b3_df.empty else 0
+            )
             return None
 
         rolling_sums = b3_df["value"].rolling(_ROLLING_SUM_WINDOW).sum().dropna()
@@ -266,4 +284,6 @@ class Fx03FlowTacticalStrategy(BaseStrategy):
 
         current_sum = float(rolling_sums.iloc[-1])
         history_list = rolling_sums.tail(_BCB_ZSCORE_WINDOW).tolist()
-        return self.compute_z_score(current_sum, history_list, window=_BCB_ZSCORE_WINDOW)
+        return self.compute_z_score(
+            current_sum, history_list, window=_BCB_ZSCORE_WINDOW
+        )

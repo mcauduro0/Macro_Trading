@@ -286,9 +286,7 @@ class RiskLimitChecker:
         all_pass = all(not r.breached for r in results)
         return all_pass, results
 
-    def utilization_report(
-        self, results: list[LimitCheckResult]
-    ) -> dict[str, float]:
+    def utilization_report(self, results: list[LimitCheckResult]) -> dict[str, float]:
         """Generate a utilization report for dashboard display.
 
         Args:

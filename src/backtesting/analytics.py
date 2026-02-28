@@ -12,6 +12,7 @@ Provides:
 All functions accept numpy arrays and return numeric results.
 Edge cases (empty arrays, zero variance, etc.) return 0.0 gracefully.
 """
+
 from __future__ import annotations
 
 import logging
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------
 # Individual metric functions (BTST-05)
 # ---------------------------------------------------------------
+
 
 def compute_sortino(returns: np.ndarray, target: float = 0.0) -> float:
     """Sortino ratio: risk-adjusted return using downside deviation only.
@@ -57,9 +59,7 @@ def compute_sortino(returns: np.ndarray, target: float = 0.0) -> float:
     return float(excess * math.sqrt(252) / downside_std)
 
 
-def compute_information_ratio(
-    returns: np.ndarray, benchmark: np.ndarray
-) -> float:
+def compute_information_ratio(returns: np.ndarray, benchmark: np.ndarray) -> float:
     """Information ratio: active return / tracking error.
 
     Args:
@@ -123,9 +123,7 @@ def compute_turnover(positions: np.ndarray) -> float:
     return float(np.mean(deltas))
 
 
-def compute_rolling_sharpe(
-    returns: np.ndarray, window: int = 252
-) -> np.ndarray:
+def compute_rolling_sharpe(returns: np.ndarray, window: int = 252) -> np.ndarray:
     """Rolling Sharpe ratio with given window.
 
     Args:
@@ -152,6 +150,7 @@ def compute_rolling_sharpe(
 # ---------------------------------------------------------------
 # Deflated Sharpe Ratio (BTST-03)
 # ---------------------------------------------------------------
+
 
 def deflated_sharpe(
     observed_sharpe: float,
@@ -187,9 +186,7 @@ def deflated_sharpe(
     # Estimate variance of Sharpe ratio
     if variance_of_sharpe_estimates is None:
         var_sr = (
-            1
-            - skewness * observed_sharpe
-            + (kurtosis_excess / 4) * observed_sharpe ** 2
+            1 - skewness * observed_sharpe + (kurtosis_excess / 4) * observed_sharpe**2
         ) / (n_observations - 1)
     else:
         var_sr = variance_of_sharpe_estimates
@@ -216,11 +213,7 @@ def deflated_sharpe(
         return 0.0
 
     psr = float(
-        norm.cdf(
-            (observed_sharpe - e_max_sr)
-            * math.sqrt(n_observations - 1)
-            / denom
-        )
+        norm.cdf((observed_sharpe - e_max_sr) * math.sqrt(n_observations - 1) / denom)
     )
 
     return max(0.0, min(1.0, psr))
@@ -229,6 +222,7 @@ def deflated_sharpe(
 # ---------------------------------------------------------------
 # Tearsheet generation (BTST-06)
 # ---------------------------------------------------------------
+
 
 def generate_tearsheet(result: BacktestResult) -> dict[str, Any]:
     """Generate a complete tearsheet dict for dashboard rendering.
@@ -285,9 +279,7 @@ def generate_tearsheet(result: BacktestResult) -> dict[str, Any]:
     # -- Rolling Sharpe (63-day / quarterly window) --
     rolling_sharpe_list: list[dict[str, Any]] = []
     if len(result.equity_curve) >= 2:
-        equities_arr = np.array(
-            [e for _, e in result.equity_curve], dtype=float
-        )
+        equities_arr = np.array([e for _, e in result.equity_curve], dtype=float)
         daily_rets = np.diff(equities_arr) / equities_arr[:-1]
         # Filter out any inf/nan from division
         daily_rets = np.nan_to_num(daily_rets, nan=0.0, posinf=0.0, neginf=0.0)
@@ -410,9 +402,7 @@ def _build_return_distribution(result: BacktestResult) -> dict[str, Any]:
             "std": 0.0,
             "skewness": 0.0,
             "kurtosis": 0.0,
-            "percentiles": {
-                "5": 0.0, "25": 0.0, "50": 0.0, "75": 0.0, "95": 0.0
-            },
+            "percentiles": {"5": 0.0, "25": 0.0, "50": 0.0, "75": 0.0, "95": 0.0},
         }
 
     equities = np.array([e for _, e in result.equity_curve], dtype=float)
@@ -425,9 +415,7 @@ def _build_return_distribution(result: BacktestResult) -> dict[str, Any]:
             "std": 0.0,
             "skewness": 0.0,
             "kurtosis": 0.0,
-            "percentiles": {
-                "5": 0.0, "25": 0.0, "50": 0.0, "75": 0.0, "95": 0.0
-            },
+            "percentiles": {"5": 0.0, "25": 0.0, "50": 0.0, "75": 0.0, "95": 0.0},
         }
 
     ret_mean = float(np.mean(daily_rets))

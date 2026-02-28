@@ -86,14 +86,15 @@ class TestRates03SignalGeneration:
 
         # DI curve: 2Y (504d) at 13%, 5Y (1260d) at 14%
         loader.get_curve.side_effect = lambda curve_id, d: (
-            {504: 0.13, 1260: 0.14} if curve_id == "DI_PRE"
-            else {504: 0.045, 1260: 0.05} if curve_id == "UST_NOM"
-            else {}
+            {504: 0.13, 1260: 0.14}
+            if curve_id == "DI_PRE"
+            else {504: 0.045, 1260: 0.05} if curve_id == "UST_NOM" else {}
         )
 
         # CDS and inflation
         def macro_side(code, d):
             return {"BR_CDS_5Y": 200.0, "BR_IPCA_12M": 5.0, "US_CPI_YOY": 3.0}.get(code)
+
         loader.get_latest_macro_value.side_effect = macro_side
 
         # DI and UST history -- spread widens dramatically at end (z > 1.25)
@@ -124,9 +125,9 @@ class TestRates03CdsAdjustment:
     def test_cds_reduces_spread(self) -> None:
         loader = MagicMock()
         loader.get_curve.side_effect = lambda curve_id, d: (
-            {504: 0.13, 1260: 0.14} if curve_id == "DI_PRE"
-            else {504: 0.045, 1260: 0.05} if curve_id == "UST_NOM"
-            else {}
+            {504: 0.13, 1260: 0.14}
+            if curve_id == "DI_PRE"
+            else {504: 0.045, 1260: 0.05} if curve_id == "UST_NOM" else {}
         )
         # CDS at 200bps = 2.0% -> adjusted spread = raw - 2.0%
         loader.get_latest_macro_value.side_effect = lambda c, d: (
@@ -147,7 +148,10 @@ class TestRates03CdsAdjustment:
         # cds_pct = 200/100 = 2.0%
         # adjusted = 0.085 - 0.02 = 0.065
         if signals:
-            assert signals[0].metadata["adjusted_spread_2y"] < signals[0].metadata["raw_spread_2y"]
+            assert (
+                signals[0].metadata["adjusted_spread_2y"]
+                < signals[0].metadata["raw_spread_2y"]
+            )
 
 
 class TestRates03MissingData:
@@ -227,6 +231,7 @@ class TestRates04StrongSignal:
 
         assert len(signals) == 1
         from src.core.enums import SignalStrength
+
         assert signals[0].strength == SignalStrength.STRONG
 
 
@@ -274,6 +279,7 @@ class TestRates05PreEventSignal:
         # CPI at 4.0%, FFR at 5.25%
         def macro_side(code, d):
             return {"US_CPI_YOY": 4.0, "US_FED_FUNDS": 5.25}.get(code)
+
         loader.get_latest_macro_value.side_effect = macro_side
 
         # History for divergence z-score
@@ -283,9 +289,7 @@ class TestRates05PreEventSignal:
         cpi_hist = _make_macro_history([3.5] * 300)
         loader.get_macro_series.return_value = cpi_hist
 
-        strat = Rates05FomcEventStrategy(
-            data_loader=loader, entry_z_threshold=0.5
-        )
+        strat = Rates05FomcEventStrategy(data_loader=loader, entry_z_threshold=0.5)
         signals = strat.generate_signals(as_of)
 
         # Should produce a signal (we're inside the FOMC window)
@@ -333,12 +337,14 @@ class TestRates05PostEventExit:
 
         def macro_side(code, d):
             return {"US_CPI_YOY": 3.0, "US_FED_FUNDS": 5.0}.get(code)
+
         loader.get_latest_macro_value.side_effect = macro_side
 
         # History with noise so that z of current divergence (0.0) is small
         # Historical divergences will be UST_rate - 6.0 (the Taylor from history)
         # Set UST history around 6.0 -> hist divergences around 0 -> z of 0 = 0
         import random
+
         random.seed(42)
         ust_noise = [6.0 + random.gauss(0, 0.15) for _ in range(300)]
         ust_hist = _make_history(ust_noise)
@@ -397,6 +403,7 @@ class TestRates06DuringWindow:
         # Selic at 13.25%, IPCA at 5.0% (above upper band -> model expects hike)
         def macro_side(code, d):
             return {"BR_SELIC_TARGET": 0.1325, "BR_IPCA_12M": 5.0}.get(code)
+
         loader.get_latest_macro_value.side_effect = macro_side
 
         # History for divergence
@@ -414,9 +421,7 @@ class TestRates06DuringWindow:
         loader.get_macro_series.side_effect = macro_series_side
         loader.get_curve_history.return_value = di_hist
 
-        strat = Rates06CopomEventStrategy(
-            data_loader=loader, entry_z_threshold=0.3
-        )
+        strat = Rates06CopomEventStrategy(data_loader=loader, entry_z_threshold=0.3)
         signals = strat.generate_signals(as_of)
 
         # Should produce signal (inside window + data available)
@@ -454,6 +459,7 @@ class TestRates06Direction:
         # Divergence = 0.0125 - 0.0025 = 0.01 (positive -> hawkish DI)
         def macro_side(code, d):
             return {"BR_SELIC_TARGET": 0.1325, "BR_IPCA_12M": 5.0}.get(code)
+
         loader.get_latest_macro_value.side_effect = macro_side
 
         # History where DI was close to Selic (low divergence historically)
@@ -471,9 +477,7 @@ class TestRates06Direction:
         loader.get_macro_series.side_effect = macro_series_side
         loader.get_curve_history.return_value = di_hist
 
-        strat = Rates06CopomEventStrategy(
-            data_loader=loader, entry_z_threshold=0.5
-        )
+        strat = Rates06CopomEventStrategy(data_loader=loader, entry_z_threshold=0.5)
         signals = strat.generate_signals(as_of)
 
         if signals:

@@ -40,14 +40,21 @@ def _make_signal(
     if timestamp is None:
         timestamp = datetime.utcnow()
 
-    direction = SignalDirection.LONG if z_score > 0 else (
-        SignalDirection.SHORT if z_score < 0 else SignalDirection.NEUTRAL
+    direction = (
+        SignalDirection.LONG
+        if z_score > 0
+        else (SignalDirection.SHORT if z_score < 0 else SignalDirection.NEUTRAL)
     )
     strength = (
-        SignalStrength.STRONG if abs(z_score) >= 2.0
-        else SignalStrength.MODERATE if abs(z_score) >= 1.0
-        else SignalStrength.WEAK if abs(z_score) >= 0.5
-        else SignalStrength.NO_SIGNAL
+        SignalStrength.STRONG
+        if abs(z_score) >= 2.0
+        else (
+            SignalStrength.MODERATE
+            if abs(z_score) >= 1.0
+            else (
+                SignalStrength.WEAK if abs(z_score) >= 0.5 else SignalStrength.NO_SIGNAL
+            )
+        )
     )
 
     return StrategySignal(
@@ -121,7 +128,9 @@ class TestRankBased:
             _make_signal("RATES_BR_01", z_score=1.0, confidence=0.8, timestamp=now),
             _make_signal("RATES_BR_02", z_score=1.2, confidence=0.8, timestamp=now),
             _make_signal("RATES_BR_03", z_score=1.1, confidence=0.8, timestamp=now),
-            _make_signal("RATES_BR_04", z_score=10.0, confidence=0.8, timestamp=now),  # outlier
+            _make_signal(
+                "RATES_BR_04", z_score=10.0, confidence=0.8, timestamp=now
+            ),  # outlier
         ]
         results = agg.aggregate(signals, as_of=now)
         assert len(results) == 1
@@ -169,20 +178,32 @@ class TestBayesian:
         now = datetime.utcnow()
         # INF strategy with moderate positive signal
         _make_signal(
-            "INF_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
+            "INF_BR_01",
+            z_score=1.0,
+            confidence=0.7,
+            timestamp=now,
         )
         # RATES strategy with same signal
         _make_signal(
-            "RATES_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
+            "RATES_BR_01",
+            z_score=1.0,
+            confidence=0.7,
+            timestamp=now,
         )
 
         # Same instrument for comparison
         inf_signal_single = _make_signal(
-            "INF_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
+            "INF_BR_01",
+            z_score=1.0,
+            confidence=0.7,
+            timestamp=now,
             instruments=["BENCHMARK"],
         )
         rates_signal_single = _make_signal(
-            "RATES_BR_01", z_score=1.0, confidence=0.7, timestamp=now,
+            "RATES_BR_01",
+            z_score=1.0,
+            confidence=0.7,
+            timestamp=now,
             instruments=["BENCHMARK"],
         )
 
@@ -204,8 +225,12 @@ class TestBayesian:
         assert len(results) == 1
         # Check that INF_ strategy got higher weight in contributions
         contribs = results[0].contributing_strategies
-        inf_weight = next(c["weight"] for c in contribs if c["strategy_id"] == "INF_BR_01")
-        rates_weight = next(c["weight"] for c in contribs if c["strategy_id"] == "RATES_BR_01")
+        inf_weight = next(
+            c["weight"] for c in contribs if c["strategy_id"] == "INF_BR_01"
+        )
+        rates_weight = next(
+            c["weight"] for c in contribs if c["strategy_id"] == "RATES_BR_01"
+        )
         # INF tilt in Stagflation is 1.5, RATES tilt is 0.7
         assert inf_weight > rates_weight
 
@@ -236,7 +261,9 @@ class TestCrowdingPenalty:
         now = datetime.utcnow()
         # 5 signals, all positive -> 100% agreement > 80%
         signals = [
-            _make_signal(f"RATES_BR_{i:02d}", z_score=1.0, confidence=0.8, timestamp=now)
+            _make_signal(
+                f"RATES_BR_{i:02d}", z_score=1.0, confidence=0.8, timestamp=now
+            )
             for i in range(5)
         ]
         results = agg.aggregate(signals, as_of=now)
@@ -247,14 +274,18 @@ class TestCrowdingPenalty:
     def test_conviction_reduced_by_20_percent(self):
         """Crowding should reduce conviction by exactly 20%."""
         agg_no_crowd = SignalAggregatorV2(
-            method="confidence_weighted", crowding_threshold=2.0,  # impossible threshold
+            method="confidence_weighted",
+            crowding_threshold=2.0,  # impossible threshold
         )
         agg_crowd = SignalAggregatorV2(
-            method="confidence_weighted", crowding_threshold=0.8,
+            method="confidence_weighted",
+            crowding_threshold=0.8,
         )
         now = datetime.utcnow()
         signals = [
-            _make_signal(f"RATES_BR_{i:02d}", z_score=1.0, confidence=0.8, timestamp=now)
+            _make_signal(
+                f"RATES_BR_{i:02d}", z_score=1.0, confidence=0.8, timestamp=now
+            )
             for i in range(5)
         ]
 
@@ -304,7 +335,9 @@ class TestStalenessDiscount:
         signal_time = datetime(2026, 2, 18, 12, 0, 0)  # Wednesday
 
         signals = [
-            _make_signal("RATES_BR_01", z_score=1.5, confidence=0.8, timestamp=signal_time),
+            _make_signal(
+                "RATES_BR_01", z_score=1.5, confidence=0.8, timestamp=signal_time
+            ),
         ]
         results = agg.aggregate(signals, as_of=now)
         assert len(results) == 1
@@ -319,7 +352,9 @@ class TestStalenessDiscount:
         signal_time = datetime(2026, 2, 13, 12, 0, 0)  # Friday (>5 biz days before)
 
         signals = [
-            _make_signal("RATES_BR_01", z_score=1.5, confidence=0.8, timestamp=signal_time),
+            _make_signal(
+                "RATES_BR_01", z_score=1.5, confidence=0.8, timestamp=signal_time
+            ),
         ]
         results = agg.aggregate(signals, as_of=now)
         # Signal should be excluded entirely
@@ -354,7 +389,9 @@ class TestEdgeCases:
     def test_method_attribute_set(self):
         """Aggregated result should reflect the method used."""
         now = datetime.utcnow()
-        signals = [_make_signal("RATES_BR_01", z_score=1.0, confidence=0.8, timestamp=now)]
+        signals = [
+            _make_signal("RATES_BR_01", z_score=1.0, confidence=0.8, timestamp=now)
+        ]
 
         for method in ["confidence_weighted", "rank_based", "bayesian"]:
             agg = SignalAggregatorV2(method=method)
@@ -379,11 +416,11 @@ class TestBusinessDays:
     def test_weekday_span(self):
         """Wednesday to Friday = 2 business days."""
         start = datetime(2026, 2, 18, 12, 0, 0)  # Wednesday
-        end = datetime(2026, 2, 20, 12, 0, 0)    # Friday
+        end = datetime(2026, 2, 20, 12, 0, 0)  # Friday
         assert _count_business_days(start, end) == 2
 
     def test_over_weekend(self):
         """Friday to Monday = 1 business day (Mon only counted)."""
         start = datetime(2026, 2, 20, 12, 0, 0)  # Friday
-        end = datetime(2026, 2, 23, 12, 0, 0)    # Monday
+        end = datetime(2026, 2, 23, 12, 0, 0)  # Monday
         assert _count_business_days(start, end) == 1

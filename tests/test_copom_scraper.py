@@ -139,7 +139,9 @@ class TestCOPOMScraperScrapeAtas:
         doc_response.status_code = 200
         doc_response.raise_for_status = MagicMock()
 
-        mock_client.get = MagicMock(side_effect=[index_response, doc_response, doc_response, doc_response])
+        mock_client.get = MagicMock(
+            side_effect=[index_response, doc_response, doc_response, doc_response]
+        )
 
         scraper._client = mock_client
 
@@ -343,9 +345,7 @@ class TestCOPOMScraperHTTPErrors:
         scraper = COPOMScraper(cache_dir=str(tmp_path), rate_limit=0)
 
         mock_client = MagicMock(spec=httpx.Client)
-        mock_client.get = MagicMock(
-            side_effect=httpx.HTTPError("Connection failed")
-        )
+        mock_client.get = MagicMock(side_effect=httpx.HTTPError("Connection failed"))
         scraper._client = mock_client
 
         docs = scraper.scrape_atas(start_year=2023)

@@ -42,6 +42,7 @@ def _get_service():
         # Hydrate from DB so in-memory stores have real data
         try:
             from src.pms.db_loader import hydrate_position_manager
+
             hydrate_position_manager(pm)
             logger.info("PerformanceAttributionEngine hydrated from DB")
         except Exception as exc:
@@ -54,9 +55,15 @@ def _get_service():
 # ---------------------------------------------------------------------------
 @router.get("", response_model=AttributionResponse)
 async def get_attribution(
-    period: str = Query("MTD", description="Period: daily, WTD, MTD, QTD, YTD, inception, custom"),
-    start_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD (for custom period)"),
-    end_date: Optional[str] = Query(None, description="End date YYYY-MM-DD (for custom period)"),
+    period: str = Query(
+        "MTD", description="Period: daily, WTD, MTD, QTD, YTD, inception, custom"
+    ),
+    start_date: Optional[str] = Query(
+        None, description="Start date YYYY-MM-DD (for custom period)"
+    ),
+    end_date: Optional[str] = Query(
+        None, description="End date YYYY-MM-DD (for custom period)"
+    ),
     cache: PMSCache = Depends(get_pms_cache),
 ):
     """Return multi-dimensional P&L attribution for the specified period."""
@@ -171,7 +178,9 @@ async def get_best_worst(
         )
 
         best = sorted_positions[:n]
-        worst = sorted_positions[-n:] if len(sorted_positions) >= n else sorted_positions
+        worst = (
+            sorted_positions[-n:] if len(sorted_positions) >= n else sorted_positions
+        )
         worst = sorted(worst, key=lambda x: x.get("pnl_brl", 0.0))
 
         return {

@@ -194,9 +194,7 @@ class SignalMonitor:
         Returns:
             List of detected SignalFlip objects.
         """
-        prev_map: dict[str, AggregatedSignalV2] = {
-            s.instrument: s for s in previous
-        }
+        prev_map: dict[str, AggregatedSignalV2] = {s.instrument: s for s in previous}
 
         flips: list[SignalFlip] = []
         for cur in current:
@@ -250,9 +248,7 @@ class SignalMonitor:
         Returns:
             List of detected ConvictionSurge objects.
         """
-        prev_map: dict[str, AggregatedSignalV2] = {
-            s.instrument: s for s in previous
-        }
+        prev_map: dict[str, AggregatedSignalV2] = {s.instrument: s for s in previous}
 
         surges: list[ConvictionSurge] = []
         for cur in current:
@@ -418,8 +414,14 @@ class SignalMonitor:
 
         # Build summary text
         summary_text = self._format_summary_text(
-            today, regime, active_by_ac, flips, surges, divergences,
-            weekly_flip_count, alert_count,
+            today,
+            regime,
+            active_by_ac,
+            flips,
+            surges,
+            divergences,
+            weekly_flip_count,
+            alert_count,
         )
 
         return DailySignalSummary(
@@ -478,7 +480,11 @@ class SignalMonitor:
                     f"{flip.previous_direction.value} -> {flip.current_direction.value}"
                 )
             for surge in surges:
-                sign = "+" if surge.current_conviction >= surge.previous_conviction else "-"
+                sign = (
+                    "+"
+                    if surge.current_conviction >= surge.previous_conviction
+                    else "-"
+                )
                 lines.append(
                     f"  [SURGE] {surge.instrument}: conviction jumped "
                     f"{sign}{surge.absolute_change:.2f} "

@@ -69,12 +69,24 @@ def test_full_pipeline_e2e():
     try:
         from src.agents.registry import AgentRegistry
 
-        expected = {"inflation_agent", "monetary_agent", "fiscal_agent", "fx_agent", "cross_asset_agent"}
+        expected = {
+            "inflation_agent",
+            "monetary_agent",
+            "fiscal_agent",
+            "fx_agent",
+            "cross_asset_agent",
+        }
         execution_order = set(AgentRegistry.EXECUTION_ORDER)
-        assert len(execution_order) >= 5, f"Expected >=5 agents in EXECUTION_ORDER, got {len(execution_order)}"
-        assert expected.issubset(execution_order), f"Missing agents: {expected - execution_order}"
+        assert (
+            len(execution_order) >= 5
+        ), f"Expected >=5 agents in EXECUTION_ORDER, got {len(execution_order)}"
+        assert expected.issubset(
+            execution_order
+        ), f"Missing agents: {expected - execution_order}"
 
-        results.append(StepResult("Agents", True, f"{len(execution_order)} agents defined"))
+        results.append(
+            StepResult("Agents", True, f"{len(execution_order)} agents defined")
+        )
         logger.info("STEP 2 Agents: PASS")
     except Exception as exc:
         results.append(StepResult("Agents", False, str(exc)))
@@ -175,7 +187,6 @@ def test_full_pipeline_e2e():
         logger.info("  [%s] %s: %s", status, r.name, r.detail)
 
     failed = [r for r in results if not r.passed]
-    assert len(failed) == 0, (
-        f"{len(failed)} pipeline step(s) failed: "
-        + ", ".join(f"{r.name} ({r.detail})" for r in failed)
+    assert len(failed) == 0, f"{len(failed)} pipeline step(s) failed: " + ", ".join(
+        f"{r.name} ({r.detail})" for r in failed
     )

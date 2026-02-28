@@ -160,7 +160,9 @@ class BaseStrategy(abc.ABC):
     # Abstract interface (subclasses MUST implement)
     # ------------------------------------------------------------------
     @abc.abstractmethod
-    def generate_signals(self, as_of_date: date) -> list[StrategyPosition] | list[StrategySignal]:
+    def generate_signals(
+        self, as_of_date: date
+    ) -> list[StrategyPosition] | list[StrategySignal]:
         """Produce target positions or signals for the given date.
 
         v2.0 strategies return list[StrategyPosition]; v3.0 strategies return
@@ -224,7 +226,9 @@ class BaseStrategy(abc.ABC):
                 else:
                     raw_weight = 0.0
             else:
-                raw_weight = strength_base * signal.confidence * self.config.max_position_size
+                raw_weight = (
+                    strength_base * signal.confidence * self.config.max_position_size
+                )
                 if signal.direction == SignalDirection.SHORT:
                     raw_weight = -raw_weight
 
@@ -305,9 +309,7 @@ class BaseStrategy(abc.ABC):
             return 0.0
         return (value - mean) / std
 
-    def size_from_conviction(
-        self, z_score: float, max_size: float = 1.0
-    ) -> float:
+    def size_from_conviction(self, z_score: float, max_size: float = 1.0) -> float:
         """Map z-score to position size using sigmoid truncation.
 
         Uses ``min(max_size, max_size * (2 / (1 + exp(-|z|)) - 1))``.

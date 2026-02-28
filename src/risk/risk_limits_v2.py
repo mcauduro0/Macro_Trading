@@ -195,7 +195,9 @@ class RiskLimitsManager:
 
         allocated_risk = sum(abs(v) for v in risk_contributions.values())
         available = total_budget - allocated_risk
-        utilization_pct = (allocated_risk / total_budget * 100.0) if total_budget > 1e-12 else 0.0
+        utilization_pct = (
+            (allocated_risk / total_budget * 100.0) if total_budget > 1e-12 else 0.0
+        )
 
         # Per-position budgets
         position_budgets: dict[str, dict] = {}
@@ -283,15 +285,14 @@ class RiskLimitsManager:
         if risk_budget is not None:
             any_budget_breach = any(
                 p["breached"] for p in risk_budget.position_budgets.values()
-            ) or any(
-                a["breached"] for a in risk_budget.asset_class_budgets.values()
-            )
+            ) or any(a["breached"] for a in risk_budget.asset_class_budgets.values())
 
         if any_limit_breach or any_loss_breach or any_budget_breach:
             overall_status = "BREACHED"
         elif loss_status is not None and (
             abs(loss_status.daily_pnl) > self.config.daily_loss_limit_pct * 0.8
-            or abs(loss_status.cumulative_weekly_pnl) > self.config.weekly_loss_limit_pct * 0.8
+            or abs(loss_status.cumulative_weekly_pnl)
+            > self.config.weekly_loss_limit_pct * 0.8
         ):
             overall_status = "WARNING"
         elif risk_budget is not None and risk_budget.utilization_pct > 80.0:

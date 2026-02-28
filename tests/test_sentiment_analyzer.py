@@ -29,7 +29,9 @@ class TestPortugueseScoring:
             "A inflacao acima da meta exige aperto monetario adicional."
         )
         result = analyzer.score(text, "pt")
-        assert result.net_score > 0, f"Expected positive net_score, got {result.net_score}"
+        assert (
+            result.net_score > 0
+        ), f"Expected positive net_score, got {result.net_score}"
         assert result.hawk_score > result.dove_score
 
     def test_dovish_pt_text_scores_negative(self, analyzer):
@@ -41,7 +43,9 @@ class TestPortugueseScoring:
             "do produto negativo sustentam o espaco para corte."
         )
         result = analyzer.score(text, "pt")
-        assert result.net_score < 0, f"Expected negative net_score, got {result.net_score}"
+        assert (
+            result.net_score < 0
+        ), f"Expected negative net_score, got {result.net_score}"
         assert result.dove_score > result.hawk_score
 
     def test_neutral_pt_text_scores_near_zero(self, analyzer):
@@ -52,7 +56,9 @@ class TestPortugueseScoring:
             "e a discussao seguiu a pauta prevista."
         )
         result = analyzer.score(text, "pt")
-        assert abs(result.net_score) < 0.3, f"Expected near-zero score, got {result.net_score}"
+        assert (
+            abs(result.net_score) < 0.3
+        ), f"Expected near-zero score, got {result.net_score}"
 
 
 # --- English scoring tests ---
@@ -70,7 +76,9 @@ class TestEnglishScoring:
             "restrictive stance. Upside risks to inflation persist."
         )
         result = analyzer.score(text, "en")
-        assert result.net_score > 0, f"Expected positive net_score, got {result.net_score}"
+        assert (
+            result.net_score > 0
+        ), f"Expected positive net_score, got {result.net_score}"
 
     def test_dovish_en_text_scores_negative(self, analyzer):
         """Clearly dovish EN text should have net_score < 0."""
@@ -81,7 +89,9 @@ class TestEnglishScoring:
             "policy easing. Inflation expectations anchored near the two percent goal."
         )
         result = analyzer.score(text, "en")
-        assert result.net_score < 0, f"Expected negative net_score, got {result.net_score}"
+        assert (
+            result.net_score < 0
+        ), f"Expected negative net_score, got {result.net_score}"
 
     def test_neutral_en_text_scores_near_zero(self, analyzer):
         """Text without policy terms should score near zero."""
@@ -91,7 +101,9 @@ class TestEnglishScoring:
             "recent developments in the global economy."
         )
         result = analyzer.score(text, "en")
-        assert abs(result.net_score) < 0.3, f"Expected near-zero score, got {result.net_score}"
+        assert (
+            abs(result.net_score) < 0.3
+        ), f"Expected near-zero score, got {result.net_score}"
 
 
 # --- Change score tests ---

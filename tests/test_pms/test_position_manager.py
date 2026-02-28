@@ -24,6 +24,7 @@ from src.pms.pricing import (
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def pm() -> PositionManager:
     """Fresh PositionManager with 100M BRL AUM."""
@@ -68,6 +69,7 @@ def pm_with_positions(pm: PositionManager) -> PositionManager:
 # =============================================================================
 # Pricing module tests
 # =============================================================================
+
 
 class TestPricing:
     """Tests for pure pricing functions."""
@@ -124,12 +126,16 @@ class TestPricing:
 
     def test_compute_pnl_brl_rates_long(self):
         """RATES LONG (receive fixed): PU increase -> positive P&L."""
-        pnl = compute_pnl_brl(90000.0, 91000.0, 10_000_000.0, "LONG", "DI1_F26", "RATES")
+        pnl = compute_pnl_brl(
+            90000.0, 91000.0, 10_000_000.0, "LONG", "DI1_F26", "RATES"
+        )
         assert pnl > 0
 
     def test_compute_pnl_brl_rates_short(self):
         """RATES SHORT (pay fixed): PU decrease -> positive P&L."""
-        pnl = compute_pnl_brl(90000.0, 89000.0, 10_000_000.0, "SHORT", "DI1_F26", "RATES")
+        pnl = compute_pnl_brl(
+            90000.0, 89000.0, 10_000_000.0, "SHORT", "DI1_F26", "RATES"
+        )
         assert pnl > 0
 
     def test_compute_pnl_brl_zero_entry(self):
@@ -155,6 +161,7 @@ class TestPricing:
 # =============================================================================
 # open_position tests
 # =============================================================================
+
 
 class TestOpenPosition:
     """Tests for PositionManager.open_position."""
@@ -276,6 +283,7 @@ class TestOpenPosition:
 # close_position tests
 # =============================================================================
 
+
 class TestClosePosition:
     """Tests for PositionManager.close_position."""
 
@@ -369,6 +377,7 @@ class TestClosePosition:
 # mark_to_market tests
 # =============================================================================
 
+
 class TestMarkToMarket:
     """Tests for PositionManager.mark_to_market."""
 
@@ -442,6 +451,7 @@ class TestMarkToMarket:
 # get_book tests
 # =============================================================================
 
+
 class TestGetBook:
     """Tests for PositionManager.get_book."""
 
@@ -468,7 +478,9 @@ class TestGetBook:
         expected_leverage = (50_000_000 + 20_000_000 + 10_000_000) / 100_000_000
         assert abs(book["summary"]["leverage"] - expected_leverage) < 0.001
 
-    def test_get_book_by_asset_class_breakdown(self, pm_with_positions: PositionManager):
+    def test_get_book_by_asset_class_breakdown(
+        self, pm_with_positions: PositionManager
+    ):
         """Verify grouping and sums."""
         book = pm_with_positions.get_book()
         assert "RATES" in book["by_asset_class"]
@@ -481,7 +493,9 @@ class TestGetBook:
         """Close a position, verify it appears in closed_today."""
         today = date.today()
         pm_with_positions.close_position(
-            2, close_price=5.1, close_date=datetime(today.year, today.month, today.day, 12, 0, 0)
+            2,
+            close_price=5.1,
+            close_date=datetime(today.year, today.month, today.day, 12, 0, 0),
         )
         book = pm_with_positions.get_book(as_of_date=today)
         assert len(book["closed_today"]) == 1
@@ -491,6 +505,7 @@ class TestGetBook:
 # =============================================================================
 # get_pnl_timeseries tests
 # =============================================================================
+
 
 class TestPnLTimeseries:
     """Tests for PositionManager.get_pnl_timeseries."""
@@ -533,13 +548,20 @@ class TestPnLTimeseries:
 # MarkToMarketService tests
 # =============================================================================
 
+
 class TestMarkToMarketService:
     """Tests for MarkToMarketService standalone."""
 
     def test_get_prices_with_override(self):
         """Manual override takes precedence."""
         svc = MarkToMarketService()
-        positions = [{"instrument": "DI1_F26", "entry_price": 90000.0, "entry_date": date(2026, 2, 20)}]
+        positions = [
+            {
+                "instrument": "DI1_F26",
+                "entry_price": 90000.0,
+                "entry_date": date(2026, 2, 20),
+            }
+        ]
         prices = svc.get_prices_for_positions(
             positions, price_overrides={"DI1_F26": 91000.0}
         )
@@ -549,7 +571,13 @@ class TestMarkToMarketService:
     def test_get_prices_fallback(self):
         """Fallback to entry_price when no override."""
         svc = MarkToMarketService()
-        positions = [{"instrument": "DI1_F26", "entry_price": 90000.0, "entry_date": date(2026, 2, 24)}]
+        positions = [
+            {
+                "instrument": "DI1_F26",
+                "entry_price": 90000.0,
+                "entry_date": date(2026, 2, 24),
+            }
+        ]
         prices = svc.get_prices_for_positions(positions, as_of_date=date(2026, 2, 24))
         assert prices["DI1_F26"]["price"] == 90000.0
         assert prices["DI1_F26"]["source"] == "entry_price_fallback"

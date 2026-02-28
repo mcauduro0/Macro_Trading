@@ -74,7 +74,9 @@ class TradeWorkflowService:
         ref_date = as_of_date or date.today()
 
         # Filter: only signals with conviction >= threshold
-        qualifying = [s for s in signals if s.get("conviction", 0) >= self.CONVICTION_MIN]
+        qualifying = [
+            s for s in signals if s.get("conviction", 0) >= self.CONVICTION_MIN
+        ]
 
         # Sort by conviction descending, take top N
         qualifying.sort(key=lambda s: s.get("conviction", 0), reverse=True)
@@ -85,7 +87,9 @@ class TradeWorkflowService:
             # Detect flip: conviction >= FLIP_THRESHOLD and opposite open position
             is_flip = False
             if signal.get("conviction", 0) >= self.FLIP_THRESHOLD:
-                opposite_dir = "SHORT" if signal.get("direction", "").upper() == "LONG" else "LONG"
+                opposite_dir = (
+                    "SHORT" if signal.get("direction", "").upper() == "LONG" else "LONG"
+                )
                 for pos in self.position_manager._positions:
                     if (
                         pos["is_open"]
@@ -106,7 +110,9 @@ class TradeWorkflowService:
                 "instrument": signal["instrument"],
                 "asset_class": signal["asset_class"],
                 "direction": signal["direction"].upper(),
-                "suggested_notional_brl": signal.get("suggested_notional_brl", 10_000_000.0),
+                "suggested_notional_brl": signal.get(
+                    "suggested_notional_brl", 10_000_000.0
+                ),
                 "conviction": signal["conviction"],
                 "signal_source": signal.get("signal_source", "aggregator"),
                 "strategy_ids": signal.get("strategy_ids", []),
@@ -488,11 +494,13 @@ class TradeWorkflowService:
             "signal_source": "DISCRETIONARY",
             "strategy_ids": strategy_ids or [],
             "rationale": manager_thesis,
-            "risk_impact": self._estimate_portfolio_impact({
-                "instrument": instrument,
-                "asset_class": asset_class,
-                "suggested_notional_brl": notional_brl,
-            }),
+            "risk_impact": self._estimate_portfolio_impact(
+                {
+                    "instrument": instrument,
+                    "asset_class": asset_class,
+                    "suggested_notional_brl": notional_brl,
+                }
+            ),
             "status": "APPROVED",
             "is_flip": False,
             "reviewed_by": "manager",
@@ -587,7 +595,9 @@ class TradeWorkflowService:
                     f"Realized P&L: {closed_position['realized_pnl_brl']:.2f} BRL"
                 ),
             }
-            content_hash = self.position_manager._compute_content_hash(**journal_content)
+            content_hash = self.position_manager._compute_content_hash(
+                **journal_content
+            )
 
             journal_entry = {
                 "id": len(self.position_manager._journal) + 1,

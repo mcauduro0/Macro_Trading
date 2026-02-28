@@ -31,11 +31,14 @@ def _make_macro_df(values: list[float], base_date: str = "2020-01-15") -> pd.Dat
         DataFrame with 'value', 'release_time', 'revision_number' columns.
     """
     dates = pd.date_range(base_date, periods=len(values), freq="MS")
-    df = pd.DataFrame({
-        "value": values,
-        "release_time": dates,
-        "revision_number": [1] * len(values),
-    }, index=dates)
+    df = pd.DataFrame(
+        {
+            "value": values,
+            "release_time": dates,
+            "revision_number": [1] * len(values),
+        },
+        index=dates,
+    )
     df.index.name = "date"
     return df
 
@@ -78,9 +81,7 @@ def _make_inf02_loader(
 
     if ipca_mom_values is None:
         # 60 months of realistic IPCA MoM data with seasonal pattern
-        ipca_mom_values = [
-            0.40 + 0.10 * (i % 12 - 6) / 6.0 for i in range(60)
-        ]
+        ipca_mom_values = [0.40 + 0.10 * (i % 12 - 6) / 6.0 for i in range(60)]
     if focus_ipca_values is None:
         # Focus forecasts that are close to actuals but not identical
         focus_ipca_values = [v + 0.02 for v in ipca_mom_values]
@@ -101,7 +102,9 @@ def _make_inf02_loader(
             return ipca_df
         if series_code.startswith("BR_FOCUS_IPCA_") and series_code.endswith("_MEDIAN"):
             return _make_macro_df(focus_ipca_values)
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -111,7 +114,9 @@ def _make_inf02_loader(
     def focus_side_effect(indicator, as_of_date, lookback_days=365):
         if indicator == "IPCA":
             return focus_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_focus_expectations.side_effect = focus_side_effect
 
@@ -274,7 +279,9 @@ def _make_inf03_loader(
     def focus_side_effect(indicator, as_of_date, lookback_days=365):
         if indicator == "IPCA":
             return focus_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_focus_expectations.side_effect = focus_side_effect
 

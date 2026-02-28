@@ -227,9 +227,7 @@ class BlackLitterman:
         omega_inv = np.linalg.inv(Omega)
 
         # Posterior covariance: inv(inv(tau*Sigma) + P^T @ Omega^-1 @ P)
-        posterior_sigma = np.linalg.inv(
-            tau_sigma_inv + P.T @ omega_inv @ P
-        )
+        posterior_sigma = np.linalg.inv(tau_sigma_inv + P.T @ omega_inv @ P)
 
         # Posterior mean
         posterior_mu = posterior_sigma @ (
@@ -274,7 +272,9 @@ class BlackLitterman:
             return {
                 "posterior_returns": dict(zip(instrument_names, equilibrium.tolist())),
                 "posterior_covariance": covariance,
-                "equilibrium_returns": dict(zip(instrument_names, equilibrium.tolist())),
+                "equilibrium_returns": dict(
+                    zip(instrument_names, equilibrium.tolist())
+                ),
                 "regime_clarity": regime_clarity,
             }
 

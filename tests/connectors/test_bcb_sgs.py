@@ -39,9 +39,7 @@ async def test_fetch_series_parses_dates_and_values():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.433/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.433/dados").respond(200, json=mock_data)
 
         async with BcbSgsConnector() as conn:
             records = await conn.fetch_series(
@@ -74,9 +72,7 @@ async def test_fetch_series_skips_empty_values():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.433/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.433/dados").respond(200, json=mock_data)
 
         async with BcbSgsConnector() as conn:
             records = await conn.fetch_series(
@@ -96,9 +92,7 @@ async def test_fetch_series_skips_empty_values():
 # ---------------------------------------------------------------------------
 def test_date_chunking_splits_long_ranges(bcb_connector):
     """Verify date ranges > 10 years are split into multiple chunks."""
-    chunks = bcb_connector._chunk_date_range(
-        date(2010, 1, 1), date(2025, 12, 31)
-    )
+    chunks = bcb_connector._chunk_date_range(date(2010, 1, 1), date(2025, 12, 31))
 
     # 16-year range should produce 2 chunks
     assert len(chunks) == 2
@@ -113,9 +107,7 @@ def test_date_chunking_splits_long_ranges(bcb_connector):
 
 def test_date_chunking_short_range_no_split(bcb_connector):
     """Verify date ranges <= 10 years return a single chunk."""
-    chunks = bcb_connector._chunk_date_range(
-        date(2020, 1, 1), date(2025, 12, 31)
-    )
+    chunks = bcb_connector._chunk_date_range(date(2020, 1, 1), date(2025, 12, 31))
 
     assert len(chunks) == 1
     assert chunks[0] == (date(2020, 1, 1), date(2025, 12, 31))
@@ -123,9 +115,7 @@ def test_date_chunking_short_range_no_split(bcb_connector):
 
 def test_date_chunking_exact_10_years(bcb_connector):
     """Verify date range of exactly 10 years returns a single chunk."""
-    chunks = bcb_connector._chunk_date_range(
-        date(2015, 1, 1), date(2024, 12, 31)
-    )
+    chunks = bcb_connector._chunk_date_range(date(2015, 1, 1), date(2024, 12, 31))
 
     assert len(chunks) == 1
     assert chunks[0] == (date(2015, 1, 1), date(2024, 12, 31))

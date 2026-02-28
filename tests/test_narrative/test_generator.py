@@ -48,12 +48,30 @@ def _make_mock_reports() -> dict[str, AgentReport]:
         as_of_date=date(2024, 1, 15),
         generated_at=datetime(2024, 1, 15, 8, 0),
         signals=[
-            _make_signal("INFLATION_BR_PHILLIPS", "inflation_agent",
-                         SignalDirection.LONG, SignalStrength.STRONG, 0.85, 1.2),
-            _make_signal("INFLATION_BR_PERSISTENCE", "inflation_agent",
-                         SignalDirection.LONG, SignalStrength.MODERATE, 0.60, 0.8),
-            _make_signal("INFLATION_BR_COMPOSITE", "inflation_agent",
-                         SignalDirection.LONG, SignalStrength.STRONG, 0.78, 1.0),
+            _make_signal(
+                "INFLATION_BR_PHILLIPS",
+                "inflation_agent",
+                SignalDirection.LONG,
+                SignalStrength.STRONG,
+                0.85,
+                1.2,
+            ),
+            _make_signal(
+                "INFLATION_BR_PERSISTENCE",
+                "inflation_agent",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.60,
+                0.8,
+            ),
+            _make_signal(
+                "INFLATION_BR_COMPOSITE",
+                "inflation_agent",
+                SignalDirection.LONG,
+                SignalStrength.STRONG,
+                0.78,
+                1.0,
+            ),
         ],
         narrative="Inflation pressures rising.",
     )
@@ -64,14 +82,38 @@ def _make_mock_reports() -> dict[str, AgentReport]:
         as_of_date=date(2024, 1, 15),
         generated_at=datetime(2024, 1, 15, 8, 0),
         signals=[
-            _make_signal("MONETARY_BR_TAYLOR", "monetary_agent",
-                         SignalDirection.SHORT, SignalStrength.STRONG, 0.90, -1.5),
-            _make_signal("MONETARY_BR_SELIC_PATH", "monetary_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.65, -0.9),
-            _make_signal("MONETARY_BR_TERM_PREMIUM", "monetary_agent",
-                         SignalDirection.NEUTRAL, SignalStrength.WEAK, 0.35, 0.1),
-            _make_signal("MONETARY_BR_COMPOSITE", "monetary_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.62, -0.7),
+            _make_signal(
+                "MONETARY_BR_TAYLOR",
+                "monetary_agent",
+                SignalDirection.SHORT,
+                SignalStrength.STRONG,
+                0.90,
+                -1.5,
+            ),
+            _make_signal(
+                "MONETARY_BR_SELIC_PATH",
+                "monetary_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.65,
+                -0.9,
+            ),
+            _make_signal(
+                "MONETARY_BR_TERM_PREMIUM",
+                "monetary_agent",
+                SignalDirection.NEUTRAL,
+                SignalStrength.WEAK,
+                0.35,
+                0.1,
+            ),
+            _make_signal(
+                "MONETARY_BR_COMPOSITE",
+                "monetary_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.62,
+                -0.7,
+            ),
         ],
         narrative="Hawkish signals from Taylor rule.",
     )
@@ -82,12 +124,30 @@ def _make_mock_reports() -> dict[str, AgentReport]:
         as_of_date=date(2024, 1, 15),
         generated_at=datetime(2024, 1, 15, 8, 0),
         signals=[
-            _make_signal("FISCAL_BR_DSA", "fiscal_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.55, -0.6),
-            _make_signal("FISCAL_BR_IMPULSE", "fiscal_agent",
-                         SignalDirection.SHORT, SignalStrength.WEAK, 0.40, -0.3),
-            _make_signal("FISCAL_BR_COMPOSITE", "fiscal_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.50, -0.5),
+            _make_signal(
+                "FISCAL_BR_DSA",
+                "fiscal_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.55,
+                -0.6,
+            ),
+            _make_signal(
+                "FISCAL_BR_IMPULSE",
+                "fiscal_agent",
+                SignalDirection.SHORT,
+                SignalStrength.WEAK,
+                0.40,
+                -0.3,
+            ),
+            _make_signal(
+                "FISCAL_BR_COMPOSITE",
+                "fiscal_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.50,
+                -0.5,
+            ),
         ],
         narrative="Fiscal deterioration ongoing.",
     )
@@ -98,16 +158,46 @@ def _make_mock_reports() -> dict[str, AgentReport]:
         as_of_date=date(2024, 1, 15),
         generated_at=datetime(2024, 1, 15, 8, 0),
         signals=[
-            _make_signal("FX_BR_BEER", "fx_agent",
-                         SignalDirection.LONG, SignalStrength.MODERATE, 0.60, 0.7),
-            _make_signal("FX_BR_CARRY", "fx_agent",
-                         SignalDirection.LONG, SignalStrength.STRONG, 0.80, 1.1),
-            _make_signal("FX_BR_FLOW", "fx_agent",
-                         SignalDirection.NEUTRAL, SignalStrength.WEAK, 0.30, 0.1),
-            _make_signal("FX_BR_CIP", "fx_agent",
-                         SignalDirection.LONG, SignalStrength.WEAK, 0.35, 0.2),
-            _make_signal("FX_BR_COMPOSITE", "fx_agent",
-                         SignalDirection.LONG, SignalStrength.MODERATE, 0.55, 0.5),
+            _make_signal(
+                "FX_BR_BEER",
+                "fx_agent",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.60,
+                0.7,
+            ),
+            _make_signal(
+                "FX_BR_CARRY",
+                "fx_agent",
+                SignalDirection.LONG,
+                SignalStrength.STRONG,
+                0.80,
+                1.1,
+            ),
+            _make_signal(
+                "FX_BR_FLOW",
+                "fx_agent",
+                SignalDirection.NEUTRAL,
+                SignalStrength.WEAK,
+                0.30,
+                0.1,
+            ),
+            _make_signal(
+                "FX_BR_CIP",
+                "fx_agent",
+                SignalDirection.LONG,
+                SignalStrength.WEAK,
+                0.35,
+                0.2,
+            ),
+            _make_signal(
+                "FX_BR_COMPOSITE",
+                "fx_agent",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.55,
+                0.5,
+            ),
         ],
         narrative="BRL undervalued vs BEER estimate.",
     )
@@ -118,12 +208,30 @@ def _make_mock_reports() -> dict[str, AgentReport]:
         as_of_date=date(2024, 1, 15),
         generated_at=datetime(2024, 1, 15, 8, 0),
         signals=[
-            _make_signal("REGIME_DETECTION", "cross_asset_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.58, -0.4),
-            _make_signal("CORRELATION_ANALYSIS", "cross_asset_agent",
-                         SignalDirection.NEUTRAL, SignalStrength.WEAK, 0.30, 0.0),
-            _make_signal("RISK_SENTIMENT_INDEX", "cross_asset_agent",
-                         SignalDirection.SHORT, SignalStrength.MODERATE, 0.55, -0.3),
+            _make_signal(
+                "REGIME_DETECTION",
+                "cross_asset_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.58,
+                -0.4,
+            ),
+            _make_signal(
+                "CORRELATION_ANALYSIS",
+                "cross_asset_agent",
+                SignalDirection.NEUTRAL,
+                SignalStrength.WEAK,
+                0.30,
+                0.0,
+            ),
+            _make_signal(
+                "RISK_SENTIMENT_INDEX",
+                "cross_asset_agent",
+                SignalDirection.SHORT,
+                SignalStrength.MODERATE,
+                0.55,
+                -0.3,
+            ),
         ],
         narrative="Regime shifting to risk-off.",
     )
@@ -168,14 +276,18 @@ class TestNarrativeGeneratorLLM:
     """Tests for the LLM generation path (mocked)."""
 
     @patch("src.narrative.generator.anthropic")
-    def test_generate_with_api_key_calls_llm(self, mock_anthropic_module: MagicMock) -> None:
+    def test_generate_with_api_key_calls_llm(
+        self, mock_anthropic_module: MagicMock
+    ) -> None:
         """Mock anthropic.Anthropic; verify client.messages.create() is called."""
         mock_client = MagicMock()
         mock_anthropic_module.Anthropic.return_value = mock_client
         mock_anthropic_module.__bool__ = lambda self: True
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="Generated macro brief with lots of words.")]
+        mock_response.content = [
+            MagicMock(text="Generated macro brief with lots of words.")
+        ]
         mock_client.messages.create.return_value = mock_response
 
         # Patch _ANTHROPIC_AVAILABLE for the import check
@@ -189,7 +301,10 @@ class TestNarrativeGeneratorLLM:
         mock_client.messages.create.assert_called_once()
 
         call_kwargs = mock_client.messages.create.call_args
-        assert call_kwargs.kwargs.get("model") or call_kwargs[1].get("model") == "claude-sonnet-4-5"
+        assert (
+            call_kwargs.kwargs.get("model")
+            or call_kwargs[1].get("model") == "claude-sonnet-4-5"
+        )
 
     @patch("src.narrative.generator.anthropic")
     def test_llm_fallback_on_api_error(self, mock_anthropic_module: MagicMock) -> None:
@@ -245,9 +360,9 @@ class TestNarrativeGeneratorTemplate:
 
         content_lower = brief.content.lower()
         for filler in ["suggests", "indicates", "appears", "seems", "likely"]:
-            assert filler not in content_lower, (
-                f"Template should not contain prose word '{filler}'"
-            )
+            assert (
+                filler not in content_lower
+            ), f"Template should not contain prose word '{filler}'"
 
     def test_template_groups_by_agent(self) -> None:
         """Each agent section appears with its signals grouped together."""
@@ -257,9 +372,9 @@ class TestNarrativeGeneratorTemplate:
 
         # Each agent_id should appear as a section header
         for agent_id in reports:
-            assert agent_id in brief.content, (
-                f"Agent '{agent_id}' not found in template output"
-            )
+            assert (
+                agent_id in brief.content
+            ), f"Agent '{agent_id}' not found in template output"
 
         # Signals within the same agent should appear together (consecutive)
         content = brief.content

@@ -47,7 +47,9 @@ class CrossAssetFeatureEngine:
         features["vix_zscore_252d"] = self._zscore_252d(data.get("vix"), col="close")
 
         features["hy_oas_bps"] = self._latest_value(data.get("hy_oas"))
-        features["hy_oas_zscore_252d"] = self._zscore_252d(data.get("hy_oas"), col="value")
+        features["hy_oas_zscore_252d"] = self._zscore_252d(
+            data.get("hy_oas"), col="value"
+        )
 
         features["dxy_level"] = self._latest_close(data.get("dxy"))
         features["dxy_zscore_252d"] = self._zscore_252d(data.get("dxy"), col="close")
@@ -56,10 +58,14 @@ class CrossAssetFeatureEngine:
         features["ust_slope_zscore_252d"] = self._compute_ust_slope_zscore(data)
 
         features["cftc_brl_net"] = self._latest_value(data.get("cftc_brl"))
-        features["cftc_brl_zscore"] = self._zscore_52w(data.get("cftc_brl"), col="value")
+        features["cftc_brl_zscore"] = self._zscore_52w(
+            data.get("cftc_brl"), col="value"
+        )
 
         features["bcb_flow_net"] = self._latest_value(data.get("bcb_flow"))
-        features["bcb_flow_zscore"] = self._zscore_52w(data.get("bcb_flow"), col="value")
+        features["bcb_flow_zscore"] = self._zscore_52w(
+            data.get("bcb_flow"), col="value"
+        )
 
         features["di_5y_rate"] = self._extract_di_5y(data.get("di_curve"))
         features["ust_5y_rate"] = self._latest_value(data.get("ust_5y"))
@@ -192,7 +198,9 @@ class CrossAssetFeatureEngine:
             if di_curve and isinstance(di_curve, dict) and len(di_curve) > 0:
                 target = 1825
                 # Ensure keys are numeric
-                numeric_keys = [k for k in di_curve.keys() if isinstance(k, (int, float))]
+                numeric_keys = [
+                    k for k in di_curve.keys() if isinstance(k, (int, float))
+                ]
                 if numeric_keys:
                     closest = min(numeric_keys, key=lambda t: abs(t - target))
                     return float(di_curve[closest])
@@ -263,9 +271,7 @@ class CrossAssetFeatureEngine:
         oil_wti = data.get("oil_wti")
         ust_2y = data.get("ust_2y")
 
-        def _extract_series(
-            df: pd.DataFrame | None, col: str
-        ) -> pd.Series | None:
+        def _extract_series(df: pd.DataFrame | None, col: str) -> pd.Series | None:
             try:
                 if df is not None and not df.empty and col in df.columns:
                     s = df[col].dropna()
@@ -348,9 +354,7 @@ class CrossAssetFeatureEngine:
     # Utility
     # ------------------------------------------------------------------
     @staticmethod
-    def _linear_scale(
-        val: float, lo: float, hi: float, invert: bool = False
-    ) -> float:
+    def _linear_scale(val: float, lo: float, hi: float, invert: bool = False) -> float:
         """Clamp val to [lo, hi], map to [0, 100], optionally invert.
 
         Args:

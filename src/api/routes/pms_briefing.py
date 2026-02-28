@@ -43,7 +43,11 @@ def _get_service():
         _service = MorningPackService(position_manager=pm, trade_workflow=tw)
         # Hydrate from DB so in-memory stores have real data
         try:
-            from src.pms.db_loader import hydrate_morning_pack_service, hydrate_trade_workflow
+            from src.pms.db_loader import (
+                hydrate_morning_pack_service,
+                hydrate_trade_workflow,
+            )
+
             hydrate_trade_workflow(tw)
             hydrate_morning_pack_service(_service)
             logger.info("MorningPackService hydrated from DB")
@@ -75,9 +79,7 @@ async def get_latest_briefing(
         svc = _get_service()
         briefing = svc.get_latest()
         if briefing is None:
-            raise HTTPException(
-                status_code=404, detail="No briefing available"
-            )
+            raise HTTPException(status_code=404, detail="No briefing available")
 
         # Cache the result
         try:

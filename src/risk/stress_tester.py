@@ -395,9 +395,7 @@ class StressTester:
                 # Cannot reach target even at max multiplier
                 results[scenario.name] = {
                     "multiplier": hi,
-                    "required_shocks": {
-                        k: v * hi for k, v in scenario.shocks.items()
-                    },
+                    "required_shocks": {k: v * hi for k, v in scenario.shocks.items()},
                     "resulting_loss_pct": pnl_at_max / portfolio_value,
                     "feasible": False,
                 }
@@ -487,7 +485,9 @@ class StressTester:
 
         for instrument, notional in positions.items():
             if instrument in historical_returns:
-                daily_rets = np.asarray(historical_returns[instrument], dtype=np.float64)
+                daily_rets = np.asarray(
+                    historical_returns[instrument], dtype=np.float64
+                )
                 # Pad shorter series with zeros
                 if len(daily_rets) < n_days:
                     padded = np.zeros(n_days)

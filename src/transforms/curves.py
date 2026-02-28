@@ -5,19 +5,24 @@ from scipy.optimize import minimize
 STANDARD_TENORS_DAYS = [30, 60, 90, 180, 365, 730, 1095, 1825, 2555, 3650]
 
 
-def nelson_siegel(tau: np.ndarray, beta0: float, beta1: float, beta2: float, lam: float) -> np.ndarray:
+def nelson_siegel(
+    tau: np.ndarray, beta0: float, beta1: float, beta2: float, lam: float
+) -> np.ndarray:
     """Nelson-Siegel formula: y(τ) = β0 + β1*[(1-e^(-τ/λ))/(τ/λ)] + β2*[(1-e^(-τ/λ))/(τ/λ) - e^(-τ/λ)]
     tau is in years. Returns rates in decimal."""
     x = tau / lam
     # Guard against division by zero
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         factor1 = np.where(x == 0, 1.0, (1 - np.exp(-x)) / x)
         factor2 = factor1 - np.exp(-x)
     return beta0 + beta1 * factor1 + beta2 * factor2
 
 
-def fit_nelson_siegel(tenors_years: np.ndarray, rates: np.ndarray) -> tuple[float, float, float, float]:
+def fit_nelson_siegel(
+    tenors_years: np.ndarray, rates: np.ndarray
+) -> tuple[float, float, float, float]:
     """Fit NS params using scipy minimize. Returns (beta0, beta1, beta2, lambda)."""
+
     def objective(params):
         b0, b1, b2, lam = params
         if lam <= 0.01:
@@ -28,7 +33,7 @@ def fit_nelson_siegel(tenors_years: np.ndarray, rates: np.ndarray) -> tuple[floa
     # Initial guess: level=long rate, slope=short-long, curvature=0, lambda=1.5
     x0 = [rates[-1], rates[0] - rates[-1], 0.0, 1.5]
     bounds = [(None, None), (None, None), (None, None), (0.05, 10.0)]
-    result = minimize(objective, x0, bounds=bounds, method='L-BFGS-B')
+    result = minimize(objective, x0, bounds=bounds, method="L-BFGS-B")
     return tuple(result.x)
 
 
@@ -60,7 +65,9 @@ def interpolate_curve(
     return dict(zip(target_tenors_days, fitted.tolist()))
 
 
-def compute_breakeven_inflation(nominal: dict[int, float], real: dict[int, float]) -> dict[int, float]:
+def compute_breakeven_inflation(
+    nominal: dict[int, float], real: dict[int, float]
+) -> dict[int, float]:
     """BEI = nominal - real at matching tenors."""
     common = set(nominal) & set(real)
     return {t: nominal[t] - real[t] for t in sorted(common)}
@@ -80,13 +87,17 @@ def compute_forward_rate(curve: dict[int, float], t1_days: int, t2_days: int) ->
     return (r2 * y2 - r1 * y1) / (y2 - y1)
 
 
-def compute_dv01(rate: float, maturity_years: float, coupon: float = 0.0, notional: float = 100.0) -> float:
+def compute_dv01(
+    rate: float, maturity_years: float, coupon: float = 0.0, notional: float = 100.0
+) -> float:
     """Dollar value of 1bp move. For zero coupon: DV01 = notional * maturity * e^(-r*T) * 0.0001."""
     discount = np.exp(-rate * maturity_years)
     return notional * maturity_years * discount * 0.0001
 
 
-def compute_carry_rolldown(curve: dict[int, float], tenor_days: int, horizon_days: int = 21) -> dict[str, float]:
+def compute_carry_rolldown(
+    curve: dict[int, float], tenor_days: int, horizon_days: int = 21
+) -> dict[str, float]:
     """Returns: carry_bps, rolldown_bps, total_bps."""
     sorted_tenors = sorted(curve.keys())
     if tenor_days not in curve:
@@ -106,4 +117,8 @@ def compute_carry_rolldown(curve: dict[int, float], tenor_days: int, horizon_day
         rates = np.interp(new_tenor, sorted_tenors, [curve[t] for t in sorted_tenors])
         rolldown_bps = (tenor_rate - float(rates)) * 10000
 
-    return {"carry_bps": carry_bps, "rolldown_bps": rolldown_bps, "total_bps": carry_bps + rolldown_bps}
+    return {
+        "carry_bps": carry_bps,
+        "rolldown_bps": rolldown_bps,
+        "total_bps": carry_bps + rolldown_bps,
+    }

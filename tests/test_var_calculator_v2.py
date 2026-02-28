@@ -64,7 +64,9 @@ class TestComputeMarginalVar:
     ) -> None:
         """Position with higher volatility should have a larger (more negative) marginal VaR."""
         returns_matrix, weights, _ = three_assets
-        marginal = compute_marginal_var(returns_matrix, weights, 0.95, method="parametric")
+        marginal = compute_marginal_var(
+            returns_matrix, weights, 0.95, method="parametric"
+        )
 
         # Marginal VaR values are negative (left tail); more negative = more risk.
         # High-vol asset (index 2) should have more negative marginal VaR than low-vol (index 0).
@@ -95,7 +97,9 @@ class TestComputeMarginalVar:
     ) -> None:
         """Historical method should also produce non-zero marginal VaR."""
         returns_matrix, weights, _ = three_assets
-        marginal = compute_marginal_var(returns_matrix, weights, 0.95, method="historical")
+        marginal = compute_marginal_var(
+            returns_matrix, weights, 0.95, method="historical"
+        )
         assert all(v != 0.0 for v in marginal.values())
 
 
@@ -189,9 +193,9 @@ class TestVaRDecomposition:
 
         # HighVol (index 2) has the highest vol, so should have most negative component VaR
         worst_contributor = min(decomp.component_var, key=decomp.component_var.get)  # type: ignore[arg-type]
-        assert worst_contributor == "HighVol", (
-            f"Expected HighVol to be largest risk contributor, got {worst_contributor}"
-        )
+        assert (
+            worst_contributor == "HighVol"
+        ), f"Expected HighVol to be largest risk contributor, got {worst_contributor}"
 
     def test_decompose_var_pct_contribution_sums_to_one(
         self, three_assets: tuple[np.ndarray, np.ndarray, list[str]]
@@ -202,9 +206,9 @@ class TestVaRDecomposition:
         decomp = calc.decompose_var(returns_matrix, weights, names, confidence=0.95)
 
         pct_sum = sum(decomp.pct_contribution.values())
-        assert abs(pct_sum - 1.0) < 0.01, (
-            f"Percentage contributions should sum to ~1.0, got {pct_sum:.6f}"
-        )
+        assert (
+            abs(pct_sum - 1.0) < 0.01
+        ), f"Percentage contributions should sum to ~1.0, got {pct_sum:.6f}"
 
     def test_decompose_var_total_var_and_cvar(
         self, three_assets: tuple[np.ndarray, np.ndarray, list[str]]
@@ -253,9 +257,9 @@ class TestLookbackDays:
 
         # If lookback works, VaR should be modest (normal returns only).
         # If lookback fails, VaR would be ~-0.50 due to extreme rows.
-        assert result.var_95 > -0.10, (
-            f"VaR 95% ({result.var_95:.4f}) too extreme -- lookback trimming may have failed"
-        )
+        assert (
+            result.var_95 > -0.10
+        ), f"VaR 95% ({result.var_95:.4f}) too extreme -- lookback trimming may have failed"
         assert result.n_observations == 756
 
     def test_decompose_var_trims_to_lookback(self, rng: np.random.Generator) -> None:
@@ -272,9 +276,9 @@ class TestLookbackDays:
         decomp = calc.decompose_var(returns_matrix, weights, names, confidence=0.95)
 
         # VaR should be modest, not influenced by the extreme rows
-        assert decomp.total_var > -0.10, (
-            f"Total VaR ({decomp.total_var:.4f}) too extreme -- lookback trimming may have failed"
-        )
+        assert (
+            decomp.total_var > -0.10
+        ), f"Total VaR ({decomp.total_var:.4f}) too extreme -- lookback trimming may have failed"
 
 
 # ---------------------------------------------------------------------------
@@ -326,12 +330,12 @@ class TestVaRAndCVaRAlwaysReported:
         calc = VaRCalculator()
         result = calc.calculate(returns, method="parametric")
 
-        assert result.cvar_95 <= result.var_95, (
-            f"CVaR 95% ({result.cvar_95:.6f}) should be <= VaR 95% ({result.var_95:.6f})"
-        )
-        assert result.cvar_99 <= result.var_99, (
-            f"CVaR 99% ({result.cvar_99:.6f}) should be <= VaR 99% ({result.var_99:.6f})"
-        )
+        assert (
+            result.cvar_95 <= result.var_95
+        ), f"CVaR 95% ({result.cvar_95:.6f}) should be <= VaR 95% ({result.var_95:.6f})"
+        assert (
+            result.cvar_99 <= result.var_99
+        ), f"CVaR 99% ({result.cvar_99:.6f}) should be <= VaR 99% ({result.var_99:.6f})"
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +366,9 @@ class TestParametricVaRLedoitWolf:
         # VaR should be negative and reasonable (not extreme)
         assert var < 0.0, f"VaR should be negative, got {var:.6f}"
         assert var > -0.10, f"VaR should be reasonable (> -10%), got {var:.6f}"
-        assert cvar < var, f"CVaR ({cvar:.6f}) should be more negative than VaR ({var:.6f})"
+        assert (
+            cvar < var
+        ), f"CVaR ({cvar:.6f}) should be more negative than VaR ({var:.6f})"
 
     def test_marginal_var_uses_ledoit_wolf(
         self, three_assets: tuple[np.ndarray, np.ndarray, list[str]]
@@ -372,8 +378,12 @@ class TestParametricVaRLedoitWolf:
 
         # This implicitly tests Ledoit-Wolf usage since the parametric method
         # calls LedoitWolf().fit() inside compute_marginal_var.
-        marginal = compute_marginal_var(returns_matrix, weights, 0.95, method="parametric")
+        marginal = compute_marginal_var(
+            returns_matrix, weights, 0.95, method="parametric"
+        )
 
         # All marginal VaRs should be negative (left tail) for parametric method
         for i, val in marginal.items():
-            assert val < 0.0, f"Marginal VaR for asset {i} should be negative, got {val:.6f}"
+            assert (
+                val < 0.0
+            ), f"Marginal VaR for asset {i} should be negative, got {val:.6f}"

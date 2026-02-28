@@ -39,6 +39,7 @@ def _partition_date(context: AssetExecutionContext) -> date:
 # Portfolio Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="portfolio",
     retry_policy=_retry_policy,
@@ -71,7 +72,9 @@ def portfolio_optimization(
     n_instruments = len(instruments)
 
     if n_instruments == 0:
-        context.log.warning("No instruments from signal aggregation, returning empty portfolio")
+        context.log.warning(
+            "No instruments from signal aggregation, returning empty portfolio"
+        )
         return {
             "status": "success",
             "date": str(as_of),
@@ -83,9 +86,7 @@ def portfolio_optimization(
     # In production, BL posterior would come from Black-Litterman model
     # using agent views and market equilibrium returns.
     # For now, report optimization readiness with instrument count.
-    context.log.info(
-        f"Portfolio optimization complete: {n_instruments} instruments"
-    )
+    context.log.info(f"Portfolio optimization complete: {n_instruments} instruments")
 
     return {
         "status": "success",
@@ -93,7 +94,9 @@ def portfolio_optimization(
         "n_instruments": n_instruments,
         "instruments": instruments,
         "optimization_method": "black_litterman_mv",
-        "target_weights": {inst: round(1.0 / max(n_instruments, 1), 6) for inst in instruments},
+        "target_weights": {
+            inst: round(1.0 / max(n_instruments, 1), 6) for inst in instruments
+        },
     }
 
 
@@ -136,10 +139,7 @@ def portfolio_sizing(
 
     # Build position data for vol_target sizing
     # In production, volatility data would come from Silver layer returns
-    positions = {
-        inst: {"volatility": 0.15, "conviction": 0.5}
-        for inst in instruments
-    }
+    positions = {inst: {"volatility": 0.15, "conviction": 0.5} for inst in instruments}
 
     sized = sizer.size_portfolio(positions, method="vol_target")
 

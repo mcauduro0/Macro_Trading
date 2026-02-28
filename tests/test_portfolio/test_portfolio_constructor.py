@@ -73,6 +73,7 @@ class TestRiskParity:
         """3 assets with equal vol and zero correlation -> approximately equal weights."""
         returns = _make_equal_vol_returns(n_obs=500, n_assets=3)
         from sklearn.covariance import LedoitWolf
+
         lw = LedoitWolf()
         lw.fit(returns)
         cov = lw.covariance_
@@ -88,6 +89,7 @@ class TestRiskParity:
         """Higher vol asset gets lower weight."""
         returns = _make_unequal_vol_returns(n_obs=500)
         from sklearn.covariance import LedoitWolf
+
         lw = LedoitWolf()
         lw.fit(returns)
         cov = lw.covariance_
@@ -129,14 +131,20 @@ class TestConvictionOverlay:
         positions = {
             "RATES_BR_01": [
                 _make_position(
-                    "RATES_BR_01", "INST_A", 0.15,
-                    confidence=0.95, strength="STRONG",
+                    "RATES_BR_01",
+                    "INST_A",
+                    0.15,
+                    confidence=0.95,
+                    strength="STRONG",
                 ),
             ],
             "RATES_BR_02": [
                 _make_position(
-                    "RATES_BR_02", "INST_B", 0.15,
-                    confidence=0.30, strength="WEAK",
+                    "RATES_BR_02",
+                    "INST_B",
+                    0.15,
+                    confidence=0.30,
+                    strength="WEAK",
                 ),
             ],
         }

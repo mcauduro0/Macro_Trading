@@ -177,15 +177,17 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "carry_score": carry_score,
-                "beer_score": beer_score,
-                "flow_score": flow_score,
-                "composite": composite,
-                "regime_score": regime_score,
-                "regime_scale_applied": weight_scale < 1.0,
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "carry_score": carry_score,
+                    "beer_score": beer_score,
+                    "flow_score": flow_score,
+                    "composite": composite,
+                    "regime_score": regime_score,
+                    "regime_scale_applied": weight_scale < 1.0,
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         return positions
 
@@ -199,7 +201,8 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         """
         # Load BR rate
         br_rate = self.data_loader.get_latest_macro_value(
-            "BR_SELIC_TARGET", as_of_date,
+            "BR_SELIC_TARGET",
+            as_of_date,
         )
         if br_rate is None:
             # Fallback: DI 1Y
@@ -216,11 +219,13 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
 
         # Load US rate
         us_rate = self.data_loader.get_latest_macro_value(
-            "US_FED_FUNDS", as_of_date,
+            "US_FED_FUNDS",
+            as_of_date,
         )
         if us_rate is None:
             us_rate = self.data_loader.get_latest_macro_value(
-                "US_SOFR", as_of_date,
+                "US_SOFR",
+                as_of_date,
             )
         if us_rate is None:
             self.log.warning("missing_us_rate", as_of_date=str(as_of_date))
@@ -230,7 +235,9 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
 
         # Load USDBRL history for realized vol
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=63,
+            "USDBRL",
+            as_of_date,
+            lookback_days=63,
         )
         if usdbrl_df.empty or len(usdbrl_df) < 21:
             self.log.warning(
@@ -262,7 +269,9 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         (long BRL = short USDBRL).
         """
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=756,
+            "USDBRL",
+            as_of_date,
+            lookback_days=756,
         )
         if usdbrl_df.empty or len(usdbrl_df) < 252:
             self.log.warning(
@@ -292,7 +301,9 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         Positive net flow => long BRL (short USDBRL).
         """
         flow_df = self.data_loader.get_flow_data(
-            "BR_FX_FLOW_NET", as_of_date, lookback_days=365,
+            "BR_FX_FLOW_NET",
+            as_of_date,
+            lookback_days=365,
         )
         if flow_df.empty or len(flow_df) < 30:
             return None
@@ -305,7 +316,9 @@ class FxBR01CarryFundamentalStrategy(BaseStrategy):
         if len(rolling_sums) < 60:
             return None
 
-        hist_window = rolling_sums.tail(252) if len(rolling_sums) >= 252 else rolling_sums
+        hist_window = (
+            rolling_sums.tail(252) if len(rolling_sums) >= 252 else rolling_sums
+        )
         mean_flow = float(hist_window.mean())
         std_flow = float(hist_window.std())
 

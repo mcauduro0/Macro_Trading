@@ -14,6 +14,7 @@ from typing import Any, Callable
 # AlertRule dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AlertRule:
     """A single evaluatable alert rule.
@@ -42,6 +43,7 @@ class AlertRule:
 # ---------------------------------------------------------------------------
 # Check functions -- each receives a context dict and returns bool
 # ---------------------------------------------------------------------------
+
 
 def _check_stale_data(ctx: dict[str, Any]) -> bool:
     """Fire when any connector's last successful run is older than threshold seconds."""

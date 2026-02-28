@@ -105,7 +105,9 @@ class Rates03BrUsSpreadStrategy(BaseStrategy):
         di_5y_tenor = find_closest_tenor(di_curve, _5Y_TENOR, _TENOR_TOLERANCE)
         ust_5y_tenor = find_closest_tenor(ust_curve, _5Y_TENOR, _TENOR_TOLERANCE)
 
-        if any(t is None for t in [di_2y_tenor, ust_2y_tenor, di_5y_tenor, ust_5y_tenor]):
+        if any(
+            t is None for t in [di_2y_tenor, ust_2y_tenor, di_5y_tenor, ust_5y_tenor]
+        ):
             self.log.warning("tenor_not_found", as_of_date=str(as_of_date))
             return []
 
@@ -195,7 +197,9 @@ class Rates03BrUsSpreadStrategy(BaseStrategy):
         strength = self.classify_strength(z_2y)
         base_confidence = min(1.0, abs(z_2y) / (self.entry_z_threshold * 3))
         confidence = min(1.0, base_confidence + confirmation_boost)
-        suggested_size = self.size_from_conviction(z_2y, max_size=self.config.max_position_size)
+        suggested_size = self.size_from_conviction(
+            z_2y, max_size=self.config.max_position_size
+        )
 
         signal = StrategySignal(
             strategy_id=self.config.strategy_id,

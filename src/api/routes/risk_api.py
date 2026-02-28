@@ -241,16 +241,35 @@ async def risk_limits():
 
             # Build a portfolio state for limit checking
             portfolio_state = {
-                "weights": {"USDBRL": 0.20, "DI_PRE": 0.30, "IBOV": 0.15, "SP500": 0.10},
+                "weights": {
+                    "USDBRL": 0.20,
+                    "DI_PRE": 0.30,
+                    "IBOV": 0.15,
+                    "SP500": 0.10,
+                },
                 "leverage": 0.75,
                 "var_95": -0.015,
                 "var_99": -0.025,
                 "drawdown_pct": 0.008,
-                "risk_contributions": {"USDBRL": 0.10, "DI_PRE": 0.15, "IBOV": 0.08, "SP500": 0.05},
+                "risk_contributions": {
+                    "USDBRL": 0.10,
+                    "DI_PRE": 0.15,
+                    "IBOV": 0.08,
+                    "SP500": 0.05,
+                },
                 "asset_class_weights": {"FX": 0.20, "RATES": 0.30, "EQUITY": 0.25},
                 "strategy_daily_pnl": {"FX_BR_01": -0.003, "RATES_BR_01": 0.002},
-                "asset_class_daily_pnl": {"FX": -0.003, "RATES": 0.002, "EQUITY": -0.001},
-                "asset_class_map": {"USDBRL": "FX", "DI_PRE": "RATES", "IBOV": "EQUITY", "SP500": "EQUITY"},
+                "asset_class_daily_pnl": {
+                    "FX": -0.003,
+                    "RATES": 0.002,
+                    "EQUITY": -0.001,
+                },
+                "asset_class_map": {
+                    "USDBRL": "FX",
+                    "DI_PRE": "RATES",
+                    "IBOV": "EQUITY",
+                    "SP500": "EQUITY",
+                },
             }
 
             result = mgr.check_all_v2(portfolio_state)
@@ -258,13 +277,15 @@ async def risk_limits():
             # Serialize limit results
             limits_out = []
             for lr in result["limit_results"]:
-                limits_out.append({
-                    "limit_name": lr.limit_name,
-                    "limit_value": lr.limit_value,
-                    "current_value": lr.current_value,
-                    "utilization_pct": round(lr.utilization_pct, 2),
-                    "breached": lr.breached,
-                })
+                limits_out.append(
+                    {
+                        "limit_name": lr.limit_name,
+                        "limit_value": lr.limit_value,
+                        "current_value": lr.current_value,
+                        "utilization_pct": round(lr.utilization_pct, 2),
+                        "breached": lr.breached,
+                    }
+                )
 
             # Loss status
             loss_status = None

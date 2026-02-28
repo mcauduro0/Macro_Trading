@@ -48,8 +48,16 @@ def render_template(
             entry = {
                 "signal_id": sig.signal_id,
                 "agent_id": sig.agent_id,
-                "direction": sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction),
-                "strength": sig.strength.value if hasattr(sig.strength, "value") else str(sig.strength),
+                "direction": (
+                    sig.direction.value
+                    if hasattr(sig.direction, "value")
+                    else str(sig.direction)
+                ),
+                "strength": (
+                    sig.strength.value
+                    if hasattr(sig.strength, "value")
+                    else str(sig.strength)
+                ),
                 "confidence": sig.confidence,
                 "value": sig.value,
             }
@@ -119,9 +127,22 @@ def render_template(
         sid = s["signal_id"].upper()
         if "INFLATION" in sid or "IPCA" in sid:
             asset_class_map["FIXED_INCOME"].append(s)
-        elif "MONETARY" in sid or "SELIC" in sid or "TAYLOR" in sid or "TERM" in sid or "RATES" in sid:
+        elif (
+            "MONETARY" in sid
+            or "SELIC" in sid
+            or "TAYLOR" in sid
+            or "TERM" in sid
+            or "RATES" in sid
+        ):
             asset_class_map["FIXED_INCOME"].append(s)
-        elif "FX" in sid or "BEER" in sid or "CARRY" in sid or "CIP" in sid or "FLOW" in sid or "USDBRL" in sid:
+        elif (
+            "FX" in sid
+            or "BEER" in sid
+            or "CARRY" in sid
+            or "CIP" in sid
+            or "FLOW" in sid
+            or "USDBRL" in sid
+        ):
             asset_class_map["FX"].append(s)
         elif "FISCAL" in sid or "DSA" in sid or "IMPULSE" in sid or "DOMINANCE" in sid:
             asset_class_map["FIXED_INCOME"].append(s)

@@ -30,9 +30,9 @@ def test_builder_produces_frozen_view():
     """CrossAssetViewBuilder.build() returns a frozen CrossAssetView."""
     builder = CrossAssetViewBuilder()
     builder.set_regime("Goldilocks")
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1
-    })
+    builder.set_regime_probabilities(
+        {"Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1}
+    )
     builder.set_as_of_date(date(2024, 6, 30))
     builder.set_risk_appetite(65.0)
     builder.set_narrative("Test narrative.")
@@ -59,9 +59,9 @@ def test_builder_validates_probabilities_sum():
     """Builder raises ValueError if probabilities do not sum to ~1.0."""
     builder = CrossAssetViewBuilder()
     builder.set_regime("Goldilocks")
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.5, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1
-    })
+    builder.set_regime_probabilities(
+        {"Goldilocks": 0.5, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1}
+    )
     builder.set_as_of_date(date(2024, 6, 30))
 
     with pytest.raises(ValueError, match="regime_probabilities must sum to"):
@@ -75,10 +75,14 @@ def test_builder_accepts_near_one_probabilities():
     """Probabilities summing to 0.9999 should be accepted (within 0.01 tol)."""
     builder = CrossAssetViewBuilder()
     builder.set_regime("Reflation")
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.25, "Reflation": 0.25,
-        "Stagflation": 0.2499, "Deflation": 0.2501
-    })
+    builder.set_regime_probabilities(
+        {
+            "Goldilocks": 0.25,
+            "Reflation": 0.25,
+            "Stagflation": 0.2499,
+            "Deflation": 0.2501,
+        }
+    )
     builder.set_as_of_date(date(2024, 6, 30))
 
     view = builder.build()
@@ -93,9 +97,9 @@ def test_builder_accepts_near_one_probabilities():
 def test_builder_raises_on_missing_regime():
     """Builder raises ValueError when regime is not set."""
     builder = CrossAssetViewBuilder()
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1
-    })
+    builder.set_regime_probabilities(
+        {"Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1}
+    )
     builder.set_as_of_date(date(2024, 6, 30))
 
     with pytest.raises(ValueError, match="regime must be set"):
@@ -199,41 +203,49 @@ def test_builder_full_population():
     """Builder populates all fields including optional ones."""
     builder = CrossAssetViewBuilder()
     builder.set_regime("Stagflation")
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.1, "Reflation": 0.1, "Stagflation": 0.6, "Deflation": 0.2
-    })
+    builder.set_regime_probabilities(
+        {"Goldilocks": 0.1, "Reflation": 0.1, "Stagflation": 0.6, "Deflation": 0.2}
+    )
     builder.set_as_of_date(date(2024, 6, 30))
     builder.set_risk_appetite(25.0)
     builder.set_narrative("Stagflation regime with elevated tail risk.")
     builder.add_risk_warning("HMM fallback: insufficient data")
     builder.add_risk_warning("VIX elevated")
 
-    builder.add_asset_class_view(AssetClassView(
-        asset_class="equities",
-        direction="SHORT",
-        conviction=0.7,
-        key_driver="stagflation_regime",
-        instruments=("IBOV_FUT",),
-    ))
+    builder.add_asset_class_view(
+        AssetClassView(
+            asset_class="equities",
+            direction="SHORT",
+            conviction=0.7,
+            key_driver="stagflation_regime",
+            instruments=("IBOV_FUT",),
+        )
+    )
 
-    builder.set_tail_risk(TailRiskAssessment(
-        composite_score=72.0,
-        regime_transition_prob=0.45,
-        assessment="critical",
-    ))
+    builder.set_tail_risk(
+        TailRiskAssessment(
+            composite_score=72.0,
+            regime_transition_prob=0.45,
+            assessment="critical",
+        )
+    )
 
-    builder.add_key_trade(KeyTrade(
-        instrument="IBOV_FUT",
-        direction="SHORT",
-        conviction=0.7,
-        rationale="Stagflation",
-    ))
+    builder.add_key_trade(
+        KeyTrade(
+            instrument="IBOV_FUT",
+            direction="SHORT",
+            conviction=0.7,
+            rationale="Stagflation",
+        )
+    )
 
-    builder.add_consistency_issue(ConsistencyIssue(
-        rule_id="TEST_RULE",
-        description="Test issue",
-        sizing_penalty=0.5,
-    ))
+    builder.add_consistency_issue(
+        ConsistencyIssue(
+            rule_id="TEST_RULE",
+            description="Test issue",
+            sizing_penalty=0.5,
+        )
+    )
 
     view = builder.build()
 
@@ -254,9 +266,9 @@ def test_builder_defaults_as_of_date():
     """Builder defaults as_of_date to today if not explicitly set."""
     builder = CrossAssetViewBuilder()
     builder.set_regime("Goldilocks")
-    builder.set_regime_probabilities({
-        "Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1
-    })
+    builder.set_regime_probabilities(
+        {"Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1}
+    )
 
     view = builder.build()
     assert view.as_of_date == date.today()

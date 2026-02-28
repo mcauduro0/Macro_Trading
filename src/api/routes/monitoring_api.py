@@ -35,6 +35,7 @@ def _get_alert_manager() -> AlertManager:
 # Response envelope (consistent with Phase 13 pattern)
 # ---------------------------------------------------------------------------
 
+
 def _envelope(data: Any) -> dict:
     return {
         "status": "ok",
@@ -46,6 +47,7 @@ def _envelope(data: Any) -> dict:
 # ---------------------------------------------------------------------------
 # Request models
 # ---------------------------------------------------------------------------
+
 
 class TestAlertRequest(BaseModel):
     channel: str = "both"  # "slack" | "email" | "both"
@@ -61,20 +63,24 @@ class RuleConfigRequest(BaseModel):
 # GET /api/v1/monitoring/alerts
 # ---------------------------------------------------------------------------
 
+
 @router.get("/alerts")
 async def get_active_alerts():
     """Return active alerts from the AlertManager (fired within cooldown window)."""
     am = _get_alert_manager()
     alerts = am.get_active_alerts()
-    return _envelope({
-        "alerts": alerts,
-        "total": len(alerts),
-    })
+    return _envelope(
+        {
+            "alerts": alerts,
+            "total": len(alerts),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # GET /api/v1/monitoring/pipeline-status
 # ---------------------------------------------------------------------------
+
 
 @router.get("/pipeline-status")
 async def get_pipeline_status():
@@ -135,16 +141,19 @@ async def get_pipeline_status():
 
     # Overall pipeline status
     all_ok = all(c["status"] == "OK" for c in connectors)
-    return _envelope({
-        "overall_status": "healthy" if all_ok else "degraded",
-        "connectors": connectors,
-        "total_connectors": len(connectors),
-    })
+    return _envelope(
+        {
+            "overall_status": "healthy" if all_ok else "degraded",
+            "connectors": connectors,
+            "total_connectors": len(connectors),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # GET /api/v1/monitoring/system-health
 # ---------------------------------------------------------------------------
+
 
 @router.get("/system-health")
 async def get_system_health():
@@ -182,15 +191,18 @@ async def get_system_health():
     else:
         overall = "degraded"
 
-    return _envelope({
-        "overall_status": overall,
-        "components": components,
-    })
+    return _envelope(
+        {
+            "overall_status": overall,
+            "components": components,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # POST /api/v1/monitoring/test-alert
 # ---------------------------------------------------------------------------
+
 
 @router.post("/test-alert")
 async def test_alert(body: TestAlertRequest | None = None):
@@ -216,8 +228,10 @@ async def test_alert(body: TestAlertRequest | None = None):
     if channel in ("email", "both"):
         results["email"] = am.send_email(test_alert)
 
-    return _envelope({
-        "test_alert": test_alert,
-        "delivery": results,
-        "channel": channel,
-    })
+    return _envelope(
+        {
+            "test_alert": test_alert,
+            "delivery": results,
+            "channel": channel,
+        }
+    )

@@ -46,6 +46,7 @@ def _get_workflow():
         # Hydrate from DB so in-memory stores have real data
         try:
             from src.pms.db_loader import hydrate_trade_workflow
+
             hydrate_trade_workflow(_workflow)
             logger.info("TradeWorkflowService hydrated from DB (trades route)")
         except Exception as exc:
@@ -79,11 +80,7 @@ async def list_proposals(
             except HTTPException:
                 raise
             if filter_date:
-                proposals = [
-                    p
-                    for p in proposals
-                    if p.get("as_of_date") == filter_date
-                ]
+                proposals = [p for p in proposals if p.get("as_of_date") == filter_date]
 
         return [TradeProposalResponse(**p) for p in proposals]
     except HTTPException:
@@ -117,9 +114,7 @@ async def get_proposal(proposal_id: int):
 # ---------------------------------------------------------------------------
 # 3. POST /pms/trades/proposals/{proposal_id}/approve
 # ---------------------------------------------------------------------------
-@router.post(
-    "/proposals/{proposal_id}/approve", response_model=TradeProposalResponse
-)
+@router.post("/proposals/{proposal_id}/approve", response_model=TradeProposalResponse)
 async def approve_proposal(
     proposal_id: int,
     body: ApproveProposalRequest,
@@ -157,9 +152,7 @@ async def approve_proposal(
 # ---------------------------------------------------------------------------
 # 4. POST /pms/trades/proposals/{proposal_id}/reject
 # ---------------------------------------------------------------------------
-@router.post(
-    "/proposals/{proposal_id}/reject", response_model=TradeProposalResponse
-)
+@router.post("/proposals/{proposal_id}/reject", response_model=TradeProposalResponse)
 async def reject_proposal(
     proposal_id: int,
     body: RejectProposalRequest,

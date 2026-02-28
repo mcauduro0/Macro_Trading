@@ -35,14 +35,17 @@ def _make_features(
 ) -> pd.DataFrame:
     """Build a DataFrame with HMM feature columns."""
     idx = pd.date_range("2020-01-01", periods=n, freq="B")
-    return pd.DataFrame({
-        "growth_z": [growth_z] * n,
-        "inflation_z": [inflation_z] * n,
-        "VIX_z": [vix_z] * n,
-        "credit_spread_z": [credit_z] * n,
-        "FX_vol_z": [fx_vol_z] * n,
-        "equity_momentum_z": [eq_mom_z] * n,
-    }, index=idx)
+    return pd.DataFrame(
+        {
+            "growth_z": [growth_z] * n,
+            "inflation_z": [inflation_z] * n,
+            "VIX_z": [vix_z] * n,
+            "credit_spread_z": [credit_z] * n,
+            "FX_vol_z": [fx_vol_z] * n,
+            "equity_momentum_z": [eq_mom_z] * n,
+        },
+        index=idx,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -183,7 +186,12 @@ def test_hmm_result_fields():
     """HMMResult has all expected fields."""
     result = HMMResult(
         regime="Goldilocks",
-        regime_probabilities={"Goldilocks": 0.7, "Reflation": 0.1, "Stagflation": 0.1, "Deflation": 0.1},
+        regime_probabilities={
+            "Goldilocks": 0.7,
+            "Reflation": 0.1,
+            "Stagflation": 0.1,
+            "Deflation": 0.1,
+        },
         method="rule_based",
         converged=False,
         warning="test warning",
@@ -229,31 +237,57 @@ def test_hmm_path_if_available():
     for i in range(n):
         if i < 50:
             # Goldilocks: high growth, low inflation
-            row = [1.5 + rng.randn() * 0.3, -0.5 + rng.randn() * 0.3,
-                   -0.5 + rng.randn() * 0.3, -0.5 + rng.randn() * 0.3,
-                   0.0 + rng.randn() * 0.3, 1.0 + rng.randn() * 0.3]
+            row = [
+                1.5 + rng.randn() * 0.3,
+                -0.5 + rng.randn() * 0.3,
+                -0.5 + rng.randn() * 0.3,
+                -0.5 + rng.randn() * 0.3,
+                0.0 + rng.randn() * 0.3,
+                1.0 + rng.randn() * 0.3,
+            ]
         elif i < 100:
             # Stagflation: low growth, high inflation
-            row = [-1.5 + rng.randn() * 0.3, 1.5 + rng.randn() * 0.3,
-                   1.5 + rng.randn() * 0.3, 1.5 + rng.randn() * 0.3,
-                   0.5 + rng.randn() * 0.3, -1.0 + rng.randn() * 0.3]
+            row = [
+                -1.5 + rng.randn() * 0.3,
+                1.5 + rng.randn() * 0.3,
+                1.5 + rng.randn() * 0.3,
+                1.5 + rng.randn() * 0.3,
+                0.5 + rng.randn() * 0.3,
+                -1.0 + rng.randn() * 0.3,
+            ]
         elif i < 150:
             # Reflation: high growth, high inflation
-            row = [1.5 + rng.randn() * 0.3, 1.5 + rng.randn() * 0.3,
-                   0.0 + rng.randn() * 0.3, 0.0 + rng.randn() * 0.3,
-                   0.0 + rng.randn() * 0.3, 1.0 + rng.randn() * 0.3]
+            row = [
+                1.5 + rng.randn() * 0.3,
+                1.5 + rng.randn() * 0.3,
+                0.0 + rng.randn() * 0.3,
+                0.0 + rng.randn() * 0.3,
+                0.0 + rng.randn() * 0.3,
+                1.0 + rng.randn() * 0.3,
+            ]
         else:
             # Deflation: low growth, low inflation
-            row = [-1.5 + rng.randn() * 0.3, -1.5 + rng.randn() * 0.3,
-                   0.5 + rng.randn() * 0.3, 0.5 + rng.randn() * 0.3,
-                   0.0 + rng.randn() * 0.3, -1.0 + rng.randn() * 0.3]
+            row = [
+                -1.5 + rng.randn() * 0.3,
+                -1.5 + rng.randn() * 0.3,
+                0.5 + rng.randn() * 0.3,
+                0.5 + rng.randn() * 0.3,
+                0.0 + rng.randn() * 0.3,
+                -1.0 + rng.randn() * 0.3,
+            ]
         data.append(row)
 
     idx = pd.date_range("2020-01-01", periods=n, freq="B")
     df = pd.DataFrame(
         data,
-        columns=["growth_z", "inflation_z", "VIX_z", "credit_spread_z",
-                 "FX_vol_z", "equity_momentum_z"],
+        columns=[
+            "growth_z",
+            "inflation_z",
+            "VIX_z",
+            "credit_spread_z",
+            "FX_vol_z",
+            "equity_momentum_z",
+        ],
         index=idx,
     )
 

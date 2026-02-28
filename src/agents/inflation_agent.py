@@ -55,8 +55,8 @@ class InflationAgent(BaseAgent):
     _IPCA_INDUSTRIAL = "BCB-10844"
     _IPCA_DIFFUSION = "BCB-21379"
     _IBC_BR = "BCB-24363"
-    _BR_UNEMPLOYMENT = "BCB-24369"    # PNAD unemployment rate (%)
-    _BR_CAPACITY_UTIL = "BCB-1344"    # NUCI capacity utilization (%)
+    _BR_UNEMPLOYMENT = "BCB-24369"  # PNAD unemployment rate (%)
+    _BR_CAPACITY_UTIL = "BCB-1344"  # NUCI capacity utilization (%)
 
     _COMPONENTS = {
         "food_home": "BCB-1637",
@@ -81,9 +81,9 @@ class InflationAgent(BaseAgent):
     _US_BREAKEVEN_10Y = "FRED-T10YIE"
     _US_MICHIGAN_1Y = "FRED-MICH"
     _US_MICHIGAN_5Y = "FRED-MICH5YR"
-    _US_OUTPUT_GAP = "FRED-GDPGAP"    # CBO output gap (% of potential)
-    _US_NROU = "FRED-NROU"            # CBO natural rate of unemployment
-    _US_UNEMP = "FRED-UNRATE"         # US unemployment rate
+    _US_OUTPUT_GAP = "FRED-GDPGAP"  # CBO output gap (% of potential)
+    _US_NROU = "FRED-NROU"  # CBO natural rate of unemployment
+    _US_UNEMP = "FRED-UNRATE"  # US unemployment rate
 
     # Market data instruments
     _USDBRL = "USDBRL"
@@ -120,14 +120,18 @@ class InflationAgent(BaseAgent):
 
         def _safe_macro(code: str, lookback: int = lookback_5y) -> pd.DataFrame | None:
             try:
-                return self.loader.get_macro_series(code, as_of_date, lookback_days=lookback)
+                return self.loader.get_macro_series(
+                    code, as_of_date, lookback_days=lookback
+                )
             except Exception as exc:
                 self.log.warning("load_macro_failed", code=code, error=str(exc))
                 return None
 
         def _safe_market(ticker: str) -> pd.DataFrame | None:
             try:
-                return self.loader.get_market_data(ticker, as_of_date, lookback_days=lookback_5y)
+                return self.loader.get_market_data(
+                    ticker, as_of_date, lookback_days=lookback_5y
+                )
             except Exception as exc:
                 self.log.warning("load_market_failed", ticker=ticker, error=str(exc))
                 return None
@@ -292,7 +296,13 @@ class InflationAgent(BaseAgent):
         as_of_date = features["_as_of_date"]
         signals = []
 
-        for model in [self.phillips, self.bottom_up, self.surprise, self.persistence, self.us_trend]:
+        for model in [
+            self.phillips,
+            self.bottom_up,
+            self.surprise,
+            self.persistence,
+            self.us_trend,
+        ]:
             try:
                 sig = model.run(features, as_of_date)
                 signals.append(sig)
@@ -328,13 +338,17 @@ class InflationAgent(BaseAgent):
             lines.append(
                 f"- {sig.signal_id}: {sig.direction.value} ({sig.strength.value}, conf={sig.confidence:.2f})"
             )
-        lines.append(f"\nComposite inflation view: {composite_direction} as of {as_of_date}")
+        lines.append(
+            f"\nComposite inflation view: {composite_direction} as of {as_of_date}"
+        )
         return "\n".join(lines)
 
     # ------------------------------------------------------------------
     # Composite signal builder
     # ------------------------------------------------------------------
-    def _build_composite(self, signals: list[AgentSignal], as_of_date: date) -> AgentSignal:
+    def _build_composite(
+        self, signals: list[AgentSignal], as_of_date: date
+    ) -> AgentSignal:
         """Weighted composite of BR inflation sub-signals.
 
         Weights: Phillips 35%, BottomUp 30%, Surprise 20%, Persistence 15%.
@@ -374,7 +388,8 @@ class InflationAgent(BaseAgent):
         active_signals = [
             sig
             for sig in signals
-            if sig.signal_id in base_weights and sig.strength != SignalStrength.NO_SIGNAL
+            if sig.signal_id in base_weights
+            and sig.strength != SignalStrength.NO_SIGNAL
         ]
 
         if not active_signals:
@@ -389,13 +404,19 @@ class InflationAgent(BaseAgent):
 
         # Majority vote for direction (count votes by weight)
         long_w = sum(
-            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.LONG
+            norm_weights[sig.signal_id]
+            for sig in active_signals
+            if sig.direction == SignalDirection.LONG
         )
         short_w = sum(
-            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.SHORT
+            norm_weights[sig.signal_id]
+            for sig in active_signals
+            if sig.direction == SignalDirection.SHORT
         )
         neutral_w = sum(
-            norm_weights[sig.signal_id] for sig in active_signals if sig.direction == SignalDirection.NEUTRAL
+            norm_weights[sig.signal_id]
+            for sig in active_signals
+            if sig.direction == SignalDirection.NEUTRAL
         )
 
         if long_w >= short_w and long_w >= neutral_w:
@@ -406,17 +427,23 @@ class InflationAgent(BaseAgent):
             plurality_direction = SignalDirection.NEUTRAL
 
         # Conflict detection: >= 2 signals disagree with plurality
-        disagreements = sum(1 for sig in active_signals if sig.direction != plurality_direction)
+        disagreements = sum(
+            1 for sig in active_signals if sig.direction != plurality_direction
+        )
         dampening = 0.70 if disagreements >= 2 else 1.0
 
         # Weighted confidence with dampening
-        composite_confidence = sum(
-            norm_weights[sig.signal_id] * sig.confidence for sig in active_signals
-        ) * dampening
+        composite_confidence = (
+            sum(norm_weights[sig.signal_id] * sig.confidence for sig in active_signals)
+            * dampening
+        )
         composite_confidence = round(min(1.0, composite_confidence), 4)
         strength = classify_strength(composite_confidence)
 
-        effective_weights = {sig.signal_id: round(norm_weights[sig.signal_id], 4) for sig in active_signals}
+        effective_weights = {
+            sig.signal_id: round(norm_weights[sig.signal_id], 4)
+            for sig in active_signals
+        }
         sub_directions = {sig.signal_id: sig.direction.value for sig in active_signals}
 
         return AgentSignal(
@@ -449,7 +476,11 @@ class InflationAgent(BaseAgent):
             ipca_df = data.get("ipca")
             focus_df = data.get("focus")
 
-            if ipca_df is None or not isinstance(ipca_df, pd.DataFrame) or ipca_df.empty:
+            if (
+                ipca_df is None
+                or not isinstance(ipca_df, pd.DataFrame)
+                or ipca_df.empty
+            ):
                 return pd.DataFrame(columns=["actual_mom", "focus_mom_median"])
 
             # Get IPCA MoM (actual)
@@ -459,11 +490,17 @@ class InflationAgent(BaseAgent):
             actual = actual.resample("ME").last()
 
             # Get Focus 12M median (used as MoM consensus proxy)
-            if focus_df is None or not isinstance(focus_df, pd.DataFrame) or focus_df.empty:
+            if (
+                focus_df is None
+                or not isinstance(focus_df, pd.DataFrame)
+                or focus_df.empty
+            ):
                 return pd.DataFrame(columns=["actual_mom", "focus_mom_median"])
 
             # Focus 12M expectations as MoM proxy (divide YoY by 12)
-            focus_val_col = "ipca_12m" if "ipca_12m" in focus_df.columns else focus_df.columns[0]
+            focus_val_col = (
+                "ipca_12m" if "ipca_12m" in focus_df.columns else focus_df.columns[0]
+            )
             focus_series = focus_df[[focus_val_col]].copy()
             focus_series.index = pd.to_datetime(focus_series.index)
             focus_monthly = focus_series.resample("ME").last()
@@ -526,9 +563,9 @@ class PhillipsCurveModel:
 
     SIGNAL_ID = "INFLATION_BR_PHILLIPS"
     AGENT_ID = "inflation_agent"
-    MIN_OBS = 36   # minimum observations to fit
-    WINDOW = 120   # 10-year rolling window (months)
-    TARGET = 3.0   # BCB inflation target %
+    MIN_OBS = 36  # minimum observations to fit
+    WINDOW = 120  # 10-year rolling window (months)
+    TARGET = 3.0  # BCB inflation target %
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
         """Fit OLS on trailing window, predict, and return signal.
@@ -560,7 +597,11 @@ class PhillipsCurveModel:
 
             # Prefer composite_activity_gap (blends output gap + unemployment + capacity)
             # Fall back to output_gap if composite not available
-            gap_col = "composite_activity_gap" if "composite_activity_gap" in window_df.columns else "output_gap"
+            gap_col = (
+                "composite_activity_gap"
+                if "composite_activity_gap" in window_df.columns
+                else "output_gap"
+            )
             x_cols = ["expectations_12m", gap_col, "usdbrl_yoy", "crb_yoy"]
 
             # Fill missing regressors with column means (allow partial obs)
@@ -586,7 +627,11 @@ class PhillipsCurveModel:
             for col in x_cols:
                 # Use the last non-NaN value from the full ols_df
                 col_series = ols_df[col].dropna()
-                latest_x[col] = float(col_series.iloc[-1]) if not col_series.empty else float(X_clean[col].mean())
+                latest_x[col] = (
+                    float(col_series.iloc[-1])
+                    if not col_series.empty
+                    else float(X_clean[col].mean())
+                )
 
             latest_df = pd.DataFrame([latest_x])[x_cols]
             latest_const = sm.add_constant(latest_df, has_constant="add")
@@ -657,8 +702,8 @@ class IpcaBottomUpModel:
 
     SIGNAL_ID = "INFLATION_BR_BOTTOMUP"
     AGENT_ID = "inflation_agent"
-    TARGET = 3.0    # BCB inflation target %
-    BAND = 1.5      # tolerance band (±1.5pp from target)
+    TARGET = 3.0  # BCB inflation target %
+    BAND = 1.5  # tolerance band (±1.5pp from target)
 
     IBGE_WEIGHTS: dict[str, float] = {
         "food_home": 0.21,
@@ -689,7 +734,9 @@ class IpcaBottomUpModel:
         no_signal = self._no_signal(as_of_date, "insufficient_data")
 
         try:
-            raw_components: dict[str, pd.DataFrame] = features.get("_raw_components", {})
+            raw_components: dict[str, pd.DataFrame] = features.get(
+                "_raw_components", {}
+            )
             if not raw_components:
                 return no_signal
 
@@ -743,7 +790,9 @@ class IpcaBottomUpModel:
                     monthly_details.append({"month": proj_month, "seasonal_mom": mom})
 
                 # 12M compounded cumulative from 12 MoM values
-                annual_forecast = (np.prod([1.0 + m / 100.0 for m in projected_moms]) - 1.0) * 100.0
+                annual_forecast = (
+                    np.prod([1.0 + m / 100.0 for m in projected_moms]) - 1.0
+                ) * 100.0
                 component_forecasts[component] = annual_forecast
                 components_used[component] = {
                     "forecast_12m": annual_forecast,
@@ -752,20 +801,23 @@ class IpcaBottomUpModel:
                 }
 
             if len(component_forecasts) < 3:
-                return self._no_signal(as_of_date, f"only {len(component_forecasts)} components available")
+                return self._no_signal(
+                    as_of_date, f"only {len(component_forecasts)} components available"
+                )
 
             # Weighted aggregate
             # Re-normalize weights to available components
-            available_weight = sum(
-                self.IBGE_WEIGHTS[c] for c in component_forecasts
-            )
+            available_weight = sum(self.IBGE_WEIGHTS[c] for c in component_forecasts)
             if available_weight <= 0:
                 return no_signal
 
-            forecast_12m = sum(
-                component_forecasts[c] * self.IBGE_WEIGHTS[c]
-                for c in component_forecasts
-            ) / available_weight
+            forecast_12m = (
+                sum(
+                    component_forecasts[c] * self.IBGE_WEIGHTS[c]
+                    for c in component_forecasts
+                )
+                / available_weight
+            )
 
             # Signal generation
             gap = forecast_12m - self.TARGET
@@ -836,7 +888,7 @@ class InflationSurpriseModel:
 
     SIGNAL_ID = "INFLATION_BR_SURPRISE"
     AGENT_ID = "inflation_agent"
-    Z_FIRE = 1.0    # |z| > 1.0 → signal fires
+    Z_FIRE = 1.0  # |z| > 1.0 → signal fires
     Z_STRONG = 2.0  # |z| > 2.0 → STRONG
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
@@ -855,18 +907,27 @@ class InflationSurpriseModel:
         try:
             surprise_df: pd.DataFrame = features.get("_surprise_series", pd.DataFrame())
 
-            if surprise_df is None or not isinstance(surprise_df, pd.DataFrame) or surprise_df.empty:
+            if (
+                surprise_df is None
+                or not isinstance(surprise_df, pd.DataFrame)
+                or surprise_df.empty
+            ):
                 return self._no_signal(as_of_date, "no_surprise_series")
 
             if len(surprise_df) < 12:
                 return self._no_signal(as_of_date, "insufficient_data_lt_12m")
 
             # Ensure required columns exist
-            if "actual_mom" not in surprise_df.columns or "focus_mom_median" not in surprise_df.columns:
+            if (
+                "actual_mom" not in surprise_df.columns
+                or "focus_mom_median" not in surprise_df.columns
+            ):
                 return self._no_signal(as_of_date, "missing_columns")
 
             # Monthly surprise = actual - consensus (in pp)
-            monthly_surprise = surprise_df["actual_mom"] - surprise_df["focus_mom_median"]
+            monthly_surprise = (
+                surprise_df["actual_mom"] - surprise_df["focus_mom_median"]
+            )
 
             # Rolling 3M average
             rolling_3m = monthly_surprise.rolling(3).mean()
@@ -910,7 +971,9 @@ class InflationSurpriseModel:
 
             # Strength and confidence
             if abs(z_score) >= self.Z_STRONG:
-                confidence = max(0.85, min(1.0, 0.85 + (abs(z_score) - self.Z_STRONG) * 0.05))
+                confidence = max(
+                    0.85, min(1.0, 0.85 + (abs(z_score) - self.Z_STRONG) * 0.05)
+                )
                 strength = SignalStrength.STRONG
             else:
                 confidence = min(abs(z_score) / 2.0, 1.0)
@@ -969,9 +1032,14 @@ class InflationPersistenceModel:
 
     SIGNAL_ID = "INFLATION_BR_PERSISTENCE"
     AGENT_ID = "inflation_agent"
-    WEIGHTS = {"diffusion": 0.25, "core_accel": 0.25, "services_mom": 0.25, "expectations": 0.25}
+    WEIGHTS = {
+        "diffusion": 0.25,
+        "core_accel": 0.25,
+        "services_mom": 0.25,
+        "expectations": 0.25,
+    }
     HIGH_THRESHOLD = 60.0  # score > 60 → LONG (sticky inflation)
-    LOW_THRESHOLD = 40.0   # score < 40 → SHORT (falling)
+    LOW_THRESHOLD = 40.0  # score < 40 → SHORT (falling)
 
     def run(self, features: dict, as_of_date: date) -> AgentSignal:
         """Compute persistence composite score and return directional signal.
@@ -996,7 +1064,11 @@ class InflationPersistenceModel:
             ipca_core_raw = features.get("ipca_core_smoothed", np.nan)
             # Try to get DataFrame-based core series for momentum computation
             raw_ols = features.get("_raw_ols_data")
-            if raw_ols is not None and isinstance(raw_ols, pd.DataFrame) and not raw_ols.empty:
+            if (
+                raw_ols is not None
+                and isinstance(raw_ols, pd.DataFrame)
+                and not raw_ols.empty
+            ):
                 core_series = raw_ols["core_yoy"].dropna()
                 if len(core_series) >= 6:
                     avg_3m = float(core_series.iloc[-3:].mean())
@@ -1021,7 +1093,9 @@ class InflationPersistenceModel:
             if not pd.isna(focus_12m):
                 bcb_target = 3.0
                 # anchoring_sub = max(0, 100 - |focus - target| * 20)
-                anchoring_sub = float(max(0.0, 100.0 - abs(focus_12m - bcb_target) * 20.0))
+                anchoring_sub = float(
+                    max(0.0, 100.0 - abs(focus_12m - bcb_target) * 20.0)
+                )
                 sub_scores["expectations"] = anchoring_sub
 
             # If all 4 components are NaN → NO_SIGNAL
@@ -1139,13 +1213,23 @@ class UsInflationTrendModel:
                 else:
                     direction = SignalDirection.NEUTRAL
             elif pce_yoy_valid:
-                direction = SignalDirection.LONG if target_gap > 0 else (
-                    SignalDirection.SHORT if target_gap < 0 else SignalDirection.NEUTRAL
+                direction = (
+                    SignalDirection.LONG
+                    if target_gap > 0
+                    else (
+                        SignalDirection.SHORT
+                        if target_gap < 0
+                        else SignalDirection.NEUTRAL
+                    )
                 )
             else:
                 gap_3m = float(pce_3m_saar) - self.FED_TARGET  # type: ignore[arg-type]
-                direction = SignalDirection.LONG if gap_3m > 0 else (
-                    SignalDirection.SHORT if gap_3m < 0 else SignalDirection.NEUTRAL
+                direction = (
+                    SignalDirection.LONG
+                    if gap_3m > 0
+                    else (
+                        SignalDirection.SHORT if gap_3m < 0 else SignalDirection.NEUTRAL
+                    )
                 )
 
             # Base confidence: 2pp above target = full confidence
@@ -1181,7 +1265,9 @@ class UsInflationTrendModel:
                 metadata={
                     "pce_3m_saar": float(pce_3m_saar) if pce_3m_valid else None,
                     "target_gap_pp": target_gap,
-                    "supercore_momentum": float(supercore_mom) if supercore_valid else None,
+                    "supercore_momentum": (
+                        float(supercore_mom) if supercore_valid else None
+                    ),
                 },
             )
 

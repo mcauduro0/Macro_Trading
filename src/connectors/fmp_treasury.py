@@ -52,18 +52,18 @@ class FmpTreasuryConnector(BaseConnector):
     # Tenor mapping: FMP JSON key -> (tenor_label, tenor_days)
     # Using the same tenor_days as TreasuryGovConnector for consistency
     TENOR_MAP: dict[str, tuple[str, int]] = {
-        "month1":  ("1M",  30),
-        "month2":  ("2M",  60),
-        "month3":  ("3M",  90),
-        "month6":  ("6M",  180),
-        "year1":   ("1Y",  365),
-        "year2":   ("2Y",  730),
-        "year3":   ("3Y",  1095),
-        "year5":   ("5Y",  1825),
-        "year7":   ("7Y",  2555),
-        "year10":  ("10Y", 3650),
-        "year20":  ("20Y", 7300),
-        "year30":  ("30Y", 10950),
+        "month1": ("1M", 30),
+        "month2": ("2M", 60),
+        "month3": ("3M", 90),
+        "month6": ("6M", 180),
+        "year1": ("1Y", 365),
+        "year2": ("2Y", 730),
+        "year3": ("3Y", 1095),
+        "year5": ("5Y", 1825),
+        "year7": ("7Y", 2555),
+        "year10": ("10Y", 3650),
+        "year20": ("20Y", 7300),
+        "year30": ("30Y", 10950),
     }
 
     # -----------------------------------------------------------------------
@@ -130,15 +130,17 @@ class FmpTreasuryConnector(BaseConnector):
                 # Convert percentage to decimal (4.52 -> 0.0452)
                 rate_decimal = rate_pct / 100.0
 
-                records.append({
-                    "curve_id": "UST_NOM",
-                    "curve_date": curve_date,
-                    "tenor_days": tenor_days,
-                    "tenor_label": tenor_label,
-                    "rate": rate_decimal,
-                    "curve_type": "sovereign_nominal",
-                    "source": "FMP",
-                })
+                records.append(
+                    {
+                        "curve_id": "UST_NOM",
+                        "curve_date": curve_date,
+                        "tenor_days": tenor_days,
+                        "tenor_label": tenor_label,
+                        "rate": rate_decimal,
+                        "curve_type": "sovereign_nominal",
+                        "source": "FMP",
+                    }
+                )
 
         self.log.info(
             "fmp_treasury_chunk_parsed",
@@ -203,6 +205,4 @@ class FmpTreasuryConnector(BaseConnector):
         Returns:
             Number of rows actually inserted (excludes conflicts).
         """
-        return await self._bulk_insert(
-            CurveData, records, "uq_curves_natural_key"
-        )
+        return await self._bulk_insert(CurveData, records, "uq_curves_natural_key")

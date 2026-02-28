@@ -69,6 +69,5 @@ def parse_numeric_value(raw: str, decimal_sep: str = ".") -> float | None:
         return float(cleaned)
     except ValueError:
         raise ValueError(
-            f"Cannot parse '{raw}' as a numeric value "
-            f"(decimal_sep='{decimal_sep}')"
+            f"Cannot parse '{raw}' as a numeric value " f"(decimal_sep='{decimal_sep}')"
         )

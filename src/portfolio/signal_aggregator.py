@@ -171,7 +171,9 @@ class SignalAggregator:
         results: list[AggregatedSignal] = []
         for asset_class in AGGREGATION_ASSET_CLASSES:
             signal = self._aggregate_asset_class(
-                asset_class, agent_reports, regime_score,
+                asset_class,
+                agent_reports,
+                regime_score,
             )
             results.append(signal)
 
@@ -205,11 +207,13 @@ class SignalAggregator:
         conflicts: dict[AssetClass, list[str]] = {}
         for ac, pos_list in ac_positions.items():
             long_strats = [
-                p for p in pos_list
+                p
+                for p in pos_list
                 if p.direction == SignalDirection.LONG and abs(p.weight) > 1e-9
             ]
             short_strats = [
-                p for p in pos_list
+                p
+                for p in pos_list
                 if p.direction == SignalDirection.SHORT and abs(p.weight) > 1e-9
             ]
 
@@ -255,12 +259,14 @@ class SignalAggregator:
             weight_total += weight
             confidence_values.append(signal.confidence)
 
-            contributing.append({
-                "agent_id": agent_id,
-                "direction": signal.direction.value,
-                "weight": weight,
-                "confidence": signal.confidence,
-            })
+            contributing.append(
+                {
+                    "agent_id": agent_id,
+                    "direction": signal.direction.value,
+                    "weight": weight,
+                    "confidence": signal.confidence,
+                }
+            )
 
         # Normalize by non-zero weight sum
         if weight_total > 0:

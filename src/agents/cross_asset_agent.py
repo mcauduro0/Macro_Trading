@@ -111,7 +111,7 @@ class RegimeDetectionModel:
         if score > 0.2:
             direction = SignalDirection.SHORT  # risk-off
         elif score < -0.2:
-            direction = SignalDirection.LONG   # risk-on
+            direction = SignalDirection.LONG  # risk-on
         else:
             direction = SignalDirection.NEUTRAL
 
@@ -354,15 +354,14 @@ class RiskSentimentIndex:
             return _no_signal("zero_weight")
 
         composite_score = sum(
-            available[k] * self.WEIGHTS.get(k, 0.0) / total_weight
-            for k in available
+            available[k] * self.WEIGHTS.get(k, 0.0) / total_weight for k in available
         )
 
         # Direction
         if composite_score < 30:
             direction = SignalDirection.SHORT  # fear
         elif composite_score > 70:
-            direction = SignalDirection.LONG   # greed
+            direction = SignalDirection.LONG  # greed
         else:
             direction = SignalDirection.NEUTRAL
 
@@ -382,7 +381,8 @@ class RiskSentimentIndex:
             metadata={
                 "composite_score": round(composite_score, 2),
                 "components": {
-                    k: round(v, 2) for k, v in components.items()
+                    k: round(v, 2)
+                    for k, v in components.items()
                     if not (isinstance(v, float) and np.isnan(v))
                 },
                 "n_components": len(available),
@@ -443,22 +443,94 @@ class CrossAssetAgent(BaseAgent):
                 self.log.warning("data_load_failed", key=key, error=str(exc))
                 data[key] = None
 
-        _safe_load("vix", self.loader.get_market_data, "VIX", as_of_date, lookback_days=756)
-        _safe_load("dxy", self.loader.get_market_data, "DXY", as_of_date, lookback_days=756)
-        _safe_load("ibovespa", self.loader.get_market_data, "IBOVESPA", as_of_date, lookback_days=756)
-        _safe_load("sp500", self.loader.get_market_data, "SP500", as_of_date, lookback_days=756)
-        _safe_load("oil_wti", self.loader.get_market_data, "OIL_WTI", as_of_date, lookback_days=756)
-        _safe_load("usdbrl_ptax", self.loader.get_market_data, "USDBRL_PTAX", as_of_date, lookback_days=756)
-        _safe_load("hy_oas", self.loader.get_macro_series, "FRED-BAMLH0A0HYM2", as_of_date, lookback_days=756)
-        _safe_load("ust_2y", self.loader.get_macro_series, "FRED-DGS2", as_of_date, lookback_days=756)
-        _safe_load("ust_10y", self.loader.get_macro_series, "FRED-DGS10", as_of_date, lookback_days=756)
-        _safe_load("ust_5y", self.loader.get_macro_series, "FRED-DGS5", as_of_date, lookback_days=756)
-        _safe_load("cftc_brl", self.loader.get_flow_data, "CFTC_6L_LEVERAGED_NET", as_of_date, lookback_days=756)
-        _safe_load("bcb_flow", self.loader.get_flow_data, "BR_FX_FLOW_COMMERCIAL", as_of_date, lookback_days=365)
+        _safe_load(
+            "vix", self.loader.get_market_data, "VIX", as_of_date, lookback_days=756
+        )
+        _safe_load(
+            "dxy", self.loader.get_market_data, "DXY", as_of_date, lookback_days=756
+        )
+        _safe_load(
+            "ibovespa",
+            self.loader.get_market_data,
+            "IBOVESPA",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "sp500", self.loader.get_market_data, "SP500", as_of_date, lookback_days=756
+        )
+        _safe_load(
+            "oil_wti",
+            self.loader.get_market_data,
+            "OIL_WTI",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "usdbrl_ptax",
+            self.loader.get_market_data,
+            "USDBRL_PTAX",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "hy_oas",
+            self.loader.get_macro_series,
+            "FRED-BAMLH0A0HYM2",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "ust_2y",
+            self.loader.get_macro_series,
+            "FRED-DGS2",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "ust_10y",
+            self.loader.get_macro_series,
+            "FRED-DGS10",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "ust_5y",
+            self.loader.get_macro_series,
+            "FRED-DGS5",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "cftc_brl",
+            self.loader.get_flow_data,
+            "CFTC_6L_LEVERAGED_NET",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "bcb_flow",
+            self.loader.get_flow_data,
+            "BR_FX_FLOW_COMMERCIAL",
+            as_of_date,
+            lookback_days=365,
+        )
 
         # v2: Growth and inflation z-score series for HMM features
-        _safe_load("growth_proxy", self.loader.get_macro_series, "BR_IBC_BR_YOY", as_of_date, lookback_days=756)
-        _safe_load("ipca_12m", self.loader.get_macro_series, "BR_IPCA_12M", as_of_date, lookback_days=756)
+        _safe_load(
+            "growth_proxy",
+            self.loader.get_macro_series,
+            "BR_IBC_BR_YOY",
+            as_of_date,
+            lookback_days=756,
+        )
+        _safe_load(
+            "ipca_12m",
+            self.loader.get_macro_series,
+            "BR_IPCA_12M",
+            as_of_date,
+            lookback_days=756,
+        )
 
         # DI curve for credit proxy
         try:
@@ -546,31 +618,37 @@ class CrossAssetAgent(BaseAgent):
         sentiment_sig = signals[2] if len(signals) > 2 else None
 
         # FX view
-        builder.add_asset_class_view(AssetClassView(
-            asset_class="FX",
-            direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
-            conviction=regime_sig.confidence if regime_sig else 0.0,
-            key_driver="regime_risk_off_on",
-            instruments=("USDBRL",),
-        ))
+        builder.add_asset_class_view(
+            AssetClassView(
+                asset_class="FX",
+                direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
+                conviction=regime_sig.confidence if regime_sig else 0.0,
+                key_driver="regime_risk_off_on",
+                instruments=("USDBRL",),
+            )
+        )
 
         # Rates view
-        builder.add_asset_class_view(AssetClassView(
-            asset_class="rates",
-            direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
-            conviction=regime_sig.confidence if regime_sig else 0.0,
-            key_driver="regime_composite",
-            instruments=("DI_PRE", "NTN_B_REAL"),
-        ))
+        builder.add_asset_class_view(
+            AssetClassView(
+                asset_class="rates",
+                direction=regime_sig.direction.value if regime_sig else "NEUTRAL",
+                conviction=regime_sig.confidence if regime_sig else 0.0,
+                key_driver="regime_composite",
+                instruments=("DI_PRE", "NTN_B_REAL"),
+            )
+        )
 
         # Equities view
-        builder.add_asset_class_view(AssetClassView(
-            asset_class="equities",
-            direction=sentiment_sig.direction.value if sentiment_sig else "NEUTRAL",
-            conviction=sentiment_sig.confidence if sentiment_sig else 0.0,
-            key_driver="risk_sentiment_index",
-            instruments=("IBOV_FUT",),
-        ))
+        builder.add_asset_class_view(
+            AssetClassView(
+                asset_class="equities",
+                direction=sentiment_sig.direction.value if sentiment_sig else "NEUTRAL",
+                conviction=sentiment_sig.confidence if sentiment_sig else 0.0,
+                key_driver="risk_sentiment_index",
+                instruments=("IBOV_FUT",),
+            )
+        )
 
         # --- Risk appetite ---
         if sentiment_sig:
@@ -578,7 +656,9 @@ class CrossAssetAgent(BaseAgent):
 
         # --- Tail risk ---
         regime_probs = hmm_result.regime_probabilities
-        regime_transition_prob = regime_probs.get("Stagflation", 0.0) + regime_probs.get("Deflation", 0.0)
+        regime_transition_prob = regime_probs.get(
+            "Stagflation", 0.0
+        ) + regime_probs.get("Deflation", 0.0)
 
         vix_z = features.get("vix_zscore_252d", 0.0)
         if isinstance(vix_z, float) and np.isnan(vix_z):
@@ -587,9 +667,15 @@ class CrossAssetAgent(BaseAgent):
         if isinstance(credit_z, float) and np.isnan(credit_z):
             credit_z = 0.0
 
-        tail_composite = min(100.0, max(0.0,
-            30.0 * abs(vix_z) + 30.0 * abs(credit_z) + 40.0 * regime_transition_prob
-        ))
+        tail_composite = min(
+            100.0,
+            max(
+                0.0,
+                30.0 * abs(vix_z)
+                + 30.0 * abs(credit_z)
+                + 40.0 * regime_transition_prob,
+            ),
+        )
 
         if tail_composite >= 70:
             assessment = "critical"
@@ -600,28 +686,32 @@ class CrossAssetAgent(BaseAgent):
         else:
             assessment = "low"
 
-        builder.set_tail_risk(TailRiskAssessment(
-            composite_score=round(tail_composite, 2),
-            regime_transition_prob=round(regime_transition_prob, 4),
-            market_indicators=(
-                ("VIX_z", round(vix_z, 4)),
-                ("credit_spread_z", round(credit_z, 4)),
-            ),
-            assessment=assessment,
-        ))
+        builder.set_tail_risk(
+            TailRiskAssessment(
+                composite_score=round(tail_composite, 2),
+                regime_transition_prob=round(regime_transition_prob, 4),
+                market_indicators=(
+                    ("VIX_z", round(vix_z, 4)),
+                    ("credit_spread_z", round(credit_z, 4)),
+                ),
+                assessment=assessment,
+            )
+        )
 
         # --- Key trades: top-3 by confidence ---
         trade_candidates = []
         for sig in signals:
             if sig.direction != SignalDirection.NEUTRAL and sig.confidence > 0:
                 instrument = sig.signal_id.replace("CROSSASSET_", "")
-                trade_candidates.append(KeyTrade(
-                    instrument=instrument,
-                    direction=sig.direction.value,
-                    conviction=sig.confidence,
-                    rationale=f"{sig.signal_id} signal ({sig.strength.value})",
-                    strategy_id="cross_asset_agent",
-                ))
+                trade_candidates.append(
+                    KeyTrade(
+                        instrument=instrument,
+                        direction=sig.direction.value,
+                        conviction=sig.confidence,
+                        rationale=f"{sig.signal_id} signal ({sig.strength.value})",
+                        strategy_id="cross_asset_agent",
+                    )
+                )
 
         trade_candidates.sort(key=lambda t: t.conviction, reverse=True)
         for trade in trade_candidates[:3]:
@@ -677,7 +767,9 @@ class CrossAssetAgent(BaseAgent):
         growth_z = -regime_comps.get("ust_slope", 0.0) if regime_comps else 0.0
 
         # Inflation: use credit proxy or dxy as inflation proxy
-        inflation_z = credit_z * 0.5  # credit spread partially reflects inflation expectations
+        inflation_z = (
+            credit_z * 0.5
+        )  # credit spread partially reflects inflation expectations
 
         # Replace NaN with 0
         def _safe(v: float) -> float:
@@ -728,9 +820,7 @@ class CrossAssetAgent(BaseAgent):
         if sentiment_sig:
             sent_val = sentiment_sig.value
             sent_dir = sentiment_sig.direction.value
-            sentences.append(
-                f"Risk sentiment at {sent_val:.0f}/100 ({sent_dir})."
-            )
+            sentences.append(f"Risk sentiment at {sent_val:.0f}/100 ({sent_dir}).")
 
         if regime_transition_prob > 0.3:
             sentences.append(
@@ -739,9 +829,7 @@ class CrossAssetAgent(BaseAgent):
             )
 
         if key_trades:
-            trade_strs = [
-                f"{t.direction} {t.instrument}" for t in key_trades[:3]
-            ]
+            trade_strs = [f"{t.direction} {t.instrument}" for t in key_trades[:3]]
             sentences.append(f"Key trades: {', '.join(trade_strs)}.")
 
         if hmm_result.warning:

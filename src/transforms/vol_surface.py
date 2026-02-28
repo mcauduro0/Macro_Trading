@@ -24,7 +24,7 @@ def reconstruct_smile(
 def compute_iv_rv_ratio(implied: float, realized: float) -> float:
     """Implied vol / realized vol ratio. >1 = vol premium."""
     if realized <= 0:
-        return float('nan')
+        return float("nan")
     return implied / realized
 
 
@@ -33,7 +33,9 @@ def compute_vol_slope(short_vol: float, long_vol: float) -> float:
     return long_vol - short_vol
 
 
-def compute_vol_zscore(current_vol: float, vol_history: np.ndarray, window: int = 252) -> float:
+def compute_vol_zscore(
+    current_vol: float, vol_history: np.ndarray, window: int = 252
+) -> float:
     """Z-score of current vol vs historical window."""
     history = vol_history[-window:] if len(vol_history) > window else vol_history
     if len(history) < 2:

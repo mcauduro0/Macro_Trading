@@ -122,10 +122,18 @@ class MonetaryFeatureEngine:
             di_10y_raw = float(row.get("tenor_10y", np.nan))
 
             # Heuristic: if max rate < 1.0 it's decimal, convert to percentage
-            max_rate = max(
-                r for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]
-                if not np.isnan(r)
-            ) if any(not np.isnan(r) for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]) else np.nan
+            max_rate = (
+                max(
+                    r
+                    for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]
+                    if not np.isnan(r)
+                )
+                if any(
+                    not np.isnan(r)
+                    for r in [di_1y_raw, di_2y_raw, di_5y_raw, di_10y_raw]
+                )
+                else np.nan
+            )
 
             if not np.isnan(max_rate) and max_rate < 1.0:
                 scale = 100.0
@@ -146,14 +154,24 @@ class MonetaryFeatureEngine:
             f["di_long_premium"] = di_10y - di_5y
         except Exception as exc:
             logger.warning("di_curve_features_failed: %s", exc)
-            for key in ("di_1y", "di_2y", "di_5y", "di_10y", "di_slope", "di_belly", "di_long_premium"):
+            for key in (
+                "di_1y",
+                "di_2y",
+                "di_5y",
+                "di_10y",
+                "di_slope",
+                "di_belly",
+                "di_long_premium",
+            ):
                 f[key] = np.nan
         return f
 
     # -----------------------------------------------------------------------
     # BCB policy features
     # -----------------------------------------------------------------------
-    def _compute_bcb_policy_features(self, data: dict, features: dict) -> dict[str, Any]:
+    def _compute_bcb_policy_features(
+        self, data: dict, features: dict
+    ) -> dict[str, Any]:
         """Compute Selic, Focus, and policy gap features."""
         f: dict[str, Any] = {}
         try:
@@ -204,7 +222,9 @@ class MonetaryFeatureEngine:
             if selic_df is not None and len(selic_df) >= 4:
                 selic_vals = selic_df["value"].dropna()
                 if len(selic_vals) >= 4:
-                    f["policy_inertia"] = float(selic_vals.iloc[-1] - selic_vals.iloc[-4])
+                    f["policy_inertia"] = float(
+                        selic_vals.iloc[-1] - selic_vals.iloc[-4]
+                    )
                 else:
                     f["policy_inertia"] = 0.0
             else:
@@ -243,7 +263,9 @@ class MonetaryFeatureEngine:
     # -----------------------------------------------------------------------
     # Labor market & composite activity gap
     # -----------------------------------------------------------------------
-    def _compute_labor_activity_features(self, data: dict, features: dict) -> dict[str, Any]:
+    def _compute_labor_activity_features(
+        self, data: dict, features: dict
+    ) -> dict[str, Any]:
         """Compute unemployment gap and composite activity gap for Taylor rule.
 
         Unemployment gap = NAIRU_proxy - actual (positive = tight labor market).
@@ -283,7 +305,9 @@ class MonetaryFeatureEngine:
                     f["br_capacity_util"] = float(vals.iloc[-1])
                     if len(vals) >= 24:
                         trend = _hp_filter_trend(vals, lamb=14400.0)
-                        f["br_capacity_gap"] = float(vals.iloc[-1]) - float(trend.iloc[-1])
+                        f["br_capacity_gap"] = float(vals.iloc[-1]) - float(
+                            trend.iloc[-1]
+                        )
         except Exception as exc:
             logger.warning("capacity_gap_failed: %s", exc)
 
@@ -385,7 +409,11 @@ class MonetaryFeatureEngine:
                 and not np.isnan(focus_ipca_12m)
             ):
                 # Resample to monthly (last obs per month) for a stable z-score
-                rates = di_10y_hist["rate"] if "rate" in di_10y_hist.columns else di_10y_hist["value"]
+                rates = (
+                    di_10y_hist["rate"]
+                    if "rate" in di_10y_hist.columns
+                    else di_10y_hist["value"]
+                )
                 tp_series = rates - (focus_ipca_12m + 3.5)
                 # Take last 24 monthly observations
                 tp_monthly = tp_series.resample("ME").last().dropna().tail(24)
@@ -429,9 +457,11 @@ class MonetaryFeatureEngine:
                 raw_10y = float(row.get("ust_10y", np.nan))
 
                 # Heuristic: if max UST rate < 1.0 it's decimal, convert to pct
-                max_ust = max(
-                    r for r in [raw_2y, raw_5y, raw_10y] if not np.isnan(r)
-                ) if any(not np.isnan(r) for r in [raw_2y, raw_5y, raw_10y]) else np.nan
+                max_ust = (
+                    max(r for r in [raw_2y, raw_5y, raw_10y] if not np.isnan(r))
+                    if any(not np.isnan(r) for r in [raw_2y, raw_5y, raw_10y])
+                    else np.nan
+                )
                 ust_scale = 100.0 if (not np.isnan(max_ust) and max_ust < 1.0) else 1.0
 
                 f["ust_2y"] = raw_2y * ust_scale

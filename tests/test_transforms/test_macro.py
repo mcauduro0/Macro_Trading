@@ -28,7 +28,7 @@ class TestYoyFromMom:
         """If MoM is constant at 0.5% for 12 months, YoY = (1.005^12 - 1)*100."""
         mom = pd.Series([0.5] * 24)  # 24 months of 0.5%
         yoy = yoy_from_mom(mom)
-        expected = ((1.005 ** 12) - 1) * 100  # ~ 6.17%
+        expected = ((1.005**12) - 1) * 100  # ~ 6.17%
         # First 11 values are NaN (need 12 months of data)
         valid = yoy.dropna()
         assert len(valid) == 13  # indices 11..23
@@ -45,7 +45,7 @@ class TestYoyFromMom:
         """12 months of exactly 1% MoM should give YoY = (1.01^12 - 1)*100."""
         mom = pd.Series([1.0] * 12)
         yoy = yoy_from_mom(mom)
-        expected = ((1.01 ** 12) - 1) * 100  # ~ 12.68%
+        expected = ((1.01**12) - 1) * 100  # ~ 12.68%
         assert abs(yoy.iloc[-1] - expected) < 0.01
 
     def test_negative_deflation(self):
@@ -73,52 +73,62 @@ class TestComputeDiffusionIndex:
 
     def test_all_positive_gives_100(self):
         """If all components are positive, diffusion = 100."""
-        df = pd.DataFrame({
-            "food": [0.5, 0.3, 0.8],
-            "housing": [0.2, 0.4, 0.1],
-            "transport": [0.1, 0.6, 0.3],
-        })
+        df = pd.DataFrame(
+            {
+                "food": [0.5, 0.3, 0.8],
+                "housing": [0.2, 0.4, 0.1],
+                "transport": [0.1, 0.6, 0.3],
+            }
+        )
         di = compute_diffusion_index(df)
         np.testing.assert_allclose(di, 100.0)
 
     def test_all_negative_gives_0(self):
         """If all components are negative, diffusion = 0."""
-        df = pd.DataFrame({
-            "food": [-0.5, -0.3],
-            "housing": [-0.2, -0.4],
-            "transport": [-0.1, -0.6],
-        })
+        df = pd.DataFrame(
+            {
+                "food": [-0.5, -0.3],
+                "housing": [-0.2, -0.4],
+                "transport": [-0.1, -0.6],
+            }
+        )
         di = compute_diffusion_index(df)
         np.testing.assert_allclose(di, 0.0)
 
     def test_mixed_gives_partial(self):
         """2 of 4 positive -> 50%."""
-        df = pd.DataFrame({
-            "food": [0.5],
-            "housing": [-0.2],
-            "transport": [0.1],
-            "clothing": [-0.3],
-        })
+        df = pd.DataFrame(
+            {
+                "food": [0.5],
+                "housing": [-0.2],
+                "transport": [0.1],
+                "clothing": [-0.3],
+            }
+        )
         di = compute_diffusion_index(df)
         assert abs(di.iloc[0] - 50.0) < 1e-10
 
     def test_zero_counted_as_not_positive(self):
         """Components at exactly 0 are not > 0, so should not count as positive."""
-        df = pd.DataFrame({
-            "a": [0.0],
-            "b": [0.0],
-            "c": [1.0],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [0.0],
+                "b": [0.0],
+                "c": [1.0],
+            }
+        )
         di = compute_diffusion_index(df)
         assert abs(di.iloc[0] - (1.0 / 3.0) * 100) < 1e-6
 
     def test_nan_handling(self):
         """NaN components should be excluded from the denominator."""
-        df = pd.DataFrame({
-            "a": [0.5],
-            "b": [np.nan],
-            "c": [-0.1],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [0.5],
+                "b": [np.nan],
+                "c": [-0.1],
+            }
+        )
         di = compute_diffusion_index(df)
         # 1 positive out of 2 non-NaN = 50%
         assert abs(di.iloc[0] - 50.0) < 1e-10
@@ -272,7 +282,7 @@ class TestAnnualizeMonthlyRate:
         mom = pd.Series([0.5] * 10)
         saar = annualize_monthly_rate(mom, window=3)
         valid = saar.dropna()
-        expected = ((1.005 ** 12) - 1) * 100
+        expected = ((1.005**12) - 1) * 100
         np.testing.assert_allclose(valid, expected, atol=0.01)
 
     def test_zero_monthly_gives_zero_saar(self):

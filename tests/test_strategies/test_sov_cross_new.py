@@ -24,7 +24,8 @@ from src.strategies.sov_03_rating_migration import Sov03RatingMigrationStrategy
 # Helpers
 # ---------------------------------------------------------------------------
 def _make_macro_df(
-    values: list[float], base_date: str = "2020-01-15",
+    values: list[float],
+    base_date: str = "2020-01-15",
 ) -> pd.DataFrame:
     """Create a mock macro series DataFrame.
 
@@ -36,17 +37,21 @@ def _make_macro_df(
         DataFrame with 'value', 'release_time', 'revision_number' columns.
     """
     dates = pd.date_range(base_date, periods=len(values), freq="MS")
-    df = pd.DataFrame({
-        "value": values,
-        "release_time": dates,
-        "revision_number": [1] * len(values),
-    }, index=dates)
+    df = pd.DataFrame(
+        {
+            "value": values,
+            "release_time": dates,
+            "revision_number": [1] * len(values),
+        },
+        index=dates,
+    )
     df.index.name = "date"
     return df
 
 
 def _make_market_df(
-    closes: list[float], base_date: str = "2023-01-02",
+    closes: list[float],
+    base_date: str = "2023-01-02",
 ) -> pd.DataFrame:
     """Create a mock market data DataFrame.
 
@@ -58,20 +63,24 @@ def _make_market_df(
         DataFrame with OHLCV columns and date index.
     """
     dates = pd.date_range(base_date, periods=len(closes), freq="B")
-    df = pd.DataFrame({
-        "open": closes,
-        "high": [c * 1.01 for c in closes],
-        "low": [c * 0.99 for c in closes],
-        "close": closes,
-        "volume": [1e6] * len(closes),
-        "adjusted_close": closes,
-    }, index=dates)
+    df = pd.DataFrame(
+        {
+            "open": closes,
+            "high": [c * 1.01 for c in closes],
+            "low": [c * 0.99 for c in closes],
+            "close": closes,
+            "volume": [1e6] * len(closes),
+            "adjusted_close": closes,
+        },
+        index=dates,
+    )
     df.index.name = "date"
     return df
 
 
 def _make_curve_history(
-    rates: list[float], base_date: str = "2023-01-02",
+    rates: list[float],
+    base_date: str = "2023-01-02",
 ) -> pd.DataFrame:
     """Create a mock curve history DataFrame.
 
@@ -115,7 +124,9 @@ def _make_sov01_loader(
             return cds_5y_df
         if series_code == "BR_CDS_1Y" and cds_1y_values is not None:
             return _make_macro_df(cds_1y_values)
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -220,7 +231,9 @@ def _make_sov02_loader(
     def macro_series_side_effect(series_code, as_of_date, lookback_days=3650):
         if series_code == "BR_CDS_5Y":
             return cds_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -312,7 +325,9 @@ def _make_sov03_loader(
     def macro_series_side_effect(series_code, as_of_date, lookback_days=3650):
         if series_code == "BR_CDS_5Y":
             return cds_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -413,7 +428,9 @@ def _make_cross01_loader(
             return growth_df
         if series_code == "BR_IPCA_12M":
             return infl_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -438,7 +455,7 @@ class TestCross01GoldilocksRegime:
         """Growth up (4%) + inflation low (3%) => Goldilocks."""
         loader = _make_cross01_loader(
             gdp_growth=4.0,  # above history mean ~2.0
-            ipca_12m=3.0,    # below history mean ~4.5
+            ipca_12m=3.0,  # below history mean ~4.5
         )
         strategy = Cross01RegimeAllocationStrategy(data_loader=loader)
         signals = strategy.generate_signals(date(2025, 6, 15))
@@ -460,16 +477,14 @@ class TestCross01StagflationRegime:
         """Growth down (0.5%) + inflation high (8%) => Stagflation => SHORT equities."""
         loader = _make_cross01_loader(
             gdp_growth=0.5,  # below mean
-            ipca_12m=8.0,    # well above mean
+            ipca_12m=8.0,  # well above mean
         )
         strategy = Cross01RegimeAllocationStrategy(data_loader=loader)
         signals = strategy.generate_signals(date(2025, 6, 15))
 
         assert len(signals) >= 1
         # Find equity signal
-        equity_signals = [
-            s for s in signals if "IBOV_FUT" in s.instruments
-        ]
+        equity_signals = [s for s in signals if "IBOV_FUT" in s.instruments]
         assert len(equity_signals) == 1
         assert equity_signals[0].direction == SignalDirection.SHORT
 
@@ -494,7 +509,10 @@ class TestCross01RegimeMetadata:
             assert "inflation_z" in meta
             assert "regime_confidence" in meta
             assert meta["regime"] in [
-                "Goldilocks", "Reflation", "Stagflation", "Deflation",
+                "Goldilocks",
+                "Reflation",
+                "Stagflation",
+                "Deflation",
             ]
 
 
@@ -563,7 +581,15 @@ def _make_cross02_loader(
         if ticker == "IBOVESPA":
             return ibov_df
         return pd.DataFrame(
-            columns=["date", "open", "high", "low", "close", "volume", "adjusted_close"],
+            columns=[
+                "date",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "adjusted_close",
+            ],
         )
 
     loader.get_market_data.side_effect = market_data_side_effect
@@ -571,7 +597,9 @@ def _make_cross02_loader(
     def macro_series_side_effect(series_code, as_of_date, lookback_days=3650):
         if series_code == "BR_CDS_5Y":
             return cds_df
-        return pd.DataFrame(columns=["date", "value", "release_time", "revision_number"])
+        return pd.DataFrame(
+            columns=["date", "value", "release_time", "revision_number"]
+        )
 
     loader.get_macro_series.side_effect = macro_series_side_effect
 
@@ -618,13 +646,53 @@ class TestCross02RiskOn:
     def test_low_vix_low_cds_strong_momentum_risk_on(self) -> None:
         """Low VIX + low CDS + strong equity momentum => risk-on trades."""
         # VIX at historic lows => -vix_z strongly positive (risk-on)
-        vix_closes = [30.0] * 280 + [28.0, 26.0, 24.0, 22.0, 20.0, 18.0, 16.0, 14.0, 12.0, 10.0,
-                                      10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 8.0]
+        vix_closes = [30.0] * 280 + [
+            28.0,
+            26.0,
+            24.0,
+            22.0,
+            20.0,
+            18.0,
+            16.0,
+            14.0,
+            12.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            10.0,
+            8.0,
+        ]
 
         # CDS declining sharply => -cds_z strongly positive
         cds_values = [250.0] * 280
-        cds_values += [240.0, 230.0, 220.0, 210.0, 200.0, 190.0, 180.0, 170.0, 160.0, 150.0,
-                       140.0, 130.0, 120.0, 110.0, 105.0, 100.0, 95.0, 90.0, 85.0, 80.0]
+        cds_values += [
+            240.0,
+            230.0,
+            220.0,
+            210.0,
+            200.0,
+            190.0,
+            180.0,
+            170.0,
+            160.0,
+            150.0,
+            140.0,
+            130.0,
+            120.0,
+            110.0,
+            105.0,
+            100.0,
+            95.0,
+            90.0,
+            85.0,
+            80.0,
+        ]
 
         # Strong equity momentum (sharply rising after flat base)
         ibov_closes = [100000.0] * 230 + [100000.0 + 1500.0 * i for i in range(70)]
@@ -730,7 +798,15 @@ class TestCross02MissingData:
     def test_all_missing_returns_empty(self) -> None:
         loader = MagicMock()
         loader.get_market_data.return_value = pd.DataFrame(
-            columns=["date", "open", "high", "low", "close", "volume", "adjusted_close"],
+            columns=[
+                "date",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "adjusted_close",
+            ],
         )
         loader.get_macro_series.return_value = pd.DataFrame(
             columns=["date", "value", "release_time", "revision_number"],

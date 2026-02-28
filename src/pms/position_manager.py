@@ -63,7 +63,9 @@ class PositionManager:
         self.mtm_service = mtm_service or MarkToMarketService()
         self.cost_model = cost_model or TransactionCostModel()
         self.aum = aum
-        self._positions: list[dict] = []  # In-memory position store (DB wiring in Phase 21)
+        self._positions: list[dict] = (
+            []
+        )  # In-memory position store (DB wiring in Phase 21)
         self._journal: list[dict] = []  # In-memory journal store
         self._pnl_history: list[dict] = []  # In-memory P&L snapshots
 
@@ -116,13 +118,21 @@ class PositionManager:
         effective_date = entry_date or today
 
         # Compute USD notional if FX rate provided
-        notional_usd = notional_brl / entry_fx_rate if entry_fx_rate and entry_fx_rate > 0 else None
+        notional_usd = (
+            notional_brl / entry_fx_rate
+            if entry_fx_rate and entry_fx_rate > 0
+            else None
+        )
 
         # Risk metrics at entry
         entry_dv01 = 0.0
         entry_delta = 0.0
 
-        if asset_class.upper() == "RATES" and rate_pct is not None and business_days is not None:
+        if (
+            asset_class.upper() == "RATES"
+            and rate_pct is not None
+            and business_days is not None
+        ):
             pu = rate_to_pu(rate_pct, business_days)
             entry_dv01 = compute_dv01_from_pu(pu, rate_pct, business_days, notional_brl)
 
@@ -264,7 +274,9 @@ class PositionManager:
         )
 
         # Subtract exit transaction cost
-        exit_cost = self.cost_model.get_cost(position["instrument"], position["notional_brl"])
+        exit_cost = self.cost_model.get_cost(
+            position["instrument"], position["notional_brl"]
+        )
         realized_pnl_brl -= exit_cost
 
         realized_pnl_usd = compute_pnl_usd(realized_pnl_brl, fx_rate)
@@ -278,7 +290,9 @@ class PositionManager:
         position["unrealized_pnl_brl"] = 0.0
         position["unrealized_pnl_usd"] = 0.0
         position["updated_at"] = now
-        position["transaction_cost_brl"] = (position.get("transaction_cost_brl") or 0.0) + exit_cost
+        position["transaction_cost_brl"] = (
+            position.get("transaction_cost_brl") or 0.0
+        ) + exit_cost
 
         # Create journal entry
         journal_content = {
@@ -395,7 +409,9 @@ class PositionManager:
                     "delta": mtm["current_delta"],
                     "var_contribution": None,
                     "fx_rate": fx_rate,
-                    "is_manual_override": bool(price_overrides and instrument in price_overrides),
+                    "is_manual_override": bool(
+                        price_overrides and instrument in price_overrides
+                    ),
                 }
                 self._pnl_history.append(snapshot)
 
@@ -432,7 +448,9 @@ class PositionManager:
         for p in closed_positions:
             closed_at = p.get("closed_at")
             if closed_at is not None:
-                close_date = closed_at.date() if isinstance(closed_at, datetime) else closed_at
+                close_date = (
+                    closed_at.date() if isinstance(closed_at, datetime) else closed_at
+                )
                 if close_date == ref_date:
                     closed_today.append(p)
 
@@ -469,7 +487,11 @@ class PositionManager:
                 pnl_today_brl += daily_brl
                 pnl_today_usd += daily_usd
 
-            if isinstance(snap_date, date) and snap_date.year == ref_date.year and snap_date.month == ref_date.month:
+            if (
+                isinstance(snap_date, date)
+                and snap_date.year == ref_date.year
+                and snap_date.month == ref_date.month
+            ):
                 pnl_mtd_brl += daily_brl
                 pnl_mtd_usd += daily_usd
 
@@ -489,7 +511,9 @@ class PositionManager:
                 }
             by_asset_class[ac]["count"] += 1
             by_asset_class[ac]["notional_brl"] += abs(p["notional_brl"])
-            by_asset_class[ac]["unrealized_pnl_brl"] += p.get("unrealized_pnl_brl") or 0.0
+            by_asset_class[ac]["unrealized_pnl_brl"] += (
+                p.get("unrealized_pnl_brl") or 0.0
+            )
 
         return {
             "summary": {
@@ -538,10 +562,18 @@ class PositionManager:
             filtered = [s for s in filtered if s.get("position_id") == position_id]
 
         if start_date is not None:
-            filtered = [s for s in filtered if s.get("snapshot_date") and s["snapshot_date"] >= start_date]
+            filtered = [
+                s
+                for s in filtered
+                if s.get("snapshot_date") and s["snapshot_date"] >= start_date
+            ]
 
         if end_date is not None:
-            filtered = [s for s in filtered if s.get("snapshot_date") and s["snapshot_date"] <= end_date]
+            filtered = [
+                s
+                for s in filtered
+                if s.get("snapshot_date") and s["snapshot_date"] <= end_date
+            ]
 
         if position_id is not None:
             return sorted(filtered, key=lambda s: s.get("snapshot_date", date.min))
@@ -562,8 +594,12 @@ class PositionManager:
                 }
             by_date[snap_date]["daily_pnl_brl"] += snap.get("daily_pnl_brl") or 0.0
             by_date[snap_date]["daily_pnl_usd"] += snap.get("daily_pnl_usd") or 0.0
-            by_date[snap_date]["cumulative_pnl_brl"] += snap.get("cumulative_pnl_brl") or 0.0
-            by_date[snap_date]["unrealized_pnl_brl"] += snap.get("unrealized_pnl_brl") or 0.0
+            by_date[snap_date]["cumulative_pnl_brl"] += (
+                snap.get("cumulative_pnl_brl") or 0.0
+            )
+            by_date[snap_date]["unrealized_pnl_brl"] += (
+                snap.get("unrealized_pnl_brl") or 0.0
+            )
 
         return sorted(by_date.values(), key=lambda s: s.get("snapshot_date", date.min))
 

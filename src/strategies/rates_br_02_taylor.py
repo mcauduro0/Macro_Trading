@@ -179,11 +179,13 @@ class RatesBR02TaylorStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "taylor_rate": taylor_rate,
-                "market_rate": market_rate,
-                "gap_bps": gap_bps,
-            })
+            pos.metadata.update(
+                {
+                    "taylor_rate": taylor_rate,
+                    "market_rate": market_rate,
+                    "gap_bps": gap_bps,
+                }
+            )
 
         return positions
 

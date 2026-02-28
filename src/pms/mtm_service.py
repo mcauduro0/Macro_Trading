@@ -108,7 +108,9 @@ class MarkToMarketService:
                 entry_date = pos.get("entry_date", ref_date)
                 if isinstance(entry_date, str):
                     entry_date = date.fromisoformat(entry_date)
-                staleness = (ref_date - entry_date).days if isinstance(entry_date, date) else 0
+                staleness = (
+                    (ref_date - entry_date).days if isinstance(entry_date, date) else 0
+                )
                 is_stale = staleness > self.STALE_THRESHOLD_DAYS
 
                 if is_stale:
@@ -174,7 +176,9 @@ class MarkToMarketService:
             business_days = position.get("business_days", 252)
             if rate_pct and business_days:
                 pu = rate_to_pu(rate_pct, business_days)
-                current_dv01 = compute_dv01_from_pu(pu, rate_pct, business_days, notional_brl)
+                current_dv01 = compute_dv01_from_pu(
+                    pu, rate_pct, business_days, notional_brl
+                )
         elif asset_class.upper() == "FX":
             current_delta = compute_fx_delta(notional_brl, fx_rate)
 
@@ -211,7 +215,9 @@ class MarkToMarketService:
         """
         pu = rate_to_pu(rate_pct, business_days)
         dv01 = compute_dv01_from_pu(pu, rate_pct, business_days, notional_brl)
-        logger.debug("dv01_computed", instrument=instrument, dv01=dv01, rate_pct=rate_pct)
+        logger.debug(
+            "dv01_computed", instrument=instrument, dv01=dv01, rate_pct=rate_pct
+        )
         return dv01
 
     def compute_var_contributions(

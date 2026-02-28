@@ -294,15 +294,17 @@ class RatesBR03SlopeStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "z_score": z_score,
-                "current_slope": current_slope,
-                "cycle_direction": cycle_direction,
-                "tenor_2y": tenor_2y,
-                "tenor_5y": tenor_5y,
-                "trade_type": "flattener" if raw_weight_sign > 0 else "steepener",
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "z_score": z_score,
+                    "current_slope": current_slope,
+                    "cycle_direction": cycle_direction,
+                    "tenor_2y": tenor_2y,
+                    "tenor_5y": tenor_5y,
+                    "trade_type": "flattener" if raw_weight_sign > 0 else "steepener",
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         self.log.info(
             "slope_signal_generated",

@@ -41,9 +41,7 @@ async def test_fetch_parses_dates_and_values():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.5364/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.5364/dados").respond(200, json=mock_data)
 
         async with StnFiscalConnector() as conn:
             records = await conn._fetch_series(
@@ -78,9 +76,7 @@ async def test_fetch_parses_dates_and_values():
 async def test_fetch_with_empty_response():
     """Verify connector returns empty list for empty API response."""
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.5364/dados").respond(
-            200, json=[]
-        )
+        mock.get("/dados/serie/bcdata.sgs.5364/dados").respond(200, json=[])
 
         async with StnFiscalConnector() as conn:
             records = await conn._fetch_series(
@@ -107,9 +103,7 @@ async def test_fetch_skips_invalid_entries():
     ]
 
     with respx.mock(base_url="https://api.bcb.gov.br") as mock:
-        mock.get("/dados/serie/bcdata.sgs.13762/dados").respond(
-            200, json=mock_data
-        )
+        mock.get("/dados/serie/bcdata.sgs.13762/dados").respond(200, json=mock_data)
 
         async with StnFiscalConnector() as conn:
             records = await conn._fetch_series(
@@ -163,9 +157,12 @@ async def test_fiscal_metric_mapping_primary_balance():
 
         async with StnFiscalConnector() as conn:
             records = await conn._fetch_series(
-                "BR_PRIMARY_BALANCE_MONTHLY", 5364,
-                "PRIMARY_BALANCE", "BRL_MM",
-                date(2025, 1, 1), date(2025, 1, 31),
+                "BR_PRIMARY_BALANCE_MONTHLY",
+                5364,
+                "PRIMARY_BALANCE",
+                "BRL_MM",
+                date(2025, 1, 1),
+                date(2025, 1, 31),
             )
 
     assert records[0]["fiscal_metric"] == "PRIMARY_BALANCE"
@@ -182,9 +179,12 @@ async def test_fiscal_metric_mapping_gross_debt():
 
         async with StnFiscalConnector() as conn:
             records = await conn._fetch_series(
-                "BR_GROSS_DEBT_GDP", 13762,
-                "GROSS_DEBT_GDP", "PERCENT",
-                date(2025, 1, 1), date(2025, 1, 31),
+                "BR_GROSS_DEBT_GDP",
+                13762,
+                "GROSS_DEBT_GDP",
+                "PERCENT",
+                date(2025, 1, 1),
+                date(2025, 1, 31),
             )
 
     assert records[0]["fiscal_metric"] == "GROSS_DEBT_GDP"
@@ -337,4 +337,5 @@ def test_connector_constants():
 def test_connector_inherits_from_base_connector():
     """Verify StnFiscalConnector inherits from BaseConnector."""
     from src.connectors.base import BaseConnector
+
     assert issubclass(StnFiscalConnector, BaseConnector)

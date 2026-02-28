@@ -133,7 +133,9 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
 
         # --- USDBRL spot and vol for sizing / stop / take-profit ---
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=_MOMENTUM_HISTORY_LOOKBACK,
+            "USDBRL",
+            as_of_date,
+            lookback_days=_MOMENTUM_HISTORY_LOOKBACK,
         )
         if usdbrl_df.empty or len(usdbrl_df) < _VOL_WINDOW + 1:
             return []
@@ -152,7 +154,9 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         suggested_size = base_size * vol_scale
 
         # Stop-loss: vol-based
-        stop_distance = _STOP_LOSS_VOL_MULT * daily_vol * math.sqrt(_HOLDING_PERIOD) * spot
+        stop_distance = (
+            _STOP_LOSS_VOL_MULT * daily_vol * math.sqrt(_HOLDING_PERIOD) * spot
+        )
         if direction == SignalDirection.SHORT:
             stop_loss = spot + stop_distance
             take_profit = spot - _TAKE_PROFIT_RATIO * stop_distance
@@ -199,14 +203,16 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         Returns None if data is missing.
         """
         br_rate = self.data_loader.get_latest_macro_value(
-            "BR_SELIC_TARGET", as_of_date,
+            "BR_SELIC_TARGET",
+            as_of_date,
         )
         if br_rate is None:
             self.log.warning("fx02_missing_br_rate", as_of_date=str(as_of_date))
             return None
 
         us_rate = self.data_loader.get_latest_macro_value(
-            "US_FED_FUNDS", as_of_date,
+            "US_FED_FUNDS",
+            as_of_date,
         )
         if us_rate is None:
             self.log.warning("fx02_missing_us_rate", as_of_date=str(as_of_date))
@@ -216,10 +222,14 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
 
         # Build spread history over lookback
         macro_df = self.data_loader.get_macro_series(
-            "BR_SELIC_TARGET", as_of_date, lookback_days=_CARRY_LOOKBACK + 100,
+            "BR_SELIC_TARGET",
+            as_of_date,
+            lookback_days=_CARRY_LOOKBACK + 100,
         )
         us_macro_df = self.data_loader.get_macro_series(
-            "US_FED_FUNDS", as_of_date, lookback_days=_CARRY_LOOKBACK + 100,
+            "US_FED_FUNDS",
+            as_of_date,
+            lookback_days=_CARRY_LOOKBACK + 100,
         )
 
         if macro_df.empty or us_macro_df.empty:
@@ -231,16 +241,16 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         br_values = macro_df["value"].reindex(
             macro_df.index.union(us_macro_df.index), method="ffill"
         )
-        us_values = us_macro_df["value"].reindex(
-            br_values.index, method="ffill"
-        )
+        us_values = us_macro_df["value"].reindex(br_values.index, method="ffill")
         spread_history = (br_values - us_values).dropna()
 
         if len(spread_history) < 10:
             return None
 
         history_list = spread_history.tail(_CARRY_LOOKBACK).tolist()
-        return self.compute_z_score(current_spread, history_list, window=_CARRY_LOOKBACK)
+        return self.compute_z_score(
+            current_spread, history_list, window=_CARRY_LOOKBACK
+        )
 
     # ------------------------------------------------------------------
     # Component 2: Momentum z-score
@@ -251,7 +261,9 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         Returns None if insufficient data.
         """
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=_MOMENTUM_HISTORY_LOOKBACK + 100,
+            "USDBRL",
+            as_of_date,
+            lookback_days=_MOMENTUM_HISTORY_LOOKBACK + 100,
         )
         if usdbrl_df.empty or len(usdbrl_df) < _MOMENTUM_RETURN_WINDOW + 10:
             self.log.warning(
@@ -263,7 +275,9 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         closes = usdbrl_df["close"]
 
         # Compute rolling 63-day log returns
-        log_returns_63d = np.log(closes / closes.shift(_MOMENTUM_RETURN_WINDOW)).dropna()
+        log_returns_63d = np.log(
+            closes / closes.shift(_MOMENTUM_RETURN_WINDOW)
+        ).dropna()
 
         if len(log_returns_63d) < 20:
             return None
@@ -272,5 +286,7 @@ class Fx02CarryMomentumStrategy(BaseStrategy):
         history_list = log_returns_63d.tail(_MOMENTUM_HISTORY_LOOKBACK).tolist()
 
         return self.compute_z_score(
-            current_return, history_list, window=_MOMENTUM_HISTORY_LOOKBACK,
+            current_return,
+            history_list,
+            window=_MOMENTUM_HISTORY_LOOKBACK,
         )

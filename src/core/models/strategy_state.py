@@ -7,6 +7,7 @@ and by the daily pipeline to persist current strategy states.
 Composite index on (strategy_id, timestamp DESC) for efficient
 time-series queries per strategy.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -31,9 +32,7 @@ class StrategyStateRecord(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     strategy_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     direction: Mapped[str] = mapped_column(String(10), nullable=False)
     strength: Mapped[str] = mapped_column(String(10), nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
@@ -44,9 +43,7 @@ class StrategyStateRecord(Base):
     entry_level: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     stop_loss: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     take_profit: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    holding_period_days: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True
-    )
+    holding_period_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     metadata_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

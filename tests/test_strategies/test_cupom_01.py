@@ -231,7 +231,8 @@ class TestCupom01Bounds:
         # With threshold=1.0, normal z-score ~2 would trigger
         loader = _make_mock_loader(di_curve={365: 16.0})
         strategy = Cupom01CipBasisStrategy(
-            data_loader=loader, basis_z_threshold=1.0,
+            data_loader=loader,
+            basis_z_threshold=1.0,
         )
         positions = strategy.generate_signals(date(2025, 6, 15))
         # Should trigger since z-score > 1.0

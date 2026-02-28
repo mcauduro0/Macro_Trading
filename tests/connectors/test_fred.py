@@ -83,9 +83,7 @@ SAMPLE_WITH_MISSING = {
 async def test_fetch_series_parses_observations():
     """Verify FRED connector correctly parses observation dates and values."""
     with respx.mock(base_url="https://api.stlouisfed.org") as mock:
-        mock.get("/fred/series/observations").respond(
-            200, json=SAMPLE_OBSERVATIONS
-        )
+        mock.get("/fred/series/observations").respond(200, json=SAMPLE_OBSERVATIONS)
 
         with patch("src.connectors.fred.settings") as mock_settings:
             mock_settings.fred_api_key = "test_api_key_123"
@@ -118,9 +116,7 @@ async def test_fetch_series_parses_observations():
 async def test_fetch_series_skips_missing_values():
     """Verify FRED connector skips observations where value is '.' (FRED missing convention)."""
     with respx.mock(base_url="https://api.stlouisfed.org") as mock:
-        mock.get("/fred/series/observations").respond(
-            200, json=SAMPLE_WITH_MISSING
-        )
+        mock.get("/fred/series/observations").respond(200, json=SAMPLE_WITH_MISSING)
 
         with patch("src.connectors.fred.settings") as mock_settings:
             mock_settings.fred_api_key = "test_api_key_123"
@@ -142,9 +138,7 @@ async def test_fetch_series_skips_missing_values():
 async def test_fetch_series_includes_realtime_start_as_release_time():
     """Verify release_time is set from the realtime_start field of each observation."""
     with respx.mock(base_url="https://api.stlouisfed.org") as mock:
-        mock.get("/fred/series/observations").respond(
-            200, json=SAMPLE_OBSERVATIONS
-        )
+        mock.get("/fred/series/observations").respond(200, json=SAMPLE_OBSERVATIONS)
 
         with patch("src.connectors.fred.settings") as mock_settings:
             mock_settings.fred_api_key = "test_api_key_123"
@@ -252,9 +246,9 @@ def test_series_registry_values_are_strings():
 def test_revisable_series_subset_of_registry():
     """Verify all REVISABLE_SERIES keys exist in SERIES_REGISTRY."""
     for key in FredConnector.REVISABLE_SERIES:
-        assert key in FredConnector.SERIES_REGISTRY, (
-            f"REVISABLE_SERIES key '{key}' not found in SERIES_REGISTRY"
-        )
+        assert (
+            key in FredConnector.SERIES_REGISTRY
+        ), f"REVISABLE_SERIES key '{key}' not found in SERIES_REGISTRY"
 
 
 # ---------------------------------------------------------------------------
@@ -272,9 +266,7 @@ def test_connector_constants():
 async def test_fetch_series_handles_empty_observations():
     """Verify connector handles empty observations list gracefully."""
     with respx.mock(base_url="https://api.stlouisfed.org") as mock:
-        mock.get("/fred/series/observations").respond(
-            200, json={"observations": []}
-        )
+        mock.get("/fred/series/observations").respond(200, json={"observations": []})
 
         with patch("src.connectors.fred.settings") as mock_settings:
             mock_settings.fred_api_key = "test_key"

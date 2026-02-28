@@ -143,9 +143,9 @@ class TestFx02Signals:
         selic_history = [br_rate or 13.75] * 350
         us_history = [us_rate or 5.50] * 350
         loader.get_macro_series.side_effect = lambda code, aod, **kw: (
-            _make_macro_df(selic_history) if "SELIC" in code
-            else _make_macro_df(us_history) if "FED" in code
-            else _empty_macro_df()
+            _make_macro_df(selic_history)
+            if "SELIC" in code
+            else _make_macro_df(us_history) if "FED" in code else _empty_macro_df()
         )
 
         if usdbrl_prices is None:
@@ -214,7 +214,9 @@ class TestFx02Signals:
         """Suggested size should be scaled by min(1, target_vol/realized_vol)."""
         # High-vol prices (larger swings)
         np.random.seed(99)
-        prices = [5.0 + 0.5 * np.sin(i / 5) + np.random.normal(0, 0.2) for i in range(600)]
+        prices = [
+            5.0 + 0.5 * np.sin(i / 5) + np.random.normal(0, 0.2) for i in range(600)
+        ]
         prices = [max(3.5, p) for p in prices]
         loader = self._make_fx02_loader(br_rate=20.0, us_rate=1.0, usdbrl_prices=prices)
         strategy = Fx02CarryMomentumStrategy(data_loader=loader)
@@ -311,7 +313,8 @@ class TestFx03Signals:
         """Missing BCB FX flow should return empty list."""
         loader = self._make_fx03_loader()
         loader.get_flow_data.side_effect = lambda code, aod, **kw: (
-            _empty_flow_df() if code == "BR_FX_FLOW_NET"
+            _empty_flow_df()
+            if code == "BR_FX_FLOW_NET"
             else _make_flow_df([50.0] * 300)
         )
         strategy = Fx03FlowTacticalStrategy(data_loader=loader)
@@ -322,7 +325,8 @@ class TestFx03Signals:
         """Missing CFTC data should return empty list."""
         loader = self._make_fx03_loader()
         loader.get_flow_data.side_effect = lambda code, aod, **kw: (
-            _empty_flow_df() if code == "CFTC_6L_LEVERAGED_NET"
+            _empty_flow_df()
+            if code == "CFTC_6L_LEVERAGED_NET"
             else _make_flow_df([50.0] * 300)
         )
         strategy = Fx03FlowTacticalStrategy(data_loader=loader)
@@ -333,7 +337,8 @@ class TestFx03Signals:
         """Missing B3 flow should return empty list."""
         loader = self._make_fx03_loader()
         loader.get_flow_data.side_effect = lambda code, aod, **kw: (
-            _empty_flow_df() if code == "BR_FX_FLOW_FINANCIAL"
+            _empty_flow_df()
+            if code == "BR_FX_FLOW_FINANCIAL"
             else _make_flow_df([50.0] * 300)
         )
         strategy = Fx03FlowTacticalStrategy(data_loader=loader)
@@ -557,7 +562,8 @@ class TestFx05Signals:
         loader = self._make_fx05_loader()
         # Override to return empty for all tickers
         loader.get_market_data.side_effect = lambda t, aod, **kw: (
-            _make_market_df([5.0 + 0.01 * i for i in range(600)]) if t == "USDBRL"
+            _make_market_df([5.0 + 0.01 * i for i in range(600)])
+            if t == "USDBRL"
             else _empty_market_df()
         )
         strategy = Fx05TermsOfTradeStrategy(data_loader=loader)
@@ -568,7 +574,8 @@ class TestFx05Signals:
         """Missing USDBRL data should return empty list."""
         loader = self._make_fx05_loader()
         loader.get_market_data.side_effect = lambda t, aod, **kw: (
-            _empty_market_df() if t == "USDBRL"
+            _empty_market_df()
+            if t == "USDBRL"
             else _make_market_df([100.0 + 0.1 * i for i in range(600)])
         )
         strategy = Fx05TermsOfTradeStrategy(data_loader=loader)

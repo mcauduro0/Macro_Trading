@@ -54,10 +54,10 @@ class TradingEconDiCurveConnector(BaseConnector):
     # Symbol mapping: TE symbol -> (tenor_label, tenor_days)
     # tenor_days aligned with MonetaryFeatureEngine expectations
     SYMBOL_MAP: dict[str, tuple[str, int]] = {
-        "GEBR1Y:IND":  ("1Y",  252),    # ~1 year in trading days
-        "GEBR2Y:IND":  ("2Y",  504),    # ~2 years in trading days
-        "GEBR5Y:IND":  ("5Y",  1260),   # ~5 years in trading days
-        "GEBR10Y:IND": ("10Y", 2520),   # ~10 years in trading days
+        "GEBR1Y:IND": ("1Y", 252),  # ~1 year in trading days
+        "GEBR2Y:IND": ("2Y", 504),  # ~2 years in trading days
+        "GEBR5Y:IND": ("5Y", 1260),  # ~5 years in trading days
+        "GEBR10Y:IND": ("10Y", 2520),  # ~10 years in trading days
     }
 
     # -----------------------------------------------------------------------
@@ -134,15 +134,17 @@ class TradingEconDiCurveConnector(BaseConnector):
             # Convert percentage to decimal (13.427 -> 0.13427)
             rate_decimal = rate_pct / 100.0
 
-            records.append({
-                "curve_id": "DI_PRE",
-                "curve_date": curve_date,
-                "tenor_days": tenor_days,
-                "tenor_label": tenor_label,
-                "rate": rate_decimal,
-                "curve_type": "swap",
-                "source": "TRADING_ECONOMICS",
-            })
+            records.append(
+                {
+                    "curve_id": "DI_PRE",
+                    "curve_date": curve_date,
+                    "tenor_days": tenor_days,
+                    "tenor_label": tenor_label,
+                    "rate": rate_decimal,
+                    "curve_type": "swap",
+                    "source": "TRADING_ECONOMICS",
+                }
+            )
 
         self.log.info(
             "te_di_symbol_parsed",
@@ -189,8 +191,11 @@ class TradingEconDiCurveConnector(BaseConnector):
                 )
 
                 records = await self._fetch_symbol(
-                    symbol, tenor_label, tenor_days,
-                    chunk_start, chunk_end,
+                    symbol,
+                    tenor_label,
+                    tenor_days,
+                    chunk_start,
+                    chunk_end,
                 )
                 all_records.extend(records)
 
@@ -215,6 +220,4 @@ class TradingEconDiCurveConnector(BaseConnector):
         Returns:
             Number of rows actually inserted (excludes conflicts).
         """
-        return await self._bulk_insert(
-            CurveData, records, "uq_curves_natural_key"
-        )
+        return await self._bulk_insert(CurveData, records, "uq_curves_natural_key")

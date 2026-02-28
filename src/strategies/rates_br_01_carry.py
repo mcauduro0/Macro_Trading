@@ -168,10 +168,12 @@ class RatesBR01CarryStrategy(BaseStrategy):
 
         # Enrich position metadata
         for pos in positions:
-            pos.metadata.update({
-                "optimal_tenor": optimal_tenor,
-                "carry_to_risk": max_ratio,
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "optimal_tenor": optimal_tenor,
+                    "carry_to_risk": max_ratio,
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         return positions

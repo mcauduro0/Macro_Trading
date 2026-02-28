@@ -88,9 +88,7 @@ class HMMRegimeClassifier:
         self.n_regimes = n_regimes
         self._hmm_available = _HMM_AVAILABLE
 
-    def classify(
-        self, feature_history: pd.DataFrame, as_of_date: date
-    ) -> HMMResult:
+    def classify(self, feature_history: pd.DataFrame, as_of_date: date) -> HMMResult:
         """Classify the current regime from feature history.
 
         Args:
@@ -250,19 +248,25 @@ class HMMRegimeClassifier:
                 break
             # Goldilocks
             if "Goldilocks" not in state_map.values():
-                best = max(candidates, key=lambda i: growth_means[i] - inflation_means[i])
+                best = max(
+                    candidates, key=lambda i: growth_means[i] - inflation_means[i]
+                )
                 state_map[best] = "Goldilocks"
                 used_states.add(best)
                 continue
             # Stagflation
             if "Stagflation" not in state_map.values():
-                best = min(candidates, key=lambda i: growth_means[i] - inflation_means[i])
+                best = min(
+                    candidates, key=lambda i: growth_means[i] - inflation_means[i]
+                )
                 state_map[best] = "Stagflation"
                 used_states.add(best)
                 continue
             # Reflation: positive growth, high inflation
             if "Reflation" not in state_map.values():
-                best = max(candidates, key=lambda i: growth_means[i] + inflation_means[i])
+                best = max(
+                    candidates, key=lambda i: growth_means[i] + inflation_means[i]
+                )
                 state_map[best] = "Reflation"
                 used_states.add(best)
                 continue

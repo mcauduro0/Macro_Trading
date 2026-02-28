@@ -42,6 +42,7 @@ def _get_service():
         # Hydrate from DB so in-memory stores have real data
         try:
             from src.pms.db_loader import hydrate_position_manager
+
             hydrate_position_manager(pm)
             logger.info("RiskMonitorService hydrated from DB")
         except Exception as exc:

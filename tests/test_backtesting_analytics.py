@@ -9,6 +9,7 @@ Tests cover:
 - deflated_sharpe: Bailey & Lopez de Prado (2014) DSR (BTST-03)
 - generate_tearsheet: Complete tearsheet dict (BTST-06)
 """
+
 from datetime import date
 
 import numpy as np
@@ -28,6 +29,7 @@ from src.backtesting.metrics import BacktestResult
 # ---------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_returns():
@@ -51,6 +53,7 @@ def realistic_backtest_result():
         dates.append(current)
         # Advance by 1 day (simplified)
         from datetime import timedelta
+
         current = current + timedelta(days=1)
         # Skip weekends
         while current.weekday() >= 5:
@@ -117,6 +120,7 @@ def empty_backtest_result():
 # compute_sortino tests
 # ---------------------------------------------------------------
 
+
 class TestComputeSortino:
     def test_sortino_known_value(self, sample_returns):
         """Known returns produce a float Sortino value."""
@@ -154,6 +158,7 @@ class TestComputeSortino:
 # compute_information_ratio tests
 # ---------------------------------------------------------------
 
+
 class TestComputeInformationRatio:
     def test_ir_identical_returns(self):
         """Identical returns and benchmark -> IR = 0.0."""
@@ -183,6 +188,7 @@ class TestComputeInformationRatio:
 # compute_tail_ratio tests
 # ---------------------------------------------------------------
 
+
 class TestComputeTailRatio:
     def test_tail_ratio_symmetric(self):
         """Normal distribution returns -> tail ratio close to 1.0."""
@@ -208,6 +214,7 @@ class TestComputeTailRatio:
 # compute_turnover tests
 # ---------------------------------------------------------------
 
+
 class TestComputeTurnover:
     def test_turnover_constant_positions(self):
         """No change in positions -> 0.0."""
@@ -231,6 +238,7 @@ class TestComputeTurnover:
 # ---------------------------------------------------------------
 # compute_rolling_sharpe tests
 # ---------------------------------------------------------------
+
 
 class TestComputeRollingSharpe:
     def test_rolling_sharpe_output_length(self):
@@ -266,6 +274,7 @@ class TestComputeRollingSharpe:
 # ---------------------------------------------------------------
 # deflated_sharpe tests (BTST-03)
 # ---------------------------------------------------------------
+
 
 class TestDeflatedSharpe:
     def test_dsr_single_trial(self):
@@ -311,9 +320,9 @@ class TestDeflatedSharpe:
                     kurtosis_excess=3.0,
                     n_observations=252,
                 )
-                assert 0.0 <= result <= 1.0, (
-                    f"DSR={result} out of range for sr={sr}, trials={trials}"
-                )
+                assert (
+                    0.0 <= result <= 1.0
+                ), f"DSR={result} out of range for sr={sr}, trials={trials}"
 
     def test_dsr_zero_trials_returns_zero(self):
         """n_trials=0 -> 0.0."""
@@ -363,13 +372,18 @@ class TestDeflatedSharpe:
 # generate_tearsheet tests (BTST-06)
 # ---------------------------------------------------------------
 
+
 class TestGenerateTearsheet:
     def test_tearsheet_structure(self, realistic_backtest_result):
         """All 7 top-level keys present."""
         ts = generate_tearsheet(realistic_backtest_result)
         expected_keys = {
-            "summary", "equity_curve", "drawdown_chart",
-            "monthly_heatmap", "rolling_sharpe", "trade_analysis",
+            "summary",
+            "equity_curve",
+            "drawdown_chart",
+            "monthly_heatmap",
+            "rolling_sharpe",
+            "trade_analysis",
             "return_distribution",
         }
         assert set(ts.keys()) == expected_keys
@@ -411,10 +425,19 @@ class TestGenerateTearsheet:
         ts = generate_tearsheet(realistic_backtest_result)
         summary = ts["summary"]
         expected_fields = {
-            "strategy_id", "start_date", "end_date",
-            "total_return", "annualized_return", "annualized_volatility",
-            "sharpe_ratio", "sortino_ratio", "calmar_ratio", "max_drawdown",
-            "win_rate", "profit_factor", "total_trades",
+            "strategy_id",
+            "start_date",
+            "end_date",
+            "total_return",
+            "annualized_return",
+            "annualized_volatility",
+            "sharpe_ratio",
+            "sortino_ratio",
+            "calmar_ratio",
+            "max_drawdown",
+            "win_rate",
+            "profit_factor",
+            "total_trades",
         }
         assert expected_fields.issubset(set(summary.keys()))
 
@@ -423,9 +446,15 @@ class TestGenerateTearsheet:
         ts = generate_tearsheet(realistic_backtest_result)
         ta = ts["trade_analysis"]
         expected = {
-            "total_trades", "winning_trades", "losing_trades",
-            "win_rate", "avg_win", "avg_loss",
-            "profit_factor", "largest_win", "largest_loss",
+            "total_trades",
+            "winning_trades",
+            "losing_trades",
+            "win_rate",
+            "avg_win",
+            "avg_loss",
+            "profit_factor",
+            "largest_win",
+            "largest_loss",
         }
         assert expected.issubset(set(ta.keys()))
 

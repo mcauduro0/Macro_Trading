@@ -119,8 +119,7 @@ class FOMCScraper:
         # Historical pages for past years
         for year in range(start_year, current_year):
             urls.append(
-                f"{self.BASE_URL}"
-                f"{self.HISTORICAL_PATH_TEMPLATE.format(year=year)}"
+                f"{self.BASE_URL}" f"{self.HISTORICAL_PATH_TEMPLATE.format(year=year)}"
             )
 
         # Current year calendar
@@ -171,11 +170,13 @@ class FOMCScraper:
                             if link.startswith("http")
                             else f"{self.BASE_URL}{link}"
                         )
-                        documents.append({
-                            "url": full_url,
-                            "date": d,
-                            "doc_type": doc_type,
-                        })
+                        documents.append(
+                            {
+                                "url": full_url,
+                                "date": d,
+                                "doc_type": doc_type,
+                            }
+                        )
                 except ValueError:
                     continue
 
@@ -211,9 +212,7 @@ class FOMCScraper:
         """
         return self._scrape_doc_type("minutes", start_year)
 
-    def _scrape_doc_type(
-        self, doc_type: str, start_year: int
-    ) -> list[ScrapedDocument]:
+    def _scrape_doc_type(self, doc_type: str, start_year: int) -> list[ScrapedDocument]:
         """Common scraping logic for a document type.
 
         Args:
@@ -244,9 +243,7 @@ class FOMCScraper:
             # Rate limit between calendar pages
             time.sleep(self.rate_limit)
 
-            doc_entries = self._parse_calendar_page(
-                response.text, doc_type, start_year
-            )
+            doc_entries = self._parse_calendar_page(response.text, doc_type, start_year)
 
             for entry in doc_entries:
                 doc_date = entry["date"]
@@ -344,9 +341,7 @@ class FOMCScraper:
 
         records = [doc.to_dict() for doc in documents]
         stmt = pg_insert(NlpDocumentRecord).values(records)
-        stmt = stmt.on_conflict_do_nothing(
-            constraint="uq_nlp_documents_natural_key"
-        )
+        stmt = stmt.on_conflict_do_nothing(constraint="uq_nlp_documents_natural_key")
         result = session.execute(stmt)
         session.flush()
         return result.rowcount

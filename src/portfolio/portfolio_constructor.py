@@ -155,7 +155,9 @@ class PortfolioConstructor:
 
         # Step 2: Risk parity base weights
         rp_weights = self._compute_risk_parity(
-            instruments, returns_matrix, instrument_list,
+            instruments,
+            returns_matrix,
+            instrument_list,
         )
         risk_parity_weights = dict(zip(instruments, rp_weights))
 
@@ -166,20 +168,21 @@ class PortfolioConstructor:
 
         # Step 3: Conviction overlay
         conviction_weights = self._apply_conviction_overlay(
-            risk_parity_weights, instrument_meta,
+            risk_parity_weights,
+            instrument_meta,
         )
 
         # Step 4: Conflict dampening
         dampened_weights = self._apply_conflict_dampening(
-            conviction_weights, instrument_meta, conflicts,
+            conviction_weights,
+            instrument_meta,
+            conflicts,
         )
 
         # Step 5: Regime scaling
         current_regime = self._classify_regime(regime_score)
         regime_scale = self._compute_regime_scale(current_regime)
-        final_weights = {
-            inst: w * regime_scale for inst, w in dampened_weights.items()
-        }
+        final_weights = {inst: w * regime_scale for inst, w in dampened_weights.items()}
 
         log.info(
             "portfolio_constructed",
@@ -245,7 +248,10 @@ class PortfolioConstructor:
             return equal
 
         # Align returns_matrix columns with instruments
-        if instrument_list is not None and len(instrument_list) == returns_matrix.shape[1]:
+        if (
+            instrument_list is not None
+            and len(instrument_list) == returns_matrix.shape[1]
+        ):
             # Select and reorder columns to match sorted instruments
             col_map = {name: idx for idx, name in enumerate(instrument_list)}
             col_indices = []
@@ -253,7 +259,9 @@ class PortfolioConstructor:
                 if inst in col_map:
                     col_indices.append(col_map[inst])
                 else:
-                    log.info("risk_parity_fallback", reason="missing_instrument", inst=inst)
+                    log.info(
+                        "risk_parity_fallback", reason="missing_instrument", inst=inst
+                    )
                     return equal
             aligned_returns = returns_matrix[:, col_indices]
         else:
@@ -397,18 +405,27 @@ class PortfolioConstructor:
 
         if current_regime != self._previous_regime:
             # Regime changed — check if this is a NEW transition or continuation
-            if not hasattr(self, '_target_regime') or self._target_regime != current_regime:
+            if (
+                not hasattr(self, "_target_regime")
+                or self._target_regime != current_regime
+            ):
                 # New regime target — reset transition from current interpolated scale
                 self._target_regime = current_regime
-                self._transition_start_scale = self._previous_scale or REGIME_SCALE[self._previous_regime]
+                self._transition_start_scale = (
+                    self._previous_scale or REGIME_SCALE[self._previous_regime]
+                )
                 self._regime_transition_day = 1
             else:
                 self._regime_transition_day += 1
 
             progress = min(
-                self._regime_transition_day / self.transition_days, 1.0,
+                self._regime_transition_day / self.transition_days,
+                1.0,
             )
-            scale = self._transition_start_scale + (target_scale - self._transition_start_scale) * progress
+            scale = (
+                self._transition_start_scale
+                + (target_scale - self._transition_start_scale) * progress
+            )
 
             if progress >= 1.0:
                 # Transition complete

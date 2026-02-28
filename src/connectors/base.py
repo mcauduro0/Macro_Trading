@@ -129,9 +129,7 @@ class BaseConnector(abc.ABC):
             )
         return self._client
 
-    async def _request(
-        self, method: str, url: str, **kwargs: Any
-    ) -> httpx.Response:
+    async def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         """Rate-limited HTTP request with retry.
 
         Acquires a semaphore slot before delegating to _request_with_retry
@@ -189,7 +187,9 @@ class BaseConnector(abc.ABC):
                 return response
 
         # Should not be reached, but satisfies type checker
-        raise FetchError(f"{self.SOURCE_NAME}: Request failed after retries")  # pragma: no cover
+        raise FetchError(
+            f"{self.SOURCE_NAME}: Request failed after retries"
+        )  # pragma: no cover
 
     # ---------------------------------------------------------------------------
     # Abstract interface
@@ -225,9 +225,7 @@ class BaseConnector(abc.ABC):
     # ---------------------------------------------------------------------------
     # Concrete methods
     # ---------------------------------------------------------------------------
-    async def run(
-        self, start_date: date, end_date: date, **kwargs: Any
-    ) -> int:
+    async def run(self, start_date: date, end_date: date, **kwargs: Any) -> int:
         """Execute the full fetch-then-store pipeline.
 
         Args:
@@ -301,15 +299,19 @@ class BaseConnector(abc.ABC):
         """
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(DataSource).values(
-                    name=self.SOURCE_NAME,
-                    base_url=self.BASE_URL,
-                    auth_type=self.AUTH_TYPE,
-                    rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
-                    default_locale=self.DEFAULT_LOCALE,
-                    notes=self.SOURCE_NOTES or self.SOURCE_NAME,
-                    is_active=True,
-                ).on_conflict_do_nothing(index_elements=["name"])
+                stmt = (
+                    pg_insert(DataSource)
+                    .values(
+                        name=self.SOURCE_NAME,
+                        base_url=self.BASE_URL,
+                        auth_type=self.AUTH_TYPE,
+                        rate_limit_per_minute=int(self.RATE_LIMIT_PER_SECOND * 60),
+                        default_locale=self.DEFAULT_LOCALE,
+                        notes=self.SOURCE_NOTES or self.SOURCE_NAME,
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(index_elements=["name"])
+                )
                 await session.execute(stmt)
 
             result = await session.execute(

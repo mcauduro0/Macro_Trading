@@ -27,9 +27,7 @@ from .base import Base
 class FlowData(Base):
     __tablename__ = "flow_data"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     series_id: Mapped[int] = mapped_column(
         ForeignKey("series_metadata.id"), nullable=False
     )
@@ -45,7 +43,9 @@ class FlowData(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "series_id", "observation_date", "flow_type",
+            "series_id",
+            "observation_date",
+            "flow_type",
             name="uq_flow_data_natural_key",
         ),
         Index("ix_flow_data_series_id", "series_id"),

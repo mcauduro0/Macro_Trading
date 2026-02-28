@@ -5,6 +5,7 @@ rebalancing -- no price lookup required during position access.
 Portfolio never accesses the database directly; BacktestEngine passes
 prices from PointInTimeDataLoader.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -25,11 +26,11 @@ class Portfolio:
 
     def __init__(self, initial_capital: float) -> None:
         self.cash: float = initial_capital
-        self.positions: dict[str, float] = {}       # ticker -> notional value
+        self.positions: dict[str, float] = {}  # ticker -> notional value
         self.equity_curve: list[tuple[date, float]] = []
         self.trade_log: list[dict[str, Any]] = []
-        self._entry_prices: dict[str, float] = {}   # ticker -> price at entry
-        self._last_prices: dict[str, float] = {}    # ticker -> last known price
+        self._entry_prices: dict[str, float] = {}  # ticker -> price at entry
+        self._last_prices: dict[str, float] = {}  # ticker -> last known price
 
     @property
     def total_equity(self) -> float:
@@ -108,9 +109,11 @@ class Portfolio:
                 continue
 
             # Transaction cost + slippage
-            cost = abs(trade_notional) * (
-                config.transaction_cost_bps + config.slippage_bps
-            ) / 10_000
+            cost = (
+                abs(trade_notional)
+                * (config.transaction_cost_bps + config.slippage_bps)
+                / 10_000
+            )
             # Move capital from cash to position (or vice versa) + deduct cost
             self.cash -= trade_notional + cost
 
@@ -128,15 +131,17 @@ class Portfolio:
 
             # Log trade
             direction = "BUY" if trade_notional > 0 else "SELL"
-            self.trade_log.append({
-                "date": rebalance_date,
-                "ticker": ticker,
-                "direction": direction,
-                "trade_notional": round(trade_notional, 2),
-                "cost": round(cost, 2),
-                "price": prices[ticker],
-                "pnl": round(pnl, 2),
-            })
+            self.trade_log.append(
+                {
+                    "date": rebalance_date,
+                    "ticker": ticker,
+                    "direction": direction,
+                    "trade_notional": round(trade_notional, 2),
+                    "cost": round(cost, 2),
+                    "price": prices[ticker],
+                    "pnl": round(pnl, 2),
+                }
+            )
 
             # Update position and entry price
             self.positions[ticker] = target_notional
@@ -148,22 +153,32 @@ class Portfolio:
             if ticker not in target_weights:
                 current_notional = self.positions[ticker]
                 if abs(current_notional) > 1.0:
-                    cost = abs(current_notional) * (
-                        config.transaction_cost_bps + config.slippage_bps
-                    ) / 10_000
+                    cost = (
+                        abs(current_notional)
+                        * (config.transaction_cost_bps + config.slippage_bps)
+                        / 10_000
+                    )
                     # Return position notional to cash, deduct exit cost
                     self.cash += current_notional - cost
-                    entry_price = self._entry_prices.get(ticker, prices.get(ticker, 1.0))
+                    entry_price = self._entry_prices.get(
+                        ticker, prices.get(ticker, 1.0)
+                    )
                     current_price = prices.get(ticker, entry_price)
-                    pnl = (current_price / entry_price - 1) * abs(current_notional) if entry_price > 0 else 0.0
-                    self.trade_log.append({
-                        "date": rebalance_date,
-                        "ticker": ticker,
-                        "direction": "EXIT",
-                        "trade_notional": round(-current_notional, 2),
-                        "cost": round(cost, 2),
-                        "price": current_price,
-                        "pnl": round(pnl, 2),
-                    })
+                    pnl = (
+                        (current_price / entry_price - 1) * abs(current_notional)
+                        if entry_price > 0
+                        else 0.0
+                    )
+                    self.trade_log.append(
+                        {
+                            "date": rebalance_date,
+                            "ticker": ticker,
+                            "direction": "EXIT",
+                            "trade_notional": round(-current_notional, 2),
+                            "cost": round(cost, 2),
+                            "price": current_price,
+                            "pnl": round(pnl, 2),
+                        }
+                    )
                 self.positions[ticker] = 0.0
                 self._entry_prices.pop(ticker, None)

@@ -64,12 +64,12 @@ TICKERS: dict[str, str] = {
     "EMB_ETF": "EMB",
     "LQD_ETF": "LQD",
     # Additional tickers
-    "USDMXN": "MXN=X",       # Mexico peso (EM peer)
-    "USDCNY": "CNY=X",       # China yuan
-    "USDCLP": "CLP=X",       # Chile peso (EM peer)
-    "NASDAQ": "^IXIC",       # Nasdaq Composite
-    "RUSSELL2000": "^RUT",   # Russell 2000 small cap
-    "CRB": "GSG",            # iShares S&P GSCI Commodity ETF (CRB proxy for PhillipsCurveModel)
+    "USDMXN": "MXN=X",  # Mexico peso (EM peer)
+    "USDCNY": "CNY=X",  # China yuan
+    "USDCLP": "CLP=X",  # Chile peso (EM peer)
+    "NASDAQ": "^IXIC",  # Nasdaq Composite
+    "RUSSELL2000": "^RUT",  # Russell 2000 small cap
+    "CRB": "GSG",  # iShares S&P GSCI Commodity ETF (CRB proxy for PhillipsCurveModel)
 }
 
 # Mapping from ticker prefix to reasonable instrument metadata defaults
@@ -121,9 +121,7 @@ class YahooFinanceConnector(BaseConnector):
     # Class-level reference to the ticker registry
     TICKERS: dict[str, str] = TICKERS
 
-    def _batch_tickers(
-        self, tickers: list[str] | None = None
-    ) -> list[list[str]]:
+    def _batch_tickers(self, tickers: list[str] | None = None) -> list[list[str]]:
         """Split ticker symbols into batches of BATCH_SIZE.
 
         Args:
@@ -224,9 +222,7 @@ class YahooFinanceConnector(BaseConnector):
                     continue
 
                 ticker_df = df[yahoo_sym]
-                records.extend(
-                    self._rows_to_records(ticker_df, our_ticker)
-                )
+                records.extend(self._rows_to_records(ticker_df, our_ticker))
         else:
             # Single ticker: flat columns (Open, High, Low, Close, Volume)
             yahoo_sym = yahoo_tickers[0]
@@ -239,9 +235,7 @@ class YahooFinanceConnector(BaseConnector):
 
         return records
 
-    def _rows_to_records(
-        self, df: pd.DataFrame, ticker: str
-    ) -> list[dict[str, Any]]:
+    def _rows_to_records(self, df: pd.DataFrame, ticker: str) -> list[dict[str, Any]]:
         """Convert DataFrame rows to record dicts for a single ticker.
 
         Args:
@@ -255,9 +249,7 @@ class YahooFinanceConnector(BaseConnector):
 
         for idx, row in df.iterrows():
             ts = pd.Timestamp(idx)
-            timestamp = datetime(
-                ts.year, ts.month, ts.day, tzinfo=timezone.utc
-            )
+            timestamp = datetime(ts.year, ts.month, ts.day, tzinfo=timezone.utc)
 
             def _clean(val: Any) -> float | None:
                 """Convert NaN/inf to None, otherwise return float."""
@@ -362,9 +354,7 @@ class YahooFinanceConnector(BaseConnector):
         )
         return all_records
 
-    async def _ensure_instrument(
-        self, ticker: str, yahoo_symbol: str
-    ) -> int:
+    async def _ensure_instrument(self, ticker: str, yahoo_symbol: str) -> int:
         """Ensure an Instrument row exists for the given ticker.
 
         Uses INSERT ... ON CONFLICT DO NOTHING on the ticker unique constraint,
@@ -386,13 +376,17 @@ class YahooFinanceConnector(BaseConnector):
 
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(Instrument).values(
-                    ticker=ticker,
-                    name=f"{ticker} ({yahoo_symbol})",
-                    asset_class=asset_class,
-                    country=country,
-                    currency=currency,
-                ).on_conflict_do_nothing(index_elements=["ticker"])
+                stmt = (
+                    pg_insert(Instrument)
+                    .values(
+                        ticker=ticker,
+                        name=f"{ticker} ({yahoo_symbol})",
+                        asset_class=asset_class,
+                        country=country,
+                        currency=currency,
+                    )
+                    .on_conflict_do_nothing(index_elements=["ticker"])
+                )
                 await session.execute(stmt)
 
             # Fetch the instrument id (separate query after commit)
@@ -402,9 +396,7 @@ class YahooFinanceConnector(BaseConnector):
             instrument_id = result.scalar_one_or_none()
 
         if instrument_id is None:
-            raise ConnectorError(
-                f"Failed to find instrument for ticker {ticker}"
-            )
+            raise ConnectorError(f"Failed to find instrument for ticker {ticker}")
         return instrument_id
 
     async def store(self, records: list[dict[str, Any]]) -> int:

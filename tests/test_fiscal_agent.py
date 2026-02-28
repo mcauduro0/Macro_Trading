@@ -146,7 +146,9 @@ class TestFiscalFeatureEngineKeys:
 
         # abs_dev value
         expected_abs_dev = abs(4.5 - 3.0)
-        assert features["focus_ipca_12m_abs_dev"] == pytest.approx(expected_abs_dev, abs=0.01)
+        assert features["focus_ipca_12m_abs_dev"] == pytest.approx(
+            expected_abs_dev, abs=0.01
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -293,9 +295,18 @@ class TestFiscalAgentComposite:
         """2 LONG + 1 SHORT → plurality LONG, dampening=0.70."""
         agent = self._make_agent()
         signals = [
-            make_signal("FISCAL_BR_DSA", SignalDirection.LONG, SignalStrength.MODERATE, 0.7),
-            make_signal("FISCAL_BR_IMPULSE", SignalDirection.SHORT, SignalStrength.MODERATE, 0.7),
-            make_signal("FISCAL_BR_DOMINANCE_RISK", SignalDirection.LONG, SignalStrength.MODERATE, 0.7),
+            make_signal(
+                "FISCAL_BR_DSA", SignalDirection.LONG, SignalStrength.MODERATE, 0.7
+            ),
+            make_signal(
+                "FISCAL_BR_IMPULSE", SignalDirection.SHORT, SignalStrength.MODERATE, 0.7
+            ),
+            make_signal(
+                "FISCAL_BR_DOMINANCE_RISK",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.7,
+            ),
         ]
         composite = agent._build_composite(signals, AS_OF)
         assert composite.direction == SignalDirection.LONG
@@ -306,9 +317,18 @@ class TestFiscalAgentComposite:
         """3 LONG → direction LONG, dampening=1.0 (no conflict)."""
         agent = self._make_agent()
         signals = [
-            make_signal("FISCAL_BR_DSA", SignalDirection.LONG, SignalStrength.STRONG, 0.8),
-            make_signal("FISCAL_BR_IMPULSE", SignalDirection.LONG, SignalStrength.MODERATE, 0.6),
-            make_signal("FISCAL_BR_DOMINANCE_RISK", SignalDirection.LONG, SignalStrength.MODERATE, 0.7),
+            make_signal(
+                "FISCAL_BR_DSA", SignalDirection.LONG, SignalStrength.STRONG, 0.8
+            ),
+            make_signal(
+                "FISCAL_BR_IMPULSE", SignalDirection.LONG, SignalStrength.MODERATE, 0.6
+            ),
+            make_signal(
+                "FISCAL_BR_DOMINANCE_RISK",
+                SignalDirection.LONG,
+                SignalStrength.MODERATE,
+                0.7,
+            ),
         ]
         composite = agent._build_composite(signals, AS_OF)
         assert composite.direction == SignalDirection.LONG

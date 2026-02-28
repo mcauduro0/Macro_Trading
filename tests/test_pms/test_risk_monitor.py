@@ -157,7 +157,9 @@ class TestTwoTierAlerts:
 
         leverage_alerts = [a for a in risk["alerts"] if "LEVERAGE" in a["type"]]
         warning_alerts = [a for a in leverage_alerts if a["severity"] == "WARNING"]
-        assert len(warning_alerts) > 0, f"Expected WARNING leverage alert, got: {leverage_alerts}"
+        assert (
+            len(warning_alerts) > 0
+        ), f"Expected WARNING leverage alert, got: {leverage_alerts}"
 
     def test_leverage_breach_at_100_pct(self):
         """Leverage at 4.5x (limit 4.0x) -> BREACH alert."""
@@ -176,7 +178,9 @@ class TestTwoTierAlerts:
 
         leverage_alerts = [a for a in risk["alerts"] if "LEVERAGE" in a["type"]]
         breach_alerts = [a for a in leverage_alerts if a["severity"] == "BREACH"]
-        assert len(breach_alerts) > 0, f"Expected BREACH leverage alert, got: {leverage_alerts}"
+        assert (
+            len(breach_alerts) > 0
+        ), f"Expected BREACH leverage alert, got: {leverage_alerts}"
 
     def test_alert_severity_values(self):
         """Verify alert severity is always 'WARNING' or 'BREACH'."""
@@ -279,8 +283,8 @@ class TestConcentrationByAssetClass:
         limits = PMSRiskLimits(
             concentration_limits={
                 "RATES": 80.0,  # 50/80 = 62.5% util (OK)
-                "FX": 50.0,     # 25/50 = 50% util (OK)
-                "EQUITY": 50.0, # 25/50 = 50% util (OK)
+                "FX": 50.0,  # 25/50 = 50% util (OK)
+                "EQUITY": 50.0,  # 25/50 = 50% util (OK)
             },
         )
         svc = RiskMonitorService(position_manager=pm, pms_limits=limits)

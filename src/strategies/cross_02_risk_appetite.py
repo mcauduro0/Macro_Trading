@@ -77,14 +77,14 @@ _HOLDING_PERIOD = 14
 _RISK_ON_TRADES = [
     ("IBOV_FUT", SignalDirection.LONG),
     ("USDBRL", SignalDirection.SHORT),
-    ("DI_PRE", SignalDirection.LONG),    # receive rates
+    ("DI_PRE", SignalDirection.LONG),  # receive rates
 ]
 
 # Risk-off trade map: (instrument, direction)
 _RISK_OFF_TRADES = [
     ("IBOV_FUT", SignalDirection.SHORT),
     ("USDBRL", SignalDirection.LONG),
-    ("DI_PRE", SignalDirection.SHORT),   # pay rates
+    ("DI_PRE", SignalDirection.SHORT),  # pay rates
 ]
 
 
@@ -188,7 +188,9 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
             "cross02_risk_appetite",
             risk_appetite=round(risk_appetite, 4),
             n_components=len(weighted_parts),
-            **{k: round(v, 4) if v is not None else None for k, v in components.items()},
+            **{
+                k: round(v, 4) if v is not None else None for k, v in components.items()
+            },
         )
 
         # --- Trade decision ---
@@ -238,7 +240,9 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
     def _compute_vix_z(self, as_of_date: date) -> Optional[float]:
         """VIX z-score vs 252-day history."""
         vix_df = self.data_loader.get_market_data(
-            "^VIX", as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "^VIX",
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if vix_df.empty or len(vix_df) < 60:
             return None
@@ -253,7 +257,9 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
     def _compute_cds_z(self, as_of_date: date) -> Optional[float]:
         """BR CDS 5Y z-score vs 252-day history."""
         cds_df = self.data_loader.get_macro_series(
-            "BR_CDS_5Y", as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "BR_CDS_5Y",
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if cds_df.empty or len(cds_df) < 60:
             return None
@@ -268,7 +274,9 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
     def _compute_fx_vol_z(self, as_of_date: date) -> Optional[float]:
         """21-day USDBRL realized vol z-scored vs history."""
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "USDBRL",
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if usdbrl_df.empty or len(usdbrl_df) < _VOL_WINDOW + 60:
             return None
@@ -283,7 +291,7 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
         rolling_vols = []
         returns_list = returns.tolist()
         for i in range(_VOL_WINDOW, len(returns_list)):
-            window = returns_list[i - _VOL_WINDOW:i]
+            window = returns_list[i - _VOL_WINDOW : i]
             mean_w = sum(window) / len(window)
             var_w = sum((x - mean_w) ** 2 for x in window) / len(window)
             rolling_vols.append(math.sqrt(var_w) * math.sqrt(252))
@@ -300,14 +308,19 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
     def _compute_eq_bond_corr_z(self, as_of_date: date) -> Optional[float]:
         """63-day rolling correlation between equity returns and DI changes."""
         eq_df = self.data_loader.get_market_data(
-            "IBOVESPA", as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "IBOVESPA",
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if eq_df.empty or len(eq_df) < _CORR_WINDOW + 60:
             return None
 
         # Get DI 1Y rate history
         di_df = self.data_loader.get_curve_history(
-            "DI_PRE", 252, as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "DI_PRE",
+            252,
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if di_df.empty or len(di_df) < _CORR_WINDOW + 60:
             return None
@@ -326,8 +339,8 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
         # Rolling 63-day correlation
         correlations = []
         for i in range(_CORR_WINDOW, len(eq_vals)):
-            eq_w = eq_vals[i - _CORR_WINDOW:i]
-            di_w = di_vals[i - _CORR_WINDOW:i]
+            eq_w = eq_vals[i - _CORR_WINDOW : i]
+            di_w = di_vals[i - _CORR_WINDOW : i]
 
             # Pearson correlation
             n = len(eq_w)
@@ -364,7 +377,8 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
         short_di = di_curve[short_tenors[0]]
 
         selic = self.data_loader.get_latest_macro_value(
-            "BR_SELIC_TARGET", as_of_date,
+            "BR_SELIC_TARGET",
+            as_of_date,
         )
         if selic is None:
             return None
@@ -373,14 +387,19 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
 
         # Build history (using DI short rate history as proxy)
         di_history = self.data_loader.get_curve_history(
-            "DI_PRE", short_tenors[0], as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "DI_PRE",
+            short_tenors[0],
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if di_history.empty or len(di_history) < 60:
             return None
 
         # Use DI rate history - selic as spread history proxy
         spread_history = [float(r) - selic for r in di_history["rate"].tolist()]
-        return self.compute_z_score(current_spread, spread_history, window=_ZSCORE_WINDOW)
+        return self.compute_z_score(
+            current_spread, spread_history, window=_ZSCORE_WINDOW
+        )
 
     # ------------------------------------------------------------------
     # Component f: Equity momentum z-score
@@ -388,7 +407,9 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
     def _compute_momentum_z(self, as_of_date: date) -> Optional[float]:
         """IBOVESPA 63-day return z-scored vs history."""
         eq_df = self.data_loader.get_market_data(
-            "IBOVESPA", as_of_date, lookback_days=_LOOKBACK_DAYS,
+            "IBOVESPA",
+            as_of_date,
+            lookback_days=_LOOKBACK_DAYS,
         )
         if eq_df.empty or len(eq_df) < _MOMENTUM_WINDOW + 60:
             return None

@@ -54,11 +54,11 @@ FX_05_CONFIG = StrategyConfig(
 # ---------------------------------------------------------------------------
 # Commodity weights reflecting Brazil export composition
 _COMMODITY_WEIGHTS: dict[str, float] = {
-    "ZS=F": 0.30,   # Soybean
+    "ZS=F": 0.30,  # Soybean
     "TIO=F": 0.25,  # Iron Ore
-    "BZ=F": 0.20,   # Brent Oil
-    "SB=F": 0.15,   # Sugar
-    "KC=F": 0.10,   # Coffee
+    "BZ=F": 0.20,  # Brent Oil
+    "SB=F": 0.15,  # Sugar
+    "KC=F": 0.10,  # Coffee
 }
 # Fallback tickers for commodities
 _COMMODITY_FALLBACKS: dict[str, list[str]] = {
@@ -144,7 +144,9 @@ class Fx05TermsOfTradeStrategy(BaseStrategy):
 
         # --- USDBRL spot for stop/take-profit ---
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=30,
+            "USDBRL",
+            as_of_date,
+            lookback_days=30,
         )
         if usdbrl_df.empty:
             return []
@@ -199,12 +201,16 @@ class Fx05TermsOfTradeStrategy(BaseStrategy):
 
         for primary_ticker, weight in _COMMODITY_WEIGHTS.items():
             # Try primary ticker first, then fallbacks
-            tickers_to_try = [primary_ticker] + _COMMODITY_FALLBACKS.get(primary_ticker, [])
+            tickers_to_try = [primary_ticker] + _COMMODITY_FALLBACKS.get(
+                primary_ticker, []
+            )
             df = None
 
             for ticker in tickers_to_try:
                 candidate = self.data_loader.get_market_data(
-                    ticker, as_of_date, lookback_days=_HISTORY_LOOKBACK + 100,
+                    ticker,
+                    as_of_date,
+                    lookback_days=_HISTORY_LOOKBACK + 100,
                 )
                 if not candidate.empty and len(candidate) >= _RETURN_WINDOW + 20:
                     df = candidate
@@ -260,7 +266,9 @@ class Fx05TermsOfTradeStrategy(BaseStrategy):
         Returns None if insufficient data.
         """
         usdbrl_df = self.data_loader.get_market_data(
-            "USDBRL", as_of_date, lookback_days=_HISTORY_LOOKBACK + 100,
+            "USDBRL",
+            as_of_date,
+            lookback_days=_HISTORY_LOOKBACK + 100,
         )
         if usdbrl_df.empty or len(usdbrl_df) < _RETURN_WINDOW + 20:
             return None

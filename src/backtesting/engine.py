@@ -10,6 +10,7 @@ v2 additions (BTST-01, BTST-02):
 - walk_forward_validation: Train/test window splitting with overfit detection
 - BacktestConfig: New optional fields for walk-forward and cost model
 """
+
 from __future__ import annotations
 
 import logging
@@ -37,13 +38,14 @@ class BacktestConfig:
     walk_forward_test_months, funding_rate, point_in_time, cost_model.
     All new fields have defaults that preserve backward compatibility.
     """
+
     start_date: date
     end_date: date
     initial_capital: float
-    rebalance_frequency: str = "monthly"    # "daily", "weekly", "monthly"
-    transaction_cost_bps: float = 5.0       # bps round-trip per trade
-    slippage_bps: float = 2.0               # bps per trade
-    max_leverage: float = 1.0               # max sum(abs(weights))
+    rebalance_frequency: str = "monthly"  # "daily", "weekly", "monthly"
+    transaction_cost_bps: float = 5.0  # bps round-trip per trade
+    slippage_bps: float = 2.0  # bps per trade
+    max_leverage: float = 1.0  # max sum(abs(weights))
     # v2 additions
     walk_forward: bool = False
     walk_forward_train_months: int = 60
@@ -62,6 +64,7 @@ class StrategyProtocol(Protocol):
     ``_adapt_signals_to_weights`` adapter.  The Protocol signature is kept as
     ``dict[str, float]`` for backward compatibility.
     """
+
     strategy_id: str
 
     def generate_signals(self, as_of_date: date) -> dict[str, float]:
@@ -273,9 +276,7 @@ class BacktestEngine:
             if len(result.equity_curve) < 2:
                 continue
             dates = [pd.Timestamp(d) for d, _ in result.equity_curve]
-            equities = pd.Series(
-                [e for _, e in result.equity_curve], index=dates
-            )
+            equities = pd.Series([e for _, e in result.equity_curve], index=dates)
             strategy_returns[sid] = equities.pct_change().dropna()
 
         # Combine equity curves: weighted sum of individual equity series
@@ -299,15 +300,10 @@ class BacktestEngine:
                 portfolio_equity += equity_df[sid] * w
 
             # Combined equity curve as list of (date, equity)
-            combined_curve = [
-                (d.date(), float(e))
-                for d, e in portfolio_equity.items()
-            ]
+            combined_curve = [(d.date(), float(e)) for d, e in portfolio_equity.items()]
 
             # Compute combined metrics via Portfolio + compute_metrics
-            combined_portfolio = Portfolio(
-                initial_capital=self.config.initial_capital
-            )
+            combined_portfolio = Portfolio(initial_capital=self.config.initial_capital)
             combined_portfolio.equity_curve = combined_curve
 
             # Aggregate trade statistics
@@ -356,9 +352,7 @@ class BacktestEngine:
                 corr = returns_df.corr()
                 for id_a in corr.columns:
                     for id_b in corr.columns:
-                        correlation_matrix[(id_a, id_b)] = float(
-                            corr.loc[id_a, id_b]
-                        )
+                        correlation_matrix[(id_a, id_b)] = float(corr.loc[id_a, id_b])
 
         # Attribution: each strategy's weighted contribution to total return
         attribution: dict[str, float] = {}
@@ -369,9 +363,7 @@ class BacktestEngine:
         for sid, result in individual_results.items():
             w = weights.get(sid, 0.0)
             if abs(total_weighted_return) > 1e-8:
-                attribution[sid] = (
-                    result.total_return * w / total_weighted_return
-                )
+                attribution[sid] = result.total_return * w / total_weighted_return
             else:
                 attribution[sid] = w  # fallback: just the weight
 
@@ -441,9 +433,7 @@ class BacktestEngine:
         is_sharpes: list[float] = []
         oos_sharpes: list[float] = []
 
-        for i, (train_start, train_end, test_start, test_end) in enumerate(
-            windows
-        ):
+        for i, (train_start, train_end, test_start, test_end) in enumerate(windows):
             params_used: dict[str, Any] = {}
 
             if param_grid:
@@ -524,18 +514,20 @@ class BacktestEngine:
             is_sharpes.append(in_sample_result.sharpe_ratio)
             oos_sharpes.append(oos_result.sharpe_ratio)
 
-            results.append({
-                "window": i,
-                "train_start": train_start,
-                "train_end": train_end,
-                "test_start": test_start,
-                "test_end": test_end,
-                "in_sample_sharpe": in_sample_result.sharpe_ratio,
-                "out_of_sample_sharpe": oos_result.sharpe_ratio,
-                "in_sample_result": in_sample_result,
-                "out_of_sample_result": oos_result,
-                "params_used": params_used,
-            })
+            results.append(
+                {
+                    "window": i,
+                    "train_start": train_start,
+                    "train_end": train_end,
+                    "test_start": test_start,
+                    "test_end": test_end,
+                    "in_sample_sharpe": in_sample_result.sharpe_ratio,
+                    "out_of_sample_sharpe": oos_result.sharpe_ratio,
+                    "in_sample_result": in_sample_result,
+                    "out_of_sample_result": oos_result,
+                    "params_used": params_used,
+                }
+            )
 
             logger.info(
                 "walk_forward_window window=%d is_sharpe=%.2f oos_sharpe=%.2f",

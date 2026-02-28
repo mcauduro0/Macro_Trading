@@ -88,9 +88,7 @@ class CentralBankSentimentAnalyzer:
         text = text.lower()
         # Decompose unicode, remove combining diacritical marks, recompose
         text = unicodedata.normalize("NFD", text)
-        text = "".join(
-            ch for ch in text if unicodedata.category(ch) != "Mn"
-        )
+        text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
         text = unicodedata.normalize("NFC", text)
         # Replace punctuation with spaces (keep alphanumeric and spaces)
         text = re.sub(r"[^\w\s]", " ", text)
@@ -171,9 +169,7 @@ class CentralBankSentimentAnalyzer:
             method=method,
         )
 
-    def compute_change_score(
-        self, current_score: float, previous_score: float
-    ) -> str:
+    def compute_change_score(self, current_score: float, previous_score: float) -> str:
         """Compute categorical change score vs previous document.
 
         Per locked decision: categorical + magnitude classification.
@@ -253,9 +249,7 @@ class CentralBankSentimentAnalyzer:
 
         return phrases
 
-    def _refine_with_llm(
-        self, text: str, dict_score: float, language: str
-    ) -> float:
+    def _refine_with_llm(self, text: str, dict_score: float, language: str) -> float:
         """Refine dictionary score using LLM analysis.
 
         Sends the text to Claude for hawk/dove rating and blends

@@ -86,9 +86,7 @@ class TestDateFormat:
         ).mock(return_value=httpx.Response(200, json=PTAX_EMPTY_RESPONSE))
 
         async with BcbPtaxConnector() as connector:
-            await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 31)
-            )
+            await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 31))
 
         assert route.called
         request = route.calls.last.request
@@ -108,20 +106,14 @@ class TestClosingBulletinFilter:
 
     @pytest.mark.asyncio
     @respx.mock
-    async def test_fetch_period_filters_closing_bulletin(
-        self, ptax_response
-    ):
+    async def test_fetch_period_filters_closing_bulletin(self, ptax_response):
         """Only closing bulletins should be returned."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(200, json=ptax_response)
-        )
+        ).mock(return_value=httpx.Response(200, json=ptax_response))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         # ptax_sample.json has 3 entries: 2 Fechamento + 1 Abertura
         assert len(records) == 2
@@ -133,16 +125,10 @@ class TestClosingBulletinFilter:
         """Only 'Fechamento' bulletins should be kept from mixed response."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(
-                200, json=PTAX_CLOSING_AND_OPENING
-            )
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_CLOSING_AND_OPENING))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         # 3 entries: 2 Fechamento + 1 Abertura -> 2 records
         assert len(records) == 2
@@ -162,16 +148,10 @@ class TestRateMapping:
         """open must be cotacaoCompra (buy), close must be cotacaoVenda (sell)."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(
-                200, json=PTAX_CLOSING_AND_OPENING
-            )
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_CLOSING_AND_OPENING))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         # First closing bulletin
         rec0 = records[0]
@@ -190,16 +170,10 @@ class TestRateMapping:
         """PTAX only has buy/sell rates; high, low, volume must be None."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(
-                200, json=PTAX_CLOSING_AND_OPENING
-            )
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_CLOSING_AND_OPENING))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         for rec in records:
             assert rec["high"] is None
@@ -221,16 +195,10 @@ class TestTimezone:
         """timestamp must be parsed from dataHoraCotacao with SP timezone."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(
-                200, json=PTAX_CLOSING_AND_OPENING
-            )
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_CLOSING_AND_OPENING))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         ts = records[0]["timestamp"]
         assert isinstance(ts, datetime)
@@ -258,14 +226,10 @@ class TestEdgeCases:
         """Empty response should return empty list, not raise."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(200, json=PTAX_EMPTY_RESPONSE)
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_EMPTY_RESPONSE))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         assert records == []
 
@@ -275,9 +239,7 @@ class TestEdgeCases:
         """fetch() should split multi-year ranges into chunks."""
         route = respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(200, json=PTAX_EMPTY_RESPONSE)
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_EMPTY_RESPONSE))
 
         async with BcbPtaxConnector() as connector:
             await connector.fetch(date(2023, 1, 1), date(2025, 6, 30))
@@ -299,16 +261,10 @@ class TestEdgeCases:
         """Each record must have correct _ticker, frequency, source."""
         respx.get(
             url__startswith="https://olinda.bcb.gov.br/olinda/servico/PTAX/"
-        ).mock(
-            return_value=httpx.Response(
-                200, json=PTAX_CLOSING_AND_OPENING
-            )
-        )
+        ).mock(return_value=httpx.Response(200, json=PTAX_CLOSING_AND_OPENING))
 
         async with BcbPtaxConnector() as connector:
-            records = await connector.fetch_period(
-                date(2025, 1, 15), date(2025, 1, 16)
-            )
+            records = await connector.fetch_period(date(2025, 1, 15), date(2025, 1, 16))
 
         for rec in records:
             assert rec["_ticker"] == "USDBRL_PTAX"

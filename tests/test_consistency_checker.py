@@ -178,7 +178,7 @@ def test_no_false_positives_consistent_signals():
     }
     strategy_signals = {
         "IBOV_FUT": _sig("LONG"),
-        "DI_PRE": _sig("LONG"),   # receive rates = dovish
+        "DI_PRE": _sig("LONG"),  # receive rates = dovish
         "USDBRL": _sig("SHORT"),  # bullish BRL
     }
 
@@ -214,9 +214,9 @@ def test_all_sizing_penalties_are_half():
 
     assert len(issues) > 0
     for issue in issues:
-        assert issue.sizing_penalty == 0.5, (
-            f"Rule {issue.rule_id} has penalty {issue.sizing_penalty}, expected 0.5"
-        )
+        assert (
+            issue.sizing_penalty == 0.5
+        ), f"Rule {issue.rule_id} has penalty {issue.sizing_penalty}, expected 0.5"
 
 
 # ---------------------------------------------------------------------------

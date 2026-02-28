@@ -37,6 +37,7 @@ def _get_workflow():
         # Hydrate from DB so in-memory stores have real data
         try:
             from src.pms.db_loader import hydrate_trade_workflow
+
             hydrate_trade_workflow(_workflow)
             logger.info("TradeWorkflowService hydrated from DB (journal route)")
         except Exception as exc:
@@ -68,7 +69,9 @@ async def list_journal_entries(
         # Apply filters
         if entry_type:
             journal = [
-                e for e in journal if e.get("entry_type", "").upper() == entry_type.upper()
+                e
+                for e in journal
+                if e.get("entry_type", "").upper() == entry_type.upper()
             ]
 
         if position_id is not None:
@@ -89,7 +92,9 @@ async def list_journal_entries(
                     for e in journal
                     if e.get("created_at")
                     and (
-                        e["created_at"].date() if isinstance(e["created_at"], datetime) else e["created_at"]
+                        e["created_at"].date()
+                        if isinstance(e["created_at"], datetime)
+                        else e["created_at"]
                     )
                     >= sd
                 ]
@@ -102,15 +107,15 @@ async def list_journal_entries(
                     for e in journal
                     if e.get("created_at")
                     and (
-                        e["created_at"].date() if isinstance(e["created_at"], datetime) else e["created_at"]
+                        e["created_at"].date()
+                        if isinstance(e["created_at"], datetime)
+                        else e["created_at"]
                     )
                     <= ed
                 ]
 
         # Sort by created_at descending
-        journal.sort(
-            key=lambda e: e.get("created_at") or datetime.min, reverse=True
-        )
+        journal.sort(key=lambda e: e.get("created_at") or datetime.min, reverse=True)
 
         # Pagination
         journal = journal[offset : offset + limit]
@@ -147,7 +152,9 @@ async def decision_analysis():
 
         # Approval rate: OPEN / (OPEN + REJECT)
         approved_plus_rejected = total_opened + total_rejections
-        approval_rate = total_opened / approved_plus_rejected if approved_plus_rejected > 0 else 0.0
+        approval_rate = (
+            total_opened / approved_plus_rejected if approved_plus_rejected > 0 else 0.0
+        )
 
         # Average holding days: time between OPEN and CLOSE for same position_id
         open_dates: dict[int, datetime] = {}
@@ -198,7 +205,9 @@ async def get_journal_entry(entry_id: int):
         for entry in wf.position_manager._journal:
             if entry.get("id") == entry_id:
                 return JournalEntryResponse(**entry)
-        raise HTTPException(status_code=404, detail=f"Journal entry {entry_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Journal entry {entry_id} not found"
+        )
     except HTTPException:
         raise
     except Exception as exc:

@@ -81,9 +81,7 @@ class TestFullPipelineDryRun:
         mock_risk,
     ):
         """Pipeline completes without error in dry-run mode."""
-        pipeline = DailyPipeline(
-            as_of_date=date(2024, 1, 15), dry_run=True
-        )
+        pipeline = DailyPipeline(as_of_date=date(2024, 1, 15), dry_run=True)
 
         # Set up agent reports on the pipeline
         def set_agent_reports():
@@ -127,9 +125,7 @@ class TestPipelineAgentToRiskChain:
         mock_risk,
     ):
         """Each step's output feeds into the next step."""
-        pipeline = DailyPipeline(
-            as_of_date=date(2024, 1, 15), dry_run=True
-        )
+        pipeline = DailyPipeline(as_of_date=date(2024, 1, 15), dry_run=True)
 
         # Track which steps were called and in what order
         call_order = []
@@ -178,13 +174,12 @@ class TestPipelineAbortOnAgentFailure:
     @patch("src.pipeline.daily_pipeline.DailyPipeline._step_ingest")
     def test_pipeline_abort_on_agent_failure(self, mock_ingest, mock_quality):
         """Mock the agents step to raise and verify FAILED status."""
-        pipeline = DailyPipeline(
-            as_of_date=date(2024, 1, 15), dry_run=True
-        )
+        pipeline = DailyPipeline(as_of_date=date(2024, 1, 15), dry_run=True)
 
         # Patch _step_agents directly to raise
         with patch.object(
-            pipeline, "_step_agents",
+            pipeline,
+            "_step_agents",
             side_effect=RuntimeError("Agent crashed"),
         ):
             with pytest.raises(RuntimeError, match="Pipeline aborted"):

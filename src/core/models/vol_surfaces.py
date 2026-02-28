@@ -27,15 +27,11 @@ from .base import Base
 class VolSurface(Base):
     __tablename__ = "vol_surfaces"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     instrument_id: Mapped[int] = mapped_column(
         ForeignKey("instruments.id"), nullable=False
     )
-    surface_date: Mapped[date] = mapped_column(
-        Date, primary_key=True, nullable=False
-    )
+    surface_date: Mapped[date] = mapped_column(Date, primary_key=True, nullable=False)
     delta: Mapped[float] = mapped_column(Float, nullable=False)
     tenor_days: Mapped[int] = mapped_column(Integer, nullable=False)
     implied_vol: Mapped[float] = mapped_column(Float, nullable=False)
@@ -44,7 +40,10 @@ class VolSurface(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "instrument_id", "surface_date", "delta", "tenor_days",
+            "instrument_id",
+            "surface_date",
+            "delta",
+            "tenor_days",
             name="uq_vol_surfaces_natural_key",
         ),
         Index("ix_vol_surfaces_instrument_id", "instrument_id"),

@@ -260,6 +260,12 @@ class TestOptimizePipeline:
         )
 
         # ASSET_A should have higher posterior than equilibrium (bullish view)
-        assert result["posterior_returns"]["ASSET_A"] > result["equilibrium_returns"]["ASSET_A"]
+        assert (
+            result["posterior_returns"]["ASSET_A"]
+            > result["equilibrium_returns"]["ASSET_A"]
+        )
         # ASSET_C should have lower posterior than equilibrium (bearish view)
-        assert result["posterior_returns"]["ASSET_C"] < result["equilibrium_returns"]["ASSET_C"]
+        assert (
+            result["posterior_returns"]["ASSET_C"]
+            < result["equilibrium_returns"]["ASSET_C"]
+        )

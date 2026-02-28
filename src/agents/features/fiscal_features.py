@@ -59,9 +59,15 @@ class FiscalFeatureEngine:
 
         # 12M change in gross debt/GDP
         try:
-            if gross_debt_df is not None and not gross_debt_df.empty and len(gross_debt_df) >= 13:
+            if (
+                gross_debt_df is not None
+                and not gross_debt_df.empty
+                and len(gross_debt_df) >= 13
+            ):
                 series = gross_debt_df["value"].dropna()
-                features["debt_gdp_12m_change"] = float(series.iloc[-1] - series.iloc[-13])
+                features["debt_gdp_12m_change"] = float(
+                    series.iloc[-1] - series.iloc[-13]
+                )
             else:
                 features["debt_gdp_12m_change"] = np.nan
         except Exception as exc:
@@ -115,7 +121,9 @@ class FiscalFeatureEngine:
         # 12M change in primary_balance_gdp
         try:
             if pb_gdp_series is not None and len(pb_gdp_series) >= 13:
-                features["pb_12m_change"] = float(pb_gdp_series.iloc[-1] - pb_gdp_series.iloc[-13])
+                features["pb_12m_change"] = float(
+                    pb_gdp_series.iloc[-1] - pb_gdp_series.iloc[-13]
+                )
             else:
                 features["pb_12m_change"] = np.nan
         except Exception as exc:
@@ -197,7 +205,9 @@ class FiscalFeatureEngine:
                 last_std = rolling_std.iloc[-1]
                 last_dev = abs_dev_series.iloc[-1]
                 if not np.isnan(last_std) and last_std > 1e-8:
-                    features["cb_credibility_zscore"] = float((last_dev - last_mean) / last_std)
+                    features["cb_credibility_zscore"] = float(
+                        (last_dev - last_mean) / last_std
+                    )
                 else:
                     features["cb_credibility_zscore"] = np.nan
             else:
@@ -228,12 +238,16 @@ class FiscalFeatureEngine:
         features["_dsa_raw_data"] = dsa_raw
 
         # _pb_history: pd.Series of monthly pb/GDP values
-        features["_pb_history"] = pb_gdp_series if pb_gdp_series is not None else pd.Series(dtype=float)
+        features["_pb_history"] = (
+            pb_gdp_series if pb_gdp_series is not None else pd.Series(dtype=float)
+        )
 
         # _focus_history: pd.Series of monthly focus_ipca_12m values
         focus_history_series = self._build_focus_series(focus_df)
         features["_focus_history"] = (
-            focus_history_series if focus_history_series is not None else pd.Series(dtype=float)
+            focus_history_series
+            if focus_history_series is not None
+            else pd.Series(dtype=float)
         )
 
         # _di_curve: raw dict {tenor_days: rate}

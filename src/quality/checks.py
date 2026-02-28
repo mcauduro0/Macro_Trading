@@ -110,9 +110,7 @@ class DataQualityChecker:
 
         with sync_engine.connect() as conn:
             # -- macro_series completeness --
-            rows = conn.execute(
-                text(
-                    """
+            rows = conn.execute(text("""
                     SELECT sm.series_code,
                            sm.name,
                            sm.frequency,
@@ -122,9 +120,7 @@ class DataQualityChecker:
                      WHERE sm.is_active = true
                      GROUP BY sm.id, sm.series_code, sm.name, sm.frequency
                      ORDER BY sm.series_code
-                    """
-                )
-            ).fetchall()
+                    """)).fetchall()
 
             for row in rows:
                 code, name, freq, last_date = row[0], row[1], row[2], row[3]
@@ -156,9 +152,7 @@ class DataQualityChecker:
                 )
 
             # -- market_data completeness (instruments) --
-            md_rows = conn.execute(
-                text(
-                    """
+            md_rows = conn.execute(text("""
                     SELECT i.ticker,
                            i.name,
                            MAX(md.timestamp) AS last_ts
@@ -167,9 +161,7 @@ class DataQualityChecker:
                      WHERE i.is_active = true
                      GROUP BY i.id, i.ticker, i.name
                      ORDER BY i.ticker
-                    """
-                )
-            ).fetchall()
+                    """)).fetchall()
 
             for row in md_rows:
                 ticker, name, last_ts = row[0], row[1], row[2]
@@ -221,8 +213,7 @@ class DataQualityChecker:
         with sync_engine.connect() as conn:
             for series_code, (low, high) in _RANGE_CHECKS.items():
                 rows = conn.execute(
-                    text(
-                        """
+                    text("""
                         SELECT ms.observation_date, ms.value
                           FROM macro_series ms
                           JOIN series_metadata sm ON sm.id = ms.series_id
@@ -230,8 +221,7 @@ class DataQualityChecker:
                            AND (ms.value < :low OR ms.value > :high)
                          ORDER BY ms.observation_date DESC
                          LIMIT 10
-                        """
-                    ),
+                        """),
                     {"code": series_code, "low": low, "high": high},
                 ).fetchall()
 
@@ -264,18 +254,14 @@ class DataQualityChecker:
 
         with sync_engine.connect() as conn:
             # Insufficient tenors
-            rows = conn.execute(
-                text(
-                    """
+            rows = conn.execute(text("""
                     SELECT curve_id, curve_date, COUNT(*) AS n_tenors
                       FROM curves
                      GROUP BY curve_id, curve_date
                     HAVING COUNT(*) < 5
                      ORDER BY curve_date DESC
                      LIMIT 50
-                    """
-                )
-            ).fetchall()
+                    """)).fetchall()
 
             for row in rows:
                 issues.append(
@@ -288,9 +274,7 @@ class DataQualityChecker:
                 )
 
             # Negative rates on nominal curves
-            neg_rows = conn.execute(
-                text(
-                    """
+            neg_rows = conn.execute(text("""
                     SELECT curve_id, curve_date, tenor_label, rate
                       FROM curves
                      WHERE rate < 0
@@ -298,9 +282,7 @@ class DataQualityChecker:
                        AND curve_id NOT LIKE '%BEI%'
                      ORDER BY curve_date DESC
                      LIMIT 50
-                    """
-                )
-            ).fetchall()
+                    """)).fetchall()
 
             for row in neg_rows:
                 issues.append(
@@ -327,9 +309,7 @@ class DataQualityChecker:
         violations: list[dict[str, Any]] = []
 
         with sync_engine.connect() as conn:
-            rows = conn.execute(
-                text(
-                    """
+            rows = conn.execute(text("""
                     SELECT ms.observation_date,
                            ms.release_time,
                            sm.series_code
@@ -338,9 +318,7 @@ class DataQualityChecker:
                      WHERE ms.release_time IS NOT NULL
                        AND ms.release_time::date < ms.observation_date
                      LIMIT 50
-                    """
-                )
-            ).fetchall()
+                    """)).fetchall()
 
             for row in rows:
                 violations.append(

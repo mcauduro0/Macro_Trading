@@ -71,7 +71,9 @@ def fomc_doc():
 class TestProcessDocument:
     """Tests for single document processing."""
 
-    def test_process_document_returns_processed_document(self, processor, copom_hawk_doc):
+    def test_process_document_returns_processed_document(
+        self, processor, copom_hawk_doc
+    ):
         """Processing a document should return ProcessedDocument with all fields."""
         result = processor.process_document(copom_hawk_doc)
         assert isinstance(result, ProcessedDocument)
@@ -124,7 +126,9 @@ class TestProcessBatch:
             "major_dovish_shift",
         )
 
-    def test_process_batch_sorts_by_date(self, processor, copom_hawk_doc, copom_dove_doc):
+    def test_process_batch_sorts_by_date(
+        self, processor, copom_hawk_doc, copom_dove_doc
+    ):
         """Batch processing should sort documents by date ascending."""
         # Pass in reverse order
         results = processor.process_batch(

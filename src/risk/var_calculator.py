@@ -452,7 +452,7 @@ class VaRCalculator:
 
         # Trim to lookback_days if returns_matrix is longer
         if returns_matrix.shape[0] > self.lookback_days:
-            returns_matrix = returns_matrix[-self.lookback_days:]
+            returns_matrix = returns_matrix[-self.lookback_days :]
         n_obs = returns_matrix.shape[0]
 
         var_95, cvar_95 = compute_monte_carlo_var(
@@ -523,7 +523,7 @@ class VaRCalculator:
 
         # Trim to lookback window
         if returns_matrix.shape[0] > self.lookback_days:
-            returns_matrix = returns_matrix[-self.lookback_days:]
+            returns_matrix = returns_matrix[-self.lookback_days :]
 
         # Compute portfolio returns for total VaR/CVaR
         portfolio_returns = returns_matrix @ weights
@@ -533,9 +533,7 @@ class VaRCalculator:
         marginal_idx = compute_marginal_var(
             returns_matrix, weights, confidence, method="parametric"
         )
-        component_idx = compute_component_var(
-            returns_matrix, weights, confidence
-        )
+        component_idx = compute_component_var(returns_matrix, weights, confidence)
 
         # Map indices to instrument names
         marginal_named = {

@@ -232,7 +232,10 @@ class SignalAggregatorV2:
         results: list[AggregatedSignalV2] = []
         for instrument, group_signals in sorted(instrument_groups.items()):
             agg = self._aggregate_instrument(
-                instrument, group_signals, regime_probs, as_of,
+                instrument,
+                group_signals,
+                regime_probs,
+                as_of,
             )
             if agg is not None:
                 results.append(agg)
@@ -253,7 +256,9 @@ class SignalAggregatorV2:
 
         # Compute staleness factors
         staleness_map: dict[str, float] = {}
-        active_signals: list[tuple[StrategySignal, float]] = []  # (signal, staleness_factor)
+        active_signals: list[tuple[StrategySignal, float]] = (
+            []
+        )  # (signal, staleness_factor)
 
         for sig in signals:
             days = _count_business_days(sig.timestamp, as_of)
@@ -276,7 +281,8 @@ class SignalAggregatorV2:
             )
         else:  # bayesian
             conviction, confidence, contribs = self._bayesian(
-                active_signals, regime_probs,
+                active_signals,
+                regime_probs,
             )
 
         # Apply crowding penalty
@@ -285,12 +291,10 @@ class SignalAggregatorV2:
 
         if len(active_signals) > 1:
             positive_count = sum(
-                1 for sig, _ in active_signals
-                if self._signal_conviction(sig) > 0
+                1 for sig, _ in active_signals if self._signal_conviction(sig) > 0
             )
             negative_count = sum(
-                1 for sig, _ in active_signals
-                if self._signal_conviction(sig) < 0
+                1 for sig, _ in active_signals if self._signal_conviction(sig) < 0
             )
             total = len(active_signals)
             agreement_fraction = max(positive_count, negative_count) / total
@@ -298,7 +302,7 @@ class SignalAggregatorV2:
             if agreement_fraction > self.crowding_threshold:
                 crowding_applied = True
                 crowding_discount_val = self.crowding_discount
-                conviction *= (1.0 - self.crowding_discount)
+                conviction *= 1.0 - self.crowding_discount
 
                 log.info(
                     "crowding_penalty_applied",
@@ -365,16 +369,25 @@ class SignalAggregatorV2:
             weighted_sum += conviction * w
             weight_total += w
             confidence_values.append(sig.confidence)
-            contribs.append({
-                "strategy_id": sig.strategy_id,
-                "raw_signal": conviction,
-                "weight": w,
-                "staleness_days": round(1.0 - staleness_factor, 2) * self.staleness_max_days
-                if staleness_factor < 1.0 else 0,
-            })
+            contribs.append(
+                {
+                    "strategy_id": sig.strategy_id,
+                    "raw_signal": conviction,
+                    "weight": w,
+                    "staleness_days": (
+                        round(1.0 - staleness_factor, 2) * self.staleness_max_days
+                        if staleness_factor < 1.0
+                        else 0
+                    ),
+                }
+            )
 
         conviction = weighted_sum / weight_total if weight_total > 0 else 0.0
-        confidence = sum(confidence_values) / len(confidence_values) if confidence_values else 0.0
+        confidence = (
+            sum(confidence_values) / len(confidence_values)
+            if confidence_values
+            else 0.0
+        )
 
         return conviction, confidence, contribs
 
@@ -395,7 +408,9 @@ class SignalAggregatorV2:
             (conviction, confidence, contributing_strategies)
         """
         # Get convictions with staleness
-        entries: list[tuple[StrategySignal, float, float]] = []  # (sig, staleness, conviction)
+        entries: list[tuple[StrategySignal, float, float]] = (
+            []
+        )  # (sig, staleness, conviction)
         for sig, staleness_factor in active_signals:
             conv = self._signal_conviction(sig)
             entries.append((sig, staleness_factor, conv))
@@ -425,15 +440,23 @@ class SignalAggregatorV2:
             rank_scores.append(weighted_rank)
             confidence_values.append(sig.confidence)
 
-            contribs.append({
-                "strategy_id": sig.strategy_id,
-                "raw_signal": conv,
-                "weight": staleness_factor,
-                "staleness_days": round((1.0 - staleness_factor) * self.staleness_max_days, 1),
-            })
+            contribs.append(
+                {
+                    "strategy_id": sig.strategy_id,
+                    "raw_signal": conv,
+                    "weight": staleness_factor,
+                    "staleness_days": round(
+                        (1.0 - staleness_factor) * self.staleness_max_days, 1
+                    ),
+                }
+            )
 
         conviction = sum(rank_scores) / len(rank_scores) if rank_scores else 0.0
-        confidence = sum(confidence_values) / len(confidence_values) if confidence_values else 0.0
+        confidence = (
+            sum(confidence_values) / len(confidence_values)
+            if confidence_values
+            else 0.0
+        )
 
         return conviction, confidence, contribs
 
@@ -471,16 +494,24 @@ class SignalAggregatorV2:
             weight_total += w
             confidence_values.append(sig.confidence)
 
-            contribs.append({
-                "strategy_id": sig.strategy_id,
-                "raw_signal": conviction,
-                "weight": w,
-                "staleness_days": round((1.0 - staleness_factor) * self.staleness_max_days, 1),
-                "regime_tilt": regime_tilt,
-            })
+            contribs.append(
+                {
+                    "strategy_id": sig.strategy_id,
+                    "raw_signal": conviction,
+                    "weight": w,
+                    "staleness_days": round(
+                        (1.0 - staleness_factor) * self.staleness_max_days, 1
+                    ),
+                    "regime_tilt": regime_tilt,
+                }
+            )
 
         conviction = weighted_sum / weight_total if weight_total > 0 else 0.0
-        confidence = sum(confidence_values) / len(confidence_values) if confidence_values else 0.0
+        confidence = (
+            sum(confidence_values) / len(confidence_values)
+            if confidence_values
+            else 0.0
+        )
 
         return conviction, confidence, contribs
 

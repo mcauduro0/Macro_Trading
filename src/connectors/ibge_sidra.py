@@ -196,17 +196,21 @@ class IbgeSidraConnector(BaseConnector):
             else:
                 series_key = f"BR_IPCA_{group_name}_V{variable}"
 
-            records.append({
-                "_series_key": series_key,
-                "observation_date": obs_date,
-                "value": value,
-                "release_time": datetime(
-                    obs_date.year, obs_date.month, 15,
-                    tzinfo=_SP_TZ,
-                ),
-                "revision_number": 0,
-                "source": self.SOURCE_NAME,
-            })
+            records.append(
+                {
+                    "_series_key": series_key,
+                    "observation_date": obs_date,
+                    "value": value,
+                    "release_time": datetime(
+                        obs_date.year,
+                        obs_date.month,
+                        15,
+                        tzinfo=_SP_TZ,
+                    ),
+                    "revision_number": 0,
+                    "source": self.SOURCE_NAME,
+                }
+            )
 
         return records
 
@@ -272,26 +276,28 @@ class IbgeSidraConnector(BaseConnector):
         )
         return all_records
 
-    async def _ensure_series_metadata(
-        self, series_key: str, source_id: int
-    ) -> int:
+    async def _ensure_series_metadata(self, series_key: str, source_id: int) -> int:
         """Ensure a series_metadata row exists for the given series. Returns its id."""
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=series_key,
-                    name=series_key,
-                    frequency="M",
-                    country="BR",
-                    unit="percent",
-                    decimal_separator=".",
-                    date_format="YYYYMM",
-                    is_revisable=False,
-                    release_timezone="America/Sao_Paulo",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=series_key,
+                        name=series_key,
+                        frequency="M",
+                        country="BR",
+                        unit="percent",
+                        decimal_separator=".",
+                        date_format="YYYYMM",
+                        is_revisable=False,
+                        release_timezone="America/Sao_Paulo",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

@@ -319,7 +319,9 @@ class TestSignalsToPositions:
         strat = DummyStrategy(config=config)
         signals = [
             _make_signal(signal_id="S1", confidence=0.8),
-            _make_signal(signal_id="S2", confidence=0.6, direction=SignalDirection.SHORT),
+            _make_signal(
+                signal_id="S2", confidence=0.6, direction=SignalDirection.SHORT
+            ),
         ]
         positions = strat.signals_to_positions(signals)
         assert len(positions) == 2

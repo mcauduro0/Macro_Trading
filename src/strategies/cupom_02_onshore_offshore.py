@@ -149,11 +149,15 @@ class Cupom02OnshoreOffshoreStrategy(BaseStrategy):
 
         # 5. Load curve histories for z-score
         di_history = self.data_loader.get_curve_history(
-            "DI_PRE", di_tenor, as_of_date,
+            "DI_PRE",
+            di_tenor,
+            as_of_date,
             lookback_days=_HISTORY_LOOKBACK_DAYS,
         )
         ust_history = self.data_loader.get_curve_history(
-            "UST_NOM", ust_tenor, as_of_date,
+            "UST_NOM",
+            ust_tenor,
+            as_of_date,
             lookback_days=_HISTORY_LOOKBACK_DAYS,
         )
 
@@ -162,9 +166,13 @@ class Cupom02OnshoreOffshoreStrategy(BaseStrategy):
             return []
 
         # Compute historical spread series
-        combined = di_history[["rate"]].rename(columns={"rate": "di_rate"}).join(
-            ust_history[["rate"]].rename(columns={"rate": "ust_rate"}),
-            how="inner",
+        combined = (
+            di_history[["rate"]]
+            .rename(columns={"rate": "di_rate"})
+            .join(
+                ust_history[["rate"]].rename(columns={"rate": "ust_rate"}),
+                how="inner",
+            )
         )
 
         if len(combined) < 60:
@@ -176,7 +184,9 @@ class Cupom02OnshoreOffshoreStrategy(BaseStrategy):
 
         # 6. Compute z-score
         z_score = self.compute_z_score(
-            current_spread, spread_history, window=_HISTORY_WINDOW,
+            current_spread,
+            spread_history,
+            window=_HISTORY_WINDOW,
         )
 
         self.log.info(
@@ -238,4 +248,3 @@ class Cupom02OnshoreOffshoreStrategy(BaseStrategy):
         )
 
         return [signal]
-

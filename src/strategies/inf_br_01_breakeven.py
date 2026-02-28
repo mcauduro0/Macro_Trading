@@ -124,7 +124,8 @@ class InfBR01BreakevenStrategy(BaseStrategy):
 
         # 5. Load agent inflation forecast
         agent_forecast = self.data_loader.get_latest_macro_value(
-            f"BR_FOCUS_IPCA_{as_of_date.year}_MEDIAN", as_of_date,
+            f"BR_FOCUS_IPCA_{as_of_date.year}_MEDIAN",
+            as_of_date,
         )
         if agent_forecast is None:
             self.log.warning("missing_focus_forecast", as_of_date=str(as_of_date))
@@ -224,16 +225,18 @@ class InfBR01BreakevenStrategy(BaseStrategy):
 
         # Enrich metadata
         for pos in positions:
-            pos.metadata.update({
-                "divergence_bps": divergence_bps,
-                "market_breakeven": market_breakeven,
-                "agent_forecast": agent_forecast,
-                "nominal_rate": nominal_rate,
-                "real_rate": real_rate,
-                "di_tenor": di_tenor,
-                "ntnb_tenor": ntnb_tenor,
-                "curve_date": str(as_of_date),
-            })
+            pos.metadata.update(
+                {
+                    "divergence_bps": divergence_bps,
+                    "market_breakeven": market_breakeven,
+                    "agent_forecast": agent_forecast,
+                    "nominal_rate": nominal_rate,
+                    "real_rate": real_rate,
+                    "di_tenor": di_tenor,
+                    "ntnb_tenor": ntnb_tenor,
+                    "curve_date": str(as_of_date),
+                }
+            )
 
         self.log.info(
             "breakeven_signal_generated",

@@ -313,8 +313,14 @@ class TestFullPipelineRun:
         result = pipeline.run()
 
         expected_steps = [
-            "ingest", "quality", "agents", "aggregate",
-            "strategies", "portfolio", "risk", "report",
+            "ingest",
+            "quality",
+            "agents",
+            "aggregate",
+            "strategies",
+            "portfolio",
+            "risk",
+            "report",
         ]
         for step_name in expected_steps:
             assert step_name in result.step_timings

@@ -84,12 +84,27 @@ openapi_tags = [
     {"name": "Reports", "description": "Daily reports and notifications"},
     {"name": "Monitoring", "description": "System monitoring and alerts"},
     {"name": "WebSocket", "description": "Real-time WebSocket channels"},
-    {"name": "PMS - Portfolio", "description": "Portfolio positions, P&L, and book management"},
-    {"name": "PMS - Trade Blotter", "description": "Trade proposals and approval workflow"},
+    {
+        "name": "PMS - Portfolio",
+        "description": "Portfolio positions, P&L, and book management",
+    },
+    {
+        "name": "PMS - Trade Blotter",
+        "description": "Trade proposals and approval workflow",
+    },
     {"name": "PMS - Decision Journal", "description": "Immutable decision audit log"},
-    {"name": "PMS - Morning Pack", "description": "Daily briefing generation and retrieval"},
-    {"name": "PMS - Risk Monitor", "description": "Real-time risk metrics, limits, and alerts"},
-    {"name": "PMS - Attribution", "description": "Multi-dimensional P&L attribution and performance analytics"},
+    {
+        "name": "PMS - Morning Pack",
+        "description": "Daily briefing generation and retrieval",
+    },
+    {
+        "name": "PMS - Risk Monitor",
+        "description": "Real-time risk metrics, limits, and alerts",
+    },
+    {
+        "name": "PMS - Attribution",
+        "description": "Multi-dimensional P&L attribution and performance analytics",
+    },
 ]
 
 app = FastAPI(

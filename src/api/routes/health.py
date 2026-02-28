@@ -45,9 +45,7 @@ async def data_status(session: AsyncSession = Depends(get_db)) -> dict:
         )
         table_counts[table_name] = result.scalar_one()
 
-    instruments_result = await session.execute(
-        text("SELECT COUNT(*) FROM instruments")
-    )
+    instruments_result = await session.execute(text("SELECT COUNT(*) FROM instruments"))
     series_meta_result = await session.execute(
         text("SELECT COUNT(*) FROM series_metadata")
     )

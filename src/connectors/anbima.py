@@ -93,9 +93,11 @@ class AnbimaConnector(BaseConnector):
             ConnectorError: If credentials are missing or auth fails.
         """
         # Return cached token if still valid
-        if (self._access_token is not None
-                and self._token_expires_at is not None
-                and datetime.utcnow() < self._token_expires_at):
+        if (
+            self._access_token is not None
+            and self._token_expires_at is not None
+            and datetime.utcnow() < self._token_expires_at
+        ):
             return self._access_token
 
         client_id = settings.anbima_client_id
@@ -250,14 +252,16 @@ class AnbimaConnector(BaseConnector):
             except (ValueError, TypeError):
                 continue
 
-            records.append({
-                "_record_type": "curve",
-                "curve_id": "NTN_B_REAL_ANBIMA",
-                "curve_date": ref_date,
-                "tenor_days": tenor_days,
-                "rate": rate,
-                "maturity_date": mat_date,
-            })
+            records.append(
+                {
+                    "_record_type": "curve",
+                    "curve_id": "NTN_B_REAL_ANBIMA",
+                    "curve_date": ref_date,
+                    "tenor_days": tenor_days,
+                    "rate": rate,
+                    "maturity_date": mat_date,
+                }
+            )
 
         return records
 
@@ -285,15 +289,22 @@ class AnbimaConnector(BaseConnector):
                         continue
 
                     # Normalize index name for ticker (e.g. "IMA-B 5" → "ANBIMA_IMA_B_5")
-                    ticker = "ANBIMA_" + index_name.replace("-", "_").replace(" ", "_").upper()
+                    ticker = (
+                        "ANBIMA_"
+                        + index_name.replace("-", "_").replace(" ", "_").upper()
+                    )
 
-                    records.append({
-                        "_record_type": "market_data",
-                        "ticker": ticker,
-                        "timestamp": datetime.combine(ref_date, datetime.min.time()).replace(tzinfo=_SP_TZ),
-                        "close": float(valor),
-                        "volume": 0.0,
-                    })
+                    records.append(
+                        {
+                            "_record_type": "market_data",
+                            "ticker": ticker,
+                            "timestamp": datetime.combine(
+                                ref_date, datetime.min.time()
+                            ).replace(tzinfo=_SP_TZ),
+                            "close": float(valor),
+                            "volume": 0.0,
+                        }
+                    )
 
             except Exception as exc:
                 logger.debug(
@@ -356,14 +367,18 @@ class AnbimaConnector(BaseConnector):
                         inst_id = result.scalar()
 
                         if inst_id is None:
-                            stmt = pg_insert(Instrument).values(
-                                ticker=ticker,
-                                name=f"ANBIMA {ticker}",
-                                instrument_type="INDEX",
-                                exchange="ANBIMA",
-                                currency="BRL",
-                                is_active=True,
-                            ).on_conflict_do_nothing()
+                            stmt = (
+                                pg_insert(Instrument)
+                                .values(
+                                    ticker=ticker,
+                                    name=f"ANBIMA {ticker}",
+                                    instrument_type="INDEX",
+                                    exchange="ANBIMA",
+                                    currency="BRL",
+                                    is_active=True,
+                                )
+                                .on_conflict_do_nothing()
+                            )
                             await session.execute(stmt)
                             result = await session.execute(
                                 select(Instrument.id).where(Instrument.ticker == ticker)
@@ -373,7 +388,8 @@ class AnbimaConnector(BaseConnector):
                     rec["instrument_id"] = inst_id
 
             total_inserted += await self._bulk_insert(
-                MarketData, [r for r in market_records if "instrument_id" in r],
+                MarketData,
+                [r for r in market_records if "instrument_id" in r],
                 "uq_market_data_instrument_timestamp",
             )
 

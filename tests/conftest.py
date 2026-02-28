@@ -41,8 +41,10 @@ def load_fixture() -> Any:
         def test_something(load_fixture):
             data = load_fixture("bcb_sgs_sample.json")
     """
+
     def _load(filename: str) -> Any:
         filepath = FIXTURES_DIR / filename
         with filepath.open("r", encoding="utf-8") as f:
             return json.load(f)
+
     return _load

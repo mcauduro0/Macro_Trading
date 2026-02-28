@@ -112,7 +112,9 @@ class TestDecisionJournal:
         # Verify it's String(64) for SHA256 hex
         mapper = sa_inspect(DecisionJournal)
         hash_col = mapper.columns["content_hash"]
-        assert hash_col.type.length == 64, f"Expected length 64, got {hash_col.type.length}"
+        assert (
+            hash_col.type.length == 64
+        ), f"Expected length 64, got {hash_col.type.length}"
 
     def test_decision_journal_has_snapshots(self):
         cols = _column_names(DecisionJournal)
@@ -214,6 +216,7 @@ class TestAllModelsInInit:
         from src.core.models import (
             TradeProposal as TP_,
         )
+
         assert PP_ is PortfolioPosition
         assert TP_ is TradeProposal
         assert DJ_ is DecisionJournal

@@ -51,8 +51,15 @@ def test_ipca_groups_has_9_entries():
 def test_ipca_groups_has_expected_groups():
     """Verify all 9 expected IPCA groups are present."""
     expected = {
-        "FOOD", "HOUSING", "HOUSEHOLD", "CLOTHING", "TRANSPORT",
-        "HEALTH", "PERSONAL", "EDUCATION", "COMMUNICATION",
+        "FOOD",
+        "HOUSING",
+        "HOUSEHOLD",
+        "CLOTHING",
+        "TRANSPORT",
+        "HEALTH",
+        "PERSONAL",
+        "EDUCATION",
+        "COMMUNICATION",
     }
     assert set(IbgeSidraConnector.IPCA_GROUPS.keys()) == expected
 
@@ -102,9 +109,7 @@ async def test_fetch_variable_skips_header_row(ibge_sidra_sample):
     """Verify the first element (header metadata) is always skipped."""
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
         # Mock the MoM change variable request
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=ibge_sidra_sample
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=ibge_sidra_sample)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(63, "202401", "202402")
@@ -124,9 +129,7 @@ async def test_fetch_variable_skips_header_row(ibge_sidra_sample):
 async def test_fetch_variable_parses_dates_correctly(ibge_sidra_sample):
     """Verify YYYYMM periods are converted to first-of-month dates."""
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=ibge_sidra_sample
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=ibge_sidra_sample)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(63, "202401", "202402")
@@ -141,9 +144,7 @@ async def test_fetch_variable_parses_dates_correctly(ibge_sidra_sample):
 async def test_fetch_variable_skips_invalid_values(ibge_sidra_sample):
     """Verify records with empty, dash, or ellipsis values are skipped."""
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=ibge_sidra_sample
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=ibge_sidra_sample)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(63, "202401", "202402")
@@ -160,9 +161,7 @@ async def test_fetch_variable_skips_invalid_values(ibge_sidra_sample):
 async def test_series_keys_incorporate_group_name(ibge_sidra_sample):
     """Verify series keys follow BR_IPCA_{GROUP}_MOM pattern."""
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=ibge_sidra_sample
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=ibge_sidra_sample)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(63, "202401", "202402")
@@ -177,19 +176,23 @@ async def test_fetch_variable_weight_produces_weight_keys():
     """Verify variable 2265 (weight) produces _WEIGHT series keys."""
     sample_data = [
         {  # Header row
-            "NC": "header", "NN": "header", "V": "Valor",
-            "D3C": "202401", "D4C": "7169",
+            "NC": "header",
+            "NN": "header",
+            "V": "Valor",
+            "D3C": "202401",
+            "D4C": "7169",
         },
         {  # Data row
-            "NC": "1", "NN": "Brasil", "V": "21.15",
-            "D3C": "202401", "D4C": "7169",
+            "NC": "1",
+            "NN": "Brasil",
+            "V": "21.15",
+            "D3C": "202401",
+            "D4C": "7169",
         },
     ]
 
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=sample_data
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=sample_data)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(2265, "202401", "202401")
@@ -258,9 +261,7 @@ async def test_fetch_calls_both_variables():
 async def test_records_have_required_fields(ibge_sidra_sample):
     """Verify each record has all required fields for macro_series table."""
     with respx.mock(base_url="https://apisidra.ibge.gov.br") as mock:
-        mock.get(url__regex=r"/values/t/7060/.*").respond(
-            200, json=ibge_sidra_sample
-        )
+        mock.get(url__regex=r"/values/t/7060/.*").respond(200, json=ibge_sidra_sample)
 
         async with IbgeSidraConnector() as conn:
             records = await conn._fetch_variable(63, "202401", "202402")

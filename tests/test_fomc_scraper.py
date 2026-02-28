@@ -137,10 +137,14 @@ class TestFOMCScraperScrapeStatements:
         # For start_year=2023, we get historical 2023 + 2024 + 2025 + current calendar
         # Each calendar returns the same HTML for simplicity
         mock_client.get = MagicMock(
-            side_effect=[cal_response] + [stmt_response] * 2 +  # historical 2023
-                        [cal_response] + [stmt_response] * 2 +  # historical 2024
-                        [cal_response] + [stmt_response] * 2 +  # historical 2025
-                        [cal_response] + [stmt_response] * 2    # current calendar
+            side_effect=[cal_response]
+            + [stmt_response] * 2  # historical 2023
+            + [cal_response]
+            + [stmt_response] * 2  # historical 2024
+            + [cal_response]
+            + [stmt_response] * 2  # historical 2025
+            + [cal_response]
+            + [stmt_response] * 2  # current calendar
         )
         scraper._client = mock_client
 
@@ -183,9 +187,7 @@ class TestFOMCScraperScrapeStatements:
         stmt_response.raise_for_status = MagicMock()
 
         # Multiple calendar pages + doc responses
-        mock_client.get = MagicMock(
-            side_effect=[cal_response, stmt_response] * 10
-        )
+        mock_client.get = MagicMock(side_effect=[cal_response, stmt_response] * 10)
         scraper._client = mock_client
 
         docs = scraper.scrape_statements(start_year=2023)
@@ -217,10 +219,14 @@ class TestFOMCScraperScrapeMinutes:
         min_response.raise_for_status = MagicMock()
 
         mock_client.get = MagicMock(
-            side_effect=[cal_response] + [min_response] * 2 +
-                        [cal_response] + [min_response] * 2 +
-                        [cal_response] + [min_response] * 2 +
-                        [cal_response] + [min_response] * 2
+            side_effect=[cal_response]
+            + [min_response] * 2
+            + [cal_response]
+            + [min_response] * 2
+            + [cal_response]
+            + [min_response] * 2
+            + [cal_response]
+            + [min_response] * 2
         )
         scraper._client = mock_client
 
@@ -254,9 +260,7 @@ class TestFOMCScraperScrapeAll:
         doc_response.raise_for_status = MagicMock()
 
         # Enough responses for all calendar pages + docs (statements + minutes)
-        mock_client.get = MagicMock(
-            side_effect=[cal_response] + [doc_response] * 20
-        )
+        mock_client.get = MagicMock(side_effect=[cal_response] + [doc_response] * 20)
         scraper._client = mock_client
 
         docs = scraper.scrape_all(start_year=2024)
@@ -369,9 +373,7 @@ class TestFOMCScraperHTTPErrors:
         scraper = FOMCScraper(cache_dir=str(tmp_path), rate_limit=0)
 
         mock_client = MagicMock(spec=httpx.Client)
-        mock_client.get = MagicMock(
-            side_effect=httpx.HTTPError("Connection failed")
-        )
+        mock_client.get = MagicMock(side_effect=httpx.HTTPError("Connection failed"))
         scraper._client = mock_client
 
         docs = scraper.scrape_statements(start_year=2024)

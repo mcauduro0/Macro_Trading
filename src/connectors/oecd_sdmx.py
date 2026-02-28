@@ -66,27 +66,27 @@ class OecdSdmxConnector(BaseConnector):
 
     # Countries of interest (ISO-3 codes used by OECD)
     COUNTRIES: dict[str, str] = {
-        "BRA": "BR",   # Brazil
-        "USA": "US",   # United States
-        "MEX": "MX",   # Mexico
-        "CHL": "CL",   # Chile
-        "COL": "CO",   # Colombia
-        "GBR": "GB",   # United Kingdom
-        "DEU": "DE",   # Germany
-        "JPN": "JP",   # Japan
-        "CHN": "CN",   # China (non-member but included in EO)
-        "IND": "IN",   # India
-        "ZAF": "ZA",   # South Africa
-        "TUR": "TR",   # Turkey
+        "BRA": "BR",  # Brazil
+        "USA": "US",  # United States
+        "MEX": "MX",  # Mexico
+        "CHL": "CL",  # Chile
+        "COL": "CO",  # Colombia
+        "GBR": "GB",  # United Kingdom
+        "DEU": "DE",  # Germany
+        "JPN": "JP",  # Japan
+        "CHN": "CN",  # China (non-member but included in EO)
+        "IND": "IN",  # India
+        "ZAF": "ZA",  # South Africa
+        "TUR": "TR",  # Turkey
     }
 
     # OECD EO variable codes → internal series suffix
     VARIABLES: dict[str, str] = {
-        "GAP": "OUTPUT_GAP",         # Output gap (% of potential GDP)
-        "NAIRU": "NAIRU",            # NAIRU estimate
-        "GDPV_ANNPCT": "GDP_GROWTH", # Real GDP growth (%)
-        "UNR": "UNEMP_RATE",        # Unemployment rate (%)
-        "CPI": "CPI_GROWTH",        # CPI growth (annual %)
+        "GAP": "OUTPUT_GAP",  # Output gap (% of potential GDP)
+        "NAIRU": "NAIRU",  # NAIRU estimate
+        "GDPV_ANNPCT": "GDP_GROWTH",  # Real GDP growth (%)
+        "UNR": "UNEMP_RATE",  # Unemployment rate (%)
+        "CPI": "CPI_GROWTH",  # CPI growth (annual %)
     }
 
     # OECD EO dataflow ID
@@ -150,7 +150,8 @@ class OecdSdmxConnector(BaseConnector):
             )
             # Fallback: fetch country by country
             all_records = await self._fetch_country_by_country(
-                start_period, end_period,
+                start_period,
+                end_period,
             )
 
         logger.info(
@@ -184,7 +185,9 @@ class OecdSdmxConnector(BaseConnector):
                         "GET",
                         url,
                         params=params,
-                        headers={"Accept": "application/vnd.sdmx.data+json;version=2.0.0"},
+                        headers={
+                            "Accept": "application/vnd.sdmx.data+json;version=2.0.0"
+                        },
                     )
                     data = response.json()
                     records = self._parse_sdmx_json(data)
@@ -233,10 +236,12 @@ class OecdSdmxConnector(BaseConnector):
             series_dim_lookups = []
             for dim in series_dims:
                 values = [v.get("id", "") for v in dim.get("values", [])]
-                series_dim_lookups.append({
-                    "id": dim.get("id", ""),
-                    "values": values,
-                })
+                series_dim_lookups.append(
+                    {
+                        "id": dim.get("id", ""),
+                        "values": values,
+                    }
+                )
 
             # Parse series and observations
             series_data = dataset.get("series", {})
@@ -252,7 +257,9 @@ class OecdSdmxConnector(BaseConnector):
                             series_attrs[dim_info["id"]] = dim_info["values"][idx]
 
                 country_oecd = series_attrs.get("REF_AREA", "")
-                variable = series_attrs.get("MEASURE", "") or series_attrs.get("SUBJECT", "")
+                variable = series_attrs.get("MEASURE", "") or series_attrs.get(
+                    "SUBJECT", ""
+                )
 
                 country_iso2 = self.COUNTRIES.get(country_oecd, country_oecd)
                 var_suffix = self.VARIABLES.get(variable, variable)
@@ -274,14 +281,16 @@ class OecdSdmxConnector(BaseConnector):
                         if value is None:
                             continue
 
-                        records.append({
-                            "observation_date": obs_date,
-                            "value": float(value),
-                            "release_time": datetime.now(tz=_PARIS_TZ),
-                            "revision_number": 0,
-                            "source": self.SOURCE_NAME,
-                            "_series_key": series_name,
-                        })
+                        records.append(
+                            {
+                                "observation_date": obs_date,
+                                "value": float(value),
+                                "release_time": datetime.now(tz=_PARIS_TZ),
+                                "revision_number": 0,
+                                "source": self.SOURCE_NAME,
+                                "_series_key": series_name,
+                            }
+                        )
                     except (ValueError, TypeError, IndexError):
                         continue
 
@@ -302,20 +311,24 @@ class OecdSdmxConnector(BaseConnector):
 
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=series_key,
-                    name=series_key,
-                    frequency="A",  # Annual
-                    country=country,
-                    unit="percent",
-                    decimal_separator=".",
-                    date_format="YYYY-MM-DD",
-                    is_revisable=True,  # OECD EO revises estimates each release
-                    release_timezone="Europe/Paris",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=series_key,
+                        name=series_key,
+                        frequency="A",  # Annual
+                        country=country,
+                        unit="percent",
+                        decimal_separator=".",
+                        date_format="YYYY-MM-DD",
+                        is_revisable=True,  # OECD EO revises estimates each release
+                        release_timezone="Europe/Paris",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

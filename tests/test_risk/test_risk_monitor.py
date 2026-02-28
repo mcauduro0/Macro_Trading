@@ -110,9 +110,7 @@ class TestRiskMonitor:
             weights=_sample_weights(),
         )
         assert len(report.limit_results) > 0
-        assert all(
-            hasattr(r, "breached") for r in report.limit_results
-        )
+        assert all(hasattr(r, "breached") for r in report.limit_results)
 
     def test_report_risk_level_low(self) -> None:
         """Healthy portfolio should have LOW risk level."""

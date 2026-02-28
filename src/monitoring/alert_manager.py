@@ -87,9 +87,7 @@ class AlertManager:
                 continue
 
             if self._in_cooldown(rule_id):
-                self._logger.debug(
-                    "rule_in_cooldown", rule_id=rule_id
-                )
+                self._logger.debug("rule_in_cooldown", rule_id=rule_id)
                 continue
 
             alert = {
@@ -131,7 +129,9 @@ class AlertManager:
             )
             return False
 
-        severity_emoji = ":red_circle:" if alert["severity"] == "critical" else ":warning:"
+        severity_emoji = (
+            ":red_circle:" if alert["severity"] == "critical" else ":warning:"
+        )
         blocks = [
             {
                 "type": "header",
@@ -242,7 +242,9 @@ class AlertManager:
         """
 
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"[{alert['severity'].upper()}] {alert['name']} - Macro Trading Alert"
+        msg["Subject"] = (
+            f"[{alert['severity'].upper()}] {alert['name']} - Macro Trading Alert"
+        )
         msg["From"] = cfg.get("user", "alerts@macrotrading.local")
         msg["To"] = ", ".join(recipients)
         msg.attach(MIMEText(html_body, "html"))
@@ -314,9 +316,7 @@ class AlertManager:
             fired_at = alert.get("fired_at")
             if fired_at and (now - fired_at) < cooldown:
                 # Return serializable copy (no datetime objects)
-                serializable = {
-                    k: v for k, v in alert.items() if k != "fired_at"
-                }
+                serializable = {k: v for k, v in alert.items() if k != "fired_at"}
                 active.append(serializable)
         return active
 
@@ -336,9 +336,7 @@ class AlertManager:
     def _load_email_config(self) -> dict[str, Any]:
         """Load SMTP configuration from environment variables."""
         recipients_raw = os.environ.get("ALERT_RECIPIENTS", "")
-        recipients = [
-            r.strip() for r in recipients_raw.split(",") if r.strip()
-        ]
+        recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
         return {
             "host": os.environ.get("SMTP_HOST", ""),
             "port": os.environ.get("SMTP_PORT", "587"),

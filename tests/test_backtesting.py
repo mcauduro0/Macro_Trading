@@ -6,6 +6,7 @@ Tests cover:
 - compute_metrics: Sharpe, Sortino, Calmar, max drawdown, win rate, profit factor
 - Edge cases: empty equity curve, single month, no trades
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -34,11 +35,15 @@ def make_equity_curve(
     curve = []
     equity = 1_000_000.0
     for i in range(n_months):
-        equity *= (1 + monthly_return)
-        d = date(start.year, start.month, 28) if i == 0 else date(
-            start.year + (start.month + i - 1) // 12,
-            (start.month + i - 1) % 12 + 1,
-            28,
+        equity *= 1 + monthly_return
+        d = (
+            date(start.year, start.month, 28)
+            if i == 0
+            else date(
+                start.year + (start.month + i - 1) // 12,
+                (start.month + i - 1) % 12 + 1,
+                28,
+            )
         )
         curve.append((d, equity))
     return curve
@@ -88,13 +93,17 @@ class TestPortfolio:
         p = Portfolio(1_000_000.0)
         p._rebalance_date = AS_OF
         config_2x = BacktestConfig(
-            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31),
-            initial_capital=1_000_000.0, max_leverage=1.0
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 12, 31),
+            initial_capital=1_000_000.0,
+            max_leverage=1.0,
         )
         # weights sum to 2.0 -- should be scaled to 1.0
         p.rebalance({"A": 1.0, "B": 1.0}, {"A": 1.0, "B": 1.0}, config_2x)
         total_notional = sum(abs(v) for v in p.positions.values())
-        assert total_notional <= 1_000_000.0 * 1.01  # within 1% of max_leverage * equity
+        assert (
+            total_notional <= 1_000_000.0 * 1.01
+        )  # within 1% of max_leverage * equity
 
     def test_rebalance_exits_removed_tickers(self):
         """Ticker in positions but not in target_weights -> position zeroed."""
@@ -103,7 +112,9 @@ class TestPortfolio:
         p.cash = 800_000.0
         p._rebalance_date = AS_OF
         # New rebalance doesn't include OLD_TICKER
-        p.rebalance({"IBOVESPA": 0.3}, {"IBOVESPA": 100_000.0, "OLD_TICKER": 100_000.0}, CONFIG)
+        p.rebalance(
+            {"IBOVESPA": 0.3}, {"IBOVESPA": 100_000.0, "OLD_TICKER": 100_000.0}, CONFIG
+        )
         assert p.positions.get("OLD_TICKER", 0.0) == 0.0
 
     def test_mark_to_market_updates_position_value(self):
@@ -162,7 +173,9 @@ class TestComputeMetrics:
             (date(2024, 3, 31), 1_050_000.0),
         ]
         result = compute_metrics(p, CONFIG, "TEST")
-        assert result.max_drawdown < 0, f"Expected negative max_dd, got {result.max_drawdown}"
+        assert (
+            result.max_drawdown < 0
+        ), f"Expected negative max_dd, got {result.max_drawdown}"
 
     def test_total_return_positive_for_positive_curve(self):
         p = self._make_portfolio_with_curve(12, 0.02)
@@ -223,4 +236,6 @@ class TestComputeMetrics:
         """12 months at 1%/month -> ~12.7% annualized."""
         p = self._make_portfolio_with_curve(12, 0.01)
         result = compute_metrics(p, CONFIG, "TEST")
-        assert 10.0 < result.annualized_return < 16.0, f"Ann return: {result.annualized_return}"
+        assert (
+            10.0 < result.annualized_return < 16.0
+        ), f"Ann return: {result.annualized_return}"

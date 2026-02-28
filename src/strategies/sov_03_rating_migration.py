@@ -176,7 +176,8 @@ class Sov03RatingMigrationStrategy(BaseStrategy):
 
         # CDS level for stop/take-profit
         cds_level = self.data_loader.get_latest_macro_value(
-            "BR_CDS_5Y", as_of_date,
+            "BR_CDS_5Y",
+            as_of_date,
         )
         entry_level = cds_level if cds_level is not None else 200.0
 
@@ -227,11 +228,13 @@ class Sov03RatingMigrationStrategy(BaseStrategy):
         Higher debt = higher downgrade risk.
         """
         debt_pct = self.data_loader.get_latest_macro_value(
-            "BR_GROSS_DEBT_PCT_GDP", as_of_date,
+            "BR_GROSS_DEBT_PCT_GDP",
+            as_of_date,
         )
         if debt_pct is None:
             debt_pct = self.data_loader.get_latest_macro_value(
-                "BR_GROSS_DEBT_GDP", as_of_date,
+                "BR_GROSS_DEBT_GDP",
+                as_of_date,
             )
         if debt_pct is None:
             return None
@@ -248,12 +251,14 @@ class Sov03RatingMigrationStrategy(BaseStrategy):
         Negative because high growth is good for rating (reduces downgrade p).
         """
         gdp_growth = self.data_loader.get_latest_macro_value(
-            "BR_GDP_GROWTH_YOY", as_of_date,
+            "BR_GDP_GROWTH_YOY",
+            as_of_date,
         )
         if gdp_growth is None:
             # Try IBC-Br proxy
             gdp_growth = self.data_loader.get_latest_macro_value(
-                "BR_IBC_BR_YOY", as_of_date,
+                "BR_IBC_BR_YOY",
+                as_of_date,
             )
         if gdp_growth is None:
             return None
@@ -270,11 +275,13 @@ class Sov03RatingMigrationStrategy(BaseStrategy):
         Surplus is positive for rating => invert sign.
         """
         trade_balance = self.data_loader.get_latest_macro_value(
-            "BR_TRADE_BALANCE", as_of_date,
+            "BR_TRADE_BALANCE",
+            as_of_date,
         )
         if trade_balance is None:
             trade_balance = self.data_loader.get_latest_macro_value(
-                "BR_CURRENT_ACCOUNT", as_of_date,
+                "BR_CURRENT_ACCOUNT",
+                as_of_date,
             )
         if trade_balance is None:
             return None
@@ -293,7 +300,9 @@ class Sov03RatingMigrationStrategy(BaseStrategy):
         Rising CDS = market perceives increasing institutional risk.
         """
         cds_df = self.data_loader.get_macro_series(
-            "BR_CDS_5Y", as_of_date, lookback_days=_CDS_LOOKBACK,
+            "BR_CDS_5Y",
+            as_of_date,
+            lookback_days=_CDS_LOOKBACK,
         )
         if cds_df.empty or len(cds_df) < _CDS_MOMENTUM_WINDOW + 20:
             return None

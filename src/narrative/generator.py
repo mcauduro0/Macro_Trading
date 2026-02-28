@@ -167,9 +167,7 @@ class NarrativeGenerator:
                 generated_at=datetime.utcnow(),
             )
         except Exception as exc:
-            logger.warning(
-                "LLM generation failed, falling back to template: %s", exc
-            )
+            logger.warning("LLM generation failed, falling back to template: %s", exc)
             content = render_template(agent_reports, features, as_of_date)
             return NarrativeBrief(
                 content=content,
@@ -261,9 +259,7 @@ class NarrativeGenerator:
         response = self._client.messages.create(  # type: ignore[union-attr]
             model=_MODEL_ID,
             max_tokens=500,
-            system=(
-                "You are a senior macro strategist. Write concise internal notes."
-            ),
+            system=("You are a senior macro strategist. Write concise internal notes."),
             messages=[{"role": "user", "content": prompt}],
         )
         return response.content[0].text
@@ -284,7 +280,8 @@ class NarrativeGenerator:
 
         if view.regime_probabilities:
             probs = ", ".join(
-                f"{k}={v:.0%}" for k, v in sorted(
+                f"{k}={v:.0%}"
+                for k, v in sorted(
                     view.regime_probabilities.items(),
                     key=lambda x: x[1],
                     reverse=True,
@@ -380,9 +377,7 @@ class NarrativeGenerator:
                 parts.append(f"  Regime: {cross_view.regime}")
                 parts.append(f"  Risk Appetite: {cross_view.risk_appetite:.0f}")
                 if cross_view.tail_risk:
-                    parts.append(
-                        f"  Tail Risk: {cross_view.tail_risk.assessment}"
-                    )
+                    parts.append(f"  Tail Risk: {cross_view.tail_risk.assessment}")
                 if cross_view.key_trades:
                     for t in cross_view.key_trades:
                         parts.append(

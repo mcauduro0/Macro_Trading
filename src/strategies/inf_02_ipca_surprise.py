@@ -130,18 +130,19 @@ class Inf02IpcaSurpriseStrategy(BaseStrategy):
 
         # 3. Compute surprise z-score
         surprise_z = self._compute_surprise_z(
-            model_forecast, focus_median, as_of_date,
+            model_forecast,
+            focus_median,
+            as_of_date,
         )
         if surprise_z is None:
-            self.log.warning("insufficient_surprise_history", as_of_date=str(as_of_date))
+            self.log.warning(
+                "insufficient_surprise_history", as_of_date=str(as_of_date)
+            )
             return []
 
         # 4. Check IPCA release window
         near_release = self._near_ipca_release(as_of_date)
-        in_carryover = (
-            not near_release
-            and abs(surprise_z) > _EXTREME_Z_THRESHOLD
-        )
+        in_carryover = not near_release and abs(surprise_z) > _EXTREME_Z_THRESHOLD
 
         if not near_release and not in_carryover:
             self.log.debug(
@@ -226,14 +227,17 @@ class Inf02IpcaSurpriseStrategy(BaseStrategy):
         """
         # Try IPCA-15 first
         ipca15 = self.data_loader.get_latest_macro_value(
-            "BR_IPCA15_MOM", as_of_date,
+            "BR_IPCA15_MOM",
+            as_of_date,
         )
         if ipca15 is not None:
             return ipca15
 
         # Fall back to seasonal average
         ipca_df = self.data_loader.get_macro_series(
-            "BR_IPCA_MOM", as_of_date, lookback_days=_SEASONAL_LOOKBACK_DAYS,
+            "BR_IPCA_MOM",
+            as_of_date,
+            lookback_days=_SEASONAL_LOOKBACK_DAYS,
         )
         if ipca_df.empty:
             return None
@@ -273,14 +277,18 @@ class Inf02IpcaSurpriseStrategy(BaseStrategy):
         """
         # Load IPCA actuals for surprise history
         ipca_df = self.data_loader.get_macro_series(
-            "BR_IPCA_MOM", as_of_date, lookback_days=_SEASONAL_LOOKBACK_DAYS,
+            "BR_IPCA_MOM",
+            as_of_date,
+            lookback_days=_SEASONAL_LOOKBACK_DAYS,
         )
         if ipca_df.empty or len(ipca_df) < _SURPRISE_LOOKBACK_MONTHS:
             return None
 
         # Load Focus history for surprise computation
         focus_df = self.data_loader.get_focus_expectations(
-            "IPCA", as_of_date, lookback_days=_SEASONAL_LOOKBACK_DAYS,
+            "IPCA",
+            as_of_date,
+            lookback_days=_SEASONAL_LOOKBACK_DAYS,
         )
         if focus_df.empty or len(focus_df) < _SURPRISE_LOOKBACK_MONTHS:
             return None
@@ -293,7 +301,8 @@ class Inf02IpcaSurpriseStrategy(BaseStrategy):
         # Simple approach: compute surprises from available paired data
         # Use inner join on date index
         combined = ipca_vals.to_frame("actual").join(
-            focus_vals.to_frame("focus"), how="inner",
+            focus_vals.to_frame("focus"),
+            how="inner",
         )
 
         if len(combined) < 6:
@@ -339,13 +348,18 @@ class Inf02IpcaSurpriseStrategy(BaseStrategy):
 
         # Simple business-day approximation
         if delta_days >= 0:
-            bdays_after = sum(
-                1 for d in range(delta_days + 1)
-                if (estimated_release + timedelta(days=d)).weekday() < 5
-            ) - 1  # subtract 1 because day 0 = release day itself
+            bdays_after = (
+                sum(
+                    1
+                    for d in range(delta_days + 1)
+                    if (estimated_release + timedelta(days=d)).weekday() < 5
+                )
+                - 1
+            )  # subtract 1 because day 0 = release day itself
         else:
             bdays_before = sum(
-                1 for d in range(-delta_days)
+                1
+                for d in range(-delta_days)
                 if (estimated_release - timedelta(days=d + 1)).weekday() < 5
             )
             bdays_after = -bdays_before

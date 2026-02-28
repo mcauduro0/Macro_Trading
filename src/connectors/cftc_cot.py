@@ -60,19 +60,19 @@ class CftcCotConnector(BaseConnector):
     # Contract registry: short name -> CFTC_Contract_Market_Code
     # ------------------------------------------------------------------
     CONTRACT_CODES: dict[str, str] = {
-        "ES": "13874A",   # E-mini S&P 500
-        "NQ": "209742",   # E-mini NASDAQ 100
-        "YM": "124603",   # E-mini Dow
-        "TY": "043602",   # 10-Year T-Note
-        "US": "020601",   # 30-Year T-Bond
-        "FV": "044601",   # 5-Year T-Note
-        "TU": "042601",   # 2-Year T-Note
-        "ED": "132741",   # Eurodollar (legacy, may use SOFR now)
-        "CL": "067651",   # Crude Oil WTI
-        "GC": "088691",   # Gold
-        "SI": "084691",   # Silver
-        "DX": "098662",   # US Dollar Index
-        "6L": "102741",   # Brazilian Real (BRL/USD)
+        "ES": "13874A",  # E-mini S&P 500
+        "NQ": "209742",  # E-mini NASDAQ 100
+        "YM": "124603",  # E-mini Dow
+        "TY": "043602",  # 10-Year T-Note
+        "US": "020601",  # 30-Year T-Bond
+        "FV": "044601",  # 5-Year T-Note
+        "TU": "042601",  # 2-Year T-Note
+        "ED": "132741",  # Eurodollar (legacy, may use SOFR now)
+        "CL": "067651",  # Crude Oil WTI
+        "GC": "088691",  # Gold
+        "SI": "084691",  # Silver
+        "DX": "098662",  # US Dollar Index
+        "6L": "102741",  # Brazilian Real (BRL/USD)
     }
 
     # Financial futures (equity indices, FX, rates) live in the TFF report,
@@ -385,14 +385,16 @@ class CftcCotConnector(BaseConnector):
                 net = long_val - short_val
                 series_key = f"CFTC_{contract_name}_{cat_name}_NET"
 
-                records.append({
-                    "_series_key": series_key,
-                    "observation_date": report_date,
-                    "value": net,
-                    "flow_type": f"CFTC_{cat_name}_NET",
-                    "unit": "contracts",
-                    "release_time": None,
-                })
+                records.append(
+                    {
+                        "_series_key": series_key,
+                        "observation_date": report_date,
+                        "value": net,
+                        "flow_type": f"CFTC_{cat_name}_NET",
+                        "unit": "contracts",
+                        "release_time": None,
+                    }
+                )
 
         return records
 
@@ -444,7 +446,8 @@ class CftcCotConnector(BaseConnector):
 
         # Filter to requested date range — guard against None/NaT values
         filtered = [
-            r for r in records
+            r
+            for r in records
             if (
                 r.get("observation_date") is not None
                 and isinstance(r["observation_date"], date)
@@ -467,20 +470,24 @@ class CftcCotConnector(BaseConnector):
         """Ensure a series_metadata row exists. Returns its id."""
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=series_key,
-                    name=series_key,
-                    frequency="W",
-                    country="US",
-                    unit="contracts",
-                    decimal_separator=".",
-                    date_format="YYYY-MM-DD",
-                    is_revisable=False,
-                    release_timezone="America/New_York",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=series_key,
+                        name=series_key,
+                        frequency="W",
+                        country="US",
+                        unit="contracts",
+                        decimal_separator=".",
+                        date_format="YYYY-MM-DD",
+                        is_revisable=False,
+                        release_timezone="America/New_York",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

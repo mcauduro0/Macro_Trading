@@ -170,8 +170,7 @@ def pms_morning_pack(context: AssetExecutionContext) -> Output:
         asyncio.run(_warm_cache_morning_pack(today_str, briefing))
 
         context.log.info(
-            f"Morning pack generated for {today_str}: "
-            f"{sections_count} sections"
+            f"Morning pack generated for {today_str}: " f"{sections_count} sections"
         )
 
         return Output(

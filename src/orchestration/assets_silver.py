@@ -38,6 +38,7 @@ def _partition_date(context: AssetExecutionContext) -> date:
 # Silver Assets
 # ---------------------------------------------------------------------------
 
+
 @asset(
     group_name="silver",
     retry_policy=_retry_policy,

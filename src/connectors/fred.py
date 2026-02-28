@@ -72,18 +72,18 @@ class FredConnector(BaseConnector):
         "US_PCE_CORE": "PCEPILFE",
         "US_PPI_ALL": "PPIACO",
         "US_MICHIGAN_INF_1Y": "MICH",
-        "US_MICHIGAN_INF_5Y": "EXPINF5YR",     # Cleveland Fed 5Y expected inflation (proxy for Michigan 5Y)
-        "US_PCE_SUPERCORE": "IA001260M",        # PCE Services ex-Energy & Housing (chain-type price index)
+        "US_MICHIGAN_INF_5Y": "EXPINF5YR",  # Cleveland Fed 5Y expected inflation (proxy for Michigan 5Y)
+        "US_PCE_SUPERCORE": "IA001260M",  # PCE Services ex-Energy & Housing (chain-type price index)
         "US_BEI_5Y": "T5YIE",
         "US_BEI_10Y": "T10YIE",
         "US_FWD_INF_5Y5Y": "T5YIFR",
         # STRUCTURAL / GAP ESTIMATES (CBO & Fed)
-        "US_GDP_POTENTIAL": "GDPPOT",            # CBO Real Potential GDP (quarterly, Billions)
-        "US_NROU": "NROU",                       # CBO Natural Rate of Unemployment (Long-Term)
-        "US_NROU_ST": "NROUST",                  # CBO Natural Rate of Unemployment (Short-Term)
-        "US_OUTPUT_GAP": "GDPGAP",               # CBO GDP Gap as % of Potential (quarterly, negative = slack)
-        "US_LABOR_FORCE_PART": "CIVPART",         # Civilian Labor Force Participation Rate
-        "US_EMPLOYMENT_POP": "EMRATIO",           # Employment-Population Ratio
+        "US_GDP_POTENTIAL": "GDPPOT",  # CBO Real Potential GDP (quarterly, Billions)
+        "US_NROU": "NROU",  # CBO Natural Rate of Unemployment (Long-Term)
+        "US_NROU_ST": "NROUST",  # CBO Natural Rate of Unemployment (Short-Term)
+        "US_OUTPUT_GAP": "GDPGAP",  # CBO GDP Gap as % of Potential (quarterly, negative = slack)
+        "US_LABOR_FORCE_PART": "CIVPART",  # Civilian Labor Force Participation Rate
+        "US_EMPLOYMENT_POP": "EMRATIO",  # Employment-Population Ratio
         # ACTIVITY & LABOR
         "US_GDP_REAL": "GDPC1",
         "US_NFP_TOTAL": "PAYEMS",
@@ -230,13 +230,15 @@ class FredConnector(BaseConnector):
             except (ValueError, TypeError):
                 release_dt = datetime.now(tz=_NY_TZ)
 
-            records.append({
-                "observation_date": obs_date,
-                "value": value,
-                "release_time": release_dt,
-                "revision_number": 0,
-                "source": self.SOURCE_NAME,
-            })
+            records.append(
+                {
+                    "observation_date": obs_date,
+                    "value": value,
+                    "release_time": release_dt,
+                    "revision_number": 0,
+                    "source": self.SOURCE_NAME,
+                }
+            )
 
         return records
 
@@ -283,9 +285,7 @@ class FredConnector(BaseConnector):
             )
 
             try:
-                records = await self.fetch_series(
-                    fred_code, start_date, end_date
-                )
+                records = await self.fetch_series(fred_code, start_date, end_date)
                 for rec in records:
                     rec["_series_key"] = series_key
                 all_records.extend(records)
@@ -361,13 +361,15 @@ class FredConnector(BaseConnector):
             except (ValueError, TypeError):
                 release_dt = datetime.now(tz=_NY_TZ)
 
-            records.append({
-                "observation_date": observation_date,
-                "value": value,
-                "release_time": release_dt,
-                "revision_number": revision_num,
-                "source": self.SOURCE_NAME,
-            })
+            records.append(
+                {
+                    "observation_date": observation_date,
+                    "value": value,
+                    "release_time": release_dt,
+                    "revision_number": revision_num,
+                    "source": self.SOURCE_NAME,
+                }
+            )
 
         return records
 
@@ -382,20 +384,24 @@ class FredConnector(BaseConnector):
 
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(SeriesMetadata).values(
-                    source_id=source_id,
-                    series_code=fred_code,
-                    name=series_key,
-                    frequency="D",
-                    country="US",
-                    unit="index",
-                    decimal_separator=".",
-                    date_format="YYYY-MM-DD",
-                    is_revisable=is_revisable,
-                    release_timezone="America/New_York",
-                    is_active=True,
-                ).on_conflict_do_nothing(
-                    constraint="uq_series_metadata_source_series"
+                stmt = (
+                    pg_insert(SeriesMetadata)
+                    .values(
+                        source_id=source_id,
+                        series_code=fred_code,
+                        name=series_key,
+                        frequency="D",
+                        country="US",
+                        unit="index",
+                        decimal_separator=".",
+                        date_format="YYYY-MM-DD",
+                        is_revisable=is_revisable,
+                        release_timezone="America/New_York",
+                        is_active=True,
+                    )
+                    .on_conflict_do_nothing(
+                        constraint="uq_series_metadata_source_series"
+                    )
                 )
                 await session.execute(stmt)
 

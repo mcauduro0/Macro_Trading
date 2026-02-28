@@ -281,9 +281,7 @@ class TestModifyAndApprove:
 class TestDiscretionaryTrade:
     """Tests for TradeWorkflowService.open_discretionary_trade."""
 
-    def test_open_discretionary_trade_requires_thesis(
-        self, tws: TradeWorkflowService
-    ):
+    def test_open_discretionary_trade_requires_thesis(self, tws: TradeWorkflowService):
         """Empty thesis raises ValueError."""
         with pytest.raises(ValueError, match="manager_thesis is mandatory"):
             tws.open_discretionary_trade(

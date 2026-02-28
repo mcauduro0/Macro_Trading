@@ -87,11 +87,13 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
         """
         # 1. Load debt-to-GDP
         debt_gdp = self.data_loader.get_latest_macro_value(
-            "BR_GROSS_DEBT_GDP", as_of_date,
+            "BR_GROSS_DEBT_GDP",
+            as_of_date,
         )
         if debt_gdp is None:
             debt_gdp = self.data_loader.get_latest_macro_value(
-                "BR_NET_DEBT_GDP", as_of_date,
+                "BR_NET_DEBT_GDP",
+                as_of_date,
             )
         if debt_gdp is None:
             self.log.warning("missing_debt_gdp", as_of_date=str(as_of_date))
@@ -99,7 +101,8 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
 
         # 2. Load primary balance
         primary_balance = self.data_loader.get_latest_macro_value(
-            "BR_PRIMARY_BALANCE_GDP", as_of_date,
+            "BR_PRIMARY_BALANCE_GDP",
+            as_of_date,
         )
         if primary_balance is None:
             self.log.warning("missing_primary_balance", as_of_date=str(as_of_date))
@@ -126,7 +129,10 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
 
         # 6. Compute spread z-score vs 252-day history
         spread_z = self._compute_spread_zscore(
-            as_of_date, di_curve, long_tenor, spread,
+            as_of_date,
+            di_curve,
+            long_tenor,
+            spread,
         )
         if spread_z is None:
             self.log.warning("insufficient_spread_history")
@@ -144,8 +150,14 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
 
         # 7. Strategy logic
         return self._generate_positions(
-            fiscal_risk, spread_z, long_tenor, as_of_date,
-            debt_gdp, primary_balance, long_di_rate, spread,
+            fiscal_risk,
+            spread_z,
+            long_tenor,
+            as_of_date,
+            debt_gdp,
+            primary_balance,
+            long_di_rate,
+            spread,
         )
 
     # ------------------------------------------------------------------
@@ -246,14 +258,21 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
             Z-score, or None if insufficient history.
         """
         di_history = self.data_loader.get_curve_history(
-            "DI_PRE", long_tenor, as_of_date, lookback_days=756,
+            "DI_PRE",
+            long_tenor,
+            as_of_date,
+            lookback_days=756,
         )
 
         if di_history.empty or len(di_history) < 60:
             return None
 
         # Use DI long-end rate history as spread proxy
-        hist_window = di_history["rate"].tail(252) if len(di_history) >= 252 else di_history["rate"]
+        hist_window = (
+            di_history["rate"].tail(252)
+            if len(di_history) >= 252
+            else di_history["rate"]
+        )
         spread_mean = float(hist_window.mean())
         spread_std = float(hist_window.std())
 
@@ -310,7 +329,8 @@ class SovBR01FiscalRiskStrategy(BaseStrategy):
             # High fiscal risk + spread below average (underpriced risk)
             # SHORT DI long-end (expect rates to rise)
             confidence_di = min(
-                1.0, fiscal_risk * abs(spread_z) / self.spread_z_threshold,
+                1.0,
+                fiscal_risk * abs(spread_z) / self.spread_z_threshold,
             )
             strength_di = classify_strength(confidence_di)
 

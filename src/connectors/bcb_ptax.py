@@ -193,19 +193,21 @@ class BcbPtaxConnector(BaseConnector):
         """
         async with async_session_factory() as session:
             async with session.begin():
-                stmt = pg_insert(Instrument).values(
-                    ticker=self.TICKER_NAME,
-                    name="PTAX Official Rate (USD/BRL)",
-                    asset_class="FX",
-                    country="BR",
-                    currency="BRL",
-                ).on_conflict_do_nothing(index_elements=["ticker"])
+                stmt = (
+                    pg_insert(Instrument)
+                    .values(
+                        ticker=self.TICKER_NAME,
+                        name="PTAX Official Rate (USD/BRL)",
+                        asset_class="FX",
+                        country="BR",
+                        currency="BRL",
+                    )
+                    .on_conflict_do_nothing(index_elements=["ticker"])
+                )
                 await session.execute(stmt)
 
             result = await session.execute(
-                select(Instrument.id).where(
-                    Instrument.ticker == self.TICKER_NAME
-                )
+                select(Instrument.id).where(Instrument.ticker == self.TICKER_NAME)
             )
             instrument_id = result.scalar_one_or_none()
 

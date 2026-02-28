@@ -32,9 +32,9 @@ class TestTickerRegistry:
         """Essential tickers from the Fase0 guide must be present."""
         required = ["USDBRL", "SP500", "GOLD", "EWZ", "VIX", "IBOVESPA", "DXY"]
         for ticker in required:
-            assert ticker in YahooFinanceConnector.TICKERS, (
-                f"Missing required ticker: {ticker}"
-            )
+            assert (
+                ticker in YahooFinanceConnector.TICKERS
+            ), f"Missing required ticker: {ticker}"
 
     def test_tickers_registry_fx_symbols(self):
         """FX tickers must map to correct Yahoo symbols."""
@@ -113,18 +113,36 @@ def _make_multi_ticker_df() -> pd.DataFrame:
     """Create a DataFrame mimicking multi-ticker yf.download() output."""
     dates = pd.to_datetime(["2025-01-02", "2025-01-03"])
     arrays = [
-        ["BRL=X", "BRL=X", "BRL=X", "BRL=X", "BRL=X",
-         "^GSPC", "^GSPC", "^GSPC", "^GSPC", "^GSPC"],
-        ["Open", "High", "Low", "Close", "Volume",
-         "Open", "High", "Low", "Close", "Volume"],
+        [
+            "BRL=X",
+            "BRL=X",
+            "BRL=X",
+            "BRL=X",
+            "BRL=X",
+            "^GSPC",
+            "^GSPC",
+            "^GSPC",
+            "^GSPC",
+            "^GSPC",
+        ],
+        [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+        ],
     ]
     tuples = list(zip(*arrays))
     index = pd.MultiIndex.from_tuples(tuples, names=["Ticker", "Price"])
     data = [
-        [6.18, 6.21, 6.15, 6.19, 0,
-         5881.63, 5906.47, 5867.08, 5881.63, 3544500000],
-        [6.19, 6.22, 6.17, 6.20, 0,
-         5900.12, 5920.87, 5880.56, 5906.47, 3628100000],
+        [6.18, 6.21, 6.15, 6.19, 0, 5881.63, 5906.47, 5867.08, 5881.63, 3544500000],
+        [6.19, 6.22, 6.17, 6.20, 0, 5900.12, 5920.87, 5880.56, 5906.47, 3628100000],
     ]
     return pd.DataFrame(data, index=dates, columns=index)
 
@@ -176,9 +194,7 @@ class TestRecordParsing:
         reverse_map = {"BRL=X": "USDBRL", "^GSPC": "SP500"}
         df = _make_multi_ticker_df()
 
-        records = connector._parse_dataframe(
-            df, ["BRL=X", "^GSPC"], reverse_map
-        )
+        records = connector._parse_dataframe(df, ["BRL=X", "^GSPC"], reverse_map)
 
         tickers = {r["_ticker"] for r in records}
         assert tickers == {"USDBRL", "SP500"}

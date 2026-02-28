@@ -112,17 +112,22 @@ class PortfolioOptimizer:
 
         # Leverage constraint: sum(|w|) <= max_leverage
         # Implemented as inequality: max_leverage - sum(|w|) >= 0
-        constraints_list.append({
-            "type": "ineq",
-            "fun": lambda w: self.constraints.max_leverage - np.sum(np.abs(w)),
-        })
+        constraints_list.append(
+            {
+                "type": "ineq",
+                "fun": lambda w: self.constraints.max_leverage - np.sum(np.abs(w)),
+            }
+        )
 
         # Optional return target constraint
         if self.constraints.target_return is not None:
-            constraints_list.append({
-                "type": "eq",
-                "fun": lambda w: float(expected_returns @ w) - self.constraints.target_return,
-            })
+            constraints_list.append(
+                {
+                    "type": "eq",
+                    "fun": lambda w: float(expected_returns @ w)
+                    - self.constraints.target_return,
+                }
+            )
 
         result = minimize(
             objective,
@@ -147,8 +152,7 @@ class PortfolioOptimizer:
 
         # Build result dict
         weight_dict = {
-            name: round(float(weights[i]), 8)
-            for i, name in enumerate(instrument_names)
+            name: round(float(weights[i]), 8) for i, name in enumerate(instrument_names)
         }
 
         logger.info(

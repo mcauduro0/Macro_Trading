@@ -189,11 +189,19 @@ class TestAggregateWeightedVote:
         reports = {
             "inflation_agent": _make_report(
                 "inflation_agent",
-                [_make_signal("inflation_agent", "INF_COMPOSITE", SignalDirection.LONG)],
+                [
+                    _make_signal(
+                        "inflation_agent", "INF_COMPOSITE", SignalDirection.LONG
+                    )
+                ],
             ),
             "monetary_agent": _make_report(
                 "monetary_agent",
-                [_make_signal("monetary_agent", "MON_COMPOSITE", SignalDirection.SHORT)],
+                [
+                    _make_signal(
+                        "monetary_agent", "MON_COMPOSITE", SignalDirection.SHORT
+                    )
+                ],
             ),
             "fiscal_agent": _make_report(
                 "fiscal_agent",
@@ -225,7 +233,11 @@ class TestAggregateWeightedVote:
         reports = {
             "inflation_agent": _make_report(
                 "inflation_agent",
-                [_make_signal("inflation_agent", "INF_COMPOSITE", SignalDirection.LONG)],
+                [
+                    _make_signal(
+                        "inflation_agent", "INF_COMPOSITE", SignalDirection.LONG
+                    )
+                ],
             ),
             "monetary_agent": _make_report(
                 "monetary_agent",
@@ -258,7 +270,8 @@ class TestCrossAssetVeto:
         """regime_score > 0.7 -> veto_applied=True, net_score reduced."""
         agg = SignalAggregator()
         reports = _all_agents_same_direction(
-            SignalDirection.LONG, regime_score=0.8,
+            SignalDirection.LONG,
+            regime_score=0.8,
         )
         results = agg.aggregate(reports)
 
@@ -272,19 +285,24 @@ class TestCrossAssetVeto:
         """regime_score < -0.7 -> veto_applied=True (bilateral)."""
         agg = SignalAggregator()
         reports = _all_agents_same_direction(
-            SignalDirection.LONG, regime_score=-0.8,
+            SignalDirection.LONG,
+            regime_score=-0.8,
         )
         results = agg.aggregate(reports)
 
         for sig in results:
             assert sig.veto_applied is True
-            assert "euphoria" in sig.veto_details.lower() or "risk-on" in sig.veto_details.lower()
+            assert (
+                "euphoria" in sig.veto_details.lower()
+                or "risk-on" in sig.veto_details.lower()
+            )
 
     def test_veto_not_fires_moderate(self) -> None:
         """regime_score = 0.3 -> veto_applied=False."""
         agg = SignalAggregator()
         reports = _all_agents_same_direction(
-            SignalDirection.LONG, regime_score=0.3,
+            SignalDirection.LONG,
+            regime_score=0.3,
         )
         results = agg.aggregate(reports)
 

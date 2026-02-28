@@ -32,9 +32,7 @@ class PortfolioStateRecord(Base):
 
     __tablename__ = "portfolio_state"
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), primary_key=True
     )
@@ -44,9 +42,7 @@ class PortfolioStateRecord(Base):
     weight: Mapped[float] = mapped_column(Float, nullable=False)
     entry_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     unrealized_pnl: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    strategy_attribution: Mapped[Optional[dict]] = mapped_column(
-        JSONB, nullable=True
-    )
+    strategy_attribution: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     __table_args__ = (
         UniqueConstraint(

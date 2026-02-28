@@ -81,7 +81,10 @@ class TestRegistryGet:
     def test_get_existing(self) -> None:
         """get() should return the registered class."""
         StrategyRegistry._strategies["TEST_GET"] = DummyRegistryStrategy
-        StrategyRegistry._metadata["TEST_GET"] = {"asset_class": AssetClass.FX, "instruments": []}
+        StrategyRegistry._metadata["TEST_GET"] = {
+            "asset_class": AssetClass.FX,
+            "instruments": [],
+        }
         cls = StrategyRegistry.get("TEST_GET")
         assert cls is DummyRegistryStrategy
 
@@ -117,7 +120,9 @@ class TestRegistryListByAssetClass:
         fi_ids = StrategyRegistry.list_by_asset_class(AssetClass.FIXED_INCOME)
         expected = ["RATES_BR_01", "RATES_BR_02", "RATES_BR_03", "RATES_BR_04"]
         for sid in expected:
-            assert sid in fi_ids, f"Expected {sid} in FIXED_INCOME strategies, got {fi_ids}"
+            assert (
+                sid in fi_ids
+            ), f"Expected {sid} in FIXED_INCOME strategies, got {fi_ids}"
 
     def test_list_by_asset_class_fx(self) -> None:
         """list_by_asset_class(FX) should return at least FX_BR_01."""

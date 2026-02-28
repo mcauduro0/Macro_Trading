@@ -128,8 +128,14 @@ ALL_STRATEGIES: dict[str, type[BaseStrategy]] = {
 # @StrategyRegistry.register decorator directly; the original 8 are registered
 # here manually since they predate the decorator pattern.
 _ORIGINAL_8 = {
-    "RATES_BR_01", "RATES_BR_02", "RATES_BR_03", "RATES_BR_04",
-    "INF_BR_01", "FX_BR_01", "CUPOM_01", "SOV_BR_01",
+    "RATES_BR_01",
+    "RATES_BR_02",
+    "RATES_BR_03",
+    "RATES_BR_04",
+    "INF_BR_01",
+    "FX_BR_01",
+    "CUPOM_01",
+    "SOV_BR_01",
 }
 for _sid, _cls in ALL_STRATEGIES.items():
     if _sid not in _ORIGINAL_8:
@@ -144,6 +150,7 @@ for _sid, _cls in ALL_STRATEGIES.items():
         # but we can also check if they have a default config attribute.
         # Safest: instantiation without data_loader may fail, so inspect module.
         import importlib
+
         _mod = importlib.import_module(_cls.__module__)
         for _attr_name in dir(_mod):
             _attr = getattr(_mod, _attr_name)

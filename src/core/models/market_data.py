@@ -26,9 +26,7 @@ from .base import Base
 class MarketData(Base):
     __tablename__ = "market_data"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     instrument_id: Mapped[int] = mapped_column(
         ForeignKey("instruments.id"), nullable=False
     )
@@ -46,7 +44,9 @@ class MarketData(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "instrument_id", "timestamp", "frequency",
+            "instrument_id",
+            "timestamp",
+            "frequency",
             name="uq_market_data_natural_key",
         ),
         Index("ix_market_data_instrument_id", "instrument_id"),

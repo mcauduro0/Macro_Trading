@@ -32,23 +32,25 @@ class PMSRiskLimits:
     """
 
     # VaR limits (% of AUM, positive numbers)
-    var_95_limit_pct: float = 2.0       # 2%
-    var_99_limit_pct: float = 3.0       # 3%
+    var_95_limit_pct: float = 2.0  # 2%
+    var_99_limit_pct: float = 3.0  # 3%
     # Leverage
-    gross_leverage_limit: float = 4.0   # 4x
-    net_leverage_limit: float = 2.0     # 2x
+    gross_leverage_limit: float = 4.0  # 4x
+    net_leverage_limit: float = 2.0  # 2x
     # Drawdown
-    drawdown_warning_pct: float = 5.0   # -5% warning
-    drawdown_limit_pct: float = 10.0    # -10% hard limit
+    drawdown_warning_pct: float = 5.0  # -5% warning
+    drawdown_limit_pct: float = 10.0  # -10% hard limit
     # Concentration by asset class (% of gross notional)
-    concentration_limits: dict = field(default_factory=lambda: {
-        "RATES": 60.0,
-        "FX": 40.0,
-        "INFLATION": 30.0,
-        "SOVEREIGN": 20.0,
-        "CREDIT": 20.0,
-        "EQUITY": 30.0,
-    })
+    concentration_limits: dict = field(
+        default_factory=lambda: {
+            "RATES": 60.0,
+            "FX": 40.0,
+            "INFLATION": 30.0,
+            "SOVEREIGN": 20.0,
+            "CREDIT": 20.0,
+            "EQUITY": 30.0,
+        }
+    )
     # Warning threshold (% of limit before breach)
     warning_threshold_pct: float = 80.0  # 80% = WARNING
 
@@ -80,18 +82,28 @@ class PMSRiskLimits:
                 os.environ.get("PMS_RISK_VAR_99_LIMIT_PCT", defaults.var_99_limit_pct)
             ),
             gross_leverage_limit=float(
-                os.environ.get("PMS_RISK_GROSS_LEVERAGE_LIMIT", defaults.gross_leverage_limit)
+                os.environ.get(
+                    "PMS_RISK_GROSS_LEVERAGE_LIMIT", defaults.gross_leverage_limit
+                )
             ),
             net_leverage_limit=float(
-                os.environ.get("PMS_RISK_NET_LEVERAGE_LIMIT", defaults.net_leverage_limit)
+                os.environ.get(
+                    "PMS_RISK_NET_LEVERAGE_LIMIT", defaults.net_leverage_limit
+                )
             ),
             drawdown_warning_pct=float(
-                os.environ.get("PMS_RISK_DRAWDOWN_WARNING_PCT", defaults.drawdown_warning_pct)
+                os.environ.get(
+                    "PMS_RISK_DRAWDOWN_WARNING_PCT", defaults.drawdown_warning_pct
+                )
             ),
             drawdown_limit_pct=float(
-                os.environ.get("PMS_RISK_DRAWDOWN_LIMIT_PCT", defaults.drawdown_limit_pct)
+                os.environ.get(
+                    "PMS_RISK_DRAWDOWN_LIMIT_PCT", defaults.drawdown_limit_pct
+                )
             ),
             warning_threshold_pct=float(
-                os.environ.get("PMS_RISK_WARNING_THRESHOLD_PCT", defaults.warning_threshold_pct)
+                os.environ.get(
+                    "PMS_RISK_WARNING_THRESHOLD_PCT", defaults.warning_threshold_pct
+                )
             ),
         )

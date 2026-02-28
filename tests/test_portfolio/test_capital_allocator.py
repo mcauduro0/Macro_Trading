@@ -75,18 +75,21 @@ class TestAssetClassConcentration:
     def test_asset_class_concentration(self) -> None:
         """FI weights > 50% scaled to 50%."""
         allocator = CapitalAllocator()
-        target = _make_target({
-            "DI_PRE_365": 0.25,
-            "DI_PRE_720": 0.25,
-            "DI_PRE_1080": 0.20,
-        })
+        target = _make_target(
+            {
+                "DI_PRE_365": 0.25,
+                "DI_PRE_720": 0.25,
+                "DI_PRE_1080": 0.20,
+            }
+        )
         inst_ac = {
             "DI_PRE_365": AssetClass.FIXED_INCOME,
             "DI_PRE_720": AssetClass.FIXED_INCOME,
             "DI_PRE_1080": AssetClass.FIXED_INCOME,
         }
         result = allocator.allocate(
-            target, instrument_to_asset_class=inst_ac,
+            target,
+            instrument_to_asset_class=inst_ac,
         )
 
         fi_exposure = result.asset_class_exposure.get("FIXED_INCOME", 0.0)
@@ -166,17 +169,21 @@ class TestRiskBudget:
 
         # Build a covariance where INST_A dominates risk
         # 3 instruments with very unequal variance
-        cov = np.array([
-            [0.04, 0.001, 0.001],
-            [0.001, 0.0004, 0.0001],
-            [0.001, 0.0001, 0.0004],
-        ])
+        cov = np.array(
+            [
+                [0.04, 0.001, 0.001],
+                [0.001, 0.0004, 0.0001],
+                [0.001, 0.0001, 0.0004],
+            ]
+        )
         instruments = ["INST_A", "INST_B", "INST_C"]
         # Heavy weight on high-variance asset
         weights = {"INST_A": 0.60, "INST_B": 0.20, "INST_C": 0.20}
 
         violations = allocator.check_risk_budget(
-            weights, cov, instruments,
+            weights,
+            cov,
+            instruments,
         )
         assert len(violations) > 0
         assert any("INST_A" in v for v in violations)

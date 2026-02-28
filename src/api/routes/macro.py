@@ -153,7 +153,9 @@ async def macro_dashboard(session: AsyncSession = Depends(get_db)) -> DashboardR
 @router.get("/search", response_model=list[SeriesSearchResult])
 async def search_series(
     q: str = Query(..., min_length=1, description="Search keyword"),
-    country: Optional[str] = Query(None, description="ISO country filter (e.g. BR, US)"),
+    country: Optional[str] = Query(
+        None, description="ISO country filter (e.g. BR, US)"
+    ),
     session: AsyncSession = Depends(get_db),
 ) -> list[SeriesSearchResult]:
     """Search series_metadata by name (case-insensitive), optionally filtered by country."""
@@ -211,22 +213,22 @@ async def get_macro_series(
     sm_id: int = meta_row.id
 
     # Build query
-    stmt = (
-        select(
-            MacroSeries.observation_date,
-            MacroSeries.value,
-            MacroSeries.release_time,
-            MacroSeries.revision_number,
-        )
-        .where(MacroSeries.series_id == sm_id)
-    )
+    stmt = select(
+        MacroSeries.observation_date,
+        MacroSeries.value,
+        MacroSeries.release_time,
+        MacroSeries.revision_number,
+    ).where(MacroSeries.series_id == sm_id)
 
     if start:
         stmt = stmt.where(MacroSeries.observation_date >= start)
     if end:
         stmt = stmt.where(MacroSeries.observation_date <= end)
     if pit and end:
-        stmt = stmt.where(MacroSeries.release_time <= datetime.combine(end, datetime.max.time(), tzinfo=timezone.utc))
+        stmt = stmt.where(
+            MacroSeries.release_time
+            <= datetime.combine(end, datetime.max.time(), tzinfo=timezone.utc)
+        )
 
     stmt = stmt.order_by(MacroSeries.observation_date.asc())
     rows = (await session.execute(stmt)).all()

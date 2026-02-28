@@ -222,14 +222,18 @@ class TestInfBR01Bounds:
         """Larger divergence should produce higher confidence."""
         # Small divergence: 60bps
         loader_small = _make_mock_loader(
-            di_curve={504: 13.0}, ntnb_curve={504: 6.0}, focus_ipca=7.6,
+            di_curve={504: 13.0},
+            ntnb_curve={504: 6.0},
+            focus_ipca=7.6,
         )
         strat_small = InfBR01BreakevenStrategy(data_loader=loader_small)
         pos_small = strat_small.generate_signals(date(2025, 6, 15))
 
         # Large divergence: 300bps
         loader_large = _make_mock_loader(
-            di_curve={504: 13.0}, ntnb_curve={504: 6.0}, focus_ipca=10.0,
+            di_curve={504: 13.0},
+            ntnb_curve={504: 6.0},
+            focus_ipca=10.0,
         )
         strat_large = InfBR01BreakevenStrategy(data_loader=loader_large)
         pos_large = strat_large.generate_signals(date(2025, 6, 15))
@@ -248,10 +252,13 @@ class TestInfBR01CustomThreshold:
         """With 100bps threshold, 60bps divergence should not trigger."""
         # market breakeven = 7.0, focus = 7.6 -> divergence = 60bps < 100bps
         loader = _make_mock_loader(
-            di_curve={504: 13.0}, ntnb_curve={504: 6.0}, focus_ipca=7.6,
+            di_curve={504: 13.0},
+            ntnb_curve={504: 6.0},
+            focus_ipca=7.6,
         )
         strategy = InfBR01BreakevenStrategy(
-            data_loader=loader, divergence_threshold_bps=100.0,
+            data_loader=loader,
+            divergence_threshold_bps=100.0,
         )
         positions = strategy.generate_signals(date(2025, 6, 15))
         assert positions == []
@@ -260,10 +267,13 @@ class TestInfBR01CustomThreshold:
         """With 25bps threshold, 40bps divergence should trigger."""
         # market breakeven = 7.0, focus = 7.4 -> divergence = 40bps > 25bps
         loader = _make_mock_loader(
-            di_curve={504: 13.0}, ntnb_curve={504: 6.0}, focus_ipca=7.4,
+            di_curve={504: 13.0},
+            ntnb_curve={504: 6.0},
+            focus_ipca=7.4,
         )
         strategy = InfBR01BreakevenStrategy(
-            data_loader=loader, divergence_threshold_bps=25.0,
+            data_loader=loader,
+            divergence_threshold_bps=25.0,
         )
         positions = strategy.generate_signals(date(2025, 6, 15))
         assert len(positions) == 1

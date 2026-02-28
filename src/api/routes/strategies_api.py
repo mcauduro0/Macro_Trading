@@ -57,19 +57,25 @@ async def list_strategies():
             # Instantiate to read config
             instance = strategy_cls(data_loader=data_loader)
             config = instance.config
-            asset_class = config.asset_class.value if hasattr(config.asset_class, "value") else str(config.asset_class)
+            asset_class = (
+                config.asset_class.value
+                if hasattr(config.asset_class, "value")
+                else str(config.asset_class)
+            )
             instruments = list(config.instruments)
         except Exception:
             pass
 
-        strategies.append({
-            "strategy_id": strategy_id,
-            "class_name": strategy_cls.__name__,
-            "description": description,
-            "asset_class": asset_class,
-            "instruments": instruments,
-            "status": "active",
-        })
+        strategies.append(
+            {
+                "strategy_id": strategy_id,
+                "class_name": strategy_cls.__name__,
+                "description": description,
+                "asset_class": asset_class,
+                "instruments": instruments,
+                "status": "active",
+            }
+        )
 
     return _envelope(strategies)
 
@@ -86,7 +92,9 @@ async def strategy_backtest(
     from src.strategies import ALL_STRATEGIES
 
     if strategy_id not in ALL_STRATEGIES:
-        raise HTTPException(status_code=404, detail=f"Strategy '{strategy_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Strategy '{strategy_id}' not found"
+        )
 
     # Try to query DB for latest backtest result
     backtest_data = await _fetch_backtest_result(strategy_id)
@@ -156,9 +164,13 @@ def _get_strategy_info(strategy_id: str) -> tuple[type, dict]:
     from src.strategies import ALL_STRATEGIES
     from src.strategies.registry import StrategyRegistry
 
-    strategy_cls = ALL_STRATEGIES.get(strategy_id) or StrategyRegistry._strategies.get(strategy_id)
+    strategy_cls = ALL_STRATEGIES.get(strategy_id) or StrategyRegistry._strategies.get(
+        strategy_id
+    )
     if strategy_cls is None:
-        raise HTTPException(status_code=404, detail=f"Strategy '{strategy_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Strategy '{strategy_id}' not found"
+        )
 
     metadata = StrategyRegistry._metadata.get(strategy_id, {})
     return strategy_cls, metadata
@@ -177,6 +189,7 @@ async def get_strategy_detail(strategy_id: str):
 
     # Try to extract config by instantiation
     from src.agents.data_loader import PointInTimeDataLoader
+
     asset_class = "UNKNOWN"
     instruments: list[str] = []
     parameters: dict[str, Any] = {}
@@ -184,7 +197,11 @@ async def get_strategy_detail(strategy_id: str):
         instance = strategy_cls(data_loader=PointInTimeDataLoader())
         if hasattr(instance, "config") and instance.config is not None:
             config = instance.config
-            asset_class = config.asset_class.value if hasattr(config.asset_class, "value") else str(config.asset_class)
+            asset_class = (
+                config.asset_class.value
+                if hasattr(config.asset_class, "value")
+                else str(config.asset_class)
+            )
             instruments = list(config.instruments)
             # Extract config as parameters dict
             parameters = {
@@ -208,15 +225,17 @@ async def get_strategy_detail(strategy_id: str):
         if metadata.get("instruments"):
             instruments = metadata["instruments"]
 
-    return _envelope({
-        "strategy_id": strategy_id,
-        "class_name": strategy_cls.__name__,
-        "asset_class": asset_class,
-        "instruments": instruments,
-        "description": description,
-        "parameters": parameters,
-        "status": "active",
-    })
+    return _envelope(
+        {
+            "strategy_id": strategy_id,
+            "class_name": strategy_cls.__name__,
+            "asset_class": asset_class,
+            "instruments": instruments,
+            "description": description,
+            "parameters": parameters,
+            "status": "active",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +252,7 @@ async def get_latest_signal(strategy_id: str):
 
     try:
         from src.agents.data_loader import PointInTimeDataLoader
+
         instance = strategy_cls(data_loader=PointInTimeDataLoader())
         today = date.today()
         raw_signals = await asyncio.to_thread(instance.generate_signals, today)
@@ -246,7 +266,11 @@ async def get_latest_signal(strategy_id: str):
             confidence = 0.0
             z_score = 0.0
             if hasattr(sig, "direction"):
-                direction = sig.direction.value if hasattr(sig.direction, "value") else str(sig.direction)
+                direction = (
+                    sig.direction.value
+                    if hasattr(sig.direction, "value")
+                    else str(sig.direction)
+                )
             if hasattr(sig, "suggested_size"):
                 strength = float(sig.suggested_size)
             if hasattr(sig, "confidence"):
@@ -254,40 +278,46 @@ async def get_latest_signal(strategy_id: str):
             if hasattr(sig, "z_score"):
                 z_score = float(sig.z_score) if sig.z_score is not None else 0.0
 
-            return _envelope({
-                "strategy_id": strategy_id,
-                "direction": direction,
-                "strength": strength,
-                "confidence": confidence,
-                "z_score": z_score,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            return _envelope(
+                {
+                    "strategy_id": strategy_id,
+                    "direction": direction,
+                    "strength": strength,
+                    "confidence": confidence,
+                    "z_score": z_score,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
         elif isinstance(raw_signals, dict) and raw_signals:
             # dict[str, float] format -- take first entry
             first_ticker = next(iter(raw_signals))
             weight = raw_signals[first_ticker]
             direction = "LONG" if weight > 0 else ("SHORT" if weight < 0 else "NEUTRAL")
-            return _envelope({
-                "strategy_id": strategy_id,
-                "direction": direction,
-                "strength": abs(weight),
-                "confidence": min(abs(weight), 1.0),
-                "z_score": 0.0,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            return _envelope(
+                {
+                    "strategy_id": strategy_id,
+                    "direction": direction,
+                    "strength": abs(weight),
+                    "confidence": min(abs(weight), 1.0),
+                    "z_score": 0.0,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
     except Exception as exc:
         logger.debug("signal_latest_fallback strategy_id=%s error=%s", strategy_id, exc)
 
     # Fallback placeholder
-    return _envelope({
-        "strategy_id": strategy_id,
-        "direction": "NEUTRAL",
-        "strength": 0.0,
-        "confidence": 0.0,
-        "z_score": 0.0,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "note": "Placeholder signal -- strategy data unavailable",
-    })
+    return _envelope(
+        {
+            "strategy_id": strategy_id,
+            "direction": "NEUTRAL",
+            "strength": 0.0,
+            "confidence": 0.0,
+            "z_score": 0.0,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "note": "Placeholder signal -- strategy data unavailable",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -333,7 +363,9 @@ async def get_signal_history(
                 ]
                 return _envelope(history)
     except Exception as exc:
-        logger.debug("signal_history_db_unavailable strategy_id=%s error=%s", strategy_id, exc)
+        logger.debug(
+            "signal_history_db_unavailable strategy_id=%s error=%s", strategy_id, exc
+        )
 
     # Fallback: generate sample history
     import random
@@ -347,11 +379,13 @@ async def get_signal_history(
         d = today - timedelta(days=days - 1 - i)
         direction = random.choice(directions)
         conviction = round(random.uniform(0.1, 0.9), 2)
-        history.append({
-            "date": str(d),
-            "direction": direction,
-            "conviction": conviction,
-        })
+        history.append(
+            {
+                "date": str(d),
+                "direction": direction,
+                "conviction": conviction,
+            }
+        )
 
     return _envelope(history)
 
@@ -362,7 +396,9 @@ async def get_signal_history(
 @router.put("/{strategy_id}/params")
 async def update_strategy_params(
     strategy_id: str,
-    params: dict[str, Any] = Body(..., description="Parameter key-value pairs to update"),
+    params: dict[str, Any] = Body(
+        ..., description="Parameter key-value pairs to update"
+    ),
 ):
     """Update strategy runtime parameters.
 
@@ -377,28 +413,45 @@ async def update_strategy_params(
 
     # Attempt to apply params to strategy instance for validation
     from src.agents.data_loader import PointInTimeDataLoader
+
     ALLOWED_STRATEGY_PARAMS = {
-        "carry_weight", "beer_weight", "flow_weight", "regime_scale",
-        "carry_threshold", "momentum_weight", "vol_target",
-        "max_position_size", "max_leverage", "stop_loss_pct", "take_profit_pct",
+        "carry_weight",
+        "beer_weight",
+        "flow_weight",
+        "regime_scale",
+        "carry_threshold",
+        "momentum_weight",
+        "vol_target",
+        "max_position_size",
+        "max_leverage",
+        "stop_loss_pct",
+        "take_profit_pct",
     }
     updated_params: dict[str, Any] = {}
     try:
         instance = strategy_cls(data_loader=PointInTimeDataLoader())
         for key, value in params.items():
             if key not in ALLOWED_STRATEGY_PARAMS:
-                updated_params[key] = {"value": value, "note": "parameter not in allowed list"}
+                updated_params[key] = {
+                    "value": value,
+                    "note": "parameter not in allowed list",
+                }
             elif hasattr(instance, key):
                 setattr(instance, key, value)
                 updated_params[key] = value
             else:
-                updated_params[key] = {"value": value, "note": "attribute not found on strategy class"}
+                updated_params[key] = {
+                    "value": value,
+                    "note": "attribute not found on strategy class",
+                }
     except Exception as exc:
         logger.debug("params_update_fallback strategy_id=%s error=%s", strategy_id, exc)
         updated_params = params
 
-    return _envelope({
-        "strategy_id": strategy_id,
-        "updated_params": updated_params,
-        "note": "Runtime parameters updated (not persisted)",
-    })
+    return _envelope(
+        {
+            "strategy_id": strategy_id,
+            "updated_params": updated_params,
+            "note": "Runtime parameters updated (not persisted)",
+        }
+    )

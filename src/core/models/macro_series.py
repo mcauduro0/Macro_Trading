@@ -31,9 +31,7 @@ from .base import Base
 class MacroSeries(Base):
     __tablename__ = "macro_series"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     series_id: Mapped[int] = mapped_column(
         ForeignKey("series_metadata.id"), nullable=False
     )
@@ -42,7 +40,8 @@ class MacroSeries(Base):
     )
     value: Mapped[float] = mapped_column(Float, nullable=False)
     release_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False,
+        DateTime(timezone=True),
+        nullable=False,
         comment="When this value became known (TIMESTAMPTZ)",
     )
     revision_number: Mapped[int] = mapped_column(SmallInteger, default=0)
@@ -50,7 +49,9 @@ class MacroSeries(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "series_id", "observation_date", "revision_number",
+            "series_id",
+            "observation_date",
+            "revision_number",
             name="uq_macro_series_natural_key",
         ),
         Index("ix_macro_series_series_id", "series_id"),

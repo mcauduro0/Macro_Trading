@@ -106,11 +106,17 @@ class RiskMonitorService:
         leverage_section = self._compute_leverage_section(summary, aum, limits)
         drawdown_section = self._compute_drawdown_section(aum, limits)
         concentration_section = self._compute_concentration_section(
-            by_asset_class, summary, positions, limits,
+            by_asset_class,
+            summary,
+            positions,
+            limits,
         )
         stress_section = self._compute_stress_section(positions, aum)
         limits_section = self._compute_limits_section(
-            book, var_section, leverage_section, drawdown_section,
+            book,
+            var_section,
+            leverage_section,
+            drawdown_section,
         )
 
         # Build risk data without alerts (alerts computed from the data)
@@ -171,7 +177,8 @@ class RiskMonitorService:
         # VaR alerts
         var_data = risk_data.get("var", {})
         self._check_alert(
-            alerts, "VAR",
+            alerts,
+            "VAR",
             var_data.get("utilization_95_pct", 0.0),
             var_data.get("parametric_95", 0.0),
             var_data.get("limit_95_pct", 0.0),
@@ -179,7 +186,8 @@ class RiskMonitorService:
             warning_pct,
         )
         self._check_alert(
-            alerts, "VAR",
+            alerts,
+            "VAR",
             var_data.get("utilization_99_pct", 0.0),
             var_data.get("parametric_99", 0.0),
             var_data.get("limit_99_pct", 0.0),
@@ -190,7 +198,8 @@ class RiskMonitorService:
         # Leverage alerts
         lev_data = risk_data.get("leverage", {})
         self._check_alert(
-            alerts, "LEVERAGE",
+            alerts,
+            "LEVERAGE",
             lev_data.get("utilization_gross_pct", 0.0),
             lev_data.get("gross", 0.0),
             lev_data.get("limit_gross", 0.0),
@@ -198,7 +207,8 @@ class RiskMonitorService:
             warning_pct,
         )
         self._check_alert(
-            alerts, "LEVERAGE",
+            alerts,
+            "LEVERAGE",
             lev_data.get("utilization_net_pct", 0.0),
             lev_data.get("net", 0.0),
             lev_data.get("limit_net", 0.0),
@@ -213,21 +223,25 @@ class RiskMonitorService:
         dd_warning = dd_data.get("warning_pct", 0.0)
 
         if dd_limit > 0 and dd_current >= dd_limit:
-            alerts.append({
-                "type": "DRAWDOWN_BREACH",
-                "severity": "BREACH",
-                "message": f"Drawdown {dd_current:.2f}% breached limit {dd_limit:.2f}%",
-                "value": dd_current,
-                "limit": dd_limit,
-            })
+            alerts.append(
+                {
+                    "type": "DRAWDOWN_BREACH",
+                    "severity": "BREACH",
+                    "message": f"Drawdown {dd_current:.2f}% breached limit {dd_limit:.2f}%",
+                    "value": dd_current,
+                    "limit": dd_limit,
+                }
+            )
         elif dd_warning > 0 and dd_current >= dd_warning:
-            alerts.append({
-                "type": "DRAWDOWN_WARNING",
-                "severity": "WARNING",
-                "message": f"Drawdown {dd_current:.2f}% approaching limit ({dd_warning:.2f}% warning)",
-                "value": dd_current,
-                "limit": dd_limit,
-            })
+            alerts.append(
+                {
+                    "type": "DRAWDOWN_WARNING",
+                    "severity": "WARNING",
+                    "message": f"Drawdown {dd_current:.2f}% approaching limit ({dd_warning:.2f}% warning)",
+                    "value": dd_current,
+                    "limit": dd_limit,
+                }
+            )
 
         # Concentration alerts
         conc_data = risk_data.get("concentration", {})
@@ -235,48 +249,56 @@ class RiskMonitorService:
         for ac_name, ac_info in by_ac.items():
             status = ac_info.get("status", "OK")
             if status == "BREACHED":
-                alerts.append({
-                    "type": "CONCENTRATION_BREACH",
-                    "severity": "BREACH",
-                    "message": (
-                        f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
-                        f" breached limit {ac_info['limit_pct']:.1f}%"
-                    ),
-                    "value": ac_info["notional_pct"],
-                    "limit": ac_info["limit_pct"],
-                })
+                alerts.append(
+                    {
+                        "type": "CONCENTRATION_BREACH",
+                        "severity": "BREACH",
+                        "message": (
+                            f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
+                            f" breached limit {ac_info['limit_pct']:.1f}%"
+                        ),
+                        "value": ac_info["notional_pct"],
+                        "limit": ac_info["limit_pct"],
+                    }
+                )
             elif status == "WARNING":
-                alerts.append({
-                    "type": "CONCENTRATION_WARNING",
-                    "severity": "WARNING",
-                    "message": (
-                        f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
-                        f" approaching limit {ac_info['limit_pct']:.1f}%"
-                    ),
-                    "value": ac_info["notional_pct"],
-                    "limit": ac_info["limit_pct"],
-                })
+                alerts.append(
+                    {
+                        "type": "CONCENTRATION_WARNING",
+                        "severity": "WARNING",
+                        "message": (
+                            f"{ac_name} concentration {ac_info['notional_pct']:.1f}%"
+                            f" approaching limit {ac_info['limit_pct']:.1f}%"
+                        ),
+                        "value": ac_info["notional_pct"],
+                        "limit": ac_info["limit_pct"],
+                    }
+                )
 
         # Limits summary alerts (from risk_limits_manager checks)
         limits_data = risk_data.get("limits_summary", {})
         for check in limits_data.get("checks", []):
             util = check.get("utilization_pct", 0.0)
             if check.get("status") == "BREACHED":
-                alerts.append({
-                    "type": f"LOSS_{check['limit_name'].upper()}_BREACH",
-                    "severity": "BREACH",
-                    "message": f"{check['limit_name']} at {util:.1f}% utilization (breached)",
-                    "value": check["current_value"],
-                    "limit": check["limit_value"],
-                })
+                alerts.append(
+                    {
+                        "type": f"LOSS_{check['limit_name'].upper()}_BREACH",
+                        "severity": "BREACH",
+                        "message": f"{check['limit_name']} at {util:.1f}% utilization (breached)",
+                        "value": check["current_value"],
+                        "limit": check["limit_value"],
+                    }
+                )
             elif check.get("status") == "WARNING":
-                alerts.append({
-                    "type": f"LOSS_{check['limit_name'].upper()}_WARNING",
-                    "severity": "WARNING",
-                    "message": f"{check['limit_name']} at {util:.1f}% utilization (warning)",
-                    "value": check["current_value"],
-                    "limit": check["limit_value"],
-                })
+                alerts.append(
+                    {
+                        "type": f"LOSS_{check['limit_name'].upper()}_WARNING",
+                        "severity": "WARNING",
+                        "message": f"{check['limit_name']} at {util:.1f}% utilization (warning)",
+                        "value": check["current_value"],
+                        "limit": check["limit_value"],
+                    }
+                )
 
         return alerts
 
@@ -288,7 +310,12 @@ class RiskMonitorService:
         """Get position book or empty structure if no position_manager."""
         if self.position_manager is None:
             return {
-                "summary": {"aum": 100_000_000.0, "total_notional_brl": 0.0, "leverage": 0.0, "open_positions": 0},
+                "summary": {
+                    "aum": 100_000_000.0,
+                    "total_notional_brl": 0.0,
+                    "leverage": 0.0,
+                    "open_positions": 0,
+                },
                 "positions": [],
                 "by_asset_class": {},
             }
@@ -319,11 +346,17 @@ class RiskMonitorService:
                 else:
                     # Simple parametric VaR without VaRCalculator
                     import numpy as np
+
                     returns_arr = np.array(daily_returns)
                     mu = float(np.mean(returns_arr))
-                    sigma = float(np.std(returns_arr, ddof=1)) if len(returns_arr) > 1 else 0.0
+                    sigma = (
+                        float(np.std(returns_arr, ddof=1))
+                        if len(returns_arr) > 1
+                        else 0.0
+                    )
                     if sigma > 1e-12:
                         from scipy import stats
+
                         var_95_pct = abs(mu + sigma * stats.norm.ppf(0.05)) * 100.0
                         var_99_pct = abs(mu + sigma * stats.norm.ppf(0.01)) * 100.0
 
@@ -331,10 +364,12 @@ class RiskMonitorService:
                 if len(pnl_ts) >= 30 and self.var_calculator is not None:
                     try:
                         import numpy as np
+
                         returns_arr = np.array(daily_returns).reshape(-1, 1)
                         weights = np.array([1.0])
                         mc_result = self.var_calculator.calculate_monte_carlo(
-                            returns_arr, weights,
+                            returns_arr,
+                            weights,
                         )
                         mc_95 = abs(mc_result.var_95) * 100.0
                         mc_99 = abs(mc_result.var_99) * 100.0
@@ -342,8 +377,16 @@ class RiskMonitorService:
                         logger.warning("mc_var_computation_failed", exc_info=True)
 
         # Utilization
-        util_95 = (var_95_pct / limits.var_95_limit_pct * 100.0) if limits.var_95_limit_pct > 0 else 0.0
-        util_99 = (var_99_pct / limits.var_99_limit_pct * 100.0) if limits.var_99_limit_pct > 0 else 0.0
+        util_95 = (
+            (var_95_pct / limits.var_95_limit_pct * 100.0)
+            if limits.var_95_limit_pct > 0
+            else 0.0
+        )
+        util_99 = (
+            (var_99_pct / limits.var_99_limit_pct * 100.0)
+            if limits.var_99_limit_pct > 0
+            else 0.0
+        )
 
         return {
             "parametric_95": var_95_pct,
@@ -357,7 +400,10 @@ class RiskMonitorService:
         }
 
     def _compute_leverage_section(
-        self, summary: dict, aum: float, limits: PMSRiskLimits,
+        self,
+        summary: dict,
+        aum: float,
+        limits: PMSRiskLimits,
     ) -> dict:
         """Compute leverage section from position book summary."""
         gross = summary.get("leverage", 0.0)
@@ -376,8 +422,16 @@ class RiskMonitorService:
             if aum > 0:
                 net = (long_notional - short_notional) / aum
 
-        util_gross = (gross / limits.gross_leverage_limit * 100.0) if limits.gross_leverage_limit > 0 else 0.0
-        util_net = (abs(net) / limits.net_leverage_limit * 100.0) if limits.net_leverage_limit > 0 else 0.0
+        util_gross = (
+            (gross / limits.gross_leverage_limit * 100.0)
+            if limits.gross_leverage_limit > 0
+            else 0.0
+        )
+        util_net = (
+            (abs(net) / limits.net_leverage_limit * 100.0)
+            if limits.net_leverage_limit > 0
+            else 0.0
+        )
 
         return {
             "gross": gross,
@@ -416,7 +470,9 @@ class RiskMonitorService:
                     else:
                         in_dd_days = 0
 
-                current_dd_pct = (hwm - cumulative) / aum * 100.0 if hwm > cumulative else 0.0
+                current_dd_pct = (
+                    (hwm - cumulative) / aum * 100.0 if hwm > cumulative else 0.0
+                )
                 max_dd_pct = worst_dd
                 days_in_dd = in_dd_days
 
@@ -443,9 +499,13 @@ class RiskMonitorService:
         ac_breakdown: dict[str, dict] = {}
         for ac_name, ac_info in by_asset_class.items():
             ac_notional = ac_info.get("notional_brl", 0.0)
-            notional_pct = (ac_notional / total_gross * 100.0) if total_gross > 0 else 0.0
+            notional_pct = (
+                (ac_notional / total_gross * 100.0) if total_gross > 0 else 0.0
+            )
             limit_pct = conc_limits.get(ac_name, 100.0)
-            utilization_pct = (notional_pct / limit_pct * 100.0) if limit_pct > 0 else 0.0
+            utilization_pct = (
+                (notional_pct / limit_pct * 100.0) if limit_pct > 0 else 0.0
+            )
 
             if utilization_pct >= 100.0:
                 status = "BREACHED"
@@ -480,7 +540,9 @@ class RiskMonitorService:
         }
 
     def _compute_stress_section(
-        self, positions: list, aum: float,
+        self,
+        positions: list,
+        aum: float,
     ) -> list[dict]:
         """Run stress tests against current positions."""
         if self.stress_tester is None or not positions:
@@ -508,8 +570,11 @@ class RiskMonitorService:
                     "pnl_brl": r.portfolio_pnl,
                     "pnl_pct": r.portfolio_pnl_pct * 100.0,
                     "description": next(
-                        (s.description for s in self.stress_tester.scenarios
-                         if s.name == r.scenario_name),
+                        (
+                            s.description
+                            for s in self.stress_tester.scenarios
+                            if s.name == r.scenario_name
+                        ),
                         "",
                     ),
                 }
@@ -533,36 +598,44 @@ class RiskMonitorService:
 
         # Build checks from PMSRiskLimits thresholds
         dd_util = (
-            (drawdown_section.get("current_drawdown_pct", 0.0)
-             / limits.drawdown_limit_pct * 100.0)
+            (
+                drawdown_section.get("current_drawdown_pct", 0.0)
+                / limits.drawdown_limit_pct
+                * 100.0
+            )
             if limits.drawdown_limit_pct > 0
             else 0.0
         )
         pms_checks = [
             (
-                "VaR 95%", var_section.get("parametric_95", 0.0),
+                "VaR 95%",
+                var_section.get("parametric_95", 0.0),
                 limits.var_95_limit_pct,
                 var_section.get("utilization_95_pct", 0.0),
             ),
             (
-                "VaR 99%", var_section.get("parametric_99", 0.0),
+                "VaR 99%",
+                var_section.get("parametric_99", 0.0),
                 limits.var_99_limit_pct,
                 var_section.get("utilization_99_pct", 0.0),
             ),
             (
-                "Gross Leverage", leverage_section.get("gross", 0.0),
+                "Gross Leverage",
+                leverage_section.get("gross", 0.0),
                 limits.gross_leverage_limit,
                 leverage_section.get("utilization_gross_pct", 0.0),
             ),
             (
-                "Net Leverage", abs(leverage_section.get("net", 0.0)),
+                "Net Leverage",
+                abs(leverage_section.get("net", 0.0)),
                 limits.net_leverage_limit,
                 leverage_section.get("utilization_net_pct", 0.0),
             ),
             (
                 "Drawdown",
                 drawdown_section.get("current_drawdown_pct", 0.0),
-                limits.drawdown_limit_pct, dd_util,
+                limits.drawdown_limit_pct,
+                dd_util,
             ),
         ]
 
@@ -574,13 +647,15 @@ class RiskMonitorService:
             else:
                 status = "OK"
 
-            checks.append({
-                "limit_name": name,
-                "current_value": current,
-                "limit_value": limit_val,
-                "utilization_pct": util,
-                "status": status,
-            })
+            checks.append(
+                {
+                    "limit_name": name,
+                    "current_value": current,
+                    "limit_value": limit_val,
+                    "utilization_pct": util,
+                    "status": status,
+                }
+            )
 
         # Add RiskLimitsManager v2 checks if available
         if self.risk_limits_manager is not None:
@@ -590,7 +665,8 @@ class RiskMonitorService:
                     "leverage": summary.get("leverage", 0.0),
                     "var_95": var_section.get("parametric_95", 0.0) / 100.0,
                     "var_99": var_section.get("parametric_99", 0.0) / 100.0,
-                    "drawdown_pct": drawdown_section.get("current_drawdown_pct", 0.0) / 100.0,
+                    "drawdown_pct": drawdown_section.get("current_drawdown_pct", 0.0)
+                    / 100.0,
                     "weights": {},
                     "asset_class_weights": {},
                 }
@@ -600,7 +676,9 @@ class RiskMonitorService:
                 aum = summary.get("aum", 1.0) or 1.0
                 for p in positions:
                     instrument = p.get("instrument", "")
-                    portfolio_state["weights"][instrument] = abs(p.get("notional_brl", 0.0)) / aum
+                    portfolio_state["weights"][instrument] = (
+                        abs(p.get("notional_brl", 0.0)) / aum
+                    )
                     ac = p.get("asset_class", "UNKNOWN")
                     portfolio_state["asset_class_weights"][ac] = (
                         portfolio_state["asset_class_weights"].get(ac, 0.0)
@@ -614,37 +692,47 @@ class RiskMonitorService:
                 if loss_status is not None:
                     daily_loss = abs(loss_status.daily_pnl)
                     daily_limit = self.risk_limits_manager.config.daily_loss_limit_pct
-                    daily_util = (daily_loss / daily_limit * 100.0) if daily_limit > 0 else 0.0
+                    daily_util = (
+                        (daily_loss / daily_limit * 100.0) if daily_limit > 0 else 0.0
+                    )
                     daily_status = "OK"
                     if daily_util >= 100.0:
                         daily_status = "BREACHED"
                     elif daily_util >= warning_pct:
                         daily_status = "WARNING"
 
-                    checks.append({
-                        "limit_name": "Daily Loss",
-                        "current_value": daily_loss,
-                        "limit_value": daily_limit,
-                        "utilization_pct": daily_util,
-                        "status": daily_status,
-                    })
+                    checks.append(
+                        {
+                            "limit_name": "Daily Loss",
+                            "current_value": daily_loss,
+                            "limit_value": daily_limit,
+                            "utilization_pct": daily_util,
+                            "status": daily_status,
+                        }
+                    )
 
                     weekly_loss = abs(loss_status.cumulative_weekly_pnl)
                     weekly_limit = self.risk_limits_manager.config.weekly_loss_limit_pct
-                    weekly_util = (weekly_loss / weekly_limit * 100.0) if weekly_limit > 0 else 0.0
+                    weekly_util = (
+                        (weekly_loss / weekly_limit * 100.0)
+                        if weekly_limit > 0
+                        else 0.0
+                    )
                     weekly_status = "OK"
                     if weekly_util >= 100.0:
                         weekly_status = "BREACHED"
                     elif weekly_util >= warning_pct:
                         weekly_status = "WARNING"
 
-                    checks.append({
-                        "limit_name": "Weekly Loss",
-                        "current_value": weekly_loss,
-                        "limit_value": weekly_limit,
-                        "utilization_pct": weekly_util,
-                        "status": weekly_status,
-                    })
+                    checks.append(
+                        {
+                            "limit_name": "Weekly Loss",
+                            "current_value": weekly_loss,
+                            "limit_value": weekly_limit,
+                            "utilization_pct": weekly_util,
+                            "status": weekly_status,
+                        }
+                    )
 
                 # Risk budget check
                 risk_budget = v2_result.get("risk_budget")
@@ -656,13 +744,15 @@ class RiskMonitorService:
                     elif budget_util >= warning_pct:
                         budget_status = "WARNING"
 
-                    checks.append({
-                        "limit_name": "Risk Budget",
-                        "current_value": risk_budget.allocated_risk,
-                        "limit_value": risk_budget.total_risk_budget,
-                        "utilization_pct": budget_util,
-                        "status": budget_status,
-                    })
+                    checks.append(
+                        {
+                            "limit_name": "Risk Budget",
+                            "current_value": risk_budget.allocated_risk,
+                            "limit_value": risk_budget.total_risk_budget,
+                            "utilization_pct": budget_util,
+                            "status": budget_status,
+                        }
+                    )
 
             except Exception:
                 logger.warning("risk_limits_v2_check_failed", exc_info=True)
@@ -699,21 +789,25 @@ class RiskMonitorService:
     ) -> None:
         """Append WARNING or BREACH alert based on utilization."""
         if utilization_pct >= 100.0:
-            alerts.append({
-                "type": f"{alert_category}_BREACH",
-                "severity": "BREACH",
-                "message": f"{label} at {utilization_pct:.1f}% utilization (breached)",
-                "value": current_value,
-                "limit": limit_value,
-            })
+            alerts.append(
+                {
+                    "type": f"{alert_category}_BREACH",
+                    "severity": "BREACH",
+                    "message": f"{label} at {utilization_pct:.1f}% utilization (breached)",
+                    "value": current_value,
+                    "limit": limit_value,
+                }
+            )
         elif utilization_pct >= warning_threshold:
-            alerts.append({
-                "type": f"{alert_category}_WARNING",
-                "severity": "WARNING",
-                "message": f"{label} at {utilization_pct:.1f}% utilization (warning)",
-                "value": current_value,
-                "limit": limit_value,
-            })
+            alerts.append(
+                {
+                    "type": f"{alert_category}_WARNING",
+                    "severity": "WARNING",
+                    "message": f"{label} at {utilization_pct:.1f}% utilization (warning)",
+                    "value": current_value,
+                    "limit": limit_value,
+                }
+            )
 
     def _persist_snapshot(self, ref_date: date, risk_data: dict) -> None:
         """Store compact snapshot summary for trend history."""
@@ -728,6 +822,8 @@ class RiskMonitorService:
             "leverage_gross": lev_data.get("gross", 0.0),
             "drawdown_pct": dd_data.get("current_drawdown_pct", 0.0),
             "alert_count": len(risk_data.get("alerts", [])),
-            "overall_status": risk_data.get("limits_summary", {}).get("overall_status", "OK"),
+            "overall_status": risk_data.get("limits_summary", {}).get(
+                "overall_status", "OK"
+            ),
         }
         self._risk_snapshots.append(snapshot)
