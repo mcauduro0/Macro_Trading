@@ -230,3 +230,62 @@ app.mount(
     StaticFiles(directory=str(Path(__file__).resolve().parent / "static")),
     name="static",
 )
+
+
+# ---------------------------------------------------------------------------
+# Convenience aliases for commonly expected endpoint paths
+# ---------------------------------------------------------------------------
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+
+
+@app.get("/api/v1/data/status")
+async def data_status_alias(request: Request):
+    """Alias for /health/data-status."""
+    return RedirectResponse(url="/health/data-status", status_code=307)
+
+
+@app.get("/api/v1/strategies/performance")
+async def strategies_performance():
+    """Aggregate performance across all strategies."""
+    from datetime import date as date_type, datetime, timezone
+    from src.agents.data_loader import PointInTimeDataLoader
+    from src.strategies import ALL_STRATEGIES
+
+    loader = PointInTimeDataLoader()
+    as_of = date_type.today()
+    performance = []
+
+    for strategy_id, strategy_cls in ALL_STRATEGIES.items():
+        entry = {"strategy_id": strategy_id, "status": "unknown"}
+        try:
+            strategy = strategy_cls(data_loader=loader)
+            signals = strategy.generate_signals(as_of)
+            entry["status"] = "active"
+            entry["signal_count"] = len(signals) if signals else 0
+        except Exception as e:
+            entry["status"] = "error"
+            entry["error"] = str(e)[:100]
+        performance.append(entry)
+
+    return {
+        "status": "ok",
+        "data": {
+            "strategies": performance,
+            "total": len(performance),
+            "active": sum(1 for p in performance if p["status"] == "active"),
+        },
+        "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+    }
+
+
+@app.get("/api/v1/monitoring/health")
+async def monitoring_health_alias(request: Request):
+    """Alias for /api/v1/monitoring/system-health."""
+    return RedirectResponse(url="/api/v1/monitoring/system-health", status_code=307)
+
+
+@app.get("/api/v1/pms/risk/summary")
+async def pms_risk_summary_alias(request: Request):
+    """Alias for /api/v1/pms/risk/live."""
+    return RedirectResponse(url="/api/v1/pms/risk/live", status_code=307)

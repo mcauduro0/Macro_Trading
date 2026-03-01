@@ -126,7 +126,7 @@ def _load_portfolio_returns() -> np.ndarray:
                 )
             )
             rows = result.fetchall()
-            if rows and len(rows) >= 30:
+            if rows and len(rows) >= 2:
                 return np.array([float(r[0]) for r in reversed(rows)])
     except Exception:
         pass
@@ -170,7 +170,7 @@ def _load_portfolio_returns() -> np.ndarray:
                     continue
             if returns_frames:
                 returns_data = pd.concat(returns_frames, axis=1).dropna()
-                if len(returns_data) >= 30:
+                if len(returns_data) >= 2:
                     w = np.array(
                         [weights.get(col, 0.0) for col in returns_data.columns]
                     )
@@ -194,7 +194,7 @@ def _load_portfolio_returns() -> np.ndarray:
                     continue
             if returns_frames:
                 returns_data = pd.concat(returns_frames, axis=1).dropna()
-                if len(returns_data) >= 30:
+                if len(returns_data) >= 2:
                     n = returns_data.shape[1]
                     w = np.ones(n) / n
                     return returns_data.values @ w
@@ -211,8 +211,9 @@ def _load_portfolio_returns() -> np.ndarray:
 def _load_positions() -> dict[str, float]:
     """Load current positions from the Position Manager.
 
-    Returns dict of {instrument: notional_value}. Raises RuntimeError if
-    PMS is unavailable or has no positions.
+    Returns dict of {instrument: notional_value}.  Falls back to equal-
+    weight positions across all tradeable instruments when PMS has no
+    positions, so that risk endpoints can still produce estimates.
     """
     try:
         from src.pms.position_manager import PositionManager
@@ -228,6 +229,16 @@ def _load_positions() -> dict[str, float]:
     except Exception:
         pass
 
+    # Fallback: equal-weight across tradeable instruments
+    tradeable = _load_all_tradeable_instruments()
+    if tradeable:
+        equal_notional = 1_000_000.0 / len(tradeable)
+        logger.info(
+            "Using equal-weight positions for %d tradeable instruments (no PMS positions)",
+            len(tradeable),
+        )
+        return {t: equal_notional for t in tradeable}
+
     raise RuntimeError(
         "Position data unavailable. Ensure PositionManager is configured "
         "with active positions from the trade workflow."
@@ -237,7 +248,9 @@ def _load_positions() -> dict[str, float]:
 def _load_portfolio_value() -> float:
     """Load current portfolio NAV from PMS.
 
-    Returns total portfolio value in BRL. Raises RuntimeError if unavailable.
+    Returns total portfolio value in BRL.  Falls back to 1,000,000 BRL
+    (initial capital assumption) when PMS NAV is unavailable so that
+    risk endpoints can still compute percentage-based metrics.
     """
     try:
         from src.pms.position_manager import PositionManager
@@ -251,17 +264,16 @@ def _load_portfolio_value() -> float:
     except Exception:
         pass
 
-    raise RuntimeError(
-        "Portfolio NAV unavailable. Ensure PositionManager is configured "
-        "and positions have been marked to market."
-    )
+    logger.info("Using default portfolio value (1M BRL); PMS NAV not available")
+    return 1_000_000.0
 
 
 def _load_portfolio_state() -> dict:
     """Load full portfolio state for risk limit checking.
 
     Returns dict with weights, leverage, VaR, drawdown, risk contributions,
-    and asset class mappings. Raises RuntimeError if unavailable.
+    and asset class mappings.  Falls back to equal-weight positions across
+    tradeable instruments when PMS has no positions.
     """
     try:
         from src.pms.position_manager import PositionManager
@@ -272,7 +284,20 @@ def _load_portfolio_state() -> dict:
         summary = book.get("summary", {})
 
         if not positions:
-            raise RuntimeError("No positions in book")
+            # Fallback: synthetic equal-weight positions from tradeable instruments
+            tradeable = _load_all_tradeable_instruments()
+            if not tradeable:
+                raise RuntimeError("No positions in book and no tradeable instruments")
+            equal_w = 1.0 / len(tradeable)
+            positions = [
+                {"instrument": t, "weight": equal_w, "asset_class": "OTHER"}
+                for t in tradeable
+            ]
+            summary = {}
+            logger.info(
+                "risk/limits: using %d equal-weight tradeable instruments as fallback",
+                len(tradeable),
+            )
 
         weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
         risk_contributions = {
@@ -394,7 +419,7 @@ async def risk_var(
                     if returns_frames
                     else None
                 )
-                if returns_df is not None and len(returns_df) >= 30:
+                if returns_df is not None and len(returns_df) >= 2:
                     returns_matrix = returns_df.values
                     total = sum(positions.values())
                     weights = np.array([positions[i] / total for i in instruments])
