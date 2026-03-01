@@ -96,7 +96,7 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
                 )
             )
             rows = result.fetchall()
-            if rows and len(rows) >= 30:
+            if rows and len(rows) >= 2:
                 return np.array([float(r[0]) for r in reversed(rows)])
     except Exception:
         pass
@@ -134,7 +134,7 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
                 continue
         if returns_frames:
             returns_data = pd.concat(returns_frames, axis=1).dropna()
-            if len(returns_data) >= 30:
+            if len(returns_data) >= 2:
                 w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
                 return returns_data.values @ w
 
@@ -156,7 +156,7 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
                     continue
             if returns_frames:
                 returns_data = pd.concat(returns_frames, axis=1).dropna()
-                if len(returns_data) >= 30:
+                if len(returns_data) >= 2:
                     n = returns_data.shape[1]
                     w = np.ones(n) / n  # Equal weight
                     return returns_data.values @ w
@@ -209,7 +209,7 @@ def _load_covariance_from_market_data(
         )
         if (
             returns_data is not None
-            and len(returns_data) >= 60
+            and len(returns_data) >= 5
             and len(available_instruments) >= 2
         ):
             covariance = returns_data.cov().values * 252  # Annualize

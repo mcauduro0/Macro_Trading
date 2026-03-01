@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.cache import PMSCache, get_pms_cache
 
@@ -341,3 +341,141 @@ async def trigger_pipeline(
     results["status"] = "success" if all_success else "partial"
 
     return results
+
+
+@router.post("/backfill-returns")
+async def backfill_portfolio_returns():
+    """Backfill portfolio_returns table from all available market data history.
+
+    Computes equal-weight daily returns for every historical date that has
+    market data, filling in the portfolio_returns table so that risk
+    endpoints (VaR, dashboard, stress) have enough observations to work.
+
+    This is idempotent — existing dates are updated via ON CONFLICT.
+    """
+    try:
+        import numpy as np
+        import pandas as pd
+        from sqlalchemy import create_engine, text
+
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+
+        # Verify table exists
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1 FROM portfolio_returns LIMIT 0"))
+        except Exception:
+            raise HTTPException(
+                status_code=503,
+                detail="portfolio_returns table not created — run migration 010",
+            )
+
+        # Load all tradeable instruments
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT DISTINCT i.ticker "
+                    "FROM instruments i "
+                    "INNER JOIN market_data md ON md.instrument_id = i.id "
+                    "ORDER BY i.ticker"
+                )
+            ).fetchall()
+            tradeable = [r[0] for r in rows] if rows else []
+
+        if not tradeable:
+            raise HTTPException(
+                status_code=503,
+                detail="No tradeable instruments with market data found.",
+            )
+
+        # Load full history for all instruments
+        loader = PointInTimeDataLoader()
+        returns_frames = []
+        for ticker in tradeable:
+            try:
+                md = loader.get_market_data(
+                    ticker, as_of_date=date.today(), lookback_days=504
+                )
+                if md is not None and not md.empty and "close" in md.columns:
+                    ret = md["close"].pct_change().dropna()
+                    ret.index = ret.index.normalize()
+                    ret = ret[~ret.index.duplicated(keep="last")]
+                    ret.name = ticker
+                    returns_frames.append(ret)
+            except Exception:
+                continue
+
+        if not returns_frames:
+            raise HTTPException(
+                status_code=503,
+                detail="No market data available for backfill.",
+            )
+
+        returns_data = pd.concat(returns_frames, axis=1).dropna()
+        if returns_data.empty:
+            raise HTTPException(
+                status_code=503,
+                detail="No aligned returns data after joining instruments.",
+            )
+
+        n = returns_data.shape[1]
+        w = np.ones(n) / n
+        daily_returns = returns_data.values @ w  # shape: (n_days,)
+        dates = returns_data.index.date if hasattr(returns_data.index, 'date') else returns_data.index
+
+        # Compute cumulative returns
+        cumulative = np.cumprod(1 + daily_returns) - 1
+
+        # Bulk insert
+        inserted = 0
+        with engine.begin() as conn:
+            for i, (d, r, c) in enumerate(zip(dates, daily_returns, cumulative)):
+                conn.execute(
+                    text(
+                        "INSERT INTO portfolio_returns "
+                        "(return_date, daily_return, cumulative_return, "
+                        "n_instruments, weighting_method) "
+                        "VALUES (:d, :r, :c, :n, :m) "
+                        "ON CONFLICT (return_date) DO UPDATE SET "
+                        "daily_return = EXCLUDED.daily_return, "
+                        "cumulative_return = EXCLUDED.cumulative_return"
+                    ),
+                    {
+                        "d": d,
+                        "r": round(float(r), 10),
+                        "c": round(float(c), 10),
+                        "n": n,
+                        "m": "equal_weight",
+                    },
+                )
+                inserted += 1
+
+        # Verify final count
+        with engine.connect() as conn:
+            count = conn.execute(
+                text("SELECT COUNT(*) FROM portfolio_returns")
+            ).scalar()
+
+        return {
+            "status": "success",
+            "rows_inserted": inserted,
+            "total_rows": count,
+            "n_instruments": n,
+            "date_range": {
+                "first": str(dates[0]),
+                "last": str(dates[-1]),
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Backfill portfolio returns failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Backfill failed: {exc}",
+        )
