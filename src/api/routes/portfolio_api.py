@@ -43,12 +43,20 @@ def _load_pms_book(as_of: date | None = None) -> dict:
     """Load portfolio book from Position Manager.
 
     Returns the full book dict with positions and summary.
+    Hydrates from DB when available to ensure positions are loaded.
     Raises RuntimeError if PMS is unavailable.
     """
     try:
         from src.pms.position_manager import PositionManager
 
         pm = PositionManager()
+        # Hydrate from DB to load persisted positions
+        try:
+            from src.pms.db_loader import hydrate_position_manager
+
+            hydrate_position_manager(pm)
+        except Exception:
+            logger.debug("PMS hydration skipped (no DB loader or no data)")
         if as_of:
             book = pm.get_book(as_of_date=as_of)
         else:
@@ -128,6 +136,7 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
                 if md is not None and not md.empty and "close" in md.columns:
                     ret = md["close"].pct_change().dropna()
                     ret.index = ret.index.normalize()
+                    ret = ret[~ret.index.duplicated(keep="last")]
                     ret.name = ticker
                     returns_frames.append(ret)
             except Exception:
@@ -150,6 +159,7 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
                         ret.index = ret.index.normalize()
+                        ret = ret[~ret.index.duplicated(keep="last")]
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -199,6 +209,7 @@ def _load_covariance_from_market_data(
                 if md is not None and not md.empty and "close" in md.columns:
                     ret = md["close"].pct_change().dropna()
                     ret.index = ret.index.normalize()
+                    ret = ret[~ret.index.duplicated(keep="last")]
                     ret.name = ticker
                     returns_frames.append(ret)
                     available_instruments.append(ticker)
@@ -213,14 +224,31 @@ def _load_covariance_from_market_data(
             and len(available_instruments) >= 2
         ):
             covariance = returns_data.cov().values * 252  # Annualize
+            n_obs = len(returns_data)
+            n_assets = covariance.shape[0]
+
+            # Ledoit-Wolf shrinkage to regularize when n_obs < n_assets
+            # Shrink toward diagonal (single-factor model)
+            if n_obs < 2 * n_assets:
+                shrinkage = max(0.1, 1.0 - n_obs / (2.0 * n_assets))
+                diag_target = np.diag(np.diag(covariance))
+                covariance = (1 - shrinkage) * covariance + shrinkage * diag_target
+                logger.info(
+                    "covariance_shrinkage: n_obs=%d, n_assets=%d, shrinkage=%.2f",
+                    n_obs,
+                    n_assets,
+                    shrinkage,
+                )
+
             # Market-cap weights proxy: inverse volatility
             vols = np.sqrt(np.diag(covariance))
             inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
             market_weights = inv_vol / inv_vol.sum()
             logger.info(
-                "covariance_loaded: requested=%d, available=%d, missing=%s",
+                "covariance_loaded: requested=%d, available=%d, n_obs=%d, missing=%s",
                 len(instruments),
                 len(available_instruments),
+                n_obs,
                 [t for t in instruments if t not in available_instruments],
             )
             return covariance, market_weights, available_instruments
@@ -582,8 +610,12 @@ def _build_rebalance_trades() -> dict:
 
     optimizer = PortfolioOptimizer()
 
-    # Load real current weights from PMS
-    current_weights = _load_current_weights()
+    # Load real current weights from PMS (fallback to empty if no positions)
+    try:
+        current_weights = _load_current_weights()
+    except RuntimeError:
+        current_weights = {}
+        logger.info("rebalance: no current positions, treating all as new trades")
 
     # Build target weights from optimization
     target_data = _build_target_weights()
@@ -678,15 +710,21 @@ async def portfolio_attribution():
 
 
 def _build_attribution() -> dict:
-    """Build strategy attribution from real PMS data."""
+    """Build strategy attribution from real PMS data.
+
+    Falls back to strategy-generated positions when PMS book is empty,
+    so the endpoint can still show which strategies contribute to each
+    instrument.
+    """
     book = _load_pms_book()
     positions = book.get("positions", [])
 
     if not positions:
-        raise RuntimeError(
-            "No positions available for attribution. "
-            "Open positions via the trade workflow first."
-        )
+        # Fallback: build synthetic positions from strategy signals
+        from datetime import date as date_type
+
+        logger.info("attribution: no PMS positions, using strategy-generated signals")
+        positions = _build_portfolio_positions(date_type.today())
 
     attribution = []
     by_strategy: dict[str, float] = {}
@@ -697,6 +735,13 @@ def _build_attribution() -> dict:
         strat_attr = pos.get("strategy_attribution", {})
         pos_pnl = pos.get("unrealized_pnl", pos.get("pnl", 0.0))
         total_pnl += pos_pnl
+
+        # If no strategy_attribution, use contributing_strategy_ids
+        if not strat_attr and "contributing_strategy_ids" in pos:
+            strat_ids = pos["contributing_strategy_ids"]
+            if strat_ids:
+                equal_contrib = 1.0 / len(strat_ids)
+                strat_attr = {sid: equal_contrib for sid in strat_ids}
 
         strategies = []
         for strategy_id, contribution_weight in strat_attr.items():

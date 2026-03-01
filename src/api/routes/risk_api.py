@@ -164,6 +164,7 @@ def _load_portfolio_returns() -> np.ndarray:
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
                         ret.index = ret.index.normalize()
+                        ret = ret[~ret.index.duplicated(keep="last")]
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -188,6 +189,7 @@ def _load_portfolio_returns() -> np.ndarray:
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
                         ret.index = ret.index.normalize()
+                        ret = ret[~ret.index.duplicated(keep="last")]
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -410,6 +412,7 @@ async def risk_var(
                         if md is not None and not md.empty and "close" in md.columns:
                             ret = md["close"].pct_change().dropna()
                             ret.index = ret.index.normalize()
+                            ret = ret[~ret.index.duplicated(keep="last")]
                             ret.name = ticker
                             returns_frames.append(ret)
                     except Exception:
