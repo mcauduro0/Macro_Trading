@@ -1,11 +1,12 @@
 """PMS (Portfolio Management System) Dagster asset definitions.
 
-Four assets in the ``pms`` group automate the daily PMS workflow:
+Five assets in the ``pms`` group automate the daily PMS workflow:
 
 1. ``pms_mark_to_market`` -- Mark all open positions to current prices
 2. ``pms_trade_proposals`` -- Generate trade proposals from aggregated signals
 3. ``pms_morning_pack`` -- Generate the daily morning briefing
 4. ``pms_performance_attribution`` -- Compute daily performance attribution
+5. ``pms_portfolio_returns`` -- Compute and persist daily portfolio returns
 
 Each asset warms the Redis cache after completing its work so the manager
 sees fresh data instantly via the dashboard.  Two scheduled runs drive these
@@ -299,3 +300,179 @@ def pms_performance_attribution(context: AssetExecutionContext) -> Output:
     except Exception as exc:
         context.log.error(f"Performance attribution failed: {exc}")
         raise
+
+
+# ---------------------------------------------------------------------------
+# Asset 5: Portfolio Returns
+# ---------------------------------------------------------------------------
+
+
+@asset(
+    group_name="pms",
+    retry_policy=_retry_policy,
+    deps=["pms_mark_to_market"],
+    description="Compute and persist daily portfolio returns for risk calculations",
+)
+def pms_portfolio_returns(context: AssetExecutionContext) -> Output:
+    """Compute daily portfolio-level returns and store in portfolio_returns table.
+
+    Uses current position weights with market data returns. Falls back to
+    equal-weight returns across all tradeable instruments when positions use
+    curve/derivative tickers without OHLCV data.
+
+    Risk endpoints (VaR, stress, limits, dashboard) read from this table.
+    """
+    import numpy as np
+    import pandas as pd
+    from datetime import date as _date_type
+    from sqlalchemy import create_engine, text
+
+    from src.agents.data_loader import PointInTimeDataLoader
+    from src.core.config import get_settings
+
+    today = _date_type.today()
+    settings = get_settings()
+    engine = create_engine(settings.database_url)
+    loader = PointInTimeDataLoader()
+
+    # Check if today's return already computed
+    with engine.connect() as conn:
+        existing = conn.execute(
+            text("SELECT 1 FROM portfolio_returns WHERE return_date = :d"),
+            {"d": today},
+        ).fetchone()
+        if existing:
+            context.log.info(f"Portfolio return for {today} already exists, skipping")
+            return Output(
+                value={"status": "skipped", "date": str(today)},
+                metadata={"date": str(today), "reason": "already_computed"},
+            )
+
+    # Try position-weighted returns
+    weights: dict[str, float] = {}
+    try:
+        pm = PositionManager()
+        book = pm.get_book()
+        positions = book.get("positions", [])
+        if positions:
+            weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
+    except Exception:
+        pass
+
+    returns_frames: list[pd.Series] = []
+    weighting_method = "position_weighted"
+
+    if weights:
+        for ticker in list(weights.keys()):
+            try:
+                md = loader.get_market_data(ticker, as_of_date=today, lookback_days=5)
+                if md is not None and not md.empty and "close" in md.columns:
+                    ret = md["close"].pct_change().dropna()
+                    ret.name = ticker
+                    returns_frames.append(ret)
+            except Exception:
+                continue
+
+    # Fallback: all tradeable instruments, equal weight
+    if not returns_frames:
+        weighting_method = "equal_weight"
+        try:
+            with engine.connect() as conn:
+                rows = conn.execute(
+                    text(
+                        "SELECT DISTINCT i.ticker "
+                        "FROM instruments i "
+                        "INNER JOIN market_data md ON md.instrument_id = i.id "
+                        "ORDER BY i.ticker"
+                    )
+                ).fetchall()
+                tradeable = [r[0] for r in rows] if rows else []
+        except Exception:
+            tradeable = []
+
+        for ticker in tradeable:
+            try:
+                md = loader.get_market_data(ticker, as_of_date=today, lookback_days=5)
+                if md is not None and not md.empty and "close" in md.columns:
+                    ret = md["close"].pct_change().dropna()
+                    ret.name = ticker
+                    returns_frames.append(ret)
+            except Exception:
+                continue
+
+    if not returns_frames:
+        context.log.warning("No market data available for portfolio returns")
+        return Output(
+            value={"status": "no_data", "date": str(today)},
+            metadata={"date": str(today), "reason": "no_market_data"},
+        )
+
+    returns_data = pd.concat(returns_frames, axis=1).dropna()
+    if returns_data.empty:
+        context.log.warning("Returns data empty after aligning instruments")
+        return Output(
+            value={"status": "no_data", "date": str(today)},
+            metadata={"date": str(today), "reason": "empty_returns"},
+        )
+
+    n = returns_data.shape[1]
+    if weighting_method == "position_weighted" and weights:
+        w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
+    else:
+        w = np.ones(n) / n
+
+    # Take last row (today's return)
+    daily_return = float(returns_data.iloc[-1].values @ w)
+
+    # Load cumulative return
+    with engine.connect() as conn:
+        prev = conn.execute(
+            text(
+                "SELECT cumulative_return FROM portfolio_returns "
+                "ORDER BY return_date DESC LIMIT 1"
+            )
+        ).fetchone()
+        prev_cum = float(prev[0]) if prev else 0.0
+
+    cumulative_return = (1 + prev_cum) * (1 + daily_return) - 1
+
+    # Insert
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO portfolio_returns "
+                "(return_date, daily_return, cumulative_return, n_instruments, weighting_method) "
+                "VALUES (:d, :r, :c, :n, :m) "
+                "ON CONFLICT (return_date) DO UPDATE SET "
+                "daily_return = EXCLUDED.daily_return, "
+                "cumulative_return = EXCLUDED.cumulative_return, "
+                "n_instruments = EXCLUDED.n_instruments"
+            ),
+            {
+                "d": today,
+                "r": round(daily_return, 10),
+                "c": round(cumulative_return, 10),
+                "n": n,
+                "m": weighting_method,
+            },
+        )
+
+    context.log.info(
+        f"Portfolio return stored: {today} = {daily_return:.6f} "
+        f"({weighting_method}, {n} instruments)"
+    )
+
+    return Output(
+        value={
+            "status": "success",
+            "date": str(today),
+            "daily_return": round(daily_return, 6),
+        },
+        metadata={
+            "date": str(today),
+            "daily_return": round(daily_return, 6),
+            "cumulative_return": round(cumulative_return, 6),
+            "n_instruments": n,
+            "weighting_method": weighting_method,
+        },
+    )

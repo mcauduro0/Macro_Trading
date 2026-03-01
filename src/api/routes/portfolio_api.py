@@ -104,12 +104,20 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
     try:
         import pandas as pd
         from datetime import date as date_type
-        weights = _load_current_weights()
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
+
+        # Try position-weighted returns first
+        try:
+            weights = _load_current_weights()
+            tickers = list(weights.keys())
+        except RuntimeError:
+            tickers = []
+            weights = {}
+
         returns_frames = []
-        for ticker in list(weights.keys()):
+        for ticker in tickers:
             try:
                 md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                 if md is not None and not md.empty and "close" in md.columns:
@@ -123,6 +131,26 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
             if len(returns_data) >= 30:
                 w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
                 return returns_data.values @ w
+
+        # Fallback: equal-weight portfolio of all tradeable instruments
+        tradeable = _load_all_tradeable_instruments()
+        if tradeable:
+            returns_frames = []
+            for ticker in tradeable:
+                try:
+                    md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
+                    if md is not None and not md.empty and "close" in md.columns:
+                        ret = md["close"].pct_change().dropna()
+                        ret.name = ticker
+                        returns_frames.append(ret)
+                except Exception:
+                    continue
+            if returns_frames:
+                returns_data = pd.concat(returns_frames, axis=1).dropna()
+                if len(returns_data) >= 30:
+                    n = returns_data.shape[1]
+                    w = np.ones(n) / n  # Equal weight
+                    return returns_data.values @ w
     except Exception:
         pass
 
@@ -183,6 +211,35 @@ def _load_covariance_from_market_data(
         f"Market data unavailable for instruments {instruments}. "
         "Ensure historical data has been collected by the data pipeline."
     )
+
+
+def _load_all_tradeable_instruments() -> list[str]:
+    """Load all instruments from the database that have market data.
+
+    Returns sorted list of tickers from the ``instruments`` table.
+    Used as fallback when strategy instruments (curves/derivatives) have no
+    OHLCV data in ``market_data``.
+    """
+    try:
+        from sqlalchemy import create_engine, text
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT DISTINCT i.ticker "
+                    "FROM instruments i "
+                    "INNER JOIN market_data md ON md.instrument_id = i.id "
+                    "ORDER BY i.ticker"
+                )
+            ).fetchall()
+            if rows:
+                return [r[0] for r in rows]
+    except Exception:
+        pass
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -406,8 +463,27 @@ def _build_target_weights() -> dict:
             raise RuntimeError("No instruments available from strategies")
         current_weights = {inst: 0.0 for inst in instruments}
 
-    # Load real covariance from market data — only instruments with data
-    covariance, market_weights, available = _load_covariance_from_market_data(instruments)
+    # Load real covariance from market data — only instruments with data.
+    # Strategy instruments may be curves/derivatives (DI_PRE, NTN_B_REAL, etc.)
+    # that have no OHLCV market data. Fall back to the full tradeable universe.
+    try:
+        covariance, market_weights, available = _load_covariance_from_market_data(instruments)
+    except RuntimeError:
+        logger.info(
+            "strategy_instruments_no_market_data",
+            strategy_instruments=instruments,
+            msg="Falling back to all tradeable instruments from database",
+        )
+        tradeable = _load_all_tradeable_instruments()
+        if len(tradeable) < 2:
+            raise RuntimeError(
+                "No tradeable instruments with market data found. "
+                "Ensure data connectors have loaded market data."
+            )
+        covariance, market_weights, available = _load_covariance_from_market_data(tradeable)
+        # Update instruments list and weights to match tradeable universe
+        instruments = available
+        current_weights = {inst: current_weights.get(inst, 0.0) for inst in instruments}
 
     # Run Black-Litterman with no views (equilibrium only) as baseline
     bl = BlackLitterman()

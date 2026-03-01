@@ -36,6 +36,7 @@ from src.orchestration.assets_pms import (
     pms_mark_to_market,
     pms_morning_pack,
     pms_performance_attribution,
+    pms_portfolio_returns,
     pms_trade_proposals,
 )
 
@@ -111,11 +112,12 @@ all_assets = [
     risk_limits,
     # Report (1)
     daily_report,
-    # PMS (4)
+    # PMS (5)
     pms_mark_to_market,
     pms_trade_proposals,
     pms_morning_pack,
     pms_performance_attribution,
+    pms_portfolio_returns,
 ]
 
 # ---------------------------------------------------------------------------
@@ -139,8 +141,8 @@ bronze_job = define_asset_job(
 # PMS EOD job -- MTM + attribution (after market close)
 pms_eod_job = define_asset_job(
     name="pms_eod_pipeline",
-    selection=[pms_mark_to_market, pms_performance_attribution],
-    description="PMS End-of-Day: MTM all positions + compute attribution",
+    selection=[pms_mark_to_market, pms_performance_attribution, pms_portfolio_returns],
+    description="PMS End-of-Day: MTM all positions + compute attribution + store returns",
 )
 
 # PMS Pre-Open job -- MTM + proposals + morning pack (before market open)
