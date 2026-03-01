@@ -84,7 +84,6 @@ def _load_all_tradeable_instruments() -> list[str]:
     """Load all instruments from the database that have market data."""
     try:
         from sqlalchemy import create_engine, text
-
         from src.core.config import get_settings
 
         settings = get_settings()
@@ -133,10 +132,8 @@ def _load_portfolio_returns() -> np.ndarray:
 
     # Fallback: compute from market data positions
     try:
-        from datetime import date as date_type
-
         import pandas as pd
-
+        from datetime import date as date_type
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
@@ -145,7 +142,6 @@ def _load_portfolio_returns() -> np.ndarray:
         weights: dict[str, float] = {}
         try:
             from src.pms.position_manager import PositionManager
-
             pm = PositionManager()
             book = pm.get_book()
             positions = book.get("positions", [])
@@ -158,12 +154,9 @@ def _load_portfolio_returns() -> np.ndarray:
             returns_frames = []
             for ticker in list(weights.keys()):
                 try:
-                    md = loader.get_market_data(
-                        ticker, as_of_date=date_type.today(), lookback_days=252
-                    )
+                    md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
-                        ret.index = ret.index.normalize()
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -171,9 +164,7 @@ def _load_portfolio_returns() -> np.ndarray:
             if returns_frames:
                 returns_data = pd.concat(returns_frames, axis=1).dropna()
                 if len(returns_data) >= 30:
-                    w = np.array(
-                        [weights.get(col, 0.0) for col in returns_data.columns]
-                    )
+                    w = np.array([weights.get(col, 0.0) for col in returns_data.columns])
                     return returns_data.values @ w
 
         # Fallback: equal-weight portfolio of all tradeable instruments
@@ -182,12 +173,9 @@ def _load_portfolio_returns() -> np.ndarray:
             returns_frames = []
             for ticker in tradeable:
                 try:
-                    md = loader.get_market_data(
-                        ticker, as_of_date=date_type.today(), lookback_days=252
-                    )
+                    md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
-                        ret.index = ret.index.normalize()
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -228,32 +216,10 @@ def _load_positions() -> dict[str, float]:
     except Exception:
         pass
 
-    # Fallback: load from database positions table
-    try:
-        from sqlalchemy import create_engine, text
-
-        from src.core.config import get_settings
-
-        settings = get_settings()
-        engine = create_engine(settings.database_url)
-        with engine.connect() as conn:
-            result = conn.execute(
-                text(
-                    "SELECT instrument, notional_brl FROM positions "
-                    "WHERE status = 'OPEN'"
-                )
-            )
-            rows = result.fetchall()
-            if rows:
-                return {
-                    r.instrument: float(r.notional_brl) if r.notional_brl else 0.0
-                    for r in rows
-                }
-    except Exception:
-        pass
-
-    # Final fallback: return a default position set for risk calculations
-    return {"IBOV_FUT": 10_000_000.0, "DI_PRE": 10_000_000.0}
+    raise RuntimeError(
+        "Position data unavailable. Ensure PositionManager is configured "
+        "with active positions from the trade workflow."
+    )
 
 
 def _load_portfolio_value() -> float:
@@ -297,12 +263,8 @@ def _load_portfolio_state() -> dict:
             raise RuntimeError("No positions in book")
 
         weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
-        risk_contributions = {
-            p["instrument"]: abs(p.get("weight", 0.0)) for p in positions
-        }
-        asset_class_map = {
-            p["instrument"]: p.get("asset_class", "OTHER") for p in positions
-        }
+        risk_contributions = {p["instrument"]: abs(p.get("weight", 0.0)) for p in positions}
+        asset_class_map = {p["instrument"]: p.get("asset_class", "OTHER") for p in positions}
 
         # Aggregate asset class weights
         ac_weights: dict[str, float] = {}
@@ -391,32 +353,22 @@ async def risk_var(
                 # Build real returns matrix from portfolio positions
                 positions = _load_positions()
                 instruments = list(positions.keys())
-                from datetime import date as date_type
-
-                import pandas as pd
-
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-
+                import pandas as pd
+                from datetime import date as date_type
                 returns_frames = []
                 for ticker in instruments:
                     try:
-                        md = loader.get_market_data(
-                            ticker, as_of_date=date_type.today(), lookback_days=252
-                        )
+                        md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                         if md is not None and not md.empty and "close" in md.columns:
                             ret = md["close"].pct_change().dropna()
-                            ret.index = ret.index.normalize()
                             ret.name = ticker
                             returns_frames.append(ret)
                     except Exception:
                         continue
-                returns_df = (
-                    pd.concat(returns_frames, axis=1).dropna()
-                    if returns_frames
-                    else None
-                )
+                returns_df = pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
                 if returns_df is not None and len(returns_df) >= 30:
                     returns_matrix = returns_df.values
                     total = sum(positions.values())

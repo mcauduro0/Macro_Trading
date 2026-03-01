@@ -4,7 +4,8 @@ Verifies all 4 new risk endpoints return 200 with expected response
 structure, and confirms backward-compatible /report still works.
 Uses the same TestClient pattern as test_dashboard.py.
 
-Data loaders are patched so tests run without a live database.
+All data loaders are mocked at module scope so tests run without a
+database, PMS, or any external infrastructure.
 """
 
 from __future__ import annotations
@@ -14,75 +15,104 @@ from contextlib import asynccontextmanager
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pandas as pd
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
-# Synthetic test data
+# Synthetic test data (deterministic via fixed RandomState seed)
 # ---------------------------------------------------------------------------
 
-_RNG = np.random.RandomState(42)
-_FAKE_RETURNS = _RNG.normal(0.0005, 0.012, 252)
-_FAKE_POSITIONS = {"IBOV_FUT": 10_000_000.0, "DI_PRE": 10_000_000.0}
-_FAKE_NAV = 20_000_000.0
-_FAKE_PORTFOLIO_STATE = {
-    "weights": {"IBOV_FUT": 0.5, "DI_PRE": 0.5},
+_SYNTHETIC_RETURNS = np.random.RandomState(42).normal(0.0005, 0.012, 252)
+
+_SYNTHETIC_POSITIONS = {
+    "DI1F27": 5_000_000.0,
+    "USDBRL": 3_000_000.0,
+    "NTN_B_2027": 2_000_000.0,
+}
+
+_SYNTHETIC_PORTFOLIO_VALUE = 10_000_000.0
+
+_SYNTHETIC_PORTFOLIO_STATE = {
+    "weights": {"DI1F27": 0.5, "USDBRL": 0.3, "NTN_B_2027": 0.2},
     "leverage": 1.0,
-    "var_95": 0.018,
+    "var_95": 0.015,
     "var_99": 0.025,
-    "drawdown_pct": 0.03,
-    "risk_contributions": {"IBOV_FUT": 0.5, "DI_PRE": 0.5},
-    "asset_class_weights": {"EQUITY": 0.5, "RATES": 0.5},
+    "drawdown_pct": 2.0,
+    "risk_contributions": {"DI1F27": 0.5, "USDBRL": 0.3, "NTN_B_2027": 0.2},
+    "asset_class_weights": {"RATES_BR": 0.7, "FX_BR": 0.3},
     "strategy_daily_pnl": {},
     "asset_class_daily_pnl": {},
-    "asset_class_map": {"IBOV_FUT": "EQUITY", "DI_PRE": "RATES"},
+    "asset_class_map": {
+        "DI1F27": "RATES_BR",
+        "USDBRL": "FX_BR",
+        "NTN_B_2027": "RATES_BR",
+    },
+}
+
+# Minimal synthetic risk report dict for the /report backward-compat endpoint.
+_SYNTHETIC_RISK_REPORT = {
+    "var": {
+        "parametric": {
+            "var_95": -0.018,
+            "cvar_95": -0.025,
+            "var_99": -0.028,
+            "cvar_99": -0.035,
+        }
+    },
+    "stress": [],
+    "limits": [],
+    "circuit_breaker": {"state": "NORMAL", "scale": 1.0, "drawdown_pct": 0.0},
 }
 
 
-def _mock_load_returns():
-    return _FAKE_RETURNS
+# ---------------------------------------------------------------------------
+# Module-level autouse fixture: patch all data loaders so endpoints never
+# hit PMS, TimescaleDB, or any external service.
+# ---------------------------------------------------------------------------
 
 
-def _mock_load_positions():
-    return _FAKE_POSITIONS
-
-
-def _mock_load_nav():
-    return _FAKE_NAV
-
-
-def _mock_load_portfolio_state():
-    return _FAKE_PORTFOLIO_STATE
-
-
-def _make_mock_data_loader():
-    """Create a mock PointInTimeDataLoader that returns synthetic market data."""
-    mock_loader = MagicMock()
-    # Generate synthetic OHLCV data for get_market_data
-    dates = pd.date_range(end="2026-02-28", periods=253, freq="B", tz="UTC")
-    prices = 100 * np.exp(np.cumsum(_RNG.normal(0.0005, 0.012, 253)))
-    mock_df = pd.DataFrame(
-        {
-            "open": prices * 0.999,
-            "high": prices * 1.005,
-            "low": prices * 0.995,
-            "close": prices,
-            "volume": _RNG.randint(1000, 100000, 253),
-            "adjusted_close": prices,
-        },
-        index=dates,
-    )
-    mock_loader.get_market_data.return_value = mock_df
-    return mock_loader
+@pytest.fixture(autouse=True, scope="module")
+def _mock_risk_data():
+    """Patch all data loaders in risk_api so endpoints work without DB."""
+    with (
+        patch(
+            "src.api.routes.risk_api._load_portfolio_returns",
+            return_value=_SYNTHETIC_RETURNS,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_positions",
+            return_value=_SYNTHETIC_POSITIONS,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_portfolio_value",
+            return_value=_SYNTHETIC_PORTFOLIO_VALUE,
+        ),
+        patch(
+            "src.api.routes.risk_api._load_portfolio_state",
+            return_value=_SYNTHETIC_PORTFOLIO_STATE,
+        ),
+        patch(
+            "src.api.routes.portfolio_api._build_risk_report",
+            return_value=_SYNTHETIC_RISK_REPORT,
+        ),
+        patch(
+            "src.agents.data_loader.PointInTimeDataLoader",
+        ) as mock_loader_cls,
+    ):
+        # Configure PointInTimeDataLoader mock so monte_carlo path's
+        # loader.get_market_data() raises, forcing the single-asset fallback.
+        mock_loader = MagicMock()
+        mock_loader_cls.return_value = mock_loader
+        mock_loader.get_market_data.side_effect = RuntimeError(
+            "No market data in test"
+        )
+        yield
 
 
 # ---------------------------------------------------------------------------
-# App factory with mocked data loaders
+# Test app and client fixture
 # ---------------------------------------------------------------------------
-
-_RISK_MODULE = "src.api.routes.risk_api"
 
 
 def _make_test_app() -> FastAPI:
@@ -101,52 +131,9 @@ def _make_test_app() -> FastAPI:
 
 @pytest.fixture(scope="module")
 def client():
-    """Provide a TestClient for the risk-API-only app with mocked data."""
+    """Provide a TestClient for the risk-API-only app."""
     app = _make_test_app()
-    mock_loader = _make_mock_data_loader()
-    with (
-        patch(
-            f"{_RISK_MODULE}._load_portfolio_returns", side_effect=_mock_load_returns
-        ),
-        patch(f"{_RISK_MODULE}._load_positions", side_effect=_mock_load_positions),
-        patch(f"{_RISK_MODULE}._load_portfolio_value", side_effect=_mock_load_nav),
-        patch(
-            f"{_RISK_MODULE}._load_portfolio_state",
-            side_effect=_mock_load_portfolio_state,
-        ),
-        patch(
-            "src.agents.data_loader.PointInTimeDataLoader",
-            return_value=mock_loader,
-        ),
-        patch(
-            "src.api.routes.portfolio_api._build_portfolio_positions",
-            return_value=[
-                {
-                    "instrument": "IBOV_FUT",
-                    "direction": "LONG",
-                    "weight": 0.5,
-                    "contributing_strategy_ids": ["EQ_01"],
-                    "asset_class": "EQUITY",
-                },
-                {
-                    "instrument": "DI_PRE",
-                    "direction": "SHORT",
-                    "weight": 0.5,
-                    "contributing_strategy_ids": ["RATES_01"],
-                    "asset_class": "RATES",
-                },
-            ],
-        ),
-        patch(
-            "src.api.routes.portfolio_api._load_portfolio_returns_for_risk",
-            return_value=_FAKE_RETURNS,
-        ),
-        patch(
-            "src.api.routes.portfolio_api._load_pms_book",
-            side_effect=RuntimeError("No PMS"),
-        ),
-        TestClient(app) as c,
-    ):
+    with TestClient(app) as c:
         yield c
 
 

@@ -17,6 +17,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from src.api.auth import Role, require_role
 from src.api.schemas.pms_schemas import (
     ApproveProposalRequest,
     GenerateProposalsRequest,
@@ -119,10 +120,45 @@ async def approve_proposal(
     proposal_id: int,
     body: ApproveProposalRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Approve a pending trade proposal and open a position."""
+    """Approve a pending trade proposal and open a position (MANAGER only)."""
     try:
         wf = _get_workflow()
+
+        # Pre-trade risk validation via compliance module
+        proposal = wf._find_proposal(proposal_id)
+        if proposal is None:
+            raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found")
+        try:
+            from src.compliance.risk_controls import PreTradeRiskControls
+
+            controls = PreTradeRiskControls()
+            notional = body.execution_notional_brl or proposal.get("suggested_notional_brl", 0)
+            book = wf.position_manager.get_book()
+            check = controls.validate_trade(
+                instrument=proposal.get("instrument", ""),
+                asset_class=proposal.get("asset_class", ""),
+                direction=proposal.get("direction", ""),
+                notional_brl=notional,
+                portfolio_nav=book["summary"].get("total_nav_brl", 10_000_000.0),
+                current_leverage=book["summary"].get("gross_leverage", 0.0),
+                current_var_pct=0.0,
+                current_drawdown_pct=book["summary"].get("max_drawdown_pct", 0.0),
+                asset_class_weights=book.get("by_asset_class", {}),
+            )
+            if not check["approved"]:
+                hard = [c for c in check.get("checks", []) if c.get("hard_block")]
+                if hard:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Pre-trade risk check failed: {hard[0].get('reason', 'blocked')}",
+                    )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning("Pre-trade risk check skipped: %s", exc)
+
         updated = wf.approve_proposal(
             proposal_id=proposal_id,
             execution_price=body.execution_price,
@@ -134,6 +170,23 @@ async def approve_proposal(
             time_horizon=body.time_horizon,
         )
 
+        # Audit log
+        try:
+            from src.compliance.audit import AuditLogger
+
+            AuditLogger().log_event(
+                event_type="TRADE_APPROVED",
+                details={
+                    "proposal_id": proposal_id,
+                    "instrument": updated.get("instrument"),
+                    "direction": updated.get("direction"),
+                    "notional_brl": updated.get("execution_notional_brl"),
+                    "user": user.get("sub", "unknown"),
+                },
+            )
+        except Exception:
+            logger.warning("Audit log failed for trade approval")
+
         # Approving a trade changes the book -- invalidate portfolio cache
         try:
             await cache.invalidate_portfolio_data()
@@ -142,6 +195,8 @@ async def approve_proposal(
             logger.warning("POST /approve: cache invalidation failed")
 
         return TradeProposalResponse(**updated)
+    except HTTPException:
+        raise
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -157,8 +212,9 @@ async def reject_proposal(
     proposal_id: int,
     body: RejectProposalRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Reject a pending trade proposal with mandatory notes."""
+    """Reject a pending trade proposal with mandatory notes (MANAGER only)."""
     try:
         wf = _get_workflow()
         updated = wf.reject_proposal(
@@ -192,8 +248,9 @@ async def modify_approve_proposal(
     proposal_id: int,
     body: ModifyApproveRequest,
     cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.MANAGER)),
 ):
-    """Modify a pending proposal and approve it, opening a position."""
+    """Modify a pending proposal and approve it (MANAGER only)."""
     try:
         wf = _get_workflow()
         updated = wf.modify_and_approve_proposal(

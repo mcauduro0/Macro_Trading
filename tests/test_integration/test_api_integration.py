@@ -121,11 +121,12 @@ class TestV2EndpointsReturn200:
         new_callable=AsyncMock,
         return_value={
             "strategy_id": "RATES_BR_01",
-            "sharpe_ratio": 1.25,
-            "annualized_return": 0.12,
+            "sharpe_ratio": 1.2,
+            "annual_return": 0.15,
             "max_drawdown": -0.08,
             "win_rate": 0.55,
             "profit_factor": 1.8,
+            "equity_curve": [],
         },
     )
     def test_strategy_backtest(self, mock_fetch, client):

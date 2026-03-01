@@ -12,8 +12,10 @@ import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel
 
+from src.api.auth import Role, require_role
 from src.api.schemas.pms_schemas import (
     LiveRiskResponse,
     RiskTrendPointResponse,
@@ -135,6 +137,97 @@ async def get_risk_limits():
     except Exception as exc:
         logger.error("%s error: %s", __name__, exc)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ---------------------------------------------------------------------------
+# 4. POST /pms/risk/emergency-stop
+# ---------------------------------------------------------------------------
+class EmergencyStopRequest(BaseModel):
+    reason: str
+    manager_confirmation: str = "I confirm emergency stop activation"
+
+
+@router.post("/emergency-stop")
+async def trigger_emergency_stop(
+    body: EmergencyStopRequest,
+    cache: PMSCache = Depends(get_pms_cache),
+    user: dict = Depends(require_role(Role.RISK_OFFICER)),
+):
+    """Activate emergency stop: flag all positions for urgent close (RISK_OFFICER+).
+
+    This does NOT auto-liquidate. It marks positions for the manager to review
+    and close manually, preventing amplification losses from bad fills.
+    """
+    try:
+        from src.compliance.emergency_stop import EmergencyStopProcedure
+
+        svc = _get_service()
+        pm = svc.position_manager
+        positions = [p for p in pm._positions if p.get("is_open")]
+
+        procedure = EmergencyStopProcedure()
+        result = procedure.initiate(
+            reason=body.reason,
+            manager_confirmation=body.manager_confirmation,
+            positions=positions,
+        )
+
+        # Audit the event
+        try:
+            from src.compliance.audit import AuditLogger
+
+            AuditLogger().log_event(
+                event_type="EMERGENCY_STOP",
+                severity="CRITICAL",
+                details={
+                    "reason": body.reason,
+                    "user": user.get("sub", "unknown"),
+                    "positions_flagged": result.get("positions_flagged", 0),
+                },
+            )
+        except Exception:
+            logger.warning("Audit log failed for emergency stop")
+
+        # Invalidate cache
+        try:
+            await cache.invalidate_portfolio_data()
+        except Exception:
+            pass
+
+        return {
+            "status": "emergency_stop_activated",
+            "reason": body.reason,
+            "activated_by": user.get("sub", "unknown"),
+            "data": result,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Emergency stop failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Emergency stop failed")
+
+
+# ---------------------------------------------------------------------------
+# 5. POST /pms/risk/emergency-stop/reset
+# ---------------------------------------------------------------------------
+@router.post("/emergency-stop/reset")
+async def reset_emergency_stop(
+    user: dict = Depends(require_role(Role.MANAGER)),
+):
+    """Reset emergency stop state and unfreeze proposals (MANAGER only)."""
+    try:
+        from src.compliance.emergency_stop import EmergencyStopProcedure
+
+        procedure = EmergencyStopProcedure()
+        result = procedure.reset(
+            manager_confirmation=f"Reset by {user.get('sub', 'unknown')}"
+        )
+        return {"status": "ok", "data": result}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Emergency stop reset failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Reset failed")
 
 
 # ---------------------------------------------------------------------------

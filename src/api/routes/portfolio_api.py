@@ -38,7 +38,6 @@ def _envelope(data: Any) -> dict:
 # Data loaders
 # ---------------------------------------------------------------------------
 
-
 def _load_pms_book(as_of: date | None = None) -> dict:
     """Load portfolio book from Position Manager.
 
@@ -103,10 +102,8 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
 
     # Try computing from current positions and market data
     try:
-        from datetime import date as date_type
-
         import pandas as pd
-
+        from datetime import date as date_type
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
@@ -122,12 +119,9 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
         returns_frames = []
         for ticker in tickers:
             try:
-                md = loader.get_market_data(
-                    ticker, as_of_date=date_type.today(), lookback_days=252
-                )
+                md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                 if md is not None and not md.empty and "close" in md.columns:
                     ret = md["close"].pct_change().dropna()
-                    ret.index = ret.index.normalize()
                     ret.name = ticker
                     returns_frames.append(ret)
             except Exception:
@@ -144,12 +138,9 @@ def _load_portfolio_returns_for_risk() -> np.ndarray:
             returns_frames = []
             for ticker in tradeable:
                 try:
-                    md = loader.get_market_data(
-                        ticker, as_of_date=date_type.today(), lookback_days=252
-                    )
+                    md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=252)
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
-                        ret.index = ret.index.normalize()
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
@@ -182,10 +173,8 @@ def _load_covariance_from_market_data(
     Raises RuntimeError if fewer than 2 instruments have data.
     """
     try:
-        from datetime import date as date_type
-
         import pandas as pd
-
+        from datetime import date as date_type
         from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
@@ -193,35 +182,26 @@ def _load_covariance_from_market_data(
         available_instruments: list[str] = []
         for ticker in instruments:
             try:
-                md = loader.get_market_data(
-                    ticker, as_of_date=date_type.today(), lookback_days=504
-                )
+                md = loader.get_market_data(ticker, as_of_date=date_type.today(), lookback_days=504)
                 if md is not None and not md.empty and "close" in md.columns:
                     ret = md["close"].pct_change().dropna()
-                    ret.index = ret.index.normalize()
                     ret.name = ticker
                     returns_frames.append(ret)
                     available_instruments.append(ticker)
             except Exception:
                 continue
-        returns_data = (
-            pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
-        )
-        if (
-            returns_data is not None
-            and len(returns_data) >= 60
-            and len(available_instruments) >= 2
-        ):
+        returns_data = pd.concat(returns_frames, axis=1).dropna() if returns_frames else None
+        if returns_data is not None and len(returns_data) >= 60 and len(available_instruments) >= 2:
             covariance = returns_data.cov().values * 252  # Annualize
             # Market-cap weights proxy: inverse volatility
             vols = np.sqrt(np.diag(covariance))
             inv_vol = 1.0 / np.where(vols > 0, vols, 1.0)
             market_weights = inv_vol / inv_vol.sum()
             logger.info(
-                "covariance_loaded: requested=%d, available=%d, missing=%s",
-                len(instruments),
-                len(available_instruments),
-                [t for t in instruments if t not in available_instruments],
+                "covariance_loaded",
+                requested=len(instruments),
+                available=len(available_instruments),
+                missing=[t for t in instruments if t not in available_instruments],
             )
             return covariance, market_weights, available_instruments
     except Exception:
@@ -242,7 +222,6 @@ def _load_all_tradeable_instruments() -> list[str]:
     """
     try:
         from sqlalchemy import create_engine, text
-
         from src.core.config import get_settings
 
         settings = get_settings()
@@ -468,8 +447,8 @@ def _build_target_weights() -> dict:
         instruments = list(current_weights.keys())
     except RuntimeError:
         # No current positions - use strategy universe
-        from src.agents.data_loader import PointInTimeDataLoader
         from src.strategies import ALL_STRATEGIES
+        from src.agents.data_loader import PointInTimeDataLoader
 
         loader = PointInTimeDataLoader()
         instruments_set: set[str] = set()
@@ -488,14 +467,12 @@ def _build_target_weights() -> dict:
     # Strategy instruments may be curves/derivatives (DI_PRE, NTN_B_REAL, etc.)
     # that have no OHLCV market data. Fall back to the full tradeable universe.
     try:
-        covariance, market_weights, available = _load_covariance_from_market_data(
-            instruments
-        )
+        covariance, market_weights, available = _load_covariance_from_market_data(instruments)
     except RuntimeError:
         logger.info(
-            "strategy_instruments_no_market_data: instruments=%s."
-            " Falling back to all tradeable instruments from database",
-            instruments,
+            "strategy_instruments_no_market_data",
+            strategy_instruments=instruments,
+            msg="Falling back to all tradeable instruments from database",
         )
         tradeable = _load_all_tradeable_instruments()
         if len(tradeable) < 2:
@@ -503,9 +480,7 @@ def _build_target_weights() -> dict:
                 "No tradeable instruments with market data found. "
                 "Ensure data connectors have loaded market data."
             )
-        covariance, market_weights, available = _load_covariance_from_market_data(
-            tradeable
-        )
+        covariance, market_weights, available = _load_covariance_from_market_data(tradeable)
         # Update instruments list and weights to match tradeable universe
         instruments = available
         current_weights = {inst: current_weights.get(inst, 0.0) for inst in instruments}
@@ -571,9 +546,7 @@ async def portfolio_rebalance_trades():
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_rebalance_trades error: %s", exc, exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Rebalance computation failed: {exc}"
-        )
+        raise HTTPException(status_code=500, detail=f"Rebalance computation failed: {exc}")
 
 
 def _build_rebalance_trades() -> dict:

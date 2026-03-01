@@ -4,10 +4,9 @@ Provides a manual trigger to run the full PMS daily pipeline without
 requiring Dagster. This endpoint orchestrates:
 
 1. Mark-to-Market (MTM) -- refresh all open position prices
-2. Agent execution -- run all 5 analytical agents to generate signals
-3. Strategy signal collection -- aggregate strategy signals
-4. Trade proposal generation -- convert signals into actionable proposals
-5. Morning pack generation -- produce the daily briefing with all services wired
+2. Signal collection -- aggregate signals from all registered strategies
+3. Trade proposal generation -- convert signals into actionable proposals
+4. Morning pack generation -- produce the daily briefing
 
 Usage:
     POST /api/v1/pms/pipeline/trigger
@@ -21,7 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.cache import PMSCache, get_pms_cache
 
@@ -30,40 +29,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/pms/pipeline", tags=["PMS - Pipeline"])
 
 
-def _ensure_agents_registered() -> None:
-    """Register all 5 agents in the AgentRegistry if not already present."""
-    from src.agents.registry import AgentRegistry
-
-    if AgentRegistry.list_registered():
-        return  # Already registered
-
-    from src.agents.cross_asset_agent import CrossAssetAgent
-    from src.agents.fiscal_agent import FiscalAgent
-    from src.agents.fx_agent import FxEquilibriumAgent
-    from src.agents.inflation_agent import InflationAgent
-    from src.agents.monetary_agent import MonetaryPolicyAgent
-
-    for agent_cls in [
-        InflationAgent,
-        MonetaryPolicyAgent,
-        FiscalAgent,
-        FxEquilibriumAgent,
-        CrossAssetAgent,
-    ]:
-        try:
-            agent = agent_cls()
-            AgentRegistry.register(agent)
-        except (ValueError, Exception) as exc:
-            logger.debug("Agent %s already registered or failed: %s", agent_cls, exc)
-
-
 @router.post("/trigger")
 async def trigger_pipeline(
     cache: PMSCache = Depends(get_pms_cache),
 ):
     """Trigger the full PMS daily pipeline manually.
 
-    Runs MTM, agents, signal collection, proposal generation, and morning pack
+    Runs MTM, signal collection, proposal generation, and morning pack
     generation in sequence. Returns a summary of each step.
     """
     results = {
@@ -73,31 +45,13 @@ async def trigger_pipeline(
     }
 
     # -----------------------------------------------------------------------
-    # Step 0: Ensure agents are registered
-    # -----------------------------------------------------------------------
-    try:
-        _ensure_agents_registered()
-        from src.agents.registry import AgentRegistry
-
-        results["steps"]["agent_registration"] = {
-            "status": "success",
-            "registered": AgentRegistry.list_registered(),
-        }
-    except Exception as exc:
-        results["steps"]["agent_registration"] = {
-            "status": "error",
-            "error": str(exc),
-        }
-        logger.error("Pipeline agent registration failed: %s", exc)
-
-    # -----------------------------------------------------------------------
     # Step 1: Mark-to-Market
     # -----------------------------------------------------------------------
-    pm = None
     try:
         from src.pms.position_manager import PositionManager
 
         pm = PositionManager()
+        # Hydrate from DB if available
         try:
             from src.pms.db_loader import hydrate_position_manager
 
@@ -108,6 +62,7 @@ async def trigger_pipeline(
         updated = pm.mark_to_market()
         book = pm.get_book()
 
+        # Cache the book
         try:
             await cache.set_book(book)
         except Exception:
@@ -126,29 +81,9 @@ async def trigger_pipeline(
         logger.error("Pipeline MTM failed: %s", exc)
 
     # -----------------------------------------------------------------------
-    # Step 2: Run all agents to generate fresh signals
-    # -----------------------------------------------------------------------
-    try:
-        from src.agents.registry import AgentRegistry
-
-        as_of = date.today()
-        agent_reports = AgentRegistry.run_all(as_of)
-
-        results["steps"]["agents"] = {
-            "status": "success",
-            "agents_run": len(agent_reports),
-            "agents": list(agent_reports.keys()),
-        }
-        logger.info("Pipeline agents: %d agents run", len(agent_reports))
-    except Exception as exc:
-        results["steps"]["agents"] = {"status": "error", "error": str(exc)}
-        logger.error("Pipeline agents failed: %s", exc)
-
-    # -----------------------------------------------------------------------
-    # Step 3: Collect aggregated strategy signals
+    # Step 2: Collect aggregated signals
     # -----------------------------------------------------------------------
     signals = []
-    aggregator = None
     try:
         from src.agents.data_loader import PointInTimeDataLoader
         from src.portfolio.signal_aggregator_v2 import SignalAggregatorV2
@@ -174,8 +109,8 @@ async def trigger_pipeline(
             except Exception:
                 logger.debug("Pipeline: strategy %s failed, skipping", strategy_id)
 
-        aggregator = SignalAggregatorV2(method="bayesian")
         if strategy_signals:
+            aggregator = SignalAggregatorV2(method="bayesian")
             aggregated = aggregator.aggregate(strategy_signals)
 
             for r in aggregated:
@@ -206,13 +141,13 @@ async def trigger_pipeline(
         logger.error("Pipeline signal collection failed: %s", exc)
 
     # -----------------------------------------------------------------------
-    # Step 4: Generate trade proposals
+    # Step 3: Generate trade proposals
     # -----------------------------------------------------------------------
-    tws = None
     try:
         from src.pms.trade_workflow import TradeWorkflowService
 
         tws = TradeWorkflowService()
+        # Hydrate from DB
         try:
             from src.pms.db_loader import hydrate_trade_workflow
 
@@ -233,17 +168,13 @@ async def trigger_pipeline(
         logger.error("Pipeline proposal generation failed: %s", exc)
 
     # -----------------------------------------------------------------------
-    # Step 5: Generate morning pack with ALL services wired
+    # Step 4: Generate morning pack
     # -----------------------------------------------------------------------
     try:
         from src.pms.morning_pack import MorningPackService
 
-        mps = MorningPackService(
-            position_manager=pm,
-            trade_workflow=tws,
-            signal_aggregator=aggregator,
-        )
-        # Hydrate with existing briefings from DB
+        mps = MorningPackService()
+        # Hydrate from DB
         try:
             from src.pms.db_loader import hydrate_morning_pack_service
 
@@ -252,7 +183,7 @@ async def trigger_pipeline(
             logger.debug("Pipeline: MPS hydration skipped")
 
         today = date.today()
-        briefing = mps.generate(briefing_date=today, force=True)
+        briefing = mps.generate(briefing_date=today)
 
         # Cache the briefing
         try:
@@ -260,31 +191,13 @@ async def trigger_pipeline(
         except Exception:
             logger.warning("Pipeline: cache write failed for morning pack")
 
-        # Count populated sections (not "unavailable")
-        populated = 0
-        for key in [
-            "trade_proposals",
-            "market_snapshot",
-            "agent_views",
-            "regime",
-            "top_signals",
-            "signal_changes",
-            "portfolio_state",
-            "macro_narrative",
-        ]:
-            val = briefing.get(key)
-            if isinstance(val, dict) and val.get("status") == "unavailable":
-                continue
-            if val:
-                populated += 1
-
+        sections_count = len(briefing.get("sections", {}))
         results["steps"]["morning_pack"] = {
             "status": "success",
             "date": today.isoformat(),
-            "populated_sections": populated,
-            "total_sections": 8,
+            "sections": sections_count,
         }
-        logger.info("Pipeline morning pack: %d/%d sections populated", populated, 8)
+        logger.info("Pipeline morning pack: %d sections", sections_count)
     except Exception as exc:
         results["steps"]["morning_pack"] = {"status": "error", "error": str(exc)}
         logger.error("Pipeline morning pack failed: %s", exc)
@@ -295,10 +208,9 @@ async def trigger_pipeline(
     try:
         import numpy as np
         import pandas as pd
-        from sqlalchemy import create_engine, text
-
         from src.agents.data_loader import PointInTimeDataLoader
         from src.core.config import get_settings
+        from sqlalchemy import create_engine, text
 
         settings = get_settings()
         engine = create_engine(settings.database_url)
@@ -311,9 +223,7 @@ async def trigger_pipeline(
                 conn.execute(text("SELECT 1 FROM portfolio_returns LIMIT 0"))
         except Exception:
             logger.info("Pipeline: portfolio_returns table does not exist yet")
-            raise RuntimeError(
-                "portfolio_returns table not created — run migration 010"
-            )
+            raise RuntimeError("portfolio_returns table not created — run migration 010")
 
         # Check if already computed
         with engine.connect() as conn:
@@ -348,7 +258,6 @@ async def trigger_pipeline(
                     )
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
-                        ret.index = ret.index.normalize()
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
