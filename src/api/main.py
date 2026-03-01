@@ -65,16 +65,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # Register analytical agents
     try:
-        from src.agents.registry import AgentRegistry
-        from src.agents.inflation_agent import InflationAgent
-        from src.agents.monetary_agent import MonetaryPolicyAgent
+        from src.agents.cross_asset_agent import CrossAssetAgent
         from src.agents.fiscal_agent import FiscalAgent
         from src.agents.fx_agent import FxEquilibriumAgent
-        from src.agents.cross_asset_agent import CrossAssetAgent
+        from src.agents.inflation_agent import InflationAgent
+        from src.agents.monetary_agent import MonetaryPolicyAgent
+        from src.agents.registry import AgentRegistry
 
         agent_classes = [
-            InflationAgent, MonetaryPolicyAgent, FiscalAgent,
-            FxEquilibriumAgent, CrossAssetAgent,
+            InflationAgent,
+            MonetaryPolicyAgent,
+            FiscalAgent,
+            FxEquilibriumAgent,
+            CrossAssetAgent,
         ]
         for agent_cls in agent_classes:
             try:

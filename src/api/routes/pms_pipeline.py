@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from src.cache import PMSCache, get_pms_cache
 
@@ -208,9 +208,10 @@ async def trigger_pipeline(
     try:
         import numpy as np
         import pandas as pd
+        from sqlalchemy import create_engine, text
+
         from src.agents.data_loader import PointInTimeDataLoader
         from src.core.config import get_settings
-        from sqlalchemy import create_engine, text
 
         settings = get_settings()
         engine = create_engine(settings.database_url)
@@ -223,7 +224,9 @@ async def trigger_pipeline(
                 conn.execute(text("SELECT 1 FROM portfolio_returns LIMIT 0"))
         except Exception:
             logger.info("Pipeline: portfolio_returns table does not exist yet")
-            raise RuntimeError("portfolio_returns table not created — run migration 010")
+            raise RuntimeError(
+                "portfolio_returns table not created — run migration 010"
+            )
 
         # Check if already computed
         with engine.connect() as conn:
@@ -258,6 +261,7 @@ async def trigger_pipeline(
                     )
                     if md is not None and not md.empty and "close" in md.columns:
                         ret = md["close"].pct_change().dropna()
+                        ret.index = ret.index.normalize()
                         ret.name = ticker
                         returns_frames.append(ret)
                 except Exception:
