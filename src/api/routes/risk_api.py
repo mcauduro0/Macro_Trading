@@ -43,9 +43,66 @@ def _error_response(message: str) -> dict:
     }
 
 
+def _check_data_freshness(returns: Any) -> str | None:
+    """Return a warning string if market data appears stale (>2 business days).
+
+    Returns None if data is fresh.
+    """
+    try:
+        import pandas as pd
+
+        if isinstance(returns, pd.DataFrame) and not returns.empty:
+            last_date = returns.index.max()
+            if hasattr(last_date, "date"):
+                last_date = last_date.date()
+            from datetime import date
+
+            gap = (date.today() - last_date).days
+            if gap > 4:  # >4 calendar days ≈ >2 business days
+                return (
+                    f"Market data may be stale: last observation is {last_date} "
+                    f"({gap} days ago). Risk metrics may not reflect current conditions."
+                )
+        elif hasattr(returns, "__len__") and len(returns) > 0:
+            # numpy array — can't check dates, just validate length
+            if len(returns) < 60:
+                return (
+                    f"Limited data: only {len(returns)} observations. "
+                    "Risk estimates may be unreliable."
+                )
+    except Exception:
+        pass
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Data loaders: fetch real portfolio data from PMS and database
 # ---------------------------------------------------------------------------
+
+
+def _load_all_tradeable_instruments() -> list[str]:
+    """Load all instruments from the database that have market data."""
+    try:
+        from sqlalchemy import create_engine, text
+
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        with engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT DISTINCT i.ticker "
+                    "FROM instruments i "
+                    "INNER JOIN market_data md ON md.instrument_id = i.id "
+                    "ORDER BY i.ticker"
+                )
+            ).fetchall()
+            if rows:
+                return [r[0] for r in rows]
+    except Exception:
+        pass
+    return []
 
 
 def _load_portfolio_returns() -> np.ndarray:
@@ -76,61 +133,71 @@ def _load_portfolio_returns() -> np.ndarray:
 
     # Fallback: compute from market data positions
     try:
-        from src.pms.position_manager import PositionManager
+        from datetime import date as date_type
 
-        pm = PositionManager()
-        book = pm.get_book()
-        positions = book.get("positions", [])
-        if positions:
-            # Use position weights with historical asset returns
-            weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
-            if weights:
-                from datetime import date as date_type
+        import pandas as pd
 
-                import pandas as pd
+        from src.agents.data_loader import PointInTimeDataLoader
 
-                from src.agents.data_loader import PointInTimeDataLoader
+        loader = PointInTimeDataLoader()
 
-                loader = PointInTimeDataLoader()
-                returns_frames = {}
-                for ticker in weights:
+        # Try position-weighted returns first
+        weights: dict[str, float] = {}
+        try:
+            from src.pms.position_manager import PositionManager
+
+            pm = PositionManager()
+            book = pm.get_book()
+            positions = book.get("positions", [])
+            if positions:
+                weights = {p["instrument"]: p.get("weight", 0.0) for p in positions}
+        except Exception:
+            pass
+
+        if weights:
+            returns_frames = []
+            for ticker in list(weights.keys()):
+                try:
                     md = loader.get_market_data(
                         ticker, as_of_date=date_type.today(), lookback_days=252
                     )
-                    if md is not None and len(md) >= 30:
-                        returns_frames[ticker] = md["close"].pct_change().dropna()
-                if returns_frames:
-                    returns_data = pd.DataFrame(returns_frames).dropna()
-                    if len(returns_data) >= 30:
-                        w = np.array(
-                            [weights.get(col, 0.0) for col in returns_data.columns]
-                        )
-                        portfolio_returns = returns_data.values @ w
-                        return portfolio_returns
-    except Exception:
-        pass
+                    if md is not None and not md.empty and "close" in md.columns:
+                        ret = md["close"].pct_change().dropna()
+                        ret.index = ret.index.normalize()
+                        ret.name = ticker
+                        returns_frames.append(ret)
+                except Exception:
+                    continue
+            if returns_frames:
+                returns_data = pd.concat(returns_frames, axis=1).dropna()
+                if len(returns_data) >= 30:
+                    w = np.array(
+                        [weights.get(col, 0.0) for col in returns_data.columns]
+                    )
+                    return returns_data.values @ w
 
-    # Final fallback: generate synthetic returns from market_data table
-    try:
-        from sqlalchemy import create_engine, text
-
-        from src.core.config import get_settings
-
-        settings = get_settings()
-        engine = create_engine(settings.database_url)
-        with engine.connect() as conn:
-            result = conn.execute(
-                text(
-                    "SELECT close_price FROM market_data "
-                    "WHERE ticker = 'IBOV' "
-                    "ORDER BY trade_date DESC LIMIT 253"
-                )
-            )
-            rows = result.fetchall()
-            if rows and len(rows) >= 31:
-                prices = np.array([float(r[0]) for r in reversed(rows)])
-                returns = np.diff(prices) / prices[:-1]
-                return returns
+        # Fallback: equal-weight portfolio of all tradeable instruments
+        tradeable = _load_all_tradeable_instruments()
+        if tradeable:
+            returns_frames = []
+            for ticker in tradeable:
+                try:
+                    md = loader.get_market_data(
+                        ticker, as_of_date=date_type.today(), lookback_days=252
+                    )
+                    if md is not None and not md.empty and "close" in md.columns:
+                        ret = md["close"].pct_change().dropna()
+                        ret.index = ret.index.normalize()
+                        ret.name = ticker
+                        returns_frames.append(ret)
+                except Exception:
+                    continue
+            if returns_frames:
+                returns_data = pd.concat(returns_frames, axis=1).dropna()
+                if len(returns_data) >= 30:
+                    n = returns_data.shape[1]
+                    w = np.ones(n) / n
+                    return returns_data.values @ w
     except Exception:
         pass
 
@@ -331,17 +398,24 @@ async def risk_var(
                 from src.agents.data_loader import PointInTimeDataLoader
 
                 loader = PointInTimeDataLoader()
-                returns_frames = {}
+
+                returns_frames = []
                 for ticker in instruments:
-                    md = loader.get_market_data(
-                        ticker,
-                        as_of_date=date_type.today(),
-                        lookback_days=252,
-                    )
-                    if md is not None and len(md) >= 30:
-                        returns_frames[ticker] = md["close"].pct_change().dropna()
+                    try:
+                        md = loader.get_market_data(
+                            ticker, as_of_date=date_type.today(), lookback_days=252
+                        )
+                        if md is not None and not md.empty and "close" in md.columns:
+                            ret = md["close"].pct_change().dropna()
+                            ret.index = ret.index.normalize()
+                            ret.name = ticker
+                            returns_frames.append(ret)
+                    except Exception:
+                        continue
                 returns_df = (
-                    pd.DataFrame(returns_frames).dropna() if returns_frames else None
+                    pd.concat(returns_frames, axis=1).dropna()
+                    if returns_frames
+                    else None
                 )
                 if returns_df is not None and len(returns_df) >= 30:
                     returns_matrix = returns_df.values

@@ -290,10 +290,140 @@ async def trigger_pipeline(
         logger.error("Pipeline morning pack failed: %s", exc)
 
     # -----------------------------------------------------------------------
+    # Step 5: Compute and store daily portfolio returns
+    # -----------------------------------------------------------------------
+    try:
+        import numpy as np
+        import pandas as pd
+        from sqlalchemy import create_engine, text
+
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        today = date.today()
+        ret_loader = PointInTimeDataLoader()
+
+        # Check if table exists
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1 FROM portfolio_returns LIMIT 0"))
+        except Exception:
+            logger.info("Pipeline: portfolio_returns table does not exist yet")
+            raise RuntimeError(
+                "portfolio_returns table not created — run migration 010"
+            )
+
+        # Check if already computed
+        with engine.connect() as conn:
+            existing = conn.execute(
+                text("SELECT 1 FROM portfolio_returns WHERE return_date = :d"),
+                {"d": today},
+            ).fetchone()
+
+        if existing:
+            results["steps"]["portfolio_returns"] = {
+                "status": "skipped",
+                "reason": "already_computed",
+            }
+        else:
+            # Load tradeable instruments
+            with engine.connect() as conn:
+                rows = conn.execute(
+                    text(
+                        "SELECT DISTINCT i.ticker "
+                        "FROM instruments i "
+                        "INNER JOIN market_data md ON md.instrument_id = i.id "
+                        "ORDER BY i.ticker"
+                    )
+                ).fetchall()
+                tradeable = [r[0] for r in rows] if rows else []
+
+            returns_frames = []
+            for ticker in tradeable:
+                try:
+                    md = ret_loader.get_market_data(
+                        ticker, as_of_date=today, lookback_days=5
+                    )
+                    if md is not None and not md.empty and "close" in md.columns:
+                        ret = md["close"].pct_change().dropna()
+                        ret.index = ret.index.normalize()
+                        ret.name = ticker
+                        returns_frames.append(ret)
+                except Exception:
+                    continue
+
+            if returns_frames:
+                returns_data = pd.concat(returns_frames, axis=1).dropna()
+                if not returns_data.empty:
+                    n = returns_data.shape[1]
+                    w = np.ones(n) / n
+                    daily_return = float(returns_data.iloc[-1].values @ w)
+
+                    with engine.connect() as conn:
+                        prev = conn.execute(
+                            text(
+                                "SELECT cumulative_return FROM portfolio_returns "
+                                "ORDER BY return_date DESC LIMIT 1"
+                            )
+                        ).fetchone()
+                    prev_cum = float(prev[0]) if prev else 0.0
+                    cumulative_return = (1 + prev_cum) * (1 + daily_return) - 1
+
+                    with engine.begin() as conn:
+                        conn.execute(
+                            text(
+                                "INSERT INTO portfolio_returns "
+                                "(return_date, daily_return, cumulative_return, "
+                                "n_instruments, weighting_method) "
+                                "VALUES (:d, :r, :c, :n, :m) "
+                                "ON CONFLICT (return_date) DO UPDATE SET "
+                                "daily_return = EXCLUDED.daily_return, "
+                                "cumulative_return = EXCLUDED.cumulative_return"
+                            ),
+                            {
+                                "d": today,
+                                "r": round(daily_return, 10),
+                                "c": round(cumulative_return, 10),
+                                "n": n,
+                                "m": "equal_weight",
+                            },
+                        )
+
+                    results["steps"]["portfolio_returns"] = {
+                        "status": "success",
+                        "daily_return": round(daily_return, 6),
+                        "n_instruments": n,
+                    }
+                    logger.info(
+                        "Pipeline portfolio returns: %.6f (%d instruments)",
+                        daily_return,
+                        n,
+                    )
+                else:
+                    results["steps"]["portfolio_returns"] = {
+                        "status": "skipped",
+                        "reason": "no_data_after_alignment",
+                    }
+            else:
+                results["steps"]["portfolio_returns"] = {
+                    "status": "skipped",
+                    "reason": "no_market_data",
+                }
+    except Exception as exc:
+        results["steps"]["portfolio_returns"] = {
+            "status": "error",
+            "error": str(exc),
+        }
+        logger.warning("Pipeline portfolio returns failed: %s", exc)
+
+    # -----------------------------------------------------------------------
     # Summary
     # -----------------------------------------------------------------------
     all_success = all(
-        step.get("status") == "success" for step in results["steps"].values()
+        step.get("status") in ("success", "skipped")
+        for step in results["steps"].values()
     )
     results["status"] = "success" if all_success else "partial"
 

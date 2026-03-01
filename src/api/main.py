@@ -31,6 +31,7 @@ from src.api.routes import (
     signals,
     strategies_api,
 )
+from src.api.routes.auth_api import router as auth_router
 from src.api.routes.backtest_api import router as backtest_router
 from src.api.routes.monitoring_api import router as monitoring_router
 from src.api.routes.pms_attribution import router as pms_attribution_router
@@ -62,7 +63,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as exc:
         logger.error("Database connection failed: %s", exc)
 
-    # Register all analytical agents at startup
+    # Register analytical agents
     try:
         from src.agents.cross_asset_agent import CrossAssetAgent
         from src.agents.fiscal_agent import FiscalAgent
@@ -71,20 +72,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from src.agents.monetary_agent import MonetaryPolicyAgent
         from src.agents.registry import AgentRegistry
 
-        for agent_cls in [
+        agent_classes = [
             InflationAgent,
             MonetaryPolicyAgent,
             FiscalAgent,
             FxEquilibriumAgent,
             CrossAssetAgent,
-        ]:
+        ]
+        for agent_cls in agent_classes:
             try:
-                AgentRegistry.register(agent_cls())
+                AgentRegistry.register(agent_cls)
             except ValueError:
                 pass  # Already registered
-        logger.info("Agents registered: %s", AgentRegistry.list_registered())
+        logger.info("Registered %d agents", len(AgentRegistry.list_agents()))
     except Exception as exc:
-        logger.warning("Agent registration failed: %s", exc)
+        logger.warning("Agent registration skipped: %s", exc)
 
     yield
     # Shutdown
@@ -203,6 +205,9 @@ app.include_router(reports_api_router, prefix="/api/v1")
 
 # Backtest endpoints
 app.include_router(backtest_router, prefix="/api/v1")
+
+# Auth endpoints
+app.include_router(auth_router, prefix="/api/v1")
 
 # PMS v4.0 endpoints
 app.include_router(pms_portfolio_router, prefix="/api/v1")
