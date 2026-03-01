@@ -86,6 +86,56 @@ async def list_strategies():
 
 
 # ---------------------------------------------------------------------------
+# GET /api/v1/strategies/performance
+# ---------------------------------------------------------------------------
+@router.get("/performance")
+async def strategies_performance():
+    """Aggregate performance status across all strategies."""
+    try:
+        import asyncio
+
+        from src.agents.data_loader import PointInTimeDataLoader
+        from src.strategies import ALL_STRATEGIES
+
+        def _compute():
+            loader = PointInTimeDataLoader()
+            as_of = date.today()
+            performance = []
+
+            for strategy_id, strategy_cls in ALL_STRATEGIES.items():
+                entry = {"strategy_id": strategy_id, "status": "unknown"}
+                try:
+                    strategy = strategy_cls(data_loader=loader)
+                    signals = strategy.generate_signals(as_of)
+                    entry["status"] = "active"
+                    entry["signal_count"] = len(signals) if signals else 0
+                    if signals:
+                        entry["instruments"] = list(
+                            {s.instrument for s in signals}
+                        )
+                except Exception as e:
+                    entry["status"] = "error"
+                    entry["error"] = str(e)[:100]
+                performance.append(entry)
+
+            return {
+                "strategies": performance,
+                "total": len(performance),
+                "active": sum(
+                    1 for p in performance if p["status"] == "active"
+                ),
+            }
+
+        data = await asyncio.to_thread(_compute)
+        return _envelope(data)
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Strategy dependencies unavailable: {exc}",
+        )
+
+
+# ---------------------------------------------------------------------------
 # GET /api/v1/strategies/{strategy_id}/backtest
 # ---------------------------------------------------------------------------
 @router.get("/{strategy_id}/backtest")
