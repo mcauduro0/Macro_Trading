@@ -1,53 +1,16 @@
 /**
- * utils.jsx - Shared PMS Utility Functions and Components.
+ * utils.jsx - Shared PMS Utility Components.
  *
  * Provides:
- * - seededRng:        Deterministic PRNG for reproducible sample data
- * - formatPnLShort:   Abbreviated P&L formatting (e.g., +R$ 45K)
  * - SampleDataBanner: Prominent banner indicating sample/mock data is displayed
  *
- * Eliminates duplication across PositionBookPage, RiskMonitorPage,
- * and PerformanceAttributionPage.
+ * Note: seededRng and formatPnLShort are defined in theme.jsx and exported
+ * via window.PMS_THEME. They were removed here to eliminate duplication.
  *
  * All exposed on window for CDN/Babel compatibility.
  */
 
 const { PMS_COLORS: _UC, PMS_TYPOGRAPHY: _UT } = window.PMS_THEME;
-
-// ---------------------------------------------------------------------------
-// Seeded PRNG — deterministic random number generator
-// ---------------------------------------------------------------------------
-/**
- * Creates a seeded pseudo-random number generator.
- * Returns a function that produces values in [0, 1) on each call.
- * Same seed always produces the same sequence.
- */
-function seededRng(seed) {
-  let s = seed;
-  return function () {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-// ---------------------------------------------------------------------------
-// formatPnLShort — abbreviated P&L formatting in BRL
-// ---------------------------------------------------------------------------
-/**
- * Format P&L in BRL with abbreviated notation and sign.
- * e.g., 45000 -> "+R$ 45K", -12000 -> "-R$ 12K", 1500000 -> "+R$ 1.5M"
- */
-function formatPnLShort(value) {
-  if (value == null || isNaN(value)) return '--';
-  const sign = value >= 0 ? '+' : '-';
-  const abs = Math.abs(value);
-  let formatted;
-  if (abs >= 1e9) formatted = (abs / 1e9).toFixed(1) + 'B';
-  else if (abs >= 1e6) formatted = (abs / 1e6).toFixed(1) + 'M';
-  else if (abs >= 1e3) formatted = (abs / 1e3).toFixed(0) + 'K';
-  else formatted = abs.toFixed(0);
-  return sign + 'R$ ' + formatted;
-}
 
 // ---------------------------------------------------------------------------
 // SampleDataBanner — visible indicator for sample/mock data
@@ -120,8 +83,4 @@ function SampleDataBanner({ message, compact }) {
 // ---------------------------------------------------------------------------
 // Export on window for CDN/Babel compatibility
 // ---------------------------------------------------------------------------
-window.PMS_UTILS = {
-  seededRng,
-  formatPnLShort,
-};
 window.SampleDataBanner = SampleDataBanner;

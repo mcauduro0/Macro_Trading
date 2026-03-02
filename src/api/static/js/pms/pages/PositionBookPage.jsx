@@ -963,7 +963,7 @@ function PositionBookPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Position Book</div>

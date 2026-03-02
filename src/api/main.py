@@ -244,6 +244,12 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 
+@app.get("/", include_in_schema=False)
+async def root_redirect():
+    """Redirect root to the PMS dashboard."""
+    return RedirectResponse(url="/dashboard", status_code=302)
+
+
 @app.get("/api/v1/data/status")
 async def data_status_alias(request: Request):
     """Alias for /health/data-status."""

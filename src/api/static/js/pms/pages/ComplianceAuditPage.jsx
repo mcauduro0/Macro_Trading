@@ -407,7 +407,7 @@ function ComplianceAuditPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: _CSP.md }}>
         <div>

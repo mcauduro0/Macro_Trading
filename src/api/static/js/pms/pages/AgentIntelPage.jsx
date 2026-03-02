@@ -398,7 +398,7 @@ function AgentIntelPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _AS.md }}>
         <div style={{ fontSize: _AT.sizes['2xl'], fontWeight: _AT.weights.bold, color: _AC.text.primary, marginBottom: '2px' }}>

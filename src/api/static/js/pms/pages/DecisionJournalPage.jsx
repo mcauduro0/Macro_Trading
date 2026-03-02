@@ -585,7 +585,7 @@ function DecisionJournalPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _JS.md }}>
         <div style={{ fontSize: _JT.sizes['2xl'], fontWeight: _JT.weights.bold, color: _JC.text.primary, marginBottom: '2px' }}>

@@ -152,7 +152,7 @@ function AlertsSection({ riskData, briefingData }) {
     setDismissed(prev => ({ ...prev, [alertId]: true }));
   };
 
-  return window.PMSAlertBanner({ alerts: visibleAlerts, onDismiss: handleDismiss });
+  return <window.PMSAlertBanner alerts={visibleAlerts} onDismiss={handleDismiss} />;
 }
 
 /**
@@ -877,7 +877,7 @@ function MorningPackPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Section 1: Alerts Banner (sticky within content area) */}
       <AlertsSection riskData={risk.data} briefingData={briefing.data} />
 

@@ -1733,7 +1733,7 @@ function PerformanceAttributionPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.sm }}>
         <div style={titleStyle}>Performance Attribution</div>

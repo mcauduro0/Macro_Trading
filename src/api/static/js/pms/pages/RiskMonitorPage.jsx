@@ -1462,7 +1462,7 @@ function RiskMonitorPage() {
 
   return (
     <div style={pageStyle}>
-      {usingSample && <PMSSampleDataBanner />}
+      {usingSample && <window.PMSSampleDataBanner />}
       {/* Page header */}
       <div style={{ marginBottom: _S.md }}>
         <div style={titleStyle}>Risk Monitor</div>
