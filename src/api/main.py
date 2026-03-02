@@ -159,8 +159,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ---------------------------------------------------------------------------
 _allowed_origins = [
     "http://localhost:3000",
+    "http://localhost:5173",
     "http://localhost:8000",
     "http://157.230.187.3:8000",
+    "http://157.230.187.3:3000",
+    # Manus deployment domains
+    "https://macro-trading-frontend.manus.space",
 ]
 if settings.allowed_origins:
     _allowed_origins.extend(
@@ -171,6 +175,7 @@ if settings.debug:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"https://.*\.manus\.(space|computer)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
