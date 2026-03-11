@@ -28,7 +28,7 @@ Holding period: 14 days.
 from __future__ import annotations
 
 import math
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 import structlog
@@ -211,7 +211,7 @@ class Cross02RiskAppetiteStrategy(BaseStrategy):
 
             signal = StrategySignal(
                 strategy_id=self.strategy_id,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 direction=direction,
                 strength=strength,
                 confidence=confidence,

@@ -15,73 +15,75 @@
 // Color Palette — semantic tokens for financial UI
 // ---------------------------------------------------------------------------
 const PMS_COLORS = {
-  // Background layers (dark theme, Bloomberg-dense)
+  // Background layers (premium dark theme)
   bg: {
-    primary: '#0d1117',
-    secondary: '#161b22',
-    tertiary: '#21262d',
-    elevated: '#30363d',
+    primary: '#06080b',
+    secondary: '#0B0F15',
+    tertiary: '#121820',
+    elevated: '#18202b',
+    glass: 'rgba(18, 24, 32, 0.7)',
   },
   // Text hierarchy
   text: {
-    primary: '#e6edf3',
-    secondary: '#8b949e',
-    muted: '#484f58',
-    inverse: '#0d1117',
+    primary: '#eef2f6',
+    secondary: '#9db0c6',
+    muted: '#758ba5',
+    inverse: '#06080b',
   },
-  // P&L semantic (locked: classic red/green)
+  // P&L semantic (vibrant red/green)
   pnl: {
-    positive: '#3fb950',
-    negative: '#f85149',
-    neutral: '#8b949e',
+    positive: '#10b981',
+    negative: '#ef4444',
+    neutral: '#758ba5',
   },
-  // Risk levels (locked: traffic light)
+  // Risk levels (vibrant traffic light)
   risk: {
-    ok: '#3fb950',
-    warning: '#d29922',
-    breach: '#f85149',
+    ok: '#10b981',
+    warning: '#f59e0b',
+    breach: '#ef4444',
   },
   // Signal directions
   direction: {
-    long: '#3fb950',
-    short: '#f85149',
-    neutral: '#8b949e',
-    hold: '#d29922',
+    long: '#10b981',
+    short: '#ef4444',
+    neutral: '#758ba5',
+    hold: '#f59e0b',
   },
   // Conviction color scale (0.0 to 1.0)
   conviction: {
-    low: '#8b949e',
-    medium: '#d29922',
-    high: '#3fb950',
-    veryHigh: '#58a6ff',
+    low: '#758ba5',
+    medium: '#f59e0b',
+    high: '#10b981',
+    veryHigh: '#3b82f6',
   },
   // Borders and accents
   border: {
-    default: '#30363d',
-    subtle: '#21262d',
-    accent: '#58a6ff',
+    default: '#232f3f',
+    subtle: 'rgba(255, 255, 255, 0.05)',
+    accent: '#3b82f6',
   },
   // Agent card accent colors (one per agent)
   agent: {
-    inflation: '#f0883e',
-    monetary: '#a371f7',
-    fiscal: '#3fb950',
-    fx: '#58a6ff',
-    cross_asset: '#d29922',
+    inflation: '#f97316', // orange-500
+    monetary: '#8b5cf6', // violet-500
+    fiscal: '#10b981', // emerald-500
+    fx: '#3b82f6', // blue-500
+    cross_asset: '#f59e0b', // amber-500
   },
 };
 
 // ---------------------------------------------------------------------------
-// Typography — Bloomberg-dense monospace
+// Typography — Modern sans-serif with monospace for numbers
 // ---------------------------------------------------------------------------
 const PMS_TYPOGRAPHY = {
-  fontFamily: "'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace",
+  fontFamily: "'Inter', sans-serif",
+  fontMono: "'JetBrains Mono', monospace",
   sizes: {
-    xs: '0.625rem',
-    sm: '0.75rem',
-    base: '0.8125rem',
-    lg: '0.9375rem',
-    xl: '1.125rem',
+    xs: '0.7rem',
+    sm: '0.8rem',
+    base: '0.875rem',
+    lg: '1rem',
+    xl: '1.25rem',
     '2xl': '1.5rem',
   },
   weights: {

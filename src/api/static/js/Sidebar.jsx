@@ -173,18 +173,19 @@ function getNavItemStyle(isActive) {
   return {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    padding: '8px 12px',
-    margin: '0 8px',
-    borderRadius: '6px',
+    gap: '12px',
+    padding: '10px 14px',
+    margin: '4px 8px',
+    borderRadius: '8px',
     textDecoration: 'none',
-    fontSize: '13px',
-    fontFamily: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace",
-    color: isActive ? '#e6edf3' : '#8b949e',
-    backgroundColor: isActive ? '#1f2937' : 'transparent',
-    borderLeft: isActive ? '2px solid #3fb950' : '2px solid transparent',
+    fontSize: '14px',
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: isActive ? 600 : 500,
+    color: isActive ? '#eef2f6' : '#758ba5',
+    backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+    borderLeft: isActive ? '3px solid #3b82f6' : '3px solid transparent',
     position: 'relative',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 }
 
@@ -193,15 +194,15 @@ const collapseStyle = {
   alignItems: 'center',
   gap: '8px',
   padding: '10px 12px',
-  margin: '8px',
-  border: '1px solid #30363d',
-  borderRadius: '6px',
-  backgroundColor: 'transparent',
-  color: '#8b949e',
-  fontSize: '12px',
-  fontFamily: "'JetBrains Mono', 'SF Mono', 'Consolas', monospace",
+  margin: '12px 8px',
+  border: '1px solid rgba(255, 255, 255, 0.05)',
+  borderRadius: '8px',
+  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+  color: '#758ba5',
+  fontSize: '13px',
+  fontFamily: "'Inter', sans-serif",
   cursor: 'pointer',
-  transition: 'all 0.15s ease',
+  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
 };
 
 // ---------------------------------------------------------------------------
@@ -212,16 +213,21 @@ function Sidebar({ alertCount = 0 }) {
 
   return (
     <div
-      className={`text-white flex flex-col h-screen fixed left-0 top-0 z-40 border-r transition-all duration-200 ${
-        collapsed ? "w-16" : "w-56"
+      className={`text-white flex flex-col h-screen fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out ${
+        collapsed ? "w-16" : "w-[4.5rem] lg:w-56"
       }`}
-      style={{ backgroundColor: '#0d1117', borderColor: '#30363d' }}
+      style={{ 
+        backgroundColor: 'rgba(11, 15, 21, 0.7)', 
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.05)' 
+      }}
     >
       {/* Logo / Brand area */}
-      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #30363d' }}>
-        <span style={{ color: '#3fb950', fontFamily: "'JetBrains Mono', monospace", fontSize: '18px', fontWeight: 700, flexShrink: 0 }}>MT</span>
+      <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <span style={{ color: '#3b82f6', fontFamily: "'Inter', sans-serif", fontSize: '20px', fontWeight: 700, flexShrink: 0, textShadow: '0 0 10px rgba(59, 130, 246, 0.5)' }}>MT</span>
         {!collapsed && (
-          <span style={{ color: '#8b949e', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.1em' }}>PMS</span>
+          <span style={{ color: '#758ba5', fontSize: '11px', fontFamily: "'Inter', sans-serif", fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.15em' }} className="hidden lg:inline">PMS</span>
         )}
       </div>
 
@@ -236,25 +242,28 @@ function Sidebar({ alertCount = 0 }) {
           >
             <Icon />
             {!collapsed && (
-              <span style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="hidden lg:block">{label}</span>
             )}
             {/* Badge count on Risk item */}
             {to === "/pms/risk" && alertCount > 0 && (
               <span
+                className="shadow-lg shadow-red-500/20"
                 style={{
                   position: 'absolute',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: '#f85149',
+                  backgroundColor: '#ef4444',
                   color: '#fff',
-                  fontSize: '10px',
+                  fontSize: '11px',
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 700,
-                  borderRadius: '50%',
-                  width: collapsed ? '16px' : '20px',
-                  height: collapsed ? '16px' : '20px',
-                  top: collapsed ? '0' : '50%',
-                  right: collapsed ? '0' : '8px',
+                  borderRadius: '12px',
+                  minWidth: collapsed ? '18px' : '22px',
+                  height: collapsed ? '18px' : '22px',
+                  padding: '0 4px',
+                  top: collapsed ? '-2px' : '50%',
+                  right: collapsed ? '-4px' : '8px',
                   transform: collapsed ? 'none' : 'translateY(-50%)',
                 }}
               >

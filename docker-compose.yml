@@ -37,26 +37,6 @@ services:
       retries: 3
     restart: unless-stopped
 
-  mongodb:
-    image: mongo:8.0
-    container_name: macro_mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-macro_user}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD required}
-    ports:
-      - "127.0.0.1:27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    networks:
-      - backend
-    restart: unless-stopped
-
   kafka:
     image: confluentinc/cp-kafka:7.8.0
     container_name: macro_kafka
@@ -89,27 +69,6 @@ services:
       start_period: 30s
     profiles:
       - full
-    networks:
-      - backend
-    restart: unless-stopped
-
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
-    container_name: macro_minio
-    ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minio_user}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY required}
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - backend
     restart: unless-stopped
@@ -208,8 +167,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      mongodb:
-        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
@@ -227,7 +184,5 @@ networks:
 volumes:
   timescaledb_data:
   redis_data:
-  mongodb_data:
   kafka_data:
-  minio_data:
   grafana_data:

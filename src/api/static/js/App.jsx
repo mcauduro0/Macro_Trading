@@ -19,18 +19,19 @@ function ToastCard({ toast, onClose }) {
   const { PMS_COLORS: _C, PMS_TYPOGRAPHY: _T } = window.PMS_THEME;
 
   const cardStyle = {
-    backgroundColor: _C.bg.elevated,
-    border: '1px solid ' + _C.border.default,
-    borderRadius: '6px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-    padding: '10px 12px',
-    marginBottom: '6px',
+    backgroundColor: _C.bg.glass || 'rgba(18, 24, 32, 0.7)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid ' + _C.border.subtle,
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    padding: '12px 16px',
+    marginBottom: '8px',
     maxWidth: '320px',
     display: 'flex',
     alignItems: 'flex-start',
-    gap: '8px',
+    gap: '12px',
     fontFamily: _T.fontFamily,
-    animation: 'slideIn 0.3s ease-out',
+    animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   const msgStyle = {
@@ -103,11 +104,11 @@ function ToastContainer({ toasts, onClose }) {
 // ---------------------------------------------------------------------------
 function Layout({ children, alertCount, toasts, onCloseToast }) {
   return (
-    <div className="flex h-screen text-gray-100" style={{ backgroundColor: '#0d1117' }}>
+    <div className="flex h-screen text-gray-100 bg-transparent">
       <Sidebar alertCount={alertCount} />
       {/* Content area — offset by sidebar width */}
-      <main className="flex-1 ml-56 overflow-y-auto" style={{ backgroundColor: '#0d1117' }}>
-        <div className="p-4 max-w-screen-2xl mx-auto">
+      <main className="flex-1 ml-56 overflow-y-auto bg-transparent">
+        <div className="p-4 md:p-6 lg:p-8 max-w-screen-2xl mx-auto">
           {children}
         </div>
       </main>

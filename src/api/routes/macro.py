@@ -166,7 +166,11 @@ async def search_series(
         SeriesMetadata.frequency,
         SeriesMetadata.country,
         SeriesMetadata.unit,
-    ).where(SeriesMetadata.name.ilike(f"%{q}%"))
+    ).where(
+        SeriesMetadata.name.ilike(
+            f"%{q.replace('%', '').replace('_', '')}%"
+        )
+    )
 
     if country:
         stmt = stmt.where(SeriesMetadata.country == country.upper())

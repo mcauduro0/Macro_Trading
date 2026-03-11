@@ -10,7 +10,7 @@ Provides:
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -240,7 +240,7 @@ async def record_outcome(entry_id: int, body: OutcomeRequest):
                 status_code=404, detail=f"Journal entry {entry_id} not found"
             )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Build content for hash
         system_notes = (

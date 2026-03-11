@@ -12,7 +12,7 @@ decision is captured with full context for audit and performance review.
 from __future__ import annotations
 
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 
 import structlog
@@ -100,7 +100,7 @@ class TradeWorkflowService:
                         break
 
             next_id = len(self._proposals) + 1
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
 
             proposal = {
                 "id": next_id,
@@ -205,7 +205,7 @@ class TradeWorkflowService:
                 f"Proposal {proposal_id} is not PENDING (current status: {proposal['status']})"
             )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Update proposal
         proposal["status"] = "APPROVED"
@@ -283,7 +283,7 @@ class TradeWorkflowService:
                 f"Proposal {proposal_id} is not PENDING (current status: {proposal['status']})"
             )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Update proposal
         proposal["status"] = "REJECTED"
@@ -368,7 +368,7 @@ class TradeWorkflowService:
                 f"Proposal {proposal_id} is not PENDING (current status: {proposal['status']})"
             )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Apply modifications
         if modified_direction is not None:
@@ -468,7 +468,7 @@ class TradeWorkflowService:
         if not manager_thesis or not manager_thesis.strip():
             raise ValueError("manager_thesis is mandatory for discretionary trades")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         next_id = len(self._proposals) + 1
 
         # Build metadata
@@ -582,7 +582,7 @@ class TradeWorkflowService:
 
         # If outcome notes provided, create additional NOTE journal entry
         if outcome_notes and outcome_notes.strip():
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             journal_content = {
                 "entry_type": "NOTE",
                 "instrument": closed_position["instrument"],

@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ def load_trade_proposals() -> list[dict]:
             prop.setdefault(
                 "as_of_date",
                 (
-                    prop.get("created_at", datetime.utcnow()).date()
+                    prop.get("created_at", datetime.now(timezone.utc)).date()
                     if isinstance(prop.get("created_at"), datetime)
                     else date.today()
                 ),

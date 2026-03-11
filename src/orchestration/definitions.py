@@ -1,6 +1,6 @@
 """Central Dagster Definitions module for the Macro Trading system.
 
-Registers all 31 assets across 8 layers (Bronze, Silver, Agents, Signals,
+Registers all 35 assets across 8 layers (Bronze, Silver, Agents, Signals,
 Portfolio, Risk, Report, PMS), defines 4 jobs (daily_pipeline, bronze_ingest,
 pms_eod_pipeline, pms_preopen_pipeline) and 3 schedules (daily at 09:00 UTC,
 PMS EOD at 21:00 UTC, PMS pre-open at 09:30 UTC -- offset 30 min from daily).
@@ -23,15 +23,19 @@ from src.orchestration.assets_agents import (
 
 # Import all assets -- Bronze
 from src.orchestration.assets_bronze import (
+    bronze_anbima,
     bronze_b3_market_data,
     bronze_bcb_focus,
     bronze_bcb_fx_flow,
     bronze_bcb_ptax,
     bronze_bcb_sgs,
     bronze_cftc_cot,
+    bronze_fmp_treasury,
     bronze_fred,
     bronze_ibge_sidra,
+    bronze_oecd,
     bronze_stn_fiscal,
+    bronze_te_di_curve,
     bronze_treasury_gov,
     bronze_yahoo,
 )
@@ -90,10 +94,14 @@ bronze_assets = [
     bronze_ibge_sidra,
     bronze_stn_fiscal,
     bronze_cftc_cot,
+    bronze_anbima,
+    bronze_oecd,
+    bronze_fmp_treasury,
+    bronze_te_di_curve,
 ]
 
 all_assets = [
-    # Bronze (11)
+    # Bronze (15)
     bronze_bcb_sgs,
     bronze_fred,
     bronze_yahoo,
@@ -105,6 +113,10 @@ all_assets = [
     bronze_ibge_sidra,
     bronze_stn_fiscal,
     bronze_cftc_cot,
+    bronze_anbima,
+    bronze_oecd,
+    bronze_fmp_treasury,
+    bronze_te_di_curve,
     # Silver (3)
     silver_curves,
     silver_returns,

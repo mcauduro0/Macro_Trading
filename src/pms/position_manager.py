@@ -16,7 +16,7 @@ import hashlib
 import importlib.util
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 
 import structlog
@@ -112,7 +112,7 @@ class PositionManager:
         Returns:
             Complete position dict with all fields populated.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         today = date.today()
         pos_id = len(self._positions) + 1
         effective_date = entry_date or today
@@ -260,7 +260,7 @@ class PositionManager:
         if not position["is_open"]:
             raise ValueError(f"Position {position_id} is already closed")
 
-        now = close_date or datetime.utcnow()
+        now = close_date or datetime.now(timezone.utc)
         fx_rate = current_fx_rate or position.get("entry_fx_rate") or 5.0
 
         # Compute realized P&L
@@ -311,7 +311,7 @@ class PositionManager:
 
         journal_entry = {
             "id": len(self._journal) + 1,
-            "created_at": now if isinstance(now, datetime) else datetime.utcnow(),
+            "created_at": now if isinstance(now, datetime) else datetime.now(timezone.utc),
             "entry_type": "CLOSE",
             "position_id": position_id,
             "proposal_id": None,
@@ -390,7 +390,7 @@ class PositionManager:
             pos["current_price"] = current_price
             pos["unrealized_pnl_brl"] = mtm["unrealized_pnl_brl"]
             pos["unrealized_pnl_usd"] = mtm["unrealized_pnl_usd"]
-            pos["updated_at"] = datetime.utcnow()
+            pos["updated_at"] = datetime.now(timezone.utc)
 
             # Persist snapshot
             if persist_snapshot:

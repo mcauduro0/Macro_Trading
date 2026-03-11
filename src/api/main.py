@@ -71,7 +71,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from src.agents.inflation_agent import InflationAgent
         from src.agents.monetary_agent import MonetaryPolicyAgent
         from src.agents.registry import AgentRegistry
+        from src.agents.data_loader import PointInTimeDataLoader
 
+        loader = PointInTimeDataLoader()
         agent_classes = [
             InflationAgent,
             MonetaryPolicyAgent,
@@ -81,10 +83,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         ]
         for agent_cls in agent_classes:
             try:
-                AgentRegistry.register(agent_cls)
+                agent = agent_cls(loader=loader)
+                AgentRegistry.register(agent)
             except ValueError:
                 pass  # Already registered
-        logger.info("Registered %d agents", len(AgentRegistry.list_agents()))
+        logger.info("Registered %d agents", len(AgentRegistry.list_registered()))
     except Exception as exc:
         logger.warning("Agent registration skipped: %s", exc)
 

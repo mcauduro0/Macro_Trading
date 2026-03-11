@@ -10,6 +10,18 @@ from src.api.deps import get_db
 
 router = APIRouter(tags=["Health"])
 
+# Allowlisted data tables for record count queries (prevents SQL injection)
+_DATA_TABLES = frozenset({
+    "macro_series",
+    "market_data",
+    "curves",
+    "flow_data",
+    "fiscal_data",
+})
+
+# Pre-built SQL statements keyed by table name
+_COUNT_QUERIES = {t: text(f"SELECT COUNT(*) FROM {t}") for t in _DATA_TABLES}
+
 
 @router.get("/health")
 async def health_check(session: AsyncSession = Depends(get_db)) -> dict:
@@ -18,8 +30,8 @@ async def health_check(session: AsyncSession = Depends(get_db)) -> dict:
     try:
         await session.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as exc:
-        db_status = f"disconnected: {exc}"
+    except Exception:
+        db_status = "disconnected"
 
     return {
         "status": "ok" if db_status == "connected" else "degraded",
@@ -33,16 +45,8 @@ async def data_status(session: AsyncSession = Depends(get_db)) -> dict:
     """Return record counts for every data table, plus reference-table totals."""
 
     table_counts: dict[str, int] = {}
-    for table_name in (
-        "macro_series",
-        "market_data",
-        "curves",
-        "flow_data",
-        "fiscal_data",
-    ):
-        result = await session.execute(
-            text(f"SELECT COUNT(*) FROM {table_name}")  # noqa: S608
-        )
+    for table_name in _DATA_TABLES:
+        result = await session.execute(_COUNT_QUERIES[table_name])
         table_counts[table_name] = result.scalar_one()
 
     instruments_result = await session.execute(text("SELECT COUNT(*) FROM instruments"))

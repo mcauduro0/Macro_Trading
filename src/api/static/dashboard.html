@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ARC Macro PMS</title>
 
-  <!-- JetBrains Mono font for Bloomberg-dense styling -->
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- React 18 — pinned to exact version for production stability -->
   <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
@@ -15,8 +17,8 @@
   <!-- Babel standalone for JSX — pinned -->
   <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
 
-  <!-- Tailwind CSS — pinned -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Tailwind CSS — plugins included for better UI -->
+  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms,typography,aspect-ratio,container-queries"></script>
 
   <!-- prop-types (required by Recharts UMD) — pinned -->
   <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
@@ -33,33 +35,61 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
           colors: {
+            // Enhanced base grays with subtle blue tint for premium dark look
             gray: {
-              950: '#0a0a0f',
-              900: '#111118',
-              800: '#1e1e2a',
-              700: '#2a2a3a',
-              600: '#3a3a4a',
-              500: '#6b7280',
-              400: '#9ca3af',
-              300: '#d1d5db',
-              200: '#e5e7eb',
-              100: '#f3f4f6',
+              950: '#06080b',
+              900: '#0B0F15',
+              850: '#121820',
+              800: '#18202b',
+              700: '#232f3f',
+              600: '#34455a',
+              500: '#4f647d',
+              400: '#758ba5',
+              300: '#9db0c6',
+              200: '#cad6e4',
+              100: '#eef2f6',
             },
-            green: { 500: '#22c55e' },
-            red: { 500: '#ef4444' },
-            amber: { 500: '#f59e0b' },
+            // Vibrant state colors
+            green: { 500: '#10b981', 400: '#34d399' },
+            red: { 500: '#ef4444', 400: '#f87171' },
+            amber: { 500: '#f59e0b', 400: '#fbbf24' },
             blue: { 500: '#3b82f6', 600: '#2563eb' },
+            // PMS semantic overrides mapping to new vibrant palette
             pms: {
-              bg: '#0d1117',
-              surface: '#161b22',
-              border: '#30363d',
-              green: '#3fb950',
-              red: '#f85149',
-              yellow: '#d29922',
-              blue: '#58a6ff',
+              bg: '#0B0F15',
+              surface: '#121820', // slightly elevated
+              glass: 'rgba(18, 24, 32, 0.7)', // translucent surface
+              border: '#232f3f', // subtle border
+              green: '#10b981',
+              red: '#ef4444',
+              yellow: '#f59e0b',
+              blue: '#3b82f6',
             },
           },
+          animation: {
+            'slide-in': 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            'fade-in': 'fadeIn 0.2s ease-out',
+            'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            slideIn: {
+              '0%': { transform: 'translateX(100%)', opacity: 0 },
+              '100%': { transform: 'translateX(0)', opacity: 1 },
+            },
+            fadeIn: {
+              '0%': { opacity: 0 },
+              '100%': { opacity: 1 },
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: 1 },
+              '50%': { opacity: 0.7 },
+            }
+          }
         },
       },
     };
@@ -67,26 +97,47 @@
 
   <style>
     body {
-      background: #0d1117;
+      background-color: #06080b; /* Deepest background color */
+      background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.05), transparent 400px), 
+                        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.05), transparent 400px);
+      background-attachment: fixed;
       margin: 0;
-      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: #eef2f6;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .font-mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Modern Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #232f3f; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #34455a; }
+
+    /* Utility classes */
     .small-caps { font-variant: small-caps; letter-spacing: 0.08em; }
-    .skeleton { animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
+    .skeleton { animation: pulseSoft 2s infinite; }
+    
+    /* Glassmorphism primitives */
+    .glass-panel {
+      background: rgba(18, 24, 32, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
     }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    
+    /* Elegant Hover Effect */
+    .hover-glow:hover {
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.3);
     }
-    .animate-slide-in { animation: slide-in 0.3s ease-out; }
+
     /* Responsive breakpoints for tablet */
     @media (max-width: 1024px) {
-      .ml-56 { margin-left: 4rem !important; }
-      .w-56 { width: 4rem !important; }
+      .ml-56 { margin-left: 4.5rem !important; }
+      .w-56 { width: 4.5rem !important; }
     }
     @media (max-width: 768px) {
       .ml-56 { margin-left: 0 !important; }

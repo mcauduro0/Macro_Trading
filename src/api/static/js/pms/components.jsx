@@ -25,12 +25,16 @@ const { PMS_COLORS, PMS_TYPOGRAPHY, PMS_SPACING } = window.PMS_THEME;
 // ---------------------------------------------------------------------------
 function PMSCard({ title, subtitle, children, accentColor, className }) {
   const cardStyle = {
-    backgroundColor: PMS_COLORS.bg.secondary,
-    border: `1px solid ${PMS_COLORS.border.default}`,
-    borderLeft: accentColor ? `3px solid ${accentColor}` : `1px solid ${PMS_COLORS.border.default}`,
-    borderRadius: '6px',
-    padding: '8px 12px',
+    backgroundColor: PMS_COLORS.bg.glass || PMS_COLORS.bg.secondary,
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: `1px solid ${PMS_COLORS.border.subtle || PMS_COLORS.border.default}`,
+    borderLeft: accentColor ? `3px solid ${accentColor}` : `1px solid ${PMS_COLORS.border.subtle || PMS_COLORS.border.default}`,
+    borderRadius: '12px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    padding: '12px 16px',
     fontFamily: PMS_TYPOGRAPHY.fontFamily,
+    transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s',
   };
 
   const titleStyle = {
@@ -88,7 +92,7 @@ function PMSTable({ columns, data, onRowClick, compact }) {
   };
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto', borderRadius: '8px', border: `1px solid ${PMS_COLORS.border.subtle}`, backgroundColor: PMS_COLORS.bg.glass, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
       <table style={tableStyle}>
         <thead>
           <tr>
@@ -105,8 +109,8 @@ function PMSTable({ columns, data, onRowClick, compact }) {
         <tbody>
           {(data || []).map((row, rowIdx) => {
             const rowBg = rowIdx % 2 === 0
-              ? PMS_COLORS.bg.secondary
-              : PMS_COLORS.bg.tertiary;
+              ? 'rgba(255, 255, 255, 0.02)'
+              : 'transparent';
 
             return (
               <tr
@@ -118,7 +122,7 @@ function PMSTable({ columns, data, onRowClick, compact }) {
                 }}
                 onClick={() => onRowClick && onRowClick(row, rowIdx)}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = PMS_COLORS.bg.elevated;
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = rowBg;
@@ -274,9 +278,13 @@ function PMSMetricCard({ label, value, change, prefix, suffix }) {
     display: 'inline-flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    padding: '4px 10px',
+    padding: '6px 12px',
     fontFamily: PMS_TYPOGRAPHY.fontFamily,
-    minWidth: '80px',
+    minWidth: '90px',
+    backgroundColor: PMS_COLORS.bg.glass || 'rgba(18, 24, 32, 0.7)',
+    backdropFilter: 'blur(8px)',
+    border: `1px solid ${PMS_COLORS.border.subtle}`,
+    borderRadius: '8px',
   };
 
   const labelStyle = {

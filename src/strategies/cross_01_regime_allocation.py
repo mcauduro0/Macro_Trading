@@ -25,7 +25,7 @@ Holding period: 21 days.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -187,7 +187,7 @@ class Cross01RegimeAllocationStrategy(BaseStrategy):
 
             signal = StrategySignal(
                 strategy_id=self.strategy_id,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 direction=direction,
                 strength=strength,
                 confidence=confidence,

@@ -422,14 +422,15 @@ function TradeProposalsSection({ proposalsData, briefingData }) {
     if (status === 'REJECTED') borderLeft = `3px solid ${_COLORS.pnl.negative}`;
 
     return {
-      backgroundColor: _COLORS.bg.tertiary,
-      border: `1px solid ${_COLORS.border.subtle}`,
+      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+      border: `1px solid rgba(255, 255, 255, 0.05)`,
       borderLeft,
-      borderRadius: '4px',
-      padding: '8px 12px',
+      borderRadius: '8px',
+      padding: '12px',
       fontFamily: _TYPO.fontFamily,
-      marginBottom: '4px',
+      marginBottom: '6px',
       opacity: status ? 0.7 : 1.0,
+      transition: 'background-color 0.2s',
     };
   };
 

@@ -363,7 +363,7 @@ async def get_latest_signal(strategy_id: str):
         )
         raise HTTPException(
             status_code=503,
-            detail=f"Signal generation failed for '{strategy_id}': {exc}. "
+            detail=f"Signal generation failed for '{strategy_id}'. "
             "Ensure market data is available and database is running.",
         )
 
@@ -428,7 +428,7 @@ async def get_signal_history(
         )
         raise HTTPException(
             status_code=503,
-            detail=f"Signal history unavailable: {exc}. "
+            detail="Signal history unavailable. "
             "Ensure TimescaleDB is running and strategy_signals table exists.",
         )
 
@@ -468,16 +468,20 @@ async def update_strategy_params(
         "stop_loss_pct",
         "take_profit_pct",
     }
+    # Reject any params not in the allowlist
+    rejected = [k for k in params if k not in ALLOWED_STRATEGY_PARAMS]
+    if rejected:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Parameters not allowed: {rejected}. "
+            f"Allowed: {sorted(ALLOWED_STRATEGY_PARAMS)}",
+        )
+
     updated_params: dict[str, Any] = {}
     try:
         instance = strategy_cls(data_loader=PointInTimeDataLoader())
         for key, value in params.items():
-            if key not in ALLOWED_STRATEGY_PARAMS:
-                updated_params[key] = {
-                    "value": value,
-                    "note": "parameter not in allowed list",
-                }
-            elif hasattr(instance, key):
+            if hasattr(instance, key):
                 setattr(instance, key, value)
                 updated_params[key] = value
             else:
@@ -489,7 +493,7 @@ async def update_strategy_params(
         logger.warning("params_update failed strategy_id=%s: %s", strategy_id, exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to update parameters for '{strategy_id}': {exc}",
+            detail=f"Failed to update parameters for '{strategy_id}'. Check server logs.",
         )
 
     return _envelope(

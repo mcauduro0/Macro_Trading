@@ -1,9 +1,9 @@
-"""Bronze layer Dagster asset definitions for data connectors.
+"""Bronze layer Dagster asset definitions for all 15 data connectors.
 
-Each asset wraps one of the 6 data source connectors, executing the async
-fetch-and-store pipeline via asyncio.run().  Assets use daily partitions
-(from 2010-01-01) for date-range backfill support and a retry policy of
-3 attempts with 30-second exponential backoff.
+Each asset wraps one data source connector, executing the async fetch-and-store
+pipeline via asyncio.run().  Assets use daily partitions (from 2010-01-01)
+for date-range backfill support and a retry policy of 3 attempts with
+30-second exponential backoff.
 
 Bronze assets are the entry points of the Dagster dependency graph.
 Silver assets depend on these to run transforms.
@@ -21,15 +21,19 @@ from dagster import (
 )
 
 from src.connectors import (
+    AnbimaConnector,
     B3MarketDataConnector,
     BcbFocusConnector,
     BcbFxFlowConnector,
     BcbPtaxConnector,
     BcbSgsConnector,
     CftcCotConnector,
+    FmpTreasuryConnector,
     FredConnector,
     IbgeSidraConnector,
+    OecdSdmxConnector,
     StnFiscalConnector,
+    TradingEconDiCurveConnector,
     TreasuryGovConnector,
     YahooFinanceConnector,
 )
@@ -279,4 +283,80 @@ def bronze_cftc_cot(context: AssetExecutionContext) -> dict:
         return {"status": "success", "records_fetched": records}
     except Exception as exc:
         context.log.error(f"CFTC COT fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest ANBIMA yield curves (ETTJ), NTN-B prices, and IMA indices",
+)
+def bronze_anbima(context: AssetExecutionContext) -> dict:
+    """Fetch ANBIMA fixed-income data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching ANBIMA data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(AnbimaConnector, as_of, as_of))
+        context.log.info(f"ANBIMA: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"ANBIMA fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest OECD Economic Outlook structural estimates (output gap, NAIRU)",
+)
+def bronze_oecd(context: AssetExecutionContext) -> dict:
+    """Fetch OECD SDMX structural macro data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching OECD data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(OecdSdmxConnector, as_of, as_of))
+        context.log.info(f"OECD: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"OECD fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest FMP US Treasury yield curves (fallback to Treasury.gov)",
+)
+def bronze_fmp_treasury(context: AssetExecutionContext) -> dict:
+    """Fetch FMP US Treasury yield curve data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching FMP Treasury data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(FmpTreasuryConnector, as_of, as_of))
+        context.log.info(f"FMP Treasury: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"FMP Treasury fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest Trading Economics Brazilian DI curve (long tenors: 2Y, 5Y, 10Y)",
+)
+def bronze_te_di_curve(context: AssetExecutionContext) -> dict:
+    """Fetch Trading Economics DI curve data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching Trading Economics DI curve for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(TradingEconDiCurveConnector, as_of, as_of))
+        context.log.info(f"TE DI Curve: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"TE DI Curve fetch failed: {exc}")
         raise

@@ -329,7 +329,7 @@ async def portfolio_current(
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_current error: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Portfolio query failed: {exc}")
+        raise HTTPException(status_code=500, detail="Portfolio query failed. Check server logs for details.")
 
 
 def _build_portfolio_positions(as_of: date) -> list[dict]:
@@ -392,7 +392,7 @@ async def portfolio_risk(
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_risk error: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Risk report failed: {exc}")
+        raise HTTPException(status_code=500, detail="Risk report failed. Check server logs for details.")
 
 
 def _build_risk_report() -> dict:
@@ -482,7 +482,7 @@ async def portfolio_target():
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_target error: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Optimization failed: {exc}")
+        raise HTTPException(status_code=500, detail="Optimization failed. Check server logs for details.")
 
 
 def _build_target_weights() -> dict:
@@ -600,7 +600,7 @@ async def portfolio_rebalance_trades():
     except Exception as exc:
         logger.error("portfolio_rebalance_trades error: %s", exc, exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Rebalance computation failed: {exc}"
+            status_code=500, detail="Rebalance computation failed. Check server logs for details."
         )
 
 
@@ -706,7 +706,7 @@ async def portfolio_attribution():
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         logger.error("portfolio_attribution error: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Attribution failed: {exc}")
+        raise HTTPException(status_code=500, detail="Attribution failed. Check server logs for details.")
 
 
 def _build_attribution() -> dict:

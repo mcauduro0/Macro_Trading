@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 
 import structlog
@@ -96,7 +96,7 @@ class MorningPackService:
                 logger.info("briefing_exists", briefing_date=str(briefing_date))
                 return existing
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Collect all sections with graceful degradation
         trade_proposals = self._collect_trade_proposals(briefing_date)
