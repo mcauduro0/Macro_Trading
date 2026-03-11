@@ -13,10 +13,11 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
+COPY .dagster/ ./.dagster/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -e ".[dev]" && \
-    pip install --no-cache-dir anthropic dagster dagster-postgres motor pymongo
+    pip install --no-cache-dir anthropic dagster dagster-webserver dagster-postgres
 
 # Expose API port
 EXPOSE 8000
