@@ -3,8 +3,10 @@
 Handles instrument-aware price sourcing from DB with manual override support,
 staleness detection, and risk metric computation (DV01, delta, VaR contribution).
 
-Actual DB price lookup will be wired in Phase 21/27 when the MTM pipeline runs
-against live TimescaleDB. For now, uses entry_price or override as price source.
+Price resolution order:
+1. Manual override (price_overrides param)
+2. Live DB lookup from TimescaleDB market_data table
+3. Carry-forward entry_price with staleness alert
 """
 
 from __future__ import annotations
@@ -12,7 +14,6 @@ from __future__ import annotations
 import importlib.util
 import os
 from datetime import date
-
 import structlog
 
 from .pricing import (
@@ -36,6 +37,51 @@ _spec.loader.exec_module(_costs_mod)
 TransactionCostModel = _costs_mod.TransactionCostModel
 
 logger = structlog.get_logger(__name__)
+
+
+def _fetch_db_prices(tickers: list[str], as_of_date: date) -> dict[str, tuple[float, date]]:
+    """Query TimescaleDB for the latest close price for each ticker.
+
+    Returns dict of {ticker: (close_price, price_date)} for tickers found.
+    Silently returns empty dict if DB is unavailable.
+    """
+    if not tickers:
+        return {}
+    try:
+        from sqlalchemy import create_engine, text
+
+        from src.core.config import get_settings
+
+        settings = get_settings()
+        engine = create_engine(settings.database_url)
+        with engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT i.ticker, md.close, md.date "
+                    "FROM market_data md "
+                    "JOIN instruments i ON i.id = md.instrument_id "
+                    "WHERE i.ticker = ANY(:tickers) AND md.date <= :as_of "
+                    "ORDER BY md.date DESC"
+                ),
+                {"tickers": tickers, "as_of": as_of_date},
+            )
+            rows = result.fetchall()
+
+        # Keep only the most recent row per ticker
+        prices: dict[str, tuple[float, date]] = {}
+        for row in rows:
+            ticker, close, price_date = row[0], row[1], row[2]
+            if ticker not in prices and close is not None:
+                if hasattr(price_date, "date"):
+                    price_date = price_date.date()
+                prices[ticker] = (float(close), price_date)
+
+        if prices:
+            logger.debug("db_prices_fetched", n_tickers=len(prices), as_of=str(as_of_date))
+        return prices
+    except Exception as exc:
+        logger.debug("db_price_lookup_failed", error=str(exc))
+        return {}
 
 
 class MarkToMarketService:
@@ -82,6 +128,14 @@ class MarkToMarketService:
         ref_date = as_of_date or date.today()
         result: dict[str, dict] = {}
 
+        # Collect all unique tickers not already in overrides for batch DB lookup
+        tickers_to_fetch = [
+            pos.get("instrument", "UNKNOWN")
+            for pos in positions
+            if pos.get("instrument", "UNKNOWN") not in overrides
+        ]
+        db_prices = _fetch_db_prices(list(set(tickers_to_fetch)), ref_date)
+
         for pos in positions:
             instrument = pos.get("instrument", "UNKNOWN")
             entry_price = pos.get("entry_price", 0.0)
@@ -102,9 +156,28 @@ class MarkToMarketService:
             elif instrument in result:
                 # Already resolved this instrument from a previous position
                 continue
+            elif instrument in db_prices:
+                # Live price from TimescaleDB market_data table
+                db_price, price_date = db_prices[instrument]
+                staleness = (ref_date - price_date).days
+                is_stale = staleness > self.STALE_THRESHOLD_DAYS
+                if is_stale:
+                    logger.warning(
+                        "stale_db_price_detected",
+                        instrument=instrument,
+                        price_date=str(price_date),
+                        staleness_days=staleness,
+                        threshold=self.STALE_THRESHOLD_DAYS,
+                    )
+                result[instrument] = {
+                    "price": db_price,
+                    "source": "db_market_data",
+                    "date": price_date,
+                    "is_stale": is_stale,
+                    "staleness_days": max(staleness, 0),
+                }
             else:
-                # Placeholder: use entry_price as fallback until DB wiring
-                # In production, this would query TimescaleDB for latest price
+                # Fallback: use entry_price when no DB data available
                 entry_date = pos.get("entry_date", ref_date)
                 if isinstance(entry_date, str):
                     entry_date = date.fromisoformat(entry_date)

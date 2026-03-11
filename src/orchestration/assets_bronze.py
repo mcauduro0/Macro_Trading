@@ -22,9 +22,14 @@ from dagster import (
 
 from src.connectors import (
     B3MarketDataConnector,
+    BcbFocusConnector,
+    BcbFxFlowConnector,
     BcbPtaxConnector,
     BcbSgsConnector,
+    CftcCotConnector,
     FredConnector,
+    IbgeSidraConnector,
+    StnFiscalConnector,
     TreasuryGovConnector,
     YahooFinanceConnector,
 )
@@ -179,4 +184,99 @@ def bronze_treasury_gov(context: AssetExecutionContext) -> dict:
         return {"status": "success", "records_fetched": records}
     except Exception as exc:
         context.log.error(f"Treasury.gov fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest BCB Focus market consensus forecasts (IPCA, SELIC, GDP, etc.)",
+)
+def bronze_bcb_focus(context: AssetExecutionContext) -> dict:
+    """Fetch BCB Focus survey consensus forecasts for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching BCB Focus data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(BcbFocusConnector, as_of, as_of))
+        context.log.info(f"BCB Focus: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"BCB Focus fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest BCB FX flow decomposition (commercial, financial, interbank)",
+)
+def bronze_bcb_fx_flow(context: AssetExecutionContext) -> dict:
+    """Fetch BCB FX flow data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching BCB FX Flow data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(BcbFxFlowConnector, as_of, as_of))
+        context.log.info(f"BCB FX Flow: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"BCB FX Flow fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest IBGE SIDRA IPCA components by category",
+)
+def bronze_ibge_sidra(context: AssetExecutionContext) -> dict:
+    """Fetch IBGE SIDRA IPCA component data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching IBGE SIDRA data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(IbgeSidraConnector, as_of, as_of))
+        context.log.info(f"IBGE SIDRA: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"IBGE SIDRA fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest STN Brazilian fiscal data (primary balance, debt, deficit)",
+)
+def bronze_stn_fiscal(context: AssetExecutionContext) -> dict:
+    """Fetch STN fiscal data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching STN Fiscal data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(StnFiscalConnector, as_of, as_of))
+        context.log.info(f"STN Fiscal: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"STN Fiscal fetch failed: {exc}")
+        raise
+
+
+@asset(
+    group_name="bronze",
+    retry_policy=_retry_policy,
+    partitions_def=_daily_partitions,
+    description="Ingest CFTC Commitments of Traders positioning data",
+)
+def bronze_cftc_cot(context: AssetExecutionContext) -> dict:
+    """Fetch CFTC COT positioning data for the partition date."""
+    as_of = _partition_date(context)
+    context.log.info(f"Fetching CFTC COT data for {as_of}")
+    try:
+        records = asyncio.run(_run_connector(CftcCotConnector, as_of, as_of))
+        context.log.info(f"CFTC COT: {records} records ingested")
+        return {"status": "success", "records_fetched": records}
+    except Exception as exc:
+        context.log.error(f"CFTC COT fetch failed: {exc}")
         raise

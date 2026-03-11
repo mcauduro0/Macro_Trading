@@ -16,9 +16,28 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import jwt
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
+from src.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+async def _verify_ws_token(token: str | None) -> bool:
+    """Validate a JWT token supplied as a WebSocket query parameter.
+
+    Returns True if valid (or if DEBUG mode is on), False otherwise.
+    """
+    if settings.debug:
+        return True
+    if not token:
+        return False
+    try:
+        jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        return True
+    except jwt.InvalidTokenError:
+        return False
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -108,16 +127,22 @@ manager = ConnectionManager()
 # WebSocket endpoints
 # ---------------------------------------------------------------------------
 @router.websocket("/ws/signals")
-async def signals_websocket(websocket: WebSocket):
+async def signals_websocket(
+    websocket: WebSocket,
+    token: str | None = Query(None, description="JWT access token"),
+):
     """WebSocket endpoint for live trading signal updates.
 
     Clients receive real-time signal broadcasts from the signal aggregation
     pipeline. Sends keepalive pings and accepts incoming messages.
+    Pass ?token=<jwt> as a query parameter for authentication.
     """
+    if not await _verify_ws_token(token):
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
     await manager.connect(websocket, "signals")
     try:
         while True:
-            # Receive messages (keepalive / subscription control)
             data = await websocket.receive_text()
             logger.debug("ws_signals_received data=%s", data[:100] if data else "")
     except WebSocketDisconnect:
@@ -125,12 +150,19 @@ async def signals_websocket(websocket: WebSocket):
 
 
 @router.websocket("/ws/portfolio")
-async def portfolio_websocket(websocket: WebSocket):
+async def portfolio_websocket(
+    websocket: WebSocket,
+    token: str | None = Query(None, description="JWT access token"),
+):
     """WebSocket endpoint for portfolio position and P&L updates.
 
     Clients receive real-time portfolio state changes including position
     updates, equity changes, and risk metric deltas.
+    Pass ?token=<jwt> as a query parameter for authentication.
     """
+    if not await _verify_ws_token(token):
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
     await manager.connect(websocket, "portfolio")
     try:
         while True:
@@ -141,12 +173,19 @@ async def portfolio_websocket(websocket: WebSocket):
 
 
 @router.websocket("/ws/alerts")
-async def alerts_websocket(websocket: WebSocket):
+async def alerts_websocket(
+    websocket: WebSocket,
+    token: str | None = Query(None, description="JWT access token"),
+):
     """WebSocket endpoint for system alerts and notifications.
 
     Clients receive risk breach alerts, strategy status changes,
     data pipeline failures, and other operational notifications.
+    Pass ?token=<jwt> as a query parameter for authentication.
     """
+    if not await _verify_ws_token(token):
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
     await manager.connect(websocket, "alerts")
     try:
         while True:

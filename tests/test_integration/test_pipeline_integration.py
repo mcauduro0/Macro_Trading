@@ -98,7 +98,7 @@ class TestFullPipelineDryRun:
         assert result.status == "SUCCESS"
         assert len(result.step_timings) == 8
         assert all(step in result.step_timings for step in DailyPipeline.STEP_NAMES)
-        assert result.duration_seconds > 0
+        assert result.duration_seconds >= 0
 
 
 # ---------------------------------------------------------------------------

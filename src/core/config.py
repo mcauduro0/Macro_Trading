@@ -75,6 +75,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiry_minutes: int = 60
 
+    # Bootstrap user passwords — set via env vars (PMS_ADMIN_PASSWORD, etc.)
+    # Leave empty to disable that user. Never use defaults in production.
+    pms_admin_password: str = ""
+    pms_manager_password: str = ""
+    pms_risk_password: str = ""
+    pms_viewer_password: str = ""
+
     @computed_field
     @property
     def async_database_url(self) -> str:

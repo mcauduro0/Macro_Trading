@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from src.api.auth import (
@@ -48,14 +48,30 @@ class RefreshRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Hard-coded users for bootstrap. Replace with DB lookup in production.
+# Bootstrap users — passwords loaded from env vars (PMS_*_PASSWORD).
+# Users with empty passwords are disabled.
 # ---------------------------------------------------------------------------
-_BOOTSTRAP_USERS: dict[str, dict] = {
-    "admin": {"password": "admin", "role": "ADMIN"},
-    "manager": {"password": "manager", "role": "MANAGER"},
-    "risk": {"password": "risk", "role": "RISK_OFFICER"},
-    "viewer": {"password": "viewer", "role": "VIEWER"},
-}
+def _build_bootstrap_users() -> dict[str, dict]:
+    users = {}
+    candidates = [
+        ("admin", settings.pms_admin_password, "ADMIN"),
+        ("manager", settings.pms_manager_password, "MANAGER"),
+        ("risk", settings.pms_risk_password, "RISK_OFFICER"),
+        ("viewer", settings.pms_viewer_password, "VIEWER"),
+    ]
+    for username, password, role in candidates:
+        if password:
+            users[username] = {"password": password, "role": role}
+        else:
+            logger.warning(
+                "bootstrap_user_disabled username=%s reason=PMS_%s_PASSWORD_not_set",
+                username,
+                username.upper(),
+            )
+    return users
+
+
+_BOOTSTRAP_USERS: dict[str, dict] = _build_bootstrap_users()
 
 
 # ---------------------------------------------------------------------------

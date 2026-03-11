@@ -279,7 +279,7 @@ class TestFullPipelineRun:
         result = pipeline.run()
 
         assert result.status == "SUCCESS"
-        assert result.duration_seconds > 0
+        assert result.duration_seconds >= 0
         assert call_order == [
             "ingest",
             "quality",

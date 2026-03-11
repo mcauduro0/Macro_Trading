@@ -11,7 +11,7 @@ Composites three components into a directional USDBRL signal:
   long BRL.
 
 An optional **regime adjustment** scales the final weight by 50% when the
-cross-asset regime is risk-off (regime_score < -0.3).
+cross-asset regime is risk-off (regime_score > 0.3).
 
 The strategy produces a single StrategyPosition for USDBRL.
 """
